@@ -21,28 +21,26 @@ For a complete guide on daily usage — invoking skills, using agents, typical w
 git clone https://github.com/ernesto2108/anvil.git ~/projects/anvil
 cd ~/projects/anvil
 
-# 2. Make the CLI available globally (pick one)
-# Option A: symlink (recommended)
-ln -sf ~/projects/anvil/anvil-cli /usr/local/bin/anvil
+# 2. Build the CLI (requires Go 1.25+)
+make build
 
-# Option B: alias in your shell profile (~/.zshrc or ~/.bashrc)
-echo 'alias anvil="~/projects/anvil/anvil-cli"' >> ~/.zshrc
-source ~/.zshrc
+# 3. Make it available globally (optional)
+ln -sf ~/projects/anvil/anvil /usr/local/bin/anvil
 
-# 3. Choose your targets (which tools to deploy to)
+# 4. Choose your targets (which tools to deploy to)
 anvil targets claude opencode    # or: all
 
-# 4. Choose your provider (model tier mapping)
+# 5. Choose your provider (model tier mapping)
 anvil provider claude            # or: gemini, local
 
-# 5. Deploy
+# 6. Deploy
 anvil deploy
 
-# 6. Verify
+# 7. Verify
 anvil status
 ```
 
-> After step 2, you can run `anvil` from anywhere. If you skip it, use `./anvil-cli` from the anvil directory.
+> After step 3, you can run `anvil` from anywhere. If you skip it, use `./anvil` from the anvil directory.
 
 ## How It Works
 
@@ -81,7 +79,8 @@ Each agent has strict boundaries:
 
 ```
 anvil/
-├── anvil-cli              # Deployment CLI (bash)
+├── cmd/anvil/             # CLI entry point (Go)
+├── internal/              # Core packages (config, deploy, state, etc.)
 ├── anvil.yaml             # Deployment manifest (targets, components)
 ├── anvil.config.yaml      # Provider & model mapping
 ├── agents/                # 12 specialized agent definitions
@@ -188,28 +187,28 @@ Skills are loadable knowledge modules. Agents load them on-demand based on the t
 
 ```bash
 # Deployment
-anvil-cli deploy                     # Deploy all components to active targets
-anvil-cli status                     # Show what's deployed where
+anvil deploy                     # Deploy all components to active targets
+anvil status                     # Show what's deployed where
 
 # Targets (which AI tools to deploy to)
-anvil-cli targets                    # Show active targets
-anvil-cli targets claude opencode    # Set exact targets
-anvil-cli targets --add gemini       # Enable one target
-anvil-cli targets --rm cursor        # Disable one target
-anvil-cli targets all                # Enable all
+anvil targets                    # Show active targets
+anvil targets claude opencode    # Set exact targets
+anvil targets --add gemini       # Enable one target
+anvil targets --rm cursor        # Disable one target
+anvil targets all                # Enable all
 
 # Provider (model mapping)
-anvil-cli provider                   # Show current provider
-anvil-cli provider gemini            # Switch to Gemini models
-anvil-cli provider local             # Switch to local/Ollama models
+anvil provider                   # Show current provider
+anvil provider gemini            # Switch to Gemini models
+anvil provider local             # Switch to local/Ollama models
 
 # Version pinning
-anvil-cli pin skills/go-conventions v1.2.0    # Pin to git tag
-anvil-cli unpin skills/go-conventions         # Follow HEAD again
+anvil pin skills/go-conventions v1.2.0    # Pin to git tag
+anvil unpin skills/go-conventions         # Follow HEAD again
 
 # Maintenance
-anvil-cli diff                       # Show changes since last deploy
-anvil-cli uninstall                  # Remove from all targets
+anvil diff                       # Show changes since last deploy
+anvil uninstall                  # Remove from all targets
 ```
 
 ## Configuration

@@ -21,28 +21,26 @@ Para una guia completa de como usar Anvil en el dia a dia — invocar skills, us
 git clone https://github.com/ernesto2108/anvil.git ~/projects/anvil
 cd ~/projects/anvil
 
-# 2. Hacer el CLI disponible globalmente (elige uno)
-# Opcion A: symlink (recomendado)
-ln -sf ~/projects/anvil/anvil-cli /usr/local/bin/anvil
+# 2. Compilar el CLI (requiere Go 1.25+)
+make build
 
-# Opcion B: alias en tu perfil de shell (~/.zshrc o ~/.bashrc)
-echo 'alias anvil="~/projects/anvil/anvil-cli"' >> ~/.zshrc
-source ~/.zshrc
+# 3. Hacerlo disponible globalmente (opcional)
+ln -sf ~/projects/anvil/anvil /usr/local/bin/anvil
 
-# 3. Elegir targets (a que herramientas desplegar)
+# 4. Elegir targets (a que herramientas desplegar)
 anvil targets claude opencode    # o: all
 
-# 4. Elegir provider (mapeo de modelos)
+# 5. Elegir provider (mapeo de modelos)
 anvil provider claude            # o: gemini, local
 
-# 5. Desplegar
+# 6. Desplegar
 anvil deploy
 
-# 6. Verificar
+# 7. Verificar
 anvil status
 ```
 
-> Despues del paso 2, puedes ejecutar `anvil` desde cualquier lugar. Si lo omites, usa `./anvil-cli` desde el directorio de anvil.
+> Despues del paso 3, puedes ejecutar `anvil` desde cualquier lugar. Si lo omites, usa `./anvil` desde el directorio de anvil.
 
 ## Como Funciona
 
@@ -81,7 +79,8 @@ Cada agente tiene limites estrictos:
 
 ```
 anvil/
-├── anvil-cli              # CLI de despliegue (bash)
+├── cmd/anvil/             # CLI de despliegue (Go)
+├── internal/              # Paquetes core (config, deploy, state, etc.)
 ├── anvil.yaml             # Manifiesto de despliegue (targets, componentes)
 ├── anvil.config.yaml      # Mapeo de proveedores y modelos
 ├── AGENTS.md              # Auto-generado — estandar abierto para herramientas IA
@@ -189,28 +188,28 @@ Las skills son modulos de conocimiento que se cargan bajo demanda segun la tarea
 
 ```bash
 # Despliegue
-anvil-cli deploy                     # Desplegar todos los componentes a targets activos
-anvil-cli status                     # Mostrar que esta desplegado donde
+anvil deploy                     # Desplegar todos los componentes a targets activos
+anvil status                     # Mostrar que esta desplegado donde
 
 # Targets (a que herramientas desplegar)
-anvil-cli targets                    # Mostrar targets activos
-anvil-cli targets claude opencode    # Definir targets exactos
-anvil-cli targets --add gemini       # Habilitar un target
-anvil-cli targets --rm cursor        # Deshabilitar un target
-anvil-cli targets all                # Habilitar todos
+anvil targets                    # Mostrar targets activos
+anvil targets claude opencode    # Definir targets exactos
+anvil targets --add gemini       # Habilitar un target
+anvil targets --rm cursor        # Deshabilitar un target
+anvil targets all                # Habilitar todos
 
 # Provider (mapeo de modelos)
-anvil-cli provider                   # Mostrar provider actual
-anvil-cli provider gemini            # Cambiar a modelos Gemini
-anvil-cli provider local             # Cambiar a modelos locales/Ollama
+anvil provider                   # Mostrar provider actual
+anvil provider gemini            # Cambiar a modelos Gemini
+anvil provider local             # Cambiar a modelos locales/Ollama
 
 # Versionado
-anvil-cli pin skills/go-conventions v1.2.0    # Fijar a un git tag
-anvil-cli unpin skills/go-conventions         # Volver a seguir HEAD
+anvil pin skills/go-conventions v1.2.0    # Fijar a un git tag
+anvil unpin skills/go-conventions         # Volver a seguir HEAD
 
 # Mantenimiento
-anvil-cli diff                       # Mostrar cambios desde ultimo deploy
-anvil-cli uninstall                  # Remover de todos los targets
+anvil diff                       # Mostrar cambios desde ultimo deploy
+anvil uninstall                  # Remover de todos los targets
 ```
 
 ## Configuracion
@@ -381,7 +380,7 @@ Ver [seccion completa en el manual](docs/manual.es.md#8-backup-y-restauracion).
 
 ```bash
 # El deploy lo genera automaticamente, pero tambien puedes:
-./anvil-cli deploy    # Genera AGENTS.md + despliega todo
+./anvil deploy    # Genera AGENTS.md + despliega todo
 ```
 
 ## Licencia
