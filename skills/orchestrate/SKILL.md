@@ -28,6 +28,8 @@ Before launching any agent, classify the task and select the pipeline:
 | Docs only | **Trivial** | tech-writer |
 | Architecture docs | **Medium** | → `/document-service` (dedicated skill) |
 | Refactor | **Complex** | architect → developer → tester → qa |
+| LinkedIn post / social content | **Medium** | mkt-content |
+| Content campaign / series | **Complex** | pm → mkt-content |
 | Unclear scope | — | pm first — always |
 
 **Triage modifiers — add agents when:**
@@ -36,6 +38,7 @@ Before launching any agent, classify the task and select the pipeline:
 - Touches infra/CI → add devops
 - Touches auth or sensitive data → add security
 - context.md missing or stale → add scanner at start
+- Marketing content → add mkt-content
 - Two different stacks → see `docs/parallel-dev-phase.md`
 - Complex/Maximum → add reporter at end
 
@@ -125,6 +128,7 @@ This inherits the full detection and response protocol from the global instructi
 | security | no auth, no sensitive data, no external APIs |
 | reporter | trivial or medium tasks |
 | tester | no testable code (docs, config, infra) |
+| mkt-content | no marketing content needed |
 
 **What you NEVER skip:**
 - developer (if there's code to write)
@@ -234,6 +238,7 @@ Each agent receives ONLY what it needs:
 | qa | prd.md content, design.md content, git diff | conversation history |
 | security | git diff, dependency paths | requirements, design |
 | reporter | TASK-ID, git diff summary | minimal context |
+| mkt-content | project/brand context, discovery answers, target audience, visual identity | code, architecture, DB, PRDs |
 
 **During Design Execution GATE:**
 1. Load `/design-recipes` skill
