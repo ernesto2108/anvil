@@ -1,0 +1,59 @@
+# anvil.config.yaml - Provider, model & permission configuration
+# Agents define tiers (high/medium/low) and permissions (read/write/execute).
+# This file resolves both to actual values per tool at deploy time.
+#
+# Usage:
+#   anvil provider              # show current
+#   anvil provider gemini       # switch + redeploy agents
+#   anvil deploy                # full deploy with current provider
+
+# Active provider
+provider: claude
+
+# Tier to model mapping per provider
+providers:
+  claude:
+    high: opus
+    medium: sonnet
+    low: haiku
+  opencode:
+    high: claude-sonnet-4-20250514
+    medium: claude-sonnet-4-20250514
+    low: claude-haiku-4-5-20251001
+  codex:
+    high: o4-mini
+    medium: o4-mini
+    low: o4-mini
+  cursor:
+    high: claude-sonnet-4-20250514
+    medium: claude-sonnet-4-20250514
+    low: claude-haiku-4-5-20251001
+  gemini:
+    high: gemini-2.5-pro
+    medium: gemini-2.5-flash
+    low: gemini-2.5-flash-lite
+  local:
+    high: qwen3:32b
+    medium: qwen3:14b
+    low: qwen3:8b
+
+# Permission to tool names per tool
+# Agents define permission: read | write | execute
+# Deploy resolves to the actual tool names each platform uses
+permissions:
+  claude:
+    read: Glob, Grep, LS, Read
+    write: Glob, Grep, LS, Read, Write, Edit
+    execute: Glob, Grep, LS, Read, Write, Edit, Bash
+  opencode:
+    read: read
+    write: write
+    execute: execute
+  gemini:
+    read: read_file, list_directory, search_files
+    write: read_file, list_directory, search_files, write_file, edit_file
+    execute: read_file, list_directory, search_files, write_file, edit_file, run_shell_command
+  cursor:
+    read: read_file, list_dir, grep_search, file_search
+    write: read_file, list_dir, grep_search, file_search, edit_file, create_file
+    execute: read_file, list_dir, grep_search, file_search, edit_file, create_file, run_terminal_command

@@ -1,0 +1,141 @@
+# Service Map Template
+# Copy this file to: .workspace/context/service-map.yaml
+# Fill in your actual services, endpoints, and dependencies.
+#
+# This file is SHARED (committed to git). It documents the architecture
+# and dependencies that the whole team needs to know.
+#
+# Local paths (where repos live on YOUR machine) go in:
+#   .workspace/context/service-map.local.yaml  ← git-ignored, per-developer
+#
+# Rules:
+# - Each endpoint/table/event must have exactly ONE owner
+# - List ALL consumers, even if it's just one
+# - Keep this file updated when adding new endpoints or dependencies
+# - Mark deprecated resources with status: deprecated
+
+# ─── Services ───────────────────────────────────────────────────────
+
+services:
+
+  # Example service — replace with your actual services
+  user-service:
+    description: "User management and authentication"
+    repo: "github.com/org/user-service"     # optional: link to repo
+    local_path: user-service                # relative to projects_root (or absolute)
+    stack: go                                # go | react | flutter | node
+    port: 8081
+    base_path: /api/v1
+
+    # Endpoints this service EXPOSES (owns)
+    endpoints:
+      GET /users/{id}:
+        description: "Get user by ID"
+        response_fields: [id, email, name, created_at]
+        consumed_by: [order-service, notification-service]
+
+      PUT /users/{id}:
+        description: "Update user profile"
+        request_fields: [name, email, phone]
+        consumed_by: [admin-panel]
+
+      POST /users:
+        description: "Register new user"
+        request_fields: [email, password, name]
+        consumed_by: [admin-panel, mobile-app]
+
+    # Tables this service OWNS (is the primary writer)
+    owns_tables: [users, user_preferences, user_sessions]
+
+    # Tables this service READS from (owned by other services)
+    reads_tables: []
+
+    # Services this service calls (outbound HTTP/gRPC)
+    depends_on: []
+
+    # Events this service PUBLISHES
+    publishes:
+      - topic: user.created
+        payload: [user_id, email, name]
+        consumed_by: [notification-service]
+      - topic: user.updated
+        payload: [user_id, changed_fields]
+        consumed_by: [notification-service, order-service]
+
+    # Events this service SUBSCRIBES to
+    subscribes_to: []
+
+  # Another example service
+  order-service:
+    description: "Order processing and management"
+    repo: "github.com/org/order-service"
+    local_path: order-service                # relative to projects_root
+    stack: go
+    port: 8082
+    base_path: /api/v1
+
+    endpoints:
+      GET /orders/{id}:
+        description: "Get order details"
+        response_fields: [id, user_id, items, total, status]
+        consumed_by: [admin-panel, mobile-app]
+
+      POST /orders:
+        description: "Create new order"
+        request_fields: [user_id, items]
+        consumed_by: [mobile-app]
+
+    owns_tables: [orders, order_items]
+    reads_tables: [users]       # ⚠️ reads directly — consider using API instead
+
+    depends_on:
+      - service: user-service
+        endpoints: [GET /users/{id}]
+        reason: "Fetch user data for order confirmation"
+
+    publishes:
+      - topic: order.created
+        payload: [order_id, user_id, total]
+        consumed_by: [notification-service, billing-service]
+
+    subscribes_to:
+      - topic: user.updated
+        from: user-service
+        reason: "Update cached user data in orders"
+
+# ─── Shared Database ───────────────────────────────────────────────
+# Document tables that multiple services access directly.
+# Goal: migrate toward single-owner tables over time.
+
+shared_database:
+  name: main_db
+  tables:
+    users:
+      owner: user-service           # only this service should WRITE
+      readers: [order-service]      # ⚠️ services reading directly
+      columns: [id, email, name, phone, created_at, updated_at]
+      migration_risk: high          # many consumers = high risk
+
+    orders:
+      owner: order-service
+      readers: []
+      columns: [id, user_id, status, total, created_at]
+      migration_risk: low
+
+# ─── Shared Contracts ──────────────────────────────────────────────
+# Types, protos, or specs shared across services
+
+shared_contracts:
+  # Example: shared proto or OpenAPI spec
+  # - name: user-types
+  #   type: proto          # proto | openapi | typescript | go-module
+  #   path: shared/protos/user.proto
+  #   used_by: [user-service, order-service]
+
+# ─── Environment & Config ─────────────────────────────────────────
+# Shared env vars or configs that multiple services depend on
+
+shared_config:
+  # - name: DATABASE_URL
+  #   used_by: [user-service, order-service]
+  #   note: "All services share the same DB connection string"

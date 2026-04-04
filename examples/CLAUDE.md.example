@@ -1,0 +1,65 @@
+# Global Engineering Standards
+
+Project-specific context lives in each project's `CLAUDE.md`. Documentation lives in the project's Obsidian vault.
+
+## Documentation vault
+
+Each project has an Obsidian vault with this structure:
+
+```
+<vault>/
+├── 01-project/context.md          # Scanner output — technical snapshot
+├── 02-backlog/sprint-current.md   # Sprint backlog (Kanban)
+├── 03-tasks/<TASK-ID>/            # prd.md, design.md, ui-spec.md, qa-review.md, security-audit.md
+├── 04-architecture/               # ADRs, bounded contexts
+├── 05-bugs/                       # Postmortems
+├── 06-reports/last-run.md         # Reporter summary (overwritten each run)
+└── 07-references/                 # Templates, external links
+```
+
+**Always read `<vault>/01-project/context.md` before starting any task.**
+**Always check `<vault>/02-backlog/sprint-current.md` before proposing new work.**
+**Before modifying endpoints, DB schemas, events, or shared contracts** — check if `<vault>/04-architecture/service-map.yaml` exists. If it does, consult it for cross-service dependencies and report impact before making changes. If uncertain about what an endpoint does or who consumes it, ask the user.
+
+## Agent orchestration
+
+For any non-trivial task, invoke `/orchestrate`. It triages complexity and runs only the agents needed:
+- **Trivial** (1-2 files, clear fix): execute directly, no agents, no `/orchestrate`
+- **Medium+**: `/orchestrate` handles triage, pipeline selection, gates, and context passing
+
+See the `orchestrate` skill for full triage rules, agent skip rules, and routing tables.
+
+**Token optimization rules:**
+- Work direct when files are already in conversation context — don't spawn agents to re-read them
+- Inject file contents into agent prompts instead of letting agents re-read
+- Skip scanner if `context.md` was updated in the same session
+
+## Problem-solving discipline
+
+- If an approach fails after 2 attempts, stop and try a different strategy
+- If the new strategy also fails, ask the user before continuing
+- Never loop on the same error — diagnose root cause first
+- When stuck, explain where you are and what you've tried instead of burning tokens
+
+## Development principles
+
+- simplicity over cleverness
+- small, focused changes — one concern per commit
+- explicit errors, no magic
+- testability first
+- avoid global state
+- prefer composition
+- no unnecessary abstractions
+- read before writing — always
+
+## Go critical rules (apply when working with .go files)
+
+1. **Validation in entity, not service** — input structs must have `Validate()`. Services call `req.Validate()`, never `strings.TrimSpace` + `== ""` checks in service methods
+2. **HTTP params via dto constants** — `g.Param(dto.ParamXxx)` / `g.Query(dto.QueryXxx)`, never inline strings. Path param validation (TrimSpace + empty check) belongs in the handler, not the application layer
+3. **Always use Context** — `QueryContext`, `ExecContext`, `NewRequestWithContext`. Never `db.Query()`, `http.Get()`, or `http.DefaultClient` without timeout
+4. **Always defer Close after error check** — `defer rows.Close()`, `defer resp.Body.Close()`, `defer cancel()`. Check error first, then defer. Never defer in loops
+5. **Wrap errors with context** — `fmt.Errorf("operation: %w", err)`. Never bare `return err`
+6. **fmt.Sprintf for dynamic error messages** — `errors.WithMessage(fmt.Sprintf("msg: %s", v))`. Never string concatenation with `+`
+7. **Parameterized SQL only** — always `$1, $2`. Never `fmt.Sprintf` with user input in queries
+
+For full conventions, patterns, and anti-pattern detection tables, invoke `/go-conventions`.

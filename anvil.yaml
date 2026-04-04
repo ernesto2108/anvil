@@ -1,0 +1,74 @@
+# Anvil - Deployment Manifest
+# Deploys agents, skills, and commands to multiple AI coding tools.
+#
+# sync_mode:
+#   - "symlink" (default): target/{component} -> repo. Edits go directly to repo.
+#   - "copy": copies files. Used for agents (tier resolution) and pinned components.
+#
+# Component tags:
+#   - "HEAD"    -> follows current branch
+#   - "v1.0.0"  -> pinned to git tag (copy)
+#   - "abc1234"  -> pinned to commit SHA (copy)
+
+# Deploy targets - one per tool. Set enabled: false to skip.
+targets:
+  claude:
+    enabled: true
+    path: ~/.claude
+  opencode:
+    enabled: true
+    path: ~/.config/opencode
+  gemini:
+    enabled: true
+    path: ~/.gemini
+  codex:
+    enabled: true
+    path: ~/.codex
+  cursor:
+    enabled: false
+
+# Cursor deploys to specific project directories (not global).
+# Uncomment and add your projects:
+# cursor_projects:
+#   - ~/projects/my-app
+#   - ~/projects/other-app
+
+# Components managed by anvil
+components:
+  agents:
+    tag: "HEAD"
+  skills:
+    tag: "HEAD"
+  commands:
+    tag: "HEAD"
+
+# Files synced individually
+files:
+  CLAUDE.md:
+    tag: "HEAD"
+
+# Local-only paths - NEVER synced, NEVER touched
+# These stay in each tool's config and are not managed by anvil
+ignore:
+  - settings.json
+  - settings.local.json
+  - history.jsonl
+  - sessions/
+  - projects/
+  - plugins/
+  - session-env/
+  - shell-snapshots/
+  - cache/
+  - debug/
+  - downloads/
+  - file-history/
+  - paste-cache/
+  - plans/
+  - ide/
+  - backups/
+  - hooks/
+  - stats-cache.json
+  - mcp-needs-auth-cache.json
+  - project-registry.md
+  - .workspace/
+  - .claude/
