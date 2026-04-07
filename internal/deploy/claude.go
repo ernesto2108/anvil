@@ -4,10 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ernesto2108/anvil/internal/config"
-	"github.com/ernesto2108/anvil/internal/fileutil"
-	"github.com/ernesto2108/anvil/internal/frontmatter"
-	"github.com/ernesto2108/anvil/internal/output"
+	"github.com/ernesto2108/anvil/pkg/config"
+	"github.com/ernesto2108/anvil/pkg/fileutil"
+	"github.com/ernesto2108/anvil/pkg/frontmatter"
+	"github.com/ernesto2108/anvil/pkg/output"
 )
 
 func Claude(cfg *config.App, paths TargetPaths) {
@@ -26,7 +26,7 @@ func deployClaudeAgents(cfg *config.App, target string) {
 		return
 	}
 
-	agentDst := filepath.Join(target, "agents")
+	agentDst := filepath.Join(target, config.CompAgents)
 	fileutil.CleanPath(agentDst)
 	os.MkdirAll(agentDst, 0o755)
 
@@ -43,16 +43,16 @@ func deployClaudeAgents(cfg *config.App, target string) {
 		perm := frontmatter.Get(content, "permission")
 
 		resolved := tier
-		if tier == "high" || tier == "medium" || tier == "low" {
-			model, err := cfg.ResolveTier(tier, "claude")
+		if config.IsTier(tier) {
+			model, err := cfg.ResolveTier(tier, config.TargetClaude)
 			if err == nil {
 				resolved = model
 				content = frontmatter.ReplaceField(content, "model", tier, resolved)
 			}
 		}
 
-		if perm == "read" || perm == "write" || perm == "execute" {
-			tools := cfg.ResolvePermission(perm, "claude")
+		if config.IsPerm(perm) {
+			tools := cfg.ResolvePermission(perm, config.TargetClaude)
 			if tools != "" {
 				content = frontmatter.ReplaceField(content, "permission", perm, tools)
 				// Rename the key from permission to tools
@@ -69,7 +69,7 @@ func deployClaudeAgents(cfg *config.App, target string) {
 		output.Info("  agents/%s  %s->%s  %s->tools", name, tier, output.Green(resolved), perm)
 		count++
 	}
-	output.Info("  %d agents (provider: %s)", count, output.Green("claude"))
+	output.Info("  %d agents (provider: %s)", count, output.Green(config.TargetClaude))
 }
 
 func replaceKey(content, oldKey, newKey string) string {
@@ -114,15 +114,15 @@ func joinLines(lines []string) string {
 }
 
 func deployClaudeMD(cfg *config.App, target string) {
-	src := filepath.Join(cfg.RepoDir, "CLAUDE.md")
+	src := filepath.Join(cfg.RepoDir, config.FileClaudeMD)
 	if !fileutil.Exists(src) {
 		return
 	}
-	if err := fileutil.ForceSymlink(src, filepath.Join(target, "CLAUDE.md")); err != nil {
-		output.Error("symlink CLAUDE.md: %s", err)
+	if err := fileutil.ForceSymlink(src, filepath.Join(target, config.FileClaudeMD)); err != nil {
+		output.Error("symlink %s: %s", config.FileClaudeMD, err)
 		return
 	}
-	output.Info("  CLAUDE.md -> symlink")
+	output.Info("  %s -> symlink", config.FileClaudeMD)
 }
 
 func ClaudeAgentsOnly(cfg *config.App, paths TargetPaths) {

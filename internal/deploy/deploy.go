@@ -4,9 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ernesto2108/anvil/internal/config"
-	"github.com/ernesto2108/anvil/internal/fileutil"
-	"github.com/ernesto2108/anvil/internal/output"
+	"github.com/ernesto2108/anvil/pkg/config"
+	"github.com/ernesto2108/anvil/pkg/fileutil"
+	"github.com/ernesto2108/anvil/pkg/output"
 )
 
 type TargetPaths struct {
@@ -95,31 +95,31 @@ func RestoreItem(current, snapshot string) {
 }
 
 func DeploySkillsSymlink(repoDir, targetDir string) {
-	skillsSrc := filepath.Join(repoDir, "skills")
+	skillsSrc := filepath.Join(repoDir, config.CompSkills)
 	if !fileutil.IsDir(skillsSrc) {
 		return
 	}
-	if err := fileutil.ForceSymlink(skillsSrc, filepath.Join(targetDir, "skills")); err != nil {
-		output.Error("symlink skills: %s", err)
+	if err := fileutil.ForceSymlink(skillsSrc, filepath.Join(targetDir, config.CompSkills)); err != nil {
+		output.Error("symlink %s: %s", config.CompSkills, err)
 		return
 	}
-	output.Info("  skills -> symlink")
+	output.Info("  %s -> symlink", config.CompSkills)
 }
 
 func DeployCommandsSymlink(repoDir, targetDir string) {
-	cmdSrc := filepath.Join(repoDir, "commands")
+	cmdSrc := filepath.Join(repoDir, config.CompCommands)
 	if !fileutil.IsDir(cmdSrc) {
 		return
 	}
-	if err := fileutil.ForceSymlink(cmdSrc, filepath.Join(targetDir, "commands")); err != nil {
-		output.Error("symlink commands: %s", err)
+	if err := fileutil.ForceSymlink(cmdSrc, filepath.Join(targetDir, config.CompCommands)); err != nil {
+		output.Error("symlink %s: %s", config.CompCommands, err)
 		return
 	}
-	output.Info("  commands -> symlink")
+	output.Info("  %s -> symlink", config.CompCommands)
 }
 
 func AgentFiles(repoDir string) []string {
-	agentDir := filepath.Join(repoDir, "agents")
+	agentDir := filepath.Join(repoDir, config.CompAgents)
 	entries, err := os.ReadDir(agentDir)
 	if err != nil {
 		return nil

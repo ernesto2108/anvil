@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ernesto2108/anvil/internal/fileutil"
+	"github.com/ernesto2108/anvil/pkg/fileutil"
 )
 
 func Test_CleanPath(t *testing.T) {

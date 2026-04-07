@@ -3,7 +3,7 @@ package frontmatter_test
 import (
 	"testing"
 
-	"github.com/ernesto2108/anvil/internal/frontmatter"
+	"github.com/ernesto2108/anvil/pkg/frontmatter"
 )
 
 func Test_Parse(t *testing.T) {

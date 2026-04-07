@@ -39,9 +39,9 @@ func Load(stateDir string) (*State, error) {
 
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		s.DeployedVersion = "none"
-		s.PreviousVersion = "none"
-		s.DeployedAt = "never"
+		s.DeployedVersion = StateNone
+		s.PreviousVersion = StateNone
+		s.DeployedAt = StateNever
 		s.Targets = make(map[string]TargetState)
 		return s, s.Save()
 	}
@@ -99,7 +99,7 @@ func (s *State) RecordDeploy(version, sha, branch, provider string, targets []st
 
 	s.Targets = make(map[string]TargetState)
 	for _, t := range targets {
-		s.Targets[t] = TargetState{Status: "deployed"}
+		s.Targets[t] = TargetState{Status: StatusDeployed}
 	}
 }
 

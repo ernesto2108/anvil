@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ernesto2108/anvil/internal/config"
-	"github.com/ernesto2108/anvil/internal/fileutil"
-	"github.com/ernesto2108/anvil/internal/frontmatter"
-	"github.com/ernesto2108/anvil/internal/output"
+	"github.com/ernesto2108/anvil/pkg/config"
+	"github.com/ernesto2108/anvil/pkg/fileutil"
+	"github.com/ernesto2108/anvil/pkg/frontmatter"
+	"github.com/ernesto2108/anvil/pkg/output"
 )
 
 func Gemini(cfg *config.App, paths TargetPaths) {
@@ -43,12 +43,12 @@ func adaptCommandGemini(src, dst string) error {
 }
 
 func deployGeminiCommands(cfg *config.App, target string) {
-	cmdSrc := filepath.Join(cfg.RepoDir, "commands")
+	cmdSrc := filepath.Join(cfg.RepoDir, config.CompCommands)
 	if !fileutil.IsDir(cmdSrc) {
 		return
 	}
 
-	cmdDst := filepath.Join(target, "commands")
+	cmdDst := filepath.Join(target, config.CompCommands)
 	fileutil.CleanPath(cmdDst)
 	os.MkdirAll(cmdDst, 0o755)
 
@@ -102,14 +102,14 @@ func deployGeminiCommands(cfg *config.App, target string) {
 }
 
 func deployGeminiMD(cfg *config.App, target string) {
-	src := filepath.Join(cfg.RepoDir, "CLAUDE.md")
+	src := filepath.Join(cfg.RepoDir, config.FileClaudeMD)
 	if !fileutil.Exists(src) {
 		return
 	}
-	dst := filepath.Join(target, "GEMINI.md")
+	dst := filepath.Join(target, config.FileGeminiMD)
 	if err := fileutil.CopyFile(src, dst); err != nil {
-		output.Error("copy GEMINI.md: %s", err)
+		output.Error("copy %s: %s", config.FileGeminiMD, err)
 		return
 	}
-	output.Info("  GEMINI.md -> copied from CLAUDE.md")
+	output.Info("  %s -> copied from %s", config.FileGeminiMD, config.FileClaudeMD)
 }

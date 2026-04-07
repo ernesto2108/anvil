@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ernesto2108/anvil/internal/config"
-	"github.com/ernesto2108/anvil/internal/frontmatter"
-	"github.com/ernesto2108/anvil/internal/output"
+	"github.com/ernesto2108/anvil/pkg/config"
+	"github.com/ernesto2108/anvil/pkg/frontmatter"
+	"github.com/ernesto2108/anvil/pkg/output"
 )
 
 func Codex(cfg *config.App, paths TargetPaths) {
@@ -17,8 +17,8 @@ func Codex(cfg *config.App, paths TargetPaths) {
 	os.MkdirAll(target, 0o755)
 
 	DeploySkillsSymlink(cfg.RepoDir, target)
-	generateAgentsMD(cfg, filepath.Join(target, "AGENTS.md"))
-	output.Info("  AGENTS.md -> generated from %s agents", cfg.Name)
+	generateAgentsMD(cfg, filepath.Join(target, config.FileAgentsMD))
+	output.Info("  %s -> generated from %s agents", config.FileAgentsMD, cfg.Name)
 }
 
 func generateAgentsMD(cfg *config.App, outputPath string) {

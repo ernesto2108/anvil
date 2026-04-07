@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ernesto2108/anvil/internal/config"
-	"github.com/ernesto2108/anvil/internal/fileutil"
-	"github.com/ernesto2108/anvil/internal/frontmatter"
-	"github.com/ernesto2108/anvil/internal/output"
+	"github.com/ernesto2108/anvil/pkg/config"
+	"github.com/ernesto2108/anvil/pkg/fileutil"
+	"github.com/ernesto2108/anvil/pkg/frontmatter"
+	"github.com/ernesto2108/anvil/pkg/output"
 )
 
 func Cursor(cfg *config.App) {
@@ -49,11 +49,11 @@ func Cursor(cfg *config.App) {
 		}
 		output.Info("  %s -> %d rules", proj, count)
 
-		claudeMD := filepath.Join(cfg.RepoDir, "CLAUDE.md")
-		agentsMD := filepath.Join(proj, "AGENTS.md")
+		claudeMD := filepath.Join(cfg.RepoDir, config.FileClaudeMD)
+		agentsMD := filepath.Join(proj, config.FileAgentsMD)
 		if fileutil.Exists(claudeMD) && !fileutil.Exists(agentsMD) {
 			fileutil.CopyFile(claudeMD, agentsMD)
-			output.Info("  %s -> AGENTS.md created", proj)
+			output.Info("  %s -> %s created", proj, config.FileAgentsMD)
 		}
 	}
 }

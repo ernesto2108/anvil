@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ernesto2108/anvil/internal/config"
+	"github.com/ernesto2108/anvil/pkg/config"
 )
 
 func setupTestRepo(t *testing.T) string {

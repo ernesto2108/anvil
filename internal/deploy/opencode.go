@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ernesto2108/anvil/internal/config"
-	"github.com/ernesto2108/anvil/internal/fileutil"
-	"github.com/ernesto2108/anvil/internal/frontmatter"
-	"github.com/ernesto2108/anvil/internal/output"
+	"github.com/ernesto2108/anvil/pkg/config"
+	"github.com/ernesto2108/anvil/pkg/fileutil"
+	"github.com/ernesto2108/anvil/pkg/frontmatter"
+	"github.com/ernesto2108/anvil/pkg/output"
 )
 
 func OpenCode(cfg *config.App, paths TargetPaths) {
@@ -26,7 +26,7 @@ func deployOpenCodeAgents(cfg *config.App, target string) {
 		return
 	}
 
-	agentDst := filepath.Join(target, "agents")
+	agentDst := filepath.Join(target, config.CompAgents)
 	fileutil.CleanPath(agentDst)
 	os.MkdirAll(agentDst, 0o755)
 
@@ -44,16 +44,16 @@ func deployOpenCodeAgents(cfg *config.App, target string) {
 		perm := doc.Fields["permission"]
 
 		resolved := tier
-		if tier == "high" || tier == "medium" || tier == "low" {
+		if config.IsTier(tier) {
 			model, err := cfg.ResolveTier(tier, cfg.ActiveProvider())
 			if err == nil {
 				resolved = model
 			}
 		}
 
-		permResolved := "write"
-		if perm == "read" || perm == "write" || perm == "execute" {
-			p := cfg.ResolvePermission(perm, "opencode")
+		permResolved := config.PermWrite
+		if config.IsPerm(perm) {
+			p := cfg.ResolvePermission(perm, config.TargetOpenCode)
 			if p != "" {
 				permResolved = p
 			}
@@ -69,12 +69,12 @@ func deployOpenCodeAgents(cfg *config.App, target string) {
 }
 
 func deployOpenCodeCommands(cfg *config.App, target string) {
-	cmdSrc := filepath.Join(cfg.RepoDir, "commands")
+	cmdSrc := filepath.Join(cfg.RepoDir, config.CompCommands)
 	if !fileutil.IsDir(cmdSrc) {
 		return
 	}
 
-	cmdDst := filepath.Join(target, "commands")
+	cmdDst := filepath.Join(target, config.CompCommands)
 	fileutil.CleanPath(cmdDst)
 
 	if err := fileutil.CopyDir(cmdSrc, cmdDst); err != nil {
@@ -91,7 +91,7 @@ func OpenCodeAgentsOnly(cfg *config.App, paths TargetPaths) {
 		return
 	}
 
-	agentDst := filepath.Join(target, "agents")
+	agentDst := filepath.Join(target, config.CompAgents)
 	fileutil.CleanPath(agentDst)
 	os.MkdirAll(agentDst, 0o755)
 
@@ -108,16 +108,16 @@ func OpenCodeAgentsOnly(cfg *config.App, paths TargetPaths) {
 		perm := doc.Fields["permission"]
 
 		resolved := tier
-		if tier == "high" || tier == "medium" || tier == "low" {
+		if config.IsTier(tier) {
 			model, err := cfg.ResolveTier(tier, cfg.ActiveProvider())
 			if err == nil {
 				resolved = model
 			}
 		}
 
-		permResolved := "write"
-		if perm == "read" || perm == "write" || perm == "execute" {
-			p := cfg.ResolvePermission(perm, "opencode")
+		permResolved := config.PermWrite
+		if config.IsPerm(perm) {
+			p := cfg.ResolvePermission(perm, config.TargetOpenCode)
 			if p != "" {
 				permResolved = p
 			}

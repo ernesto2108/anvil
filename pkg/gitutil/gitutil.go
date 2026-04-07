@@ -116,3 +116,16 @@ func (r *Repo) Archive(ref, path, destDir string) error {
 func (r *Repo) ShowFile(ref, path string) (string, error) {
 	return r.run("show", ref+":"+path)
 }
+
+func (r *Repo) Pull() error {
+	_, err := r.run("pull", "--ff-only")
+	return err
+}
+
+func (r *Repo) IsDirty() bool {
+	out, err := r.run("status", "--porcelain")
+	if err != nil {
+		return false
+	}
+	return out != ""
+}

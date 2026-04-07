@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ernesto2108/anvil/internal/state"
+	"github.com/ernesto2108/anvil/pkg/state"
 )
 
 func Test_Load_creates_default(t *testing.T) {

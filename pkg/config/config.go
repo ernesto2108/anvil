@@ -97,7 +97,7 @@ func (a *App) TargetEnabled(name string) bool {
 }
 
 func (a *App) AllTargets() []string {
-	return []string{"claude", "opencode", "gemini", "codex", "cursor"}
+	return []string{TargetClaude, TargetOpenCode, TargetGemini, TargetCodex, TargetCursor}
 }
 
 func (a *App) ActiveProvider() string {
@@ -122,11 +122,11 @@ func (a *App) ResolveTier(tier, provider string) (string, error) {
 	}
 
 	switch tier {
-	case "high":
+	case TierHigh:
 		return tm.High, nil
-	case "medium":
+	case TierMedium:
 		return tm.Medium, nil
-	case "low":
+	case TierLow:
 		return tm.Low, nil
 	default:
 		return tier, nil
@@ -139,11 +139,11 @@ func (a *App) ResolvePermission(perm, tool string) string {
 		return ""
 	}
 	switch perm {
-	case "read":
+	case PermRead:
 		return pm.Read
-	case "write":
+	case PermWrite:
 		return pm.Write
-	case "execute":
+	case PermExecute:
 		return pm.Execute
 	default:
 		return ""
