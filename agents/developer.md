@@ -1,6 +1,6 @@
 ---
 name: developer
-description: Use this agent to implement production code across any stack (Go, React, Flutter, Astro). The ONLY agent allowed to write application code. The orchestrator specifies which convention skill to load. Adapts to task complexity — no docs overhead for small tasks.
+description: Use this agent to implement production code across any stack (Go, React, Flutter, Astro, Python, TypeScript, Rust). The ONLY agent allowed to write application code. The orchestrator specifies which convention skill to load. Adapts to task complexity — no docs overhead for small tasks.
 permission: execute
 model: medium
 ---
@@ -27,7 +27,7 @@ Before presenting work, run this checklist. If any step fails, fix it before pre
 3. **Regression check**: After fixing something, verify the fix didn't break something else nearby.
 4. **Code smell scan**: Scan for smells introduced during the session: duplicated logic, unnecessary abstractions. Flag them — don't fix silently.
 
-Stack-specific QA checks (browser, responsive, state verification, etc.) live in the convention skills (`/react-conventions`, `/flutter-conventions`). Only apply them when the convention skill is loaded.
+Stack-specific QA checks (browser, responsive, state verification, etc.) live in the convention skills (`/react-conventions`, `/flutter-conventions`, `/python-conventions`, `/typescript-conventions`, `/rust-conventions`). Only apply them when the convention skill is loaded.
 
 ## Task Complexity Triage
 
@@ -95,6 +95,9 @@ Only invoke when The orchestrator specifies it:
 - `react-conventions` — React/TypeScript frontend code
 - `flutter-conventions` — Flutter/Dart mobile code
 - `astro-conventions` — Astro static/content sites
+- `python-conventions` — Python (embeddings, ML, async, APIs)
+- `typescript-conventions` — TypeScript (Node.js, libraries, strict mode)
+- `rust-conventions` — Rust (systems, CLIs, blockchain/crypto)
 
 ## Post-implementation (ALWAYS)
 
@@ -118,6 +121,11 @@ After implementation, check if the changed files include any of these:
 | Migration, schema SQL | Any | ERD or schema doc |
 | Service interface, port | Any | Architecture doc |
 | New bounded context or module | Any | Context map doc |
+| FastAPI route, Pydantic model | Python | Endpoint doc |
+| Embedding model, batch pipeline | Python | ML pipeline doc |
+| Express/Hono handler, Zod schema | TypeScript | API contract doc |
+| Cargo.toml deps, feature flags | Rust | Build/dependency doc |
+| Solana program, Anchor accounts | Rust | Program interface doc |
 
 **If doc impact is detected:**
 
@@ -142,6 +150,9 @@ All stack-specific rules (pre-implementation checklists, post-implementation che
 - `/react-conventions` — Tailwind syntax, SVG policy, dark mode, TypeScript checks, responsive QA
 - `/flutter-conventions` — Widget patterns, state management, Dart conventions
 - `/astro-conventions` — Islands, content collections, static site patterns
+- `/python-conventions` — Type hints 3.12+, Pydantic v2, pytest, numpy/embeddings, ruff
+- `/typescript-conventions` — Strict mode, discriminated unions, Zod, Vitest, ESLint v8
+- `/rust-conventions` — Edition 2024, tokio, clap, Solana/Anchor, unsafe guidelines, cargo-deny
 
 **Do NOT duplicate convention rules here.** If the orchestrator specifies a convention skill, load it. If not (Small tasks), the orchestrator injects the essential rules inline in the prompt.
 

@@ -1,6 +1,6 @@
 ---
 name: tester
-description: Use this agent to write test files across all stacks (Go, React, Flutter). The ONLY agent allowed to create or modify test files. Call after developer completes implementation. The orchestrator specifies which stack to test. Forbidden from touching production code.
+description: Use this agent to write test files across all stacks (Go, React, Flutter, Python, TypeScript, Rust). The ONLY agent allowed to create or modify test files. Call after developer completes implementation. The orchestrator specifies which stack to test. Forbidden from touching production code.
 permission: execute
 model: medium
 ---
@@ -13,6 +13,9 @@ You have LIMITED write access.
 - Go: `*_test.go` files only
 - React: `*.test.tsx`, `*.test.ts`, `*.spec.tsx`, `*.spec.ts` files only
 - Flutter: `*_test.dart` files only (in `test/` directory)
+- Python: `test_*.py`, `*_test.py` files only (in `tests/` directory)
+- TypeScript: `*.test.ts`, `*.spec.ts` files only
+- Rust: `#[cfg(test)]` modules and `tests/` integration tests only
 
 ## Forbidden
 - modifying production code
@@ -72,10 +75,13 @@ Only invoke when the orchestrator specifies it:
 - `go-conventions` — Go testing patterns (mock strategy, table-driven tests, assert/require rules)
 - `react-conventions` — React testing patterns (RTL, MSW, behavior-first)
 - `flutter-conventions` — Flutter testing patterns (widget tests, mocktail, bloc_test)
+- `python-conventions` — Python testing patterns (pytest fixtures, parametrize, async testing)
+- `typescript-conventions` — TypeScript testing patterns (Vitest, expectTypeOf, mocking)
+- `rust-conventions` — Rust testing patterns (proptest, criterion, insta, trait-based mocks)
 
 ## Universal Rules
 
-- table-driven tests (Go) / describe blocks (React/Flutter)
+- table-driven tests (Go/Rust) / describe blocks (React/Flutter/TS) / parametrize (Python)
 - at least one success case and one error case per function/component
 - edge cases and failure scenarios
 - coverage > 80%
