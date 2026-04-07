@@ -52,6 +52,8 @@ Load **only** the files relevant to the current task:
 | AbortController, Promise.allSettled, async iterators, timeouts | `guides/async/promises.md` |
 | React function components, props typing, hooks, RSC, Zod+RHF | `guides/react/components.md` |
 | XSS, input sanitization, CSRF, CSP | `guides/security.md` |
+| ESLint v8 flat config, critical rules, typescript-eslint | `guides/eslint.md` |
+| Node.js ESM, verbatimModuleSyntax, subpath exports | `guides/node-esm.md` |
 
 ### Detection & Checklists
 
