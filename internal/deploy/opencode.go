@@ -13,26 +13,33 @@ import (
 
 func OpenCode(cfg *config.App, paths TargetPaths) {
 	target := paths.OpenCode
-	output.Info("%s -> %s", output.Bold("OpenCode"), target)
+	ts := AddTarget("OpenCode")
 
-	deployOpenCodeAgents(cfg, target)
-	output.Info("  skills -> using Claude Code path (default)")
-	deployOpenCodeCommands(cfg, target)
+	deployOpenCodeAgents(cfg, target, ts)
+	ts.Extras = append(ts.Extras, "Skills -> Claude Code path")
+	deployOpenCodeCommands(cfg, target, ts)
 }
 
-func deployOpenCodeAgents(cfg *config.App, target string) {
-	files := AgentFiles(cfg.RepoDir)
+func deployOpenCodeAgents(cfg *config.App, target string, ts *TargetStats) {
+	files := FilteredAgentFiles(cfg)
 	if len(files) == 0 {
 		return
 	}
 
 	agentDst := filepath.Join(target, config.CompAgents)
-	fileutil.CleanPath(agentDst)
 	os.MkdirAll(agentDst, 0o755)
 
-	count := 0
+	result := ResolveCollisions(files, agentDst, stdinReader)
+	CleanManagedFiles(agentDst)
+	skip, _, renames := ApplyResolutions(result.Resolutions)
+
 	for _, f := range files {
 		name := filepath.Base(f)
+		if !ShouldDeployFile(name, skip) {
+			ts.Agents.Preserved++
+			continue
+		}
+
 		data, err := os.ReadFile(f)
 		if err != nil {
 			continue
@@ -59,16 +66,15 @@ func deployOpenCodeAgents(cfg *config.App, target string) {
 			}
 		}
 
-		adapted := fmt.Sprintf("---\ndescription: %s\nmode: subagent\nmodel: %s\npermission: %s\n---\n\n%s", desc, resolved, permResolved, doc.Body)
+		deployName := GetDeployName(name, renames)
+		adapted := fmt.Sprintf("---\ndescription: %s\nmanaged-by: anvil\nmode: subagent\nmodel: %s\npermission: %s\n---\n\n%s", desc, resolved, permResolved, doc.Body)
 
-		dstPath := filepath.Join(agentDst, name)
-		os.WriteFile(dstPath, []byte(adapted), 0o644)
-		count++
+		os.WriteFile(filepath.Join(agentDst, deployName), []byte(adapted), 0o644)
+		ts.Agents.Deployed++
 	}
-	output.Info("  %d agents adapted", count)
 }
 
-func deployOpenCodeCommands(cfg *config.App, target string) {
+func deployOpenCodeCommands(cfg *config.App, target string, ts *TargetStats) {
 	cmdSrc := filepath.Join(cfg.RepoDir, config.CompCommands)
 	if !fileutil.IsDir(cmdSrc) {
 		return
@@ -81,22 +87,34 @@ func deployOpenCodeCommands(cfg *config.App, target string) {
 		output.Error("copy commands: %s", err)
 		return
 	}
-	output.Info("  commands -> copied")
+
+	entries, _ := os.ReadDir(cmdDst)
+	ts.Commands.Deployed = len(entries)
 }
 
 func OpenCodeAgentsOnly(cfg *config.App, paths TargetPaths) {
 	target := paths.OpenCode
-	files := AgentFiles(cfg.RepoDir)
+	ts := AddTarget("OpenCode (agents only)")
+
+	files := FilteredAgentFiles(cfg)
 	if len(files) == 0 {
 		return
 	}
 
 	agentDst := filepath.Join(target, config.CompAgents)
-	fileutil.CleanPath(agentDst)
 	os.MkdirAll(agentDst, 0o755)
+
+	result := ResolveCollisions(files, agentDst, stdinReader)
+	CleanManagedFiles(agentDst)
+	skip, _, renames := ApplyResolutions(result.Resolutions)
 
 	for _, f := range files {
 		name := filepath.Base(f)
+		if !ShouldDeployFile(name, skip) {
+			ts.Agents.Preserved++
+			continue
+		}
+
 		data, err := os.ReadFile(f)
 		if err != nil {
 			continue
@@ -123,8 +141,9 @@ func OpenCodeAgentsOnly(cfg *config.App, paths TargetPaths) {
 			}
 		}
 
-		adapted := fmt.Sprintf("---\ndescription: %s\nmode: subagent\nmodel: %s\npermission: %s\n---\n\n%s", desc, resolved, permResolved, doc.Body)
-		os.WriteFile(filepath.Join(agentDst, name), []byte(adapted), 0o644)
+		deployName := GetDeployName(name, renames)
+		adapted := fmt.Sprintf("---\ndescription: %s\nmanaged-by: anvil\nmode: subagent\nmodel: %s\npermission: %s\n---\n\n%s", desc, resolved, permResolved, doc.Body)
+		os.WriteFile(filepath.Join(agentDst, deployName), []byte(adapted), 0o644)
+		ts.Agents.Deployed++
 	}
-	output.Info("%s -> agents updated", output.Bold("OpenCode"))
 }

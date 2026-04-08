@@ -101,7 +101,11 @@ Load `/social-content` — covers copywriting frameworks, visual design, platfor
 - Tu producto/servicio tiene limitaciones que debas reconocer? (la honestidad construye confianza)
 - Prefieres sonar como alguien contando su experiencia o como una marca buscando clientes?
 
-**Gate:** No crear NADA hasta tener al menos **Topics 1, 2, 4 y 5** respondidos.
+#### Topic 9: Idioma del contenido
+- En que idioma quieres el post? (español, inglés, ambos/bilingüe)
+- (follow-up) Si bilingüe, cual es el principal y cual el secundario?
+
+**Gate:** No crear NADA hasta tener al menos **Topics 1, 2, 4, 5 y 9** respondidos.
 
 ### Step 2 — Research
 
@@ -136,6 +140,18 @@ Based on discovery, decide:
 | Story / personal | No image or simple photo | Let the words carry it |
 | Code / technical | 1 image with code snippet | Clean, dark background, syntax highlighted |
 
+### Step 3b — Mock / Preview (MANDATORY)
+
+Before writing the final copy or designing the visual, present a quick mock to the user for approval:
+
+1. **Copy mock** — the hook, the general structure (framework + key points), and the CTA direction. NOT the full polished text — just the skeleton so the user can say "yes, go" or "change the angle"
+2. **Visual mock** — describe in 1-2 sentences what the image will look like: visual type (statement card, split layout, etc.), dominant color, key text on the image, composition
+3. **Language confirmation** — confirm the language from Topic 9 will be used
+
+**Gate:** Do NOT proceed to Step 4 until the user approves the mock. If they request changes, adjust and re-present. This prevents wasted effort on content the user would reject.
+
+**Agent mode exception:** If the orchestrator passes `skip_mock: true`, skip this step.
+
 ### Step 4 — Write the Copy
 
 #### The Hook (80% of success)
@@ -167,70 +183,65 @@ Five patterns:
 - **Specific** — "DM me 'MENU'" or "Link in comments" > "Check it out"
 - **Platform-aware** — on LinkedIn, link goes in comments (algorithm deprioritizes links in body)
 
-### Step 5 — Design the Visual
+### Step 4b — Human Voice Check (MANDATORY)
 
-**Default: 1 image.** Only propose carousel if the content genuinely needs sequential slides (max 3-5).
+Before moving to visual design, run the Anti-AI Voice checklist from `/social-content` section 8.5 against your draft.
 
-#### The 1-Image Philosophy
+**Process:**
+1. Scan for banned words (8.1) — replace every one with a plain alternative
+2. Scan for banned structures (8.2) — rewrite any rule-of-three, "not just X but Y", copula avoidance
+3. Scan for banned tone (8.3) — kill promotional superlatives, vague authority, emotional inflation
+4. Apply human voice techniques (8.4) — contractions, irregular rhythm, specific details, plain verbs
+5. Run the self-review checklist (8.5) — every box must pass
+6. The ultimate test (8.6) — if someone could reply "nice ChatGPT post", rewrite
 
-One image should:
-- **Communicate the core idea** without reading the post
-- **Stop the scroll** through contrast, color, or boldness
-- **Be readable on mobile** (70%+ of social is mobile)
-- **Use text as design** — a powerful phrase with great typography IS the visual
+**Gate:** Do NOT proceed to Step 5 until the draft passes all checks. This is non-negotiable.
 
-#### Visual Design Principles
+### Step 5 — Design the Visual (MANDATORY)
 
-- **Color is communication** — warm colors for urgency/passion, cool for trust/calm, dark for tech/premium, bright for energy/creativity
-- **Contrast is king** — if there's no contrast, there's no hierarchy
-- **Whitespace is not empty** — it's what makes the content breathe
-- **One dominant element** — the eye needs to land somewhere first
-- **Typography is design** — a well-set phrase with the right font weight and size IS the image. You don't always need graphics
-- **Brand consistency** — use the user's colors/fonts if they have them. If not, choose deliberately and document why
+**Every post gets a visual. No exceptions.** Text-only posts get 0.7x engagement.
 
-#### Output Method
+#### 5a. Choose the visual type
 
-Produce a **self-contained HTML file** that renders as the image:
+Refer to `/social-content` section 4.1. Match the visual type to your content:
+- Hot take / opinion → **Statement card** (Recipe A, ~6 ops)
+- Data / result → **Stat card** (Recipe B, ~6 ops)
+- Before/after → **Split layout** (Recipe C, ~10 ops)
+- Testimonial / social proof → **Quote card** (Recipe D, ~7 ops)
+- Personal story → **Photo + overlay** (Recipe E, ~6 ops)
+- Technical / code → **Code snippet card** (Recipe F, ~8 ops)
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<style>
-  body {
-    margin: 0;
-    width: 1080px;   /* adjust per platform */
-    height: 1080px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Brand as CSS variables */
-    --brand-primary: #2563eb;
-    --brand-bg: #0f172a;
-    --brand-text: #f8fafc;
-  }
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-</head>
-<body>
-  <!-- Content -->
-</body>
-</html>
-```
+**Do NOT default to Statement Card every time.** Vary the visual type based on content.
 
-Include rendering instructions:
-```bash
-# Render to PNG with Puppeteer
-npx puppeteer screenshot image.html --viewport 1080x1080 --output image.png
-# Or with the script:
-node render.js
-```
+#### 5b. Human element decision
 
-For AI-generated imagery (editorial, abstract):
-- Write a detailed prompt for DALL-E / Stable Diffusion
-- Avoid text in AI images (unreliable)
-- Specify composition, colors, style, mood
+- If the post is personal/story/testimonial → ask the user for a real photo. Human faces get 38% more engagement
+- If no photo available → use text/graphic. NEVER use generic stock photos
+- If the user has brand assets → use them
+
+#### 5c. Apply scroll-stopping technique
+
+Pick at least ONE technique from `/social-content` section 4.3:
+- Contrast shock, giant number, unexpected crop, color block, negative space, handwritten element, or screenshot with annotation
+
+#### 5d. Build the Visual
+
+Use **Pencil** (.pen) or **Figma** — whichever the user already has open or prefers. Never generate HTML.
+
+1. Run setup from `/social-content` section 4.4 (ONCE per session — schema, guidelines, variables)
+2. Pick the composition recipe from section 4.5 matching your visual type
+3. Build in a single `batch_design` call (all recipes fit in 1 call)
+4. Verify with `get_screenshot` once
+5. Export with `export_nodes` (Pencil) or Figma export
+
+**Budget: 2-3 tool calls per asset** (build + screenshot + export). Follow efficiency rules in section 4.9.
+
+#### 5e. Output
+
+Produce the design file (`.pen` or Figma frame) that the user can open, review, and adjust visually. If the post needs a real photo, provide:
+- The design with a placeholder image layer
+- Specific instructions for what photo to use
+- Alternative: an AI image prompt (DALL-E/SD) describing the exact photo needed
 
 ### Step 6 — Present to User
 
@@ -308,6 +319,7 @@ Present inline during conversation. If the user wants files:
 - **Less is more** — 1 image > 10 slides. 1 idea > 3 crammed together. Short > long
 - **Never invent facts** — only use what the project/user provides. No fake testimonials, inflated numbers, or fictional features
 - **Never use fluff** — no "excited to announce", "game-changing", "revolutionary", "synergy"
+- **Anti-AI voice is non-negotiable** — every draft MUST pass the Human Voice Check (Step 4b) before presenting. Zero tolerance for banned words, banned structures, and banned tone from `/social-content` section 8. If it sounds like ChatGPT wrote it, rewrite it
 - **Specific beats vague** — always prefer a number, name, or example over an adjective
 - **Link in comments** (LinkedIn) — never in post body
 - **Text IS design** — a well-typographied phrase is a valid image. Not everything needs graphics

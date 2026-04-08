@@ -53,6 +53,8 @@ func Run(args []string) {
 		cmdTags(git)
 	case "diff":
 		cmdDiff(cfg, git, cmdArgs)
+	case "registry":
+		cmdRegistry(cfg, cmdArgs)
 	case "self-update":
 		cmdSelfUpdate(cfg, git, cmdArgs)
 	case "doctor":

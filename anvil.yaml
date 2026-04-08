@@ -34,11 +34,24 @@ targets:
 #   - ~/projects/other-app
 
 # Components managed by anvil
+# Use include/exclude to select specific agents, skills, or commands.
+# include: only deploy these (whitelist). exclude: deploy all except these (blacklist).
+# include takes precedence over exclude. Names without .md extension.
 components:
   agents:
     tag: "HEAD"
+    # include:              # Only deploy these agents
+    #   - developer
+    #   - tester
+    #   - dba
+    # exclude:              # Deploy all EXCEPT these
+    #   - mkt-content
+    #   - reporter
   skills:
     tag: "HEAD"
+    # include:
+    #   - go-conventions
+    #   - react-conventions
   commands:
     tag: "HEAD"
 
@@ -46,6 +59,15 @@ components:
 files:
   CLAUDE.md:
     tag: "HEAD"
+
+# Remote registries - browse and install additional agents/skills
+# Each registry points to a JSON index with available entries.
+# Use `anvil registry list` to browse, `anvil registry add <name>` to install.
+registries:
+  - name: official
+    url: https://raw.githubusercontent.com/ernesto2108/anvil/main/registry.json
+#   - name: team
+#     url: https://raw.githubusercontent.com/myteam/anvil-agents/main/registry.json
 
 # Local-only paths - NEVER synced, NEVER touched
 # These stay in each tool's config and are not managed by anvil

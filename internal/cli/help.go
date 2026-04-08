@@ -26,6 +26,7 @@ func cmdHelp(appName string) {
     uninstall            Remove %s from all targets
     tags                 List available versions
     diff [component...]  Show changes since last deploy
+    registry <cmd>       Browse and install from remote registries
     help                 Show this help
 
   EXAMPLES:
@@ -41,6 +42,8 @@ func cmdHelp(appName string) {
     %s doctor                              # Check deployment health
     %s diff skills                         # Changes in skills only
     %s diff agents/developer               # Changes in one agent
+    %s registry list                       # Browse remote agents/skills
+    %s registry add my-agent               # Install from registry
 
   TARGETS:
     claude    ~/.claude/          agents + skills + commands
@@ -49,5 +52,5 @@ func cmdHelp(appName string) {
     codex     ~/.codex/           skills + AGENTS.md (auto-generated)
     cursor    per-project         rules from agents
 
-`, t, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName)
+`, t, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName)
 }

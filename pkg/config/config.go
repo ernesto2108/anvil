@@ -15,11 +15,18 @@ type Target struct {
 }
 
 type Component struct {
-	Tag string `yaml:"tag"`
+	Tag     string   `yaml:"tag"`
+	Include []string `yaml:"include,omitempty"`
+	Exclude []string `yaml:"exclude,omitempty"`
 }
 
 type FileEntry struct {
 	Tag string `yaml:"tag"`
+}
+
+type Registry struct {
+	Name string `yaml:"name"`
+	URL  string `yaml:"url"`
 }
 
 type Manifest struct {
@@ -28,6 +35,7 @@ type Manifest struct {
 	Components     map[string]Component `yaml:"components"`
 	Files          map[string]FileEntry `yaml:"files"`
 	Ignore         []string             `yaml:"ignore"`
+	Registries     []Registry           `yaml:"registries"`
 }
 
 type TierMap struct {
@@ -214,6 +222,39 @@ func (a *App) SetProvider(name string) error {
 
 	a.Provider.Provider = name
 	return nil
+}
+
+// ComponentFilter returns the include/exclude lists for a component.
+func (a *App) ComponentFilter(name string) (include, exclude []string) {
+	comp, ok := a.Manifest.Components[name]
+	if !ok {
+		return nil, nil
+	}
+	return comp.Include, comp.Exclude
+}
+
+// IsComponentAllowed checks if a given item name passes the include/exclude filter.
+// Rules: if include is set, only items in include are allowed.
+// If exclude is set, items in exclude are blocked. Include takes precedence.
+func IsComponentAllowed(name string, include, exclude []string) bool {
+	// Strip .md extension for matching
+	clean := strings.TrimSuffix(name, ".md")
+
+	if len(include) > 0 {
+		for _, inc := range include {
+			if inc == clean {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, exc := range exclude {
+		if exc == clean {
+			return false
+		}
+	}
+	return true
 }
 
 func (a *App) ExpandedCursorProjects() []string {

@@ -14,12 +14,11 @@ import (
 
 func Gemini(cfg *config.App, paths TargetPaths) {
 	target := paths.Gemini
-	output.Info("%s -> %s", output.Bold("Gemini CLI"), target)
+	ts := AddTarget("Gemini CLI")
 
-	output.Info("  agents -> skipped (not supported)")
-	DeploySkillsSymlink(cfg.RepoDir, target)
-	deployGeminiCommands(cfg, target)
-	deployGeminiMD(cfg, target)
+	DeploySkillsSymlink(cfg, target, ts)
+	deployGeminiCommands(cfg, target, ts)
+	deployGeminiMD(cfg, target, ts)
 }
 
 func adaptCommandGemini(src, dst string) error {
@@ -42,7 +41,7 @@ func adaptCommandGemini(src, dst string) error {
 	return os.WriteFile(dst, []byte(content), 0o644)
 }
 
-func deployGeminiCommands(cfg *config.App, target string) {
+func deployGeminiCommands(cfg *config.App, target string, ts *TargetStats) {
 	cmdSrc := filepath.Join(cfg.RepoDir, config.CompCommands)
 	if !fileutil.IsDir(cmdSrc) {
 		return
@@ -98,10 +97,10 @@ func deployGeminiCommands(cfg *config.App, target string) {
 		}
 	}
 
-	output.Info("  %d commands -> toml", count)
+	ts.Commands.Deployed = count
 }
 
-func deployGeminiMD(cfg *config.App, target string) {
+func deployGeminiMD(cfg *config.App, target string, ts *TargetStats) {
 	src := filepath.Join(cfg.RepoDir, config.FileClaudeMD)
 	if !fileutil.Exists(src) {
 		return
@@ -111,5 +110,5 @@ func deployGeminiMD(cfg *config.App, target string) {
 		output.Error("copy %s: %s", config.FileGeminiMD, err)
 		return
 	}
-	output.Info("  %s -> copied from %s", config.FileGeminiMD, config.FileClaudeMD)
+	ts.Extras = append(ts.Extras, config.FileGeminiMD+" -> copied")
 }

@@ -8,21 +8,20 @@ import (
 
 	"github.com/ernesto2108/anvil/pkg/config"
 	"github.com/ernesto2108/anvil/pkg/frontmatter"
-	"github.com/ernesto2108/anvil/pkg/output"
 )
 
 func Codex(cfg *config.App, paths TargetPaths) {
 	target := paths.Codex
-	output.Info("%s -> %s", output.Bold("Codex"), target)
+	ts := AddTarget("Codex")
 	os.MkdirAll(target, 0o755)
 
-	DeploySkillsSymlink(cfg.RepoDir, target)
+	DeploySkillsSymlink(cfg, target, ts)
 	generateAgentsMD(cfg, filepath.Join(target, config.FileAgentsMD))
-	output.Info("  %s -> generated from %s agents", config.FileAgentsMD, cfg.Name)
+	ts.Extras = append(ts.Extras, config.FileAgentsMD+" -> generated")
 }
 
 func generateAgentsMD(cfg *config.App, outputPath string) {
-	files := AgentFiles(cfg.RepoDir)
+	files := FilteredAgentFiles(cfg)
 	if len(files) == 0 {
 		return
 	}

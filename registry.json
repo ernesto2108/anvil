@@ -1,0 +1,454 @@
+{
+  "name": "anvil-official",
+  "description": "Official Anvil agents and skills registry",
+  "entries": [
+    {
+      "name": "architect",
+      "type": "agent",
+      "description": "Use this agent for system design, architecture decisions, domain boundaries, API contracts, and technical trade-offs. READ-ONLY on code — writes design docs. Call after PM and before any developer work.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/architect.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "dba",
+      "type": "agent",
+      "description": "Use this agent for database migrations, schema design, query optimization, and data integrity. The ONLY agent allowed to create or modify migration files and schema definitions.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/dba.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "designer",
+      "type": "agent",
+      "description": "Use this agent for UX/UI design — design system creation, design tokens, user flows, wireframes, component specs, interaction design, and accessibility. Call after PM writes the PRD and before architect. Produces design specs that guide both architect and developer.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/designer.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "developer",
+      "type": "agent",
+      "description": "Use this agent to implement production code across any stack (Go, React, Flutter, Astro, Python, TypeScript, Rust). The ONLY agent allowed to write application code. The orchestrator specifies which convention skill to load. Adapts to task complexity — no docs overhead for small tasks.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/developer.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "devops",
+      "type": "agent",
+      "description": "Use this agent to manage CI/CD pipelines, Docker, Kubernetes, Terraform, and infrastructure as code. The ONLY agent allowed to touch .github/workflows, Dockerfiles, and infrastructure configs.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/devops.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "mkt-content",
+      "type": "agent",
+      "description": "Use this agent for content marketing — LinkedIn posts, social media, visual assets, copywriting, and content strategy. Works for ANY industry (tech, restaurants, real estate, personal branding, etc.). Handles both text AND images. Loads /social-content for platform knowledge, copywriting, and visual design.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/mkt-content.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "pm",
+      "type": "agent",
+      "description": "Use this agent for requirements discovery, PRD writing, backlog management, and sprint planning. Speaks Spanish with the user, writes PRDs in English. The ONLY agent allowed to create PRDs and manage the backlog. Call before architect.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/pm.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "qa",
+      "type": "agent",
+      "description": "Use this agent to review code quality, architecture adherence, correctness, and test coverage. READ-ONLY quality gate — can block work and create backlog tasks. Call after implementation and tests are complete. Blocks if score < 7. Only invoke for tasks >= 5 pts or high-risk changes.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/qa.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "reporter",
+      "type": "agent",
+      "description": "Use this agent to produce an execution report after completing a run. Summarizes tasks executed, files changed, what changed and why. Always the LAST agent to run. Writes to the docs location.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/reporter.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "scanner",
+      "type": "agent",
+      "description": "Use this agent at the START of any session to scan the repository structure and produce project context. Always the FIRST agent to run. Read-only except for writing the context file.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/scanner.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "security",
+      "type": "agent",
+      "description": "Use this agent to audit code for security vulnerabilities (SAST, SCA, secrets, auth). READ-ONLY — can block work if CVE critical/high is found. Call before any code ships to production.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/security.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "tech-writer",
+      "type": "agent",
+      "description": "Use this agent to write or update documentation, README files, API docs, Mermaid diagrams, and changelogs. Only writes markdown files — never touches production code.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/tech-writer.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "tester",
+      "type": "agent",
+      "description": "Use this agent to write test files across all stacks (Go, React, Flutter, Python, TypeScript, Rust). The ONLY agent allowed to create or modify test files. Call after developer completes implementation. The orchestrator specifies which stack to test. Forbidden from touching production code.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/tester.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "a11y-check",
+      "type": "skill",
+      "description": "Audit UI for WCAG 2.1 accessibility compliance and report violations. Use when user says \"accessibility check\", \"a11y audit\", \"WCAG compliance\", \"screen reader\", \"ARIA labels\", \"keyboard navigation\", or reviewing UI components for inclusivity.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/a11y-check/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "architecture-boundary-guardrails",
+      "type": "skill",
+      "description": "Prevent architectural drift by enforcing bounded contexts and use-case-per-file structure. Use when creating new services, moving code across domain boundaries, or detecting cross-context imports, god-interfaces, or monolithic service files.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/architecture-boundary-guardrails/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "astro-conventions",
+      "type": "skill",
+      "description": "Astro framework conventions and coding standards for static and content-driven sites. Use when writing Astro components, reviewing Astro code, or user mentions \"Astro patterns\", \"islands architecture\", \"content collections\", \"static site\", \".astro files\", \"astro components\", \"client directives\", or working with .astro files.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/astro-conventions/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "backlog-management",
+      "type": "skill",
+      "description": "Task creation, backlog management, and sprint board format. Defines how to break PRDs into tickets, assign agents, and track progress. Used by the PM agent after writing a PRD.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/backlog-management/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "bundle-analyzer",
+      "type": "skill",
+      "description": "Analyze frontend bundle size impact of new dependencies or components. Use when user says \"bundle size\", \"check bundle\", \"too heavy\", \"tree shaking\", \"webpack analyze\", or after adding a new npm dependency to evaluate its size impact.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/bundle-analyzer/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "code-review-rubric",
+      "type": "skill",
+      "description": "Scoring rubric and report format for code reviews. Defines evaluation criteria, scoring scale, and output structure. Used by the QA agent and anyone reviewing code quality.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/code-review-rubric/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "cross-service-dev",
+      "type": "skill",
+      "description": "Orchestrate agents across multiple microservice repos in a single session. Use when user says \"implement across services\", \"this touches X and Y services\", \"cross-service feature\", \"work on multiple repos\", \"remove this endpoint from all services\", \"deprecate this across services\", \"refactor cross-service\", or describes any change (create, update, delete, deprecate) that requires coordinated work in 2+ services. Extends the orchestrate workflow for multi-repo scenarios. Requires service-map.yaml to resolve repo paths.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/cross-service-dev/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "db-optimize",
+      "type": "skill",
+      "description": "Identify slow queries and suggest schema, index, or query optimizations. Use when user says \"slow query\", \"optimize SQL\", \"add index\", \"query performance\", \"EXPLAIN\", or investigating database bottlenecks.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/db-optimize/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "db-schema-scan",
+      "type": "skill",
+      "description": "Read-only inspection of database schema via migration files and schema SQL. Use when user says \"check the schema\", \"show tables\", \"inspect migrations\", \"what columns does X have\", or needs to understand the database structure before writing queries.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/db-schema-scan/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "dependency-check",
+      "type": "skill",
+      "description": "Analyze project dependencies for vulnerabilities, license issues, and outdated versions. Use when user says \"check dependencies\", \"audit packages\", \"outdated deps\", \"npm audit\", \"go mod tidy\", \"security vulnerabilities\", or before upgrading libraries.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/dependency-check/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "design-project",
+      "type": "skill",
+      "description": "Quick entry point for resuming or starting design projects. Auto-detects the design tool (.pen → Pencil, Figma URL → Figma), opens the file, loads context (variables, components, screens), and prepares the workspace. Use when user says \"open design\", \"resume design\", \"design project\", \"pencil project\", \"figma project\", or wants to start designing.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/design-project/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "design-recipes",
+      "type": "skill",
+      "description": "Reusable design patterns for efficient screen building in Pencil or Figma. Reduces operations per screen by providing tested recipes. Load during the Design Execution GATE phase. Use when building screens from design system components in any design tool.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/design-recipes/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "design-review",
+      "type": "skill",
+      "description": "Review existing designs for quality, visual hierarchy, and anti-AI patterns. Works with Pencil (.pen files) and Figma. Use when user says \"review this design\", \"does this look good\", \"improve the design\", \"design feedback\", \"design QA\", or after completing visual design execution.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/design-review/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "design-system",
+      "type": "skill",
+      "description": "Create and maintain design system foundations — variables, collections, modes, color palettes, typography, spacing, reusable components with variants, and theming. Use when user says \"design system\", \"design tokens\", \"color palette\", \"typography scale\", \"spacing scale\", \"create variables\", \"define colors\", \"theme setup\", \"dark mode\", \"component library\", or when the designer agent needs to establish visual foundations before designing screens.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/design-system/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "design-to-code",
+      "type": "skill",
+      "description": "Translate approved designs to production code. Works with any design tool (Pencil, Figma). Syncs design tokens with CSS, maps components to code, and validates visual fidelity. Use when user says \"implement this design\", \"code this\", \"translate to code\", \"design to code\", or after a design is approved.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/design-to-code/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "devops-conventions",
+      "type": "skill",
+      "description": "DevOps/Infrastructure conventions and best practices. Use when writing Dockerfiles, GitHub Actions, Terraform, K8s manifests, or cloud infra configs.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/devops-conventions/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "document-architecture",
+      "type": "skill",
+      "description": "Document the architecture of a frontend or backend service. Auto-detects project type and runs the appropriate pipeline. Use when user says \"documenta arquitectura\", \"document service\", \"documenta frontend\", \"document architecture\", or when orchestrate routes here.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/document-architecture/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "domain-entity-guardrails",
+      "type": "skill",
+      "description": "Enforce strict typing and explicit optionality in domain entities and value objects. Use when creating or modifying domain structs, reviewing domain layer code, or detecting pointer fields, `any` types, or `sql.Null*` in domain models.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/domain-entity-guardrails/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "e2e-test-run",
+      "type": "skill",
+      "description": "Run end-to-end tests validating complete user flows across the full stack. Use when user says \"run e2e tests\", \"end to end\", \"Playwright\", \"Cypress\", \"test the full flow\", or validating a feature works from UI to database.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/e2e-test-run/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "flutter-conventions",
+      "type": "skill",
+      "description": "Flutter/Dart mobile conventions and coding standards. Use when writing Flutter widgets, reviewing Dart code, or user mentions \"Flutter patterns\", \"BLoC\", \"Riverpod\", \"widget composition\", \"freezed\", or working with .dart files.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/flutter-conventions/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "generate-diagram",
+      "type": "skill",
+      "description": "Create Mermaid.js diagrams for architecture, flows, sequences, ERDs, and C4. Use when user says \"draw a diagram\", \"create a flowchart\", \"sequence diagram\", \"ERD\", \"architecture diagram\", \"visualize\", or needs visual documentation.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/generate-diagram/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "git-diff",
+      "type": "skill",
+      "description": "Inspect and summarize repository changes using git diff. Use when user says \"what changed\", \"show diff\", \"review changes\", \"summarize modifications\", or before creating a commit or pull request.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/git-diff/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "go-conventions",
+      "type": "skill",
+      "description": "Go backend conventions and coding standards. Use when writing Go code, reviewing Go patterns, or user mentions \"go conventions\", \"idiomatic Go\", \"error handling in Go\", \"Go best practices\", \"Go testing patterns\", or working with .go files.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/go-conventions/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "lint",
+      "type": "skill",
+      "description": "Run linters and formatters. Auto-detects stack (Go, React, Flutter). Use when user says \"lint\", \"check code style\", \"format code\", \"run eslint\", \"run prettier\", \"golangci-lint\", \"dart analyze\", or after writing code that should be validated. MANDATORY after any code modification — invoke before considering any code task done.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/lint/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "orchestrate",
+      "type": "skill",
+      "description": "Smart orchestration — triages task complexity and runs only the agents needed. Use when user says \"orchestrate\", \"new feature\", \"full workflow\", \"run the pipeline\", or for any non-trivial task. Also auto-triggered by hook on complex requests.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/orchestrate/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "perf",
+      "type": "skill",
+      "description": "Run load/stress/performance tests, analyze bottlenecks, and generate visual reports. Auto-detects Vegeta, k6, Locust. Use when user says \"load test\", \"stress test\", \"performance test\", \"prueba de carga\", \"benchmark\", \"run vegeta\", \"run k6\", \"run locust\", \"throughput\", \"rps\", \"50 rps\", \"latency\", \"bottleneck\", \"perf\", or investigating performance under concurrency.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/perf/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "prd-template",
+      "type": "skill",
+      "description": "PRD writing guide with discovery questionnaire, template, and acceptance criteria format. Used by the PM agent to create consistent, complete PRDs. Use when writing a PRD or when user says \"create PRD\", \"write requirements\", \"new feature\".",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/prd-template/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "python-conventions",
+      "type": "skill",
+      "description": "Python conventions and coding standards for 3.12+. Use when writing Python code, reviewing Python patterns, or user mentions \"python conventions\", \"type hints\", \"pydantic\", \"pytest\", \"embeddings\", \"numpy\", \"async python\", or working with .py files.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/python-conventions/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "react-conventions",
+      "type": "skill",
+      "description": "React/TypeScript frontend conventions and coding standards. Use when writing React components, reviewing frontend code, or user mentions \"React patterns\", \"component structure\", \"hooks best practices\", \"accessibility\", \"state management\", or working with .tsx/.jsx files.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/react-conventions/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "read-files",
+      "type": "skill",
+      "description": "Safely read project files to gather context before making decisions. Use when needing to understand existing code before modifying it, gathering context from multiple files, or summarizing large codebases.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/read-files/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "run-tests",
+      "type": "skill",
+      "description": "Run project tests with race detector and coverage. Auto-detects stack (Go, React, Flutter). Use when user says \"run tests\", \"test this\", \"check coverage\", \"run vitest\", \"go test\", \"flutter test\", or after implementing code that needs verification.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/run-tests/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "rust-conventions",
+      "type": "skill",
+      "description": "Rust conventions for systems programming, high-performance CLIs, and blockchain/crypto. Use when writing Rust code, reviewing Rust patterns, or user mentions \"rust conventions\", \"tokio\", \"async rust\", \"clap\", \"solana\", \"substrate\", \"no_std\", \"unsafe\", or working with .rs files.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/rust-conventions/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "scan-project",
+      "type": "skill",
+      "description": "Scan repo structure and write context.md to the vault with product objective and technical snapshot. Use when starting a new session, user says \"scan the project\", \"what stack is this\", \"analyze the repo\", or when context.md is missing or stale.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/scan-project/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "service-map",
+      "type": "skill",
+      "description": "Cross-service dependency awareness for microservices. Use when modifying endpoints, DB schemas, shared contracts, or any code that other services consume. Triggers on \"service map\", \"who uses this endpoint\", \"impact analysis\", \"cross-service\", \"dependency check\", \"what services depend on\", \"before refactoring endpoint\", or when working in a project that has a service-map.yaml file.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/service-map/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "skill-standards",
+      "type": "skill",
+      "description": "Standards and checklist for creating new skills. Use when creating a new skill, reviewing skill quality, or user says \"create a skill\", \"new skill\", \"skill template\", \"skill checklist\". Ensures all skills follow the Agent Skills open standard and project conventions.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/skill-standards/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "social-content",
+      "type": "skill",
+      "description": "Complete social media content knowledge — copywriting frameworks, visual design, platform-specific rules (LinkedIn, Instagram, Twitter/X), algorithm mechanics, engagement strategy, color psychology, typography, and image creation. Used by mkt-content agent. Use when creating any social media content.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/social-content/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "summarize-changes",
+      "type": "skill",
+      "description": "Create a human-readable summary of what changed and why, writing last-run.md to the vault. Use when user says \"summarize what we did\", \"write a report\", \"what did we change\", or at the end of a work session to document progress.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/summarize-changes/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "task-complete",
+      "type": "skill",
+      "description": "Mark a task as done — updates task file status, moves card on Kanban board, cleans duplicates. Use when user says \"task done\", \"complete task\", \"mark as done\", or \"/task-complete TASK-XXX\".",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/task-complete/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "test-api",
+      "type": "skill",
+      "description": "Test and validate API endpoints for contract compliance. Use when user says \"test the API\", \"check endpoint\", \"validate response\", \"API contract\", \"curl this endpoint\", or verifying HTTP status codes and response schemas.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/test-api/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "typescript-conventions",
+      "type": "skill",
+      "description": "TypeScript 5.x conventions and coding standards. Use when writing TypeScript code, reviewing TS patterns, or user mentions \"typescript conventions\", \"strict mode\", \"discriminated unions\", \"Zod validation\", \"Vitest\", \"type safety\", \"TS best practices\", or working with .ts/.tsx files.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/typescript-conventions/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "ui-component-scan",
+      "type": "skill",
+      "description": "Scan existing UI component library to promote reuse and maintain visual consistency. Use when user says \"what components exist\", \"check Storybook\", \"reuse component\", \"is there a Button already\", or before creating a new UI component to avoid duplication.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/ui-component-scan/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "visual-diff",
+      "type": "skill",
+      "description": "Detect visual regressions by comparing before/after screenshots of UI changes. Use when user says \"visual regression\", \"screenshot comparison\", \"UI looks different\", \"CSS broke something\", or after modifying styles, themes, or shared components.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/visual-diff/SKILL.md",
+      "author": "ernesto2108"
+    },
+    {
+      "name": "write-files",
+      "type": "skill",
+      "description": "Create or modify files with minimal, focused changes respecting permissions. Use when writing code changes to ensure minimal diffs, preserved formatting, and no unrelated modifications.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/skills/write-files/SKILL.md",
+      "author": "ernesto2108"
+    }
+  ]
+}

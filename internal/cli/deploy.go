@@ -93,26 +93,20 @@ func cmdDeploy(cfg *config.App, git *gitutil.Repo, args []string) {
 	}
 
 	// Deploy to each enabled target
+	deploy.StartSummary()
+
 	if cfg.TargetEnabled(config.TargetClaude) {
 		deploy.Claude(cfg, paths)
 	}
-	fmt.Println()
-
 	if cfg.TargetEnabled(config.TargetOpenCode) {
 		deploy.OpenCode(cfg, paths)
 	}
-	fmt.Println()
-
 	if cfg.TargetEnabled(config.TargetGemini) {
 		deploy.Gemini(cfg, paths)
 	}
-	fmt.Println()
-
 	if cfg.TargetEnabled(config.TargetCodex) {
 		deploy.Codex(cfg, paths)
 	}
-	fmt.Println()
-
 	if cfg.TargetEnabled(config.TargetCursor) {
 		deploy.Cursor(cfg)
 	}
@@ -123,7 +117,8 @@ func cmdDeploy(cfg *config.App, git *gitutil.Repo, args []string) {
 		output.Error("save state: %s", err)
 	}
 
-	fmt.Println()
+	// Print final summary
+	deploy.PrintSummary()
 	output.Info("Deployed %s (%s) to all enabled targets", output.Cyan(displayVersion), sha)
 }
 

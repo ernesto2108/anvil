@@ -204,6 +204,34 @@ func Test_SetTargetEnabled(t *testing.T) {
 	}
 }
 
+func Test_IsComponentAllowed(t *testing.T) {
+	tests := []struct {
+		name    string
+		item    string
+		include []string
+		exclude []string
+		want    bool
+	}{
+		{"no filter", "developer", nil, nil, true},
+		{"include match", "developer", []string{"developer", "tester"}, nil, true},
+		{"include no match", "pm", []string{"developer", "tester"}, nil, false},
+		{"exclude match", "pm", nil, []string{"pm", "reporter"}, false},
+		{"exclude no match", "developer", nil, []string{"pm", "reporter"}, true},
+		{"include beats exclude", "developer", []string{"developer"}, []string{"developer"}, true},
+		{"with .md extension", "developer.md", []string{"developer"}, nil, true},
+		{"exclude with .md", "pm.md", nil, []string{"pm"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := config.IsComponentAllowed(tt.item, tt.include, tt.exclude)
+			if got != tt.want {
+				t.Errorf("IsComponentAllowed(%q) = %v, want %v", tt.item, got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_SetProvider(t *testing.T) {
 	dir := setupTestRepo(t)
 	app, _ := config.Load(dir, "forge")

@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"bufio"
 	"os"
 	"path/filepath"
 
@@ -10,29 +11,45 @@ import (
 	"github.com/ernesto2108/anvil/pkg/output"
 )
 
-func Claude(cfg *config.App, paths TargetPaths) {
-	target := paths.Claude
-	output.Info("%s -> %s", output.Bold("Claude Code"), target)
+// stdinReader is the shared reader for interactive prompts during deploy.
+var stdinReader = bufio.NewReader(os.Stdin)
 
-	deployClaudeAgents(cfg, target)
-	DeploySkillsSymlink(cfg.RepoDir, target)
-	DeployCommandsSymlink(cfg.RepoDir, target)
-	deployClaudeMD(cfg, target)
+// SetStdinReader replaces the stdin reader (used in tests).
+func SetStdinReader(r *bufio.Reader) {
+	stdinReader = r
 }
 
-func deployClaudeAgents(cfg *config.App, target string) {
-	files := AgentFiles(cfg.RepoDir)
+func Claude(cfg *config.App, paths TargetPaths) {
+	target := paths.Claude
+	ts := AddTarget("Claude Code")
+
+	deployClaudeAgents(cfg, target, ts)
+	DeploySkillsSymlink(cfg, target, ts)
+	DeployCommandsSymlink(cfg, target, ts)
+	deployClaudeMD(cfg, target, ts)
+}
+
+func deployClaudeAgents(cfg *config.App, target string, ts *TargetStats) {
+	files := FilteredAgentFiles(cfg)
 	if len(files) == 0 {
 		return
 	}
 
 	agentDst := filepath.Join(target, config.CompAgents)
-	fileutil.CleanPath(agentDst)
 	os.MkdirAll(agentDst, 0o755)
 
-	count := 0
+	// Resolve collisions interactively
+	result := ResolveCollisions(files, agentDst, stdinReader)
+	CleanManagedFiles(agentDst)
+	skip, _, renames := ApplyResolutions(result.Resolutions)
+
 	for _, f := range files {
 		name := filepath.Base(f)
+		if !ShouldDeployFile(name, skip) {
+			ts.Agents.Preserved++
+			continue
+		}
+
 		data, err := os.ReadFile(f)
 		if err != nil {
 			continue
@@ -55,21 +72,22 @@ func deployClaudeAgents(cfg *config.App, target string) {
 			tools := cfg.ResolvePermission(perm, config.TargetClaude)
 			if tools != "" {
 				content = frontmatter.ReplaceField(content, "permission", perm, tools)
-				// Rename the key from permission to tools
 				content = replaceKey(content, "permission", "tools")
 			}
 		}
 
+		content = StampManagedBy(content)
+
 		if len(content) > 0 && content[len(content)-1] != '\n' {
 			content += "\n"
 		}
-		dstPath := filepath.Join(agentDst, name)
-		os.WriteFile(dstPath, []byte(content), 0o644)
 
-		output.Info("  agents/%s  %s->%s  %s->tools", name, tier, output.Green(resolved), perm)
-		count++
+		deployName := GetDeployName(name, renames)
+		dstPath := filepath.Join(agentDst, deployName)
+		os.WriteFile(dstPath, []byte(content), 0o644)
+		ts.Agents.Deployed++
+		ts.Agents.Names = append(ts.Agents.Names, deployName)
 	}
-	output.Info("  %d agents (provider: %s)", count, output.Green(config.TargetClaude))
 }
 
 func replaceKey(content, oldKey, newKey string) string {
@@ -113,7 +131,7 @@ func joinLines(lines []string) string {
 	return result
 }
 
-func deployClaudeMD(cfg *config.App, target string) {
+func deployClaudeMD(cfg *config.App, target string, ts *TargetStats) {
 	src := filepath.Join(cfg.RepoDir, config.FileClaudeMD)
 	if !fileutil.Exists(src) {
 		return
@@ -122,11 +140,11 @@ func deployClaudeMD(cfg *config.App, target string) {
 		output.Error("symlink %s: %s", config.FileClaudeMD, err)
 		return
 	}
-	output.Info("  %s -> symlink", config.FileClaudeMD)
+	ts.Extras = append(ts.Extras, config.FileClaudeMD+" -> symlink")
 }
 
 func ClaudeAgentsOnly(cfg *config.App, paths TargetPaths) {
 	target := paths.Claude
-	output.Info("%s -> %s", output.Bold("Claude Code"), target)
-	deployClaudeAgents(cfg, target)
+	ts := AddTarget("Claude Code (agents only)")
+	deployClaudeAgents(cfg, target, ts)
 }

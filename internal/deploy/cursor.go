@@ -8,32 +8,37 @@ import (
 	"github.com/ernesto2108/anvil/pkg/config"
 	"github.com/ernesto2108/anvil/pkg/fileutil"
 	"github.com/ernesto2108/anvil/pkg/frontmatter"
-	"github.com/ernesto2108/anvil/pkg/output"
 )
 
 func Cursor(cfg *config.App) {
 	projects := cfg.ExpandedCursorProjects()
 	if len(projects) == 0 {
-		output.Info("%s -> skipped (no cursor_projects configured)", output.Bold("Cursor"))
 		return
 	}
 
-	output.Info("%s -> %d project(s)", output.Bold("Cursor"), len(projects))
-
-	files := AgentFiles(cfg.RepoDir)
+	files := FilteredAgentFiles(cfg)
 
 	for _, proj := range projects {
 		if !fileutil.IsDir(proj) {
-			output.Warn("  %s -> directory not found, skipping", proj)
 			continue
 		}
+
+		ts := AddTarget(fmt.Sprintf("Cursor (%s)", filepath.Base(proj)))
 
 		rulesDir := filepath.Join(proj, ".cursor", "rules")
 		os.MkdirAll(rulesDir, 0o755)
 
-		count := 0
+		result := ResolveCollisions(files, rulesDir, stdinReader)
+		CleanManagedFiles(rulesDir)
+		skip, _, renames := ApplyResolutions(result.Resolutions)
+
 		for _, f := range files {
 			name := filepath.Base(f)
+			if !ShouldDeployFile(name, skip) {
+				ts.Agents.Preserved++
+				continue
+			}
+
 			data, err := os.ReadFile(f)
 			if err != nil {
 				continue
@@ -42,18 +47,18 @@ func Cursor(cfg *config.App) {
 			doc := frontmatter.Parse(string(data))
 			desc := doc.Fields["description"]
 
-			adapted := fmt.Sprintf("---\ndescription: \"%s\"\nalwaysApply: false\n---\n\n%s", desc, doc.Body)
+			deployName := GetDeployName(name, renames)
+			adapted := fmt.Sprintf("---\ndescription: \"%s\"\nmanaged-by: anvil\nalwaysApply: false\n---\n\n%s", desc, doc.Body)
 
-			os.WriteFile(filepath.Join(rulesDir, name), []byte(adapted), 0o644)
-			count++
+			os.WriteFile(filepath.Join(rulesDir, deployName), []byte(adapted), 0o644)
+			ts.Agents.Deployed++
 		}
-		output.Info("  %s -> %d rules", proj, count)
 
 		claudeMD := filepath.Join(cfg.RepoDir, config.FileClaudeMD)
 		agentsMD := filepath.Join(proj, config.FileAgentsMD)
 		if fileutil.Exists(claudeMD) && !fileutil.Exists(agentsMD) {
 			fileutil.CopyFile(claudeMD, agentsMD)
-			output.Info("  %s -> %s created", proj, config.FileAgentsMD)
+			ts.Extras = append(ts.Extras, config.FileAgentsMD+" -> created")
 		}
 	}
 }

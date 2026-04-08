@@ -136,3 +136,69 @@ func Test_ReplaceField(t *testing.T) {
 		})
 	}
 }
+
+func Test_HasField(t *testing.T) {
+	content := "---\nmanaged-by: anvil\nmodel: high\n---\n\nBody"
+
+	if !frontmatter.HasField(content, "managed-by", "anvil") {
+		t.Error("HasField should return true for managed-by: anvil")
+	}
+	if frontmatter.HasField(content, "managed-by", "other") {
+		t.Error("HasField should return false for managed-by: other")
+	}
+	if frontmatter.HasField(content, "nonexistent", "value") {
+		t.Error("HasField should return false for nonexistent key")
+	}
+}
+
+func Test_SetField(t *testing.T) {
+	tests := []struct {
+		name    string
+		content string
+		key     string
+		value   string
+		check   func(string) bool
+		desc    string
+	}{
+		{
+			name:    "add to existing frontmatter",
+			content: "---\nmodel: high\n---\n\nBody",
+			key:     "managed-by",
+			value:   "anvil",
+			check: func(s string) bool {
+				return frontmatter.HasField(s, "managed-by", "anvil") &&
+					frontmatter.Get(s, "model") == "high"
+			},
+			desc: "should have managed-by and preserve model",
+		},
+		{
+			name:    "update existing field",
+			content: "---\nmanaged-by: old\nmodel: high\n---\n\nBody",
+			key:     "managed-by",
+			value:   "anvil",
+			check: func(s string) bool {
+				return frontmatter.HasField(s, "managed-by", "anvil")
+			},
+			desc: "should update managed-by to anvil",
+		},
+		{
+			name:    "add frontmatter to plain content",
+			content: "Just plain text",
+			key:     "managed-by",
+			value:   "anvil",
+			check: func(s string) bool {
+				return frontmatter.HasField(s, "managed-by", "anvil")
+			},
+			desc: "should wrap content with frontmatter",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := frontmatter.SetField(tt.content, tt.key, tt.value)
+			if !tt.check(got) {
+				t.Errorf("%s: got %q", tt.desc, got)
+			}
+		})
+	}
+}
