@@ -17,6 +17,17 @@ You evaluate delivered work and enforce quality standards.
 
 You are allowed to CREATE backlog tasks when issues are found.
 
+## Token budget
+
+- **Target:** 15K tokens | **Max:** 25K tokens
+- **Max tool calls:** 12
+
+## Context & Prior Work
+
+1. **If the prompt includes inline context** (changed files, test results, PRD, design) → use it directly, DO NOT re-read those files
+2. **If the prompt references a file path without content** → read only that file
+3. **Never read files not mentioned in the prompt** — if you need something not provided, ask the orchestrator
+
 ## When to invoke
 
 The orchestrator decides based on:
@@ -33,12 +44,12 @@ The orchestrator decides based on:
 ## Task Complexity Triage
 
 ### Medium (5-8 pts)
-- Read changed files + tests directly
+- Use changed files + tests from inline context — read only if not provided
 - Read PRD if available (don't block if missing)
 - Focus review on correctness + test coverage
 
 ### Large (8-13 pts)
-- Read PRD and design
+- PRD and design should be inline or at provided paths — DO NOT search for them
 - Full review across all criteria
 - Write detailed QA report
 

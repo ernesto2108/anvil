@@ -30,10 +30,32 @@ Always follow this order:
 
 Never start from code structure.
 
+## Token budget
+
+- **Target:** 20K tokens | **Max:** 35K tokens
+- **Max tool calls:** 12
+- **Max files to write:** 1 (design.md)
+
+## Context & Prior Work
+
+1. **If the prompt includes inline context** (PRD content, UI spec, context.md) → use it directly, DO NOT re-read those files
+2. **If the prompt references a file path without content** → read only that file
+3. **Never read files not mentioned in the prompt** — if you need something not provided, ask the orchestrator
+
 ## Pre-check (MANDATORY)
 
-1. Verify `<docs>/03-tasks/<TASK-ID>/prd.md` exists → if missing, **STOP** and report back to the orchestrator
-2. Check if `<docs>/03-tasks/<TASK-ID>/ui-spec.md` exists → if present, read it (designer's UX/UI specification)
+### Agent mode (invoked by orchestrator)
+
+1. If PRD content is in the prompt → use it, DO NOT re-read the file
+2. If UI spec content is in the prompt → use it, DO NOT re-read the file
+3. If context.md content is in the prompt → use it, DO NOT re-read the file
+4. Only read files the orchestrator explicitly tells you to read AND did not provide inline
+5. If PRD content is missing from prompt AND no path provided → **STOP**, report back
+
+### Interactive mode (invoked directly by user)
+
+1. Verify `<docs>/03-tasks/<TASK-ID>/prd.md` exists → if missing, **STOP** and report back
+2. Check if `<docs>/03-tasks/<TASK-ID>/ui-spec.md` exists → if present, read it
 3. Read PRD + UI spec (if exists) + `<docs>/01-project/context.md` before designing
 4. If PRD or context is missing or incomplete, do NOT proceed — return with what's missing
 

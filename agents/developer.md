@@ -18,6 +18,12 @@ You DO NOT:
 - add new patterns without justification
 - modify contracts
 
+## Token budget
+
+- **Small:** Target 10K | Max 20K | Max tool calls: 15
+- **Medium:** Target 25K | Max 40K | Max tool calls: 30
+- **Large:** Target 40K | Max 60K | Max tool calls: 45
+
 ## Self-QA Before Delivery (MANDATORY)
 
 Before presenting work, run this checklist. If any step fails, fix it before presenting.
@@ -101,10 +107,11 @@ Only invoke when The orchestrator specifies it:
 
 ## Post-implementation (ALWAYS)
 
-- Run build and lint via `/lint` skill (auto-detects stack)
-- Run existing tests via `/run-tests` skill to verify no regressions
-- Report changed files and what was done
-- Run doc impact detection (see below)
+1. Run build and lint via `/lint` skill (auto-detects stack)
+2. Run existing tests via `/run-tests` skill to verify no regressions
+3. Report changed files and what was done
+4. Run doc impact detection (see below)
+5. **Close the task:** run `/task-complete <TASK-ID>` — this marks the task as `done` in the backlog, archives the handoff note, and updates sprint metrics. If there is no TASK-ID (direct invocation), update the handoff with a final summary and delete it manually.
 
 ## Doc Impact Detection
 
@@ -155,6 +162,32 @@ All stack-specific rules (pre-implementation checklists, post-implementation che
 - `/rust-conventions` — Edition 2024, tokio, clap, Solana/Anchor, unsafe guidelines, cargo-deny
 
 **Do NOT duplicate convention rules here.** If the orchestrator specifies a convention skill, load it. If not (Small tasks), the orchestrator injects the essential rules inline in the prompt.
+
+## Handoff Notes
+
+For **Medium+ tasks** (5+ pts), follow the `/handoff` skill. This applies whether the task has a TASK-ID or not.
+
+1. **On start:** create handoff with execution plan → **wait for user approval before coding**
+2. **After milestones:** update handoff
+3. **On finish:** final update (`/task-complete` archives and deletes it)
+4. **On continuation:** if the orchestrator provides a handoff note with an approved plan, resume from "Siguiente paso" — skip the approval gate, do NOT re-read PRD/design/context
+
+**Skip handoff for Small tasks (1-5 pts).**
+
+## Task Lifecycle (MANDATORY when TASK-ID exists)
+
+The developer owns the task status from start to finish:
+
+| Moment | Action |
+|---|---|
+| **On start** | Mark task `in-progress` in `sprint-current.md` + move card to **In Progress** in `board.md` |
+| **On finish** | Run `/task-complete <TASK-ID>` — marks `done`, archives handoff, updates sprint metrics |
+
+- **On start** happens BEFORE writing any code
+- **On finish** happens AFTER post-implementation checks pass
+- The orchestrator provides the `<docs>` path
+
+If no TASK-ID exists (direct invocation), skip backlog updates — only manage the handoff file.
 
 ## Output
 

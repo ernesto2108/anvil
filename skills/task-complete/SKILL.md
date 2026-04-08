@@ -44,7 +44,11 @@ In `<docs>/02-backlog/board.md`:
 
 In `<docs>/02-backlog/sprint-current.md`, increment SP completed by the task's `story_points`.
 
-### Step 5 — Confirm
+### Step 5 — Archive handoff note
+
+Follow the `/handoff` skill Archive operation: read, append summary to task file, delete handoff file. Skip if no handoff exists.
+
+### Step 6 — Confirm
 
 Output a one-line confirmation:
 ```
@@ -57,4 +61,4 @@ Output a one-line confirmation:
 - If task file not found → report error, do not create it
 - If task is already `status: done` → skip, report "already done"
 - Do NOT modify any file other than: the task .md, board.md, sprint-current.md
-- Maximum 4 tool calls: 1 Read (task file) + 1 Edit (task status) + 1 Edit (board) + 1 Edit (sprint metrics)
+- Maximum 6 tool calls: 1 Read (task file) + 1 Edit (task status) + 1 Edit (board) + 1 Edit (sprint metrics) + 1 Read (handoff) + 1 Delete (handoff)

@@ -91,11 +91,29 @@ Ask:
 
 ### Before Developer
 
-Ask:
+**For Medium+ tasks**, check for an existing handoff note per `/handoff` skill (Read operation). If found, pass it inline to the developer — this is a continuation.
+
+**If no handoff exists**, ask the user:
 1. "Do you already have progress on this feature? What files already exist?"
 2. "Is there partial code or a branch with prior work?"
 
-**Why:** Prevents the Developer from wasting tokens reading and discovering code that already exists. If the user confirms prior work, the Developer prompt must be specific: "Only X, Y, Z are missing — don't read the rest."
+**Why:** The handoff prevents the Developer from wasting tokens re-reading PRD, design, and code already processed. If the user confirms prior work (and there's no handoff), be specific: "Only X, Y, Z are missing — don't read the rest."
+
+**Developer prompt for continuations (handoff exists):**
+```
+Resume <TASK-ID or slug>. Here is the handoff note from the previous session:
+
+<handoff content inline>
+
+Continue from "Siguiente paso". Do NOT re-read PRD or design — the handoff has all the context you need. Update the handoff file as you make progress.
+```
+
+**Developer prompt for new Medium+ tasks (no handoff):**
+```
+Complexity: <Medium|Large>. Follow /handoff skill to create a handoff file as you work.
+```
+
+**Skip handoff check for Small tasks (1-5 pts).**
 
 ### General rule
 

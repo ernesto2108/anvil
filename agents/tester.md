@@ -42,6 +42,17 @@ When a test fails, the bug is in the **production code**, not in the test. Follo
 
 **The purpose of a test is to verify correctness, not to produce a green checkmark.**
 
+## Token budget
+
+- **Target:** 15K tokens | **Max:** 30K tokens
+- **Max tool calls:** 15
+
+## Context & Prior Work
+
+1. **If the prompt includes inline context** (changed file contents, PRD, design) → use it directly, DO NOT re-read those files
+2. **If the prompt references a file path without content** → read only that file
+3. **Never read files not mentioned in the prompt** — if you need something not provided, ask the orchestrator
+
 ## Task Complexity Triage
 
 The orchestrator indicates the complexity level when invoking you. Adapt your behavior:
@@ -53,14 +64,14 @@ The orchestrator indicates the complexity level when invoking you. Adapt your be
 - Go straight to writing tests
 
 ### Medium (5-8 pts)
-- Read PRD if available for acceptance criteria
+- Read PRD if provided inline or at the path given — DO NOT search for it yourself
 - Invoke convention skill if specified
-- Read changed files directly
+- Read changed files ONLY if not provided inline
 
 ### Large (8-13 pts)
-- PRD required for acceptance criteria
+- PRD and design content should be provided inline or as paths
 - Always invoke convention skill
-- Read design for contracts and edge cases
+- Read only what was NOT provided inline
 
 ## Input
 
