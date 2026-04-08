@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="200" font-family="'SF Mono','Fira Code','Cascadia Code',Menlo,Monaco,Consolas,monospace" font-size="12">
+  <!-- Background -->
+  <rect width="720" height="200" rx="8" fill="#1c1c1e"/>
+
+  <!-- Step 1: Define -->
+  <rect x="20" y="50" width="130" height="100" rx="8" fill="#2c2c2e" stroke="#6366f1" stroke-width="2"/>
+  <text x="85" y="78" fill="#6366f1" text-anchor="middle" font-weight="bold" font-size="13">Define</text>
+  <text x="85" y="100" fill="#98989d" text-anchor="middle" font-size="11">agents/*.md</text>
+  <text x="85" y="116" fill="#98989d" text-anchor="middle" font-size="11">skills/*/SKILL.md</text>
+  <text x="85" y="132" fill="#98989d" text-anchor="middle" font-size="11">commands/*.md</text>
+
+  <!-- Arrow 1 -->
+  <line x1="155" y1="100" x2="185" y2="100" stroke="#48484a" stroke-width="2"/>
+  <polygon points="185,95 195,100 185,105" fill="#48484a"/>
+
+  <!-- Step 2: Browse -->
+  <rect x="200" y="50" width="130" height="100" rx="8" fill="#2c2c2e" stroke="#bf5af2" stroke-width="2"/>
+  <text x="265" y="78" fill="#bf5af2" text-anchor="middle" font-weight="bold" font-size="13">Browse</text>
+  <text x="265" y="100" fill="#98989d" text-anchor="middle" font-size="11">anvil browse</text>
+  <text x="265" y="116" fill="#98989d" text-anchor="middle" font-size="11">Interactive TUI</text>
+  <text x="265" y="132" fill="#98989d" text-anchor="middle" font-size="11">select + install</text>
+
+  <!-- Arrow 2 -->
+  <line x1="335" y1="100" x2="365" y2="100" stroke="#48484a" stroke-width="2"/>
+  <polygon points="365,95 375,100 365,105" fill="#48484a"/>
+
+  <!-- Step 3: Deploy -->
+  <rect x="380" y="50" width="130" height="100" rx="8" fill="#2c2c2e" stroke="#30d158" stroke-width="2"/>
+  <text x="445" y="78" fill="#30d158" text-anchor="middle" font-weight="bold" font-size="13">Deploy</text>
+  <text x="445" y="100" fill="#98989d" text-anchor="middle" font-size="11">copy or symlink</text>
+  <text x="445" y="116" fill="#98989d" text-anchor="middle" font-size="11">to each target</text>
+  <text x="445" y="132" fill="#98989d" text-anchor="middle" font-size="11">auto backup</text>
+
+  <!-- Arrow 3 -->
+  <line x1="515" y1="100" x2="545" y2="100" stroke="#48484a" stroke-width="2"/>
+  <polygon points="545,95 555,100 545,105" fill="#48484a"/>
+
+  <!-- Step 4: Use -->
+  <rect x="560" y="50" width="140" height="100" rx="8" fill="#2c2c2e" stroke="#ffd60a" stroke-width="2"/>
+  <text x="630" y="78" fill="#ffd60a" text-anchor="middle" font-weight="bold" font-size="13">Use</text>
+  <text x="630" y="96" fill="#98989d" text-anchor="middle" font-size="11">Claude Code</text>
+  <text x="630" y="110" fill="#98989d" text-anchor="middle" font-size="11">Gemini CLI</text>
+  <text x="630" y="124" fill="#98989d" text-anchor="middle" font-size="11">Codex · Cursor</text>
+  <text x="630" y="138" fill="#98989d" text-anchor="middle" font-size="11">OpenCode</text>
+
+  <!-- Title -->
+  <text x="360" y="28" fill="#636366" text-anchor="middle" font-size="11">WORKFLOW</text>
+</svg>

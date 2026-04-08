@@ -4,9 +4,13 @@
 
 AI agent orchestration system. Define agents, skills, and conventions once — deploy to Claude Code, OpenCode, Gemini CLI, Codex, and Cursor. Compatible with the [AGENTS.md](https://agents.md/) open standard.
 
+<p align="center">
+  <img src="assets/anvil-flow.svg" alt="Anvil workflow: Define → Browse → Deploy → Use" width="700"/>
+</p>
+
 ## What is Anvil?
 
-Anvil is a collection of **agents** (specialized AI roles), **skills** (domain knowledge and conventions), and a **CLI** that deploys them to your AI coding tools. Write your agents and skills in markdown, run `anvil deploy`, and every tool gets the same knowledge.
+Anvil is a collection of **agents** (specialized AI roles), **skills** (domain knowledge and conventions), and a **CLI** that deploys them to your AI coding tools. Write your agents and skills in markdown, run `anvil browse`, and every tool gets the same knowledge.
 
 Anvil automatically generates an `AGENTS.md` file — the [open standard](https://agents.md/) maintained by the Linux Foundation and adopted by Codex, Cursor, Copilot, and others.
 
@@ -27,20 +31,29 @@ make build
 # 3. Make it available globally (optional)
 ln -sf ~/projects/anvil/anvil /usr/local/bin/anvil
 
-# 4. Choose your targets (which tools to deploy to)
-anvil targets claude opencode    # or: all
+# 4. First-time setup
+anvil init
 
-# 5. Choose your provider (model tier mapping)
-anvil provider claude            # or: gemini, local
-
-# 6. Deploy
-anvil deploy
-
-# 7. Verify
-anvil status
+# 5. Browse, select, and install agents/skills/commands
+anvil browse
 ```
 
 > After step 3, you can run `anvil` from anywhere. If you skip it, use `./anvil` from the anvil directory.
+
+## Interactive TUI
+
+`anvil browse` launches an interactive terminal UI where you can explore all agents, skills, and commands — then install or uninstall them per target with a single keystroke.
+
+<p align="center">
+  <img src="assets/tui-browse.svg" alt="Anvil TUI browse interface" width="700"/>
+</p>
+
+Features:
+- **Tab switching** between Agents, Skills, and Commands views
+- **Search/filter** to quickly find what you need
+- **Per-target toggling** — install to Claude only, or all targets at once
+- **Deploy modes** — copy (permanent) or symlink (always in sync)
+- **Keyboard-driven** — `enter` to install, `d` to uninstall, `t` to toggle targets
 
 ## How It Works
 
@@ -80,11 +93,14 @@ Each agent has strict boundaries:
 ```
 anvil/
 ├── cmd/anvil/             # CLI entry point (Go)
-├── internal/              # Core packages (config, deploy, state, etc.)
+├── internal/
+│   ├── cli/               # CLI commands (init, status, doctor, etc.)
+│   ├── deploy/            # Deploy providers per target
+│   └── tui/               # Interactive TUI (Bubble Tea)
 ├── anvil.yaml             # Deployment manifest (targets, components)
 ├── anvil.config.yaml      # Provider & model mapping
 ├── agents/                # 13 specialized agent definitions
-├── skills/                # 43 domain skills and conventions
+├── skills/                # 44 domain skills and conventions
 ├── commands/              # User-invocable slash commands
 ├── docs/                  # Documentation (en + es)
 ├── examples/              # CLAUDE.md template for projects
@@ -158,11 +174,17 @@ Skills are loadable knowledge modules. Agents load them on-demand based on the t
 | `/orchestrate` | Triage complexity, select agents, manage gates |
 | `/lint` | Auto-detect stack, run linters and formatters |
 | `/run-tests` | Auto-detect stack, run tests with coverage |
+| `/perf` | Load/stress testing with Vegeta, k6, Locust |
 | `/design-system` | Create design tokens, variables, components (Pencil/Figma) |
+| `/design-project` | Quick entry point for design projects, auto-detects tool |
+| `/design-recipes` | Reusable design patterns for efficient screen building |
 | `/design-review` | Quality audit of designs with scoring |
 | `/design-to-code` | Translate designs to production code |
 | `/prd-template` | PRD writing with discovery questionnaire |
 | `/backlog-management` | Break PRDs into tickets, manage sprints |
+| `/handoff` | Session continuity — create/resume handoff notes across sessions |
+| `/scan-project` | Scan repo structure and generate context.md |
+| `/cross-service-dev` | Orchestrate changes across multiple microservice repos |
 
 ### Guard Skills
 
@@ -171,6 +193,7 @@ Skills are loadable knowledge modules. Agents load them on-demand based on the t
 | `/architecture-boundary-guardrails` | Enforce bounded contexts, prevent cross-domain leaks |
 | `/domain-entity-guardrails` | Strict typing, no pointers for optional fields |
 | `/code-review-rubric` | Scoring criteria for QA reviews |
+| `/skill-standards` | Standards and checklist for creating new skills |
 
 ### Utility Skills
 
@@ -182,17 +205,28 @@ Skills are loadable knowledge modules. Agents load them on-demand based on the t
 | `/db-optimize` | Slow query identification, index suggestions |
 | `/generate-diagram` | Mermaid.js diagrams (C4, ERD, sequence, flow) |
 | `/git-diff` | Summarize repository changes |
+| `/summarize-changes` | Write human-readable session summary to vault |
 | `/service-map` | Cross-service dependency awareness |
 | `/a11y-check` | WCAG 2.1 accessibility audit |
 | `/test-api` | API endpoint contract validation |
+| `/e2e-test-run` | End-to-end tests (Playwright, Cypress) |
 | `/ui-component-scan` | Scan component library for reuse |
+| `/visual-diff` | Screenshot comparison for visual regressions |
+| `/document-architecture` | Auto-document service architecture |
+| `/social-content` | Social media content creation (LinkedIn, Instagram, X) |
+| `/task-complete` | Mark tasks done, update Kanban board |
 
 ## CLI Reference
 
+<p align="center">
+  <img src="assets/anvil-status.svg" alt="anvil status output" width="600"/>
+</p>
+
 ```bash
-# Deployment
-anvil deploy                     # Deploy all components to active targets
-anvil status                     # Show what's deployed where
+# Setup
+anvil init                       # First-time setup — show config and launch browser
+anvil browse                     # Interactive TUI to manage agents/skills/commands
+anvil update                     # Pull latest + rebuild binary
 
 # Targets (which AI tools to deploy to)
 anvil targets                    # Show active targets
@@ -206,12 +240,16 @@ anvil provider                   # Show current provider
 anvil provider gemini            # Switch to Gemini models
 anvil provider local             # Switch to local/Ollama models
 
+# Diagnostics
+anvil status                     # Show version, branch, targets, tags
+anvil doctor                     # Diagnose deployment health
+anvil diff                       # Show changes since last deploy
+
 # Version pinning
 anvil pin skills/go-conventions v1.2.0    # Pin to git tag
 anvil unpin skills/go-conventions         # Follow HEAD again
 
 # Maintenance
-anvil diff                       # Show changes since last deploy
 anvil uninstall                  # Remove from all targets
 ```
 
@@ -235,7 +273,7 @@ targets:
     path: ~/.codex
   cursor:
     enabled: true
-    path: ~/.cursor
+    path: per-project
 
 components:
   agents:
@@ -282,7 +320,7 @@ See [full section in the manual](docs/manual.md#8-backup--restore).
 
 ## AGENTS.md Compatibility
 
-[AGENTS.md](https://agents.md/) is an open standard maintained by the Linux Foundation for configuring AI agents in software projects. Anvil generates this file automatically on every `anvil deploy`.
+[AGENTS.md](https://agents.md/) is an open standard maintained by the Linux Foundation for configuring AI agents in software projects. Anvil generates this file automatically on every deploy.
 
 ### Which tools read it?
 
@@ -298,7 +336,7 @@ See [full section in the manual](docs/manual.md#8-backup--restore).
 ### How it works in Anvil
 
 1. Define agents in `agents/*.md` with frontmatter (role, permissions, tier)
-2. On `anvil deploy`, Anvil:
+2. When installing via `anvil browse`, Anvil:
    - Deploys native agents to each target (Claude, OpenCode, Gemini, etc.)
    - Generates compact `AGENTS.md` to `~/.codex/` for Codex
 3. Any AGENTS.md-compatible tool can read the generated file

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="380" font-family="'SF Mono','Fira Code','Cascadia Code',Menlo,Monaco,Consolas,monospace" font-size="13">
+  <defs>
+    <linearGradient id="tb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a3a3c"/>
+      <stop offset="100%" stop-color="#2c2c2e"/>
+    </linearGradient>
+  </defs>
+  <!-- Window -->
+  <rect width="620" height="380" rx="10" fill="#1c1c1e"/>
+  <rect width="620" height="32" rx="10" fill="url(#tb)"/>
+  <rect y="22" width="620" height="10" fill="url(#tb)"/>
+  <circle cx="20" cy="16" r="6" fill="#ff5f57"/>
+  <circle cx="40" cy="16" r="6" fill="#febc2e"/>
+  <circle cx="60" cy="16" r="6" fill="#28c840"/>
+  <text x="310" y="21" fill="#98989d" text-anchor="middle" font-size="12">Terminal</text>
+
+  <!-- Command -->
+  <text x="20" y="58" fill="#30d158">$</text>
+  <text x="36" y="58" fill="#e5e5ea">anvil status</text>
+
+  <!-- Output -->
+  <text x="20" y="86" fill="#bf5af2" font-weight="bold">Anvil Status</text>
+
+  <text x="20" y="112" fill="#636366">Version:</text>
+  <text x="110" y="112" fill="#e5e5ea">HEAD (66d84b0)</text>
+  <text x="20" y="132" fill="#636366">Branch:</text>
+  <text x="110" y="132" fill="#e5e5ea">main</text>
+  <text x="20" y="152" fill="#636366">Provider:</text>
+  <text x="110" y="152" fill="#ffd60a">claude</text>
+  <text x="186" y="152" fill="#636366">(opus / sonnet / haiku)</text>
+
+  <text x="20" y="182" fill="#bf5af2" font-weight="bold">Targets</text>
+  <text x="20" y="204" fill="#30d158">✓</text>
+  <text x="40" y="204" fill="#e5e5ea">claude</text>
+  <text x="140" y="204" fill="#636366">~/.claude/</text>
+  <text x="20" y="224" fill="#30d158">✓</text>
+  <text x="40" y="224" fill="#e5e5ea">opencode</text>
+  <text x="140" y="224" fill="#636366">~/.config/opencode/</text>
+  <text x="20" y="244" fill="#30d158">✓</text>
+  <text x="40" y="244" fill="#e5e5ea">gemini</text>
+  <text x="140" y="244" fill="#636366">~/.gemini/</text>
+  <text x="20" y="264" fill="#30d158">✓</text>
+  <text x="40" y="264" fill="#e5e5ea">codex</text>
+  <text x="140" y="264" fill="#636366">~/.codex/</text>
+  <text x="20" y="284" fill="#30d158">✓</text>
+  <text x="40" y="284" fill="#e5e5ea">cursor</text>
+  <text x="140" y="284" fill="#636366">per-project</text>
+
+  <text x="20" y="314" fill="#bf5af2" font-weight="bold">Components</text>
+  <text x="20" y="336" fill="#e5e5ea">Agents:</text>
+  <text x="100" y="336" fill="#64d2ff">13</text>
+  <text x="140" y="336" fill="#e5e5ea">Skills:</text>
+  <text x="210" y="336" fill="#64d2ff">44</text>
+  <text x="260" y="336" fill="#e5e5ea">Commands:</text>
+  <text x="360" y="336" fill="#64d2ff">3</text>
+
+  <text x="20" y="362" fill="#30d158">All systems operational.</text>
+</svg>
