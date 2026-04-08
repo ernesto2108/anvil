@@ -8,22 +8,29 @@ import (
 
 	"github.com/ernesto2108/anvil/pkg/config"
 	"github.com/ernesto2108/anvil/pkg/frontmatter"
+	"github.com/ernesto2108/anvil/pkg/output"
 )
 
 func Codex(cfg *config.App, paths TargetPaths) {
 	target := paths.Codex
 	ts := AddTarget("Codex")
-	os.MkdirAll(target, 0o755)
+	if err := os.MkdirAll(target, 0o755); err != nil {
+		output.Error("create codex dir: %s", err)
+		return
+	}
 
 	DeploySkillsSymlink(cfg, target, ts)
-	generateAgentsMD(cfg, filepath.Join(target, config.FileAgentsMD))
+	if err := generateAgentsMD(cfg, filepath.Join(target, config.FileAgentsMD)); err != nil {
+		output.Error("generate AGENTS.md: %s", err)
+		return
+	}
 	ts.Extras = append(ts.Extras, config.FileAgentsMD+" -> generated")
 }
 
-func generateAgentsMD(cfg *config.App, outputPath string) {
+func generateAgentsMD(cfg *config.App, outputPath string) error {
 	files := FilteredAgentFiles(cfg)
 	if len(files) == 0 {
-		return
+		return nil
 	}
 
 	var b strings.Builder
@@ -64,7 +71,7 @@ For non-trivial tasks, the orchestrator triages complexity and runs agents in or
 - **Large** (8+ files): pm → architect → developer → tester → qa → reporter
 `)
 
-	os.WriteFile(outputPath, []byte(b.String()), 0o644)
+	return os.WriteFile(outputPath, []byte(b.String()), 0o644)
 }
 
 func capitalize(s string) string {
@@ -74,6 +81,6 @@ func capitalize(s string) string {
 	return strings.ToUpper(s[:1]) + s[1:]
 }
 
-func GenerateAgentsMD(cfg *config.App, outputPath string) {
-	generateAgentsMD(cfg, outputPath)
+func GenerateAgentsMD(cfg *config.App, outputPath string) error {
+	return generateAgentsMD(cfg, outputPath)
 }

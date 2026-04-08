@@ -401,7 +401,10 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 	switch targetName {
 	case config.TargetClaude:
 		destDir := filepath.Join(targetPath, config.CompAgents)
-		os.MkdirAll(destDir, 0o755)
+		if err := os.MkdirAll(destDir, 0o755); err != nil {
+			output.Error("  create agents dir: %s", err)
+			return
+		}
 		destFile := filepath.Join(destDir, it.Name+".md")
 
 		if mode == tui.ModeSymlink {
@@ -425,14 +428,20 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 					content = frontmatter.ReplaceField(content, "permission", perm, tools)
 				}
 			}
-			os.WriteFile(destFile, []byte(content), 0o644)
+			if err := os.WriteFile(destFile, []byte(content), 0o644); err != nil {
+				output.Error("  write agent: %s", err)
+				return
+			}
 		}
 		output.Info("  %s %s -> %s", output.Green("✓"), mode, destFile)
 
 	case config.TargetOpenCode:
 		// OpenCode needs mode: subagent in frontmatter
 		destDir := filepath.Join(targetPath, config.CompAgents)
-		os.MkdirAll(destDir, 0o755)
+		if err := os.MkdirAll(destDir, 0o755); err != nil {
+			output.Error("  create agents dir: %s", err)
+			return
+		}
 		destFile := filepath.Join(destDir, it.Name+".md")
 
 		desc := doc.Fields["description"]
@@ -453,7 +462,10 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 		}
 
 		adapted := fmt.Sprintf("---\ndescription: %s\nmanaged-by: anvil\nmode: subagent\nmodel: %s\npermission: %s\n---\n\n%s", desc, resolved, permResolved, doc.Body)
-		os.WriteFile(destFile, []byte(adapted), 0o644)
+		if err := os.WriteFile(destFile, []byte(adapted), 0o644); err != nil {
+			output.Error("  write agent: %s", err)
+			return
+		}
 		output.Info("  %s copy (adapted) -> %s", output.Green("✓"), destFile)
 
 	case config.TargetGemini:
@@ -467,12 +479,18 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 	case config.TargetCursor:
 		// Cursor needs .cursor/rules/ format with alwaysApply
 		rulesDir := filepath.Join(targetPath, ".cursor", "rules")
-		os.MkdirAll(rulesDir, 0o755)
+		if err := os.MkdirAll(rulesDir, 0o755); err != nil {
+			output.Error("  create cursor rules dir: %s", err)
+			return
+		}
 		destFile := filepath.Join(rulesDir, it.Name+".md")
 
 		desc := doc.Fields["description"]
 		adapted := fmt.Sprintf("---\ndescription: \"%s\"\nmanaged-by: anvil\nalwaysApply: false\n---\n\n%s", desc, doc.Body)
-		os.WriteFile(destFile, []byte(adapted), 0o644)
+		if err := os.WriteFile(destFile, []byte(adapted), 0o644); err != nil {
+			output.Error("  write cursor rule: %s", err)
+			return
+		}
 		output.Info("  %s copy (cursor rule) -> %s", output.Green("✓"), destFile)
 	}
 }
@@ -484,7 +502,10 @@ func installSkill(cfg *config.App, it tui.Item, targetPath string, mode tui.Depl
 		return
 	}
 	destDir := filepath.Join(targetPath, config.CompSkills)
-	os.MkdirAll(destDir, 0o755)
+	if err := os.MkdirAll(destDir, 0o755); err != nil {
+		output.Error("  create skills dir: %s", err)
+		return
+	}
 	dst := filepath.Join(destDir, it.Name)
 
 	if mode == tui.ModeSymlink {
@@ -528,14 +549,23 @@ func installCommand(cfg *config.App, it tui.Item, targetName, targetPath string,
 		toml := fmt.Sprintf("description = \"%s\"\nprompt = \"\"\"\n%s\n\"\"\"", desc, body)
 
 		destFile := filepath.Join(targetPath, config.CompCommands, it.Name+".toml")
-		os.MkdirAll(filepath.Dir(destFile), 0o755)
-		os.WriteFile(destFile, []byte(toml), 0o644)
+		if err := os.MkdirAll(filepath.Dir(destFile), 0o755); err != nil {
+			output.Error("  create commands dir: %s", err)
+			return
+		}
+		if err := os.WriteFile(destFile, []byte(toml), 0o644); err != nil {
+			output.Error("  write command: %s", err)
+			return
+		}
 		output.Info("  %s copy (toml) -> %s", output.Green("✓"), destFile)
 
 	default:
 		// Claude, OpenCode, Codex — standard .md
 		destFile := filepath.Join(targetPath, config.CompCommands, it.Name+".md")
-		os.MkdirAll(filepath.Dir(destFile), 0o755)
+		if err := os.MkdirAll(filepath.Dir(destFile), 0o755); err != nil {
+			output.Error("  create commands dir: %s", err)
+			return
+		}
 
 		if mode == tui.ModeSymlink {
 			if err := fileutil.ForceSymlink(srcFile, destFile); err != nil {
@@ -611,8 +641,11 @@ func syncMetadataFiles(cfg *config.App, targetPaths map[string]string) {
 	// AGENTS.md -> regenerate for codex target
 	if codexPath, ok := targetPaths[config.TargetCodex]; ok {
 		dst := filepath.Join(codexPath, config.FileAgentsMD)
-		deploy.GenerateAgentsMD(cfg, dst)
-		output.Info("  %s %s -> %s", output.Green("✓"), config.FileAgentsMD, dst)
+		if err := deploy.GenerateAgentsMD(cfg, dst); err != nil {
+			output.Error("generate AGENTS.md: %s", err)
+		} else {
+			output.Info("  %s %s -> %s", output.Green("✓"), config.FileAgentsMD, dst)
+		}
 	}
 }
 

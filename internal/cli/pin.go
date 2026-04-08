@@ -34,15 +34,28 @@ func cmdPin(cfg *config.App, git *gitutil.Repo, args []string) {
 		parentPath := filepath.Join(paths.Claude, topLevel)
 		if fileutil.IsSymlink(parentPath) {
 			output.Warn("Breaking symlink %s/", topLevel)
-			link, _ := os.Readlink(parentPath)
-			os.Remove(parentPath)
-			fileutil.CopyDir(link, parentPath)
+			link, err := os.Readlink(parentPath)
+			if err != nil {
+				output.Error("readlink %s: %s", parentPath, err)
+				os.Exit(1)
+			}
+			if err := os.Remove(parentPath); err != nil {
+				output.Error("remove symlink %s: %s", parentPath, err)
+				os.Exit(1)
+			}
+			if err := fileutil.CopyDir(link, parentPath); err != nil {
+				output.Error("copy dir %s: %s", link, err)
+				os.Exit(1)
+			}
 		}
 	}
 
 	targetPath := filepath.Join(paths.Claude, component)
 	fileutil.CleanPath(targetPath)
-	os.MkdirAll(filepath.Dir(targetPath), 0o755)
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
+		output.Error("create dir: %s", err)
+		os.Exit(1)
+	}
 
 	objType, err := git.CatFileType(version, component)
 	if err != nil {
@@ -51,7 +64,10 @@ func cmdPin(cfg *config.App, git *gitutil.Repo, args []string) {
 	}
 
 	if objType == "tree" {
-		os.MkdirAll(targetPath, 0o755)
+		if err := os.MkdirAll(targetPath, 0o755); err != nil {
+			output.Error("create dir %s: %s", targetPath, err)
+			os.Exit(1)
+		}
 		if err := git.Archive(version, component, paths.Claude); err != nil {
 			output.Error("archive: %s", err)
 			os.Exit(1)
@@ -62,7 +78,10 @@ func cmdPin(cfg *config.App, git *gitutil.Repo, args []string) {
 			output.Error("show file: %s", err)
 			os.Exit(1)
 		}
-		os.WriteFile(targetPath, []byte(content), 0o644)
+		if err := os.WriteFile(targetPath, []byte(content), 0o644); err != nil {
+			output.Error("write file %s: %s", targetPath, err)
+			os.Exit(1)
+		}
 	}
 
 	output.Info("Pinned %s to %s", output.Cyan(component), output.Yellow(version))
@@ -95,12 +114,23 @@ func cmdUnpin(cfg *config.App, git *gitutil.Repo, args []string) {
 		objType, err := git.CatFileType("HEAD", component)
 		if err == nil {
 			if objType == "tree" {
-				os.MkdirAll(targetPath, 0o755)
-				git.Archive("HEAD", component, paths.Claude)
+				if err := os.MkdirAll(targetPath, 0o755); err != nil {
+					output.Error("create dir %s: %s", targetPath, err)
+					os.Exit(1)
+				}
+				if err := git.Archive("HEAD", component, paths.Claude); err != nil {
+					output.Error("archive: %s", err)
+					os.Exit(1)
+				}
 			} else {
 				content, err := git.ShowFile("HEAD", component)
-				if err == nil {
-					os.WriteFile(targetPath, []byte(content), 0o644)
+				if err != nil {
+					output.Error("show file: %s", err)
+					os.Exit(1)
+				}
+				if err := os.WriteFile(targetPath, []byte(content), 0o644); err != nil {
+					output.Error("write file %s: %s", targetPath, err)
+					os.Exit(1)
 				}
 			}
 		}
@@ -110,13 +140,22 @@ func cmdUnpin(cfg *config.App, git *gitutil.Repo, args []string) {
 		if st.PinCount(topLevel+"/") == 0 {
 			parentPath := filepath.Join(paths.Claude, topLevel)
 			if fileutil.IsDir(parentPath) && !fileutil.IsSymlink(parentPath) {
-				os.RemoveAll(parentPath)
-				os.Symlink(filepath.Join(cfg.RepoDir, topLevel), parentPath)
+				if err := os.RemoveAll(parentPath); err != nil {
+					output.Error("remove %s: %s", parentPath, err)
+					os.Exit(1)
+				}
+				if err := os.Symlink(filepath.Join(cfg.RepoDir, topLevel), parentPath); err != nil {
+					output.Error("symlink %s: %s", parentPath, err)
+					os.Exit(1)
+				}
 				output.Info("Restored %s symlink", output.Cyan(topLevel+"/"))
 			}
 		}
 	} else {
-		os.Symlink(source, targetPath)
+		if err := os.Symlink(source, targetPath); err != nil {
+			output.Error("symlink %s: %s", targetPath, err)
+			os.Exit(1)
+		}
 		output.Info("Unpinned %s", output.Cyan(component))
 	}
 

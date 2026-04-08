@@ -49,7 +49,10 @@ func deployGeminiCommands(cfg *config.App, target string, ts *TargetStats) {
 
 	cmdDst := filepath.Join(target, config.CompCommands)
 	fileutil.CleanPath(cmdDst)
-	os.MkdirAll(cmdDst, 0o755)
+	if err := os.MkdirAll(cmdDst, 0o755); err != nil {
+		output.Error("create gemini commands dir: %s", err)
+		return
+	}
 
 	count := 0
 
@@ -79,7 +82,10 @@ func deployGeminiCommands(cfg *config.App, target string, ts *TargetStats) {
 		}
 		subSrc := filepath.Join(cmdSrc, e.Name())
 		subDst := filepath.Join(cmdDst, e.Name())
-		os.MkdirAll(subDst, 0o755)
+		if err := os.MkdirAll(subDst, 0o755); err != nil {
+			output.Error("create gemini subcommands dir %s: %s", e.Name(), err)
+			continue
+		}
 
 		subEntries, _ := os.ReadDir(subSrc)
 		for _, se := range subEntries {

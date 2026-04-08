@@ -359,6 +359,16 @@ func (m Model) updateNormal(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "r":
 		m.toggleTarget(TargetCursor)
 
+	// Batch deploy: install ALL filtered items to a single target
+	case "C":
+		m.batchToggleTarget(TargetClaude)
+	case "O":
+		m.batchToggleTarget(TargetOpenCode)
+	case "X":
+		m.batchToggleTarget(TargetCodex)
+	case "R":
+		m.batchToggleTarget(TargetCursor)
+
 	// Deploy mode toggle
 	case "s":
 		if m.mode == ModeCopy {
@@ -399,6 +409,49 @@ func (m *Model) toggleTarget(target string) {
 	} else {
 		m.enqueue("install", it, target)
 		m.setTarget(it.Name, target, true)
+	}
+}
+
+// batchToggleTarget installs or uninstalls ALL filtered items for a single target.
+// If any filtered item is NOT deployed to the target, it installs all of them.
+// If all are already deployed, it uninstalls all of them.
+func (m *Model) batchToggleTarget(target string) {
+	if len(m.filtered) == 0 {
+		return
+	}
+	// Check target is enabled
+	enabled := false
+	for _, t := range m.targets {
+		if t == target {
+			enabled = true
+			break
+		}
+	}
+	if !enabled {
+		return
+	}
+
+	// Determine direction: if any item is not deployed, we install all; otherwise uninstall all
+	allDeployed := true
+	for _, it := range m.filtered {
+		if !it.Targets[target] {
+			allDeployed = false
+			break
+		}
+	}
+
+	if allDeployed {
+		for _, it := range m.filtered {
+			m.enqueue("uninstall", it, target)
+			m.setTarget(it.Name, target, false)
+		}
+	} else {
+		for _, it := range m.filtered {
+			if !it.Targets[target] {
+				m.enqueue("install", it, target)
+				m.setTarget(it.Name, target, true)
+			}
+		}
 	}
 }
 
@@ -765,6 +818,7 @@ func (m Model) renderHelp() string {
 		"tab filter",
 		"enter all targets",
 		"c/o/g/x/r per target",
+		"C/O/X/R all→target",
 		"s mode",
 		"/ search",
 		"q quit",

@@ -810,7 +810,100 @@ func TestTargetBadge_PartialDeployed(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// 13. wordWrap
+// 13. Batch toggle (Shift+key deploys ALL filtered items to one target)
+// ---------------------------------------------------------------------------
+
+func TestUpdate_BatchToggle_Claude_InstallsAll(t *testing.T) {
+	m := NewModel(sampleItems(), defaultTargets(), RepoInfo{})
+	// sampleItems: developer(claude:true), tester(claude:false), go-conventions(empty),
+	//              react-conventions(claude:true), git-commit(empty)
+	// After Shift+C, all 5 should have claude=true
+
+	m = pressKey(m, 'C')
+
+	q := m.Queue()
+	// Items not yet deployed to claude: tester, go-conventions, git-commit = 3 installs
+	if len(q) != 3 {
+		t.Fatalf("expected 3 install actions, got %d", len(q))
+	}
+	for _, a := range q {
+		if a.Target != TargetClaude {
+			t.Errorf("expected target %q, got %q", TargetClaude, a.Target)
+		}
+		if a.Action != "install" {
+			t.Errorf("expected install, got %q", a.Action)
+		}
+	}
+}
+
+func TestUpdate_BatchToggle_Claude_UninstallsWhenAllDeployed(t *testing.T) {
+	items := []Item{
+		{Name: "a", Type: "agent", Targets: map[string]bool{"claude": true}},
+		{Name: "b", Type: "skill", Targets: map[string]bool{"claude": true}},
+	}
+	m := NewModel(items, []string{"claude"}, RepoInfo{})
+
+	m = pressKey(m, 'C')
+
+	q := m.Queue()
+	if len(q) != 2 {
+		t.Fatalf("expected 2 uninstall actions, got %d", len(q))
+	}
+	for _, a := range q {
+		if a.Action != "uninstall" {
+			t.Errorf("expected uninstall, got %q", a.Action)
+		}
+	}
+}
+
+func TestUpdate_BatchToggle_OpenCode(t *testing.T) {
+	m := NewModel(sampleItems(), defaultTargets(), RepoInfo{})
+
+	m = pressKey(m, 'O')
+
+	q := m.Queue()
+	for _, a := range q {
+		if a.Target != TargetOpenCode {
+			t.Errorf("expected target %q, got %q", TargetOpenCode, a.Target)
+		}
+	}
+	if len(q) == 0 {
+		t.Error("expected at least one action")
+	}
+}
+
+func TestUpdate_BatchToggle_DisabledTargetIsNoop(t *testing.T) {
+	// Only claude is enabled; Shift+O (opencode batch) should do nothing
+	m := NewModel(sampleItems(), []string{"claude"}, RepoInfo{})
+
+	m = pressKey(m, 'O')
+
+	if len(m.Queue()) != 0 {
+		t.Errorf("batch toggle on disabled target should be no-op, got %d actions", len(m.Queue()))
+	}
+}
+
+func TestUpdate_BatchToggle_RespectsFilter(t *testing.T) {
+	m := NewModel(sampleItems(), defaultTargets(), RepoInfo{})
+
+	// Switch to Agents filter
+	m = pressSpecial(m, tea.KeyTab) // -> Agents
+	// Now only agent items are visible (developer, tester)
+
+	m = pressKey(m, 'C')
+
+	q := m.Queue()
+	// developer already has claude=true, tester has claude=false → 1 install
+	if len(q) != 1 {
+		t.Fatalf("expected 1 install action (only tester), got %d", len(q))
+	}
+	if q[0].Item.Name != "tester" {
+		t.Errorf("expected tester to be installed, got %q", q[0].Item.Name)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// 14. wordWrap
 // ---------------------------------------------------------------------------
 
 func TestWordWrap(t *testing.T) {

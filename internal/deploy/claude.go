@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ernesto2108/anvil/pkg/config"
 	"github.com/ernesto2108/anvil/pkg/fileutil"
@@ -30,64 +31,40 @@ func Claude(cfg *config.App, paths TargetPaths) {
 }
 
 func deployClaudeAgents(cfg *config.App, target string, ts *TargetStats) {
-	files := FilteredAgentFiles(cfg)
-	if len(files) == 0 {
-		return
-	}
-
 	agentDst := filepath.Join(target, config.CompAgents)
-	os.MkdirAll(agentDst, 0o755)
+	deployAgents(cfg, agentDst, ts, adaptClaude)
+}
 
-	// Resolve collisions interactively
-	result := ResolveCollisions(files, agentDst, stdinReader)
-	CleanManagedFiles(agentDst)
-	skip, _, renames := ApplyResolutions(result.Resolutions)
+// adaptClaude formats an agent file for the Claude Code target.
+func adaptClaude(cfg *config.App, agent AgentData) string {
+	content := agent.Content
+	tier := agent.Tier
+	perm := agent.Perm
 
-	for _, f := range files {
-		name := filepath.Base(f)
-		if !ShouldDeployFile(name, skip) {
-			ts.Agents.Preserved++
-			continue
+	resolved := tier
+	if config.IsTier(tier) {
+		model, err := cfg.ResolveTier(tier, config.TargetClaude)
+		if err == nil {
+			resolved = model
+			content = frontmatter.ReplaceField(content, "model", tier, resolved)
 		}
-
-		data, err := os.ReadFile(f)
-		if err != nil {
-			continue
-		}
-
-		content := string(data)
-		tier := frontmatter.Get(content, "model")
-		perm := frontmatter.Get(content, "permission")
-
-		resolved := tier
-		if config.IsTier(tier) {
-			model, err := cfg.ResolveTier(tier, config.TargetClaude)
-			if err == nil {
-				resolved = model
-				content = frontmatter.ReplaceField(content, "model", tier, resolved)
-			}
-		}
-
-		if config.IsPerm(perm) {
-			tools := cfg.ResolvePermission(perm, config.TargetClaude)
-			if tools != "" {
-				content = frontmatter.ReplaceField(content, "permission", perm, tools)
-				content = replaceKey(content, "permission", "tools")
-			}
-		}
-
-		content = StampManagedBy(content)
-
-		if len(content) > 0 && content[len(content)-1] != '\n' {
-			content += "\n"
-		}
-
-		deployName := GetDeployName(name, renames)
-		dstPath := filepath.Join(agentDst, deployName)
-		os.WriteFile(dstPath, []byte(content), 0o644)
-		ts.Agents.Deployed++
-		ts.Agents.Names = append(ts.Agents.Names, deployName)
 	}
+
+	if config.IsPerm(perm) {
+		tools := cfg.ResolvePermission(perm, config.TargetClaude)
+		if tools != "" {
+			content = frontmatter.ReplaceField(content, "permission", perm, tools)
+			content = replaceKey(content, "permission", "tools")
+		}
+	}
+
+	content = StampManagedBy(content)
+
+	if len(content) > 0 && content[len(content)-1] != '\n' {
+		content += "\n"
+	}
+
+	return content
 }
 
 func replaceKey(content, oldKey, newKey string) string {
@@ -95,40 +72,14 @@ func replaceKey(content, oldKey, newKey string) string {
 	old := oldKey + ":"
 	new := newKey + ":"
 	replaced := false
-	lines := splitLines(content)
+	lines := strings.Split(content, "\n")
 	for i, line := range lines {
 		if !replaced && len(line) > len(old) && line[:len(old)] == old {
 			lines[i] = new + line[len(old):]
 			replaced = true
 		}
 	}
-	return joinLines(lines)
-}
-
-func splitLines(s string) []string {
-	var lines []string
-	start := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] == '\n' {
-			lines = append(lines, s[start:i])
-			start = i + 1
-		}
-	}
-	if start < len(s) {
-		lines = append(lines, s[start:])
-	}
-	return lines
-}
-
-func joinLines(lines []string) string {
-	if len(lines) == 0 {
-		return ""
-	}
-	result := lines[0]
-	for _, l := range lines[1:] {
-		result += "\n" + l
-	}
-	return result
+	return strings.Join(lines, "\n")
 }
 
 func deployClaudeMD(cfg *config.App, target string, ts *TargetStats) {
