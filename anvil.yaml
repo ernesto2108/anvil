@@ -25,13 +25,14 @@ targets:
     enabled: true
     path: ~/.codex
   cursor:
-    enabled: false
+    enabled: true
+    path: ~/.cursor
 
-# Cursor deploys to specific project directories (not global).
-# Uncomment and add your projects:
-# cursor_projects:
-#   - ~/projects/my-app
-#   - ~/projects/other-app
+# Cursor deploys to .cursor/rules/ in specific project directories.
+# Add your projects to deploy agents as Cursor rules:
+cursor_projects: []
+  # - ~/projects/my-app
+  # - ~/projects/other-app
 
 # Components managed by anvil
 # Use include/exclude to select specific agents, skills, or commands.

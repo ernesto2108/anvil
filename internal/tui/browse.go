@@ -16,6 +16,7 @@ const (
 	TargetOpenCode = "opencode"
 	TargetGemini   = "gemini"
 	TargetCodex    = "codex"
+	TargetCursor   = "cursor"
 )
 
 // RepoInfo holds git/provider context displayed in the TUI header.
@@ -355,6 +356,8 @@ func (m Model) updateNormal(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	case "x":
 		m.toggleTarget(TargetCodex)
+	case "r":
+		m.toggleTarget(TargetCursor)
 
 	// Deploy mode toggle
 	case "s":
@@ -665,6 +668,7 @@ func (m Model) renderDetail(width, height int) string {
 		{TargetOpenCode, "o"},
 		{TargetGemini, "g"},
 		{TargetCodex, "x"},
+		{TargetCursor, "r"},
 	}
 
 	for _, tk := range targetKeys {
@@ -760,7 +764,7 @@ func (m Model) renderHelp() string {
 		"↑/↓ nav",
 		"tab filter",
 		"enter all targets",
-		"c/o/g/x per target",
+		"c/o/g/x/r per target",
 		"s mode",
 		"/ search",
 		"q quit",

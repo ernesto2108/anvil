@@ -25,7 +25,7 @@ providers:
     medium: o4-mini
     low: o4-mini
   cursor:
-    high: claude-sonnet-4-20250514
+    high: claude-opus-4-20250514
     medium: claude-sonnet-4-20250514
     low: claude-haiku-4-5-20251001
   gemini:

@@ -83,8 +83,8 @@ anvil/
 ├── internal/              # Core packages (config, deploy, state, etc.)
 ├── anvil.yaml             # Deployment manifest (targets, components)
 ├── anvil.config.yaml      # Provider & model mapping
-├── agents/                # 12 specialized agent definitions
-├── skills/                # 38 domain skills and conventions
+├── agents/                # 13 specialized agent definitions
+├── skills/                # 43 domain skills and conventions
 ├── commands/              # User-invocable slash commands
 ├── docs/                  # Documentation (en + es)
 ├── examples/              # CLAUDE.md template for projects
@@ -100,7 +100,7 @@ Each agent is a markdown file with YAML frontmatter defining its role, permissio
 | **pm** | Requirements, PRDs, backlog, sprint planning | write | high |
 | **architect** | System design, API contracts, ADRs | write | high |
 | **designer** | UX/UI design, design system, user flows | write | high |
-| **developer** | Production code (Go, React, Flutter, Astro) | execute | medium |
+| **developer** | Production code (Go, React, Flutter, Astro, Python, TypeScript, Rust) | execute | medium |
 | **tester** | Test files across all stacks | execute | medium |
 | **dba** | Migrations, schema design, query optimization | execute | medium |
 | **devops** | CI/CD, Docker, Terraform, K8s, cloud infra | execute | medium |
@@ -109,6 +109,7 @@ Each agent is a markdown file with YAML frontmatter defining its role, permissio
 | **scanner** | Repository scanning, project context generation | execute | medium |
 | **tech-writer** | Documentation, README, API docs, changelogs | write | medium |
 | **reporter** | Session execution reports | execute | low |
+| **mkt-content** | Content marketing, copywriting, visual assets | execute | high |
 
 ### How agents work
 
@@ -145,6 +146,9 @@ Skills are loadable knowledge modules. Agents load them on-demand based on the t
 | `/react-conventions` | Hooks, state management, Tailwind v4, accessibility, testing, anti-patterns |
 | `/flutter-conventions` | BLoC/Riverpod, widget composition, theming, testing |
 | `/astro-conventions` | Islands, content collections, components, styling |
+| `/python-conventions` | Type hints 3.12+, Pydantic v2, pytest, numpy, async, security |
+| `/typescript-conventions` | Strict mode, discriminated unions, Zod, Vitest, ESLint v8, Node.js ESM |
+| `/rust-conventions` | Edition 2024, tokio, clap, Solana/Anchor, async, CLI patterns |
 | `/devops-conventions` | Docker, GitHub Actions, Terraform, K8s, AWS, GCP, Argo CD/Workflows/Rollouts |
 
 ### Workflow Skills
@@ -230,7 +234,8 @@ targets:
     enabled: true
     path: ~/.codex
   cursor:
-    enabled: false
+    enabled: true
+    path: ~/.cursor
 
 components:
   agents:
@@ -251,6 +256,10 @@ providers:
     high: opus
     medium: sonnet
     low: haiku
+  cursor:
+    high: claude-opus-4-20250514
+    medium: claude-sonnet-4-20250514
+    low: claude-haiku-4-5-20251001
   gemini:
     high: gemini-2.5-pro
     medium: gemini-2.5-flash
