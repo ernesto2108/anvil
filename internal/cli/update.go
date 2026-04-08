@@ -11,11 +11,6 @@ import (
 )
 
 func cmdSelfUpdate(cfg *config.App, git *gitutil.Repo, args []string) {
-	version := "HEAD"
-	if len(args) > 0 {
-		version = args[0]
-	}
-
 	// Step 1: Pull latest changes
 	output.Info("Pulling latest changes...")
 	if err := git.Pull(); err != nil {
@@ -37,9 +32,8 @@ func cmdSelfUpdate(cfg *config.App, git *gitutil.Repo, args []string) {
 		output.Error("go build: %s", err)
 		os.Exit(1)
 	}
-	output.Info("Binary rebuilt")
 
-	// Step 3: Deploy
 	fmt.Println()
-	cmdDeploy(cfg, git, []string{version})
+	output.Info("Updated. Symlinked targets are already in sync.")
+	output.Info("Run %s to review and update targets.", output.Cyan(cfg.Name+" browse"))
 }

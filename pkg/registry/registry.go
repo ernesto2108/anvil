@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -46,6 +47,21 @@ func Fetch(url string) (*Index, error) {
 	var idx Index
 	if err := json.Unmarshal(body, &idx); err != nil {
 		return nil, fmt.Errorf("parse registry JSON: %w", err)
+	}
+
+	return &idx, nil
+}
+
+// FetchLocal reads and parses a registry index from a local file path.
+func FetchLocal(path string) (*Index, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read local registry: %w", err)
+	}
+
+	var idx Index
+	if err := json.Unmarshal(data, &idx); err != nil {
+		return nil, fmt.Errorf("parse local registry JSON: %w", err)
 	}
 
 	return &idx, nil

@@ -7,50 +7,41 @@ func cmdHelp(appName string) {
 	fmt.Printf(`
   %s - Multi-tool GitOps for AI coding configuration
 
-  Deploys agents, skills, and commands to:
+  Manages agents, skills, and commands across:
     Claude Code, OpenCode, Gemini CLI, Codex, and Cursor
 
   USAGE:
     %s <command> [args]
 
   COMMANDS:
-    deploy [version]     Deploy to all enabled targets (default: HEAD)
-    self-update [ver]    Pull + rebuild + deploy in one step
+    init                 First-time setup — show config and launch browser
+    browse               Interactive TUI to manage agents/skills/commands
+    update               Pull latest + rebuild binary
     targets [tool...]    Show or set which tools are active
-    provider [name]      Show or switch AI provider (redeploys agents)
-    status               Show deployment state across all tools
+    provider [name]      Show or switch AI provider
+    status               Show version, branch, targets, tags
     doctor               Diagnose deployment health
-    rollback             Rollback to previous version
-    pin <comp> <tag>     Pin a component to specific version (Claude)
-    unpin <comp>         Unpin a component (Claude)
-    uninstall            Remove %s from all targets
-    tags                 List available versions
+    pin <comp> <tag>     Pin a component to a specific version
+    unpin <comp>         Unpin a component back to HEAD
     diff [component...]  Show changes since last deploy
-    registry <cmd>       Browse and install from remote registries
+    uninstall            Remove %s from all targets
     help                 Show this help
 
   EXAMPLES:
-    %s targets                             # Show active tools
-    %s targets claude                      # Only use Claude Code
-    %s targets claude opencode             # Claude + OpenCode
-    %s targets all                         # Enable all tools
-    %s deploy                              # Deploy to active tools
-    %s provider gemini                     # Switch to Gemini models
-    %s provider local                      # Switch to local/Ollama
+    %s init                                # First-time setup
+    %s browse                              # Manage agents/skills/commands
+    %s update                              # Pull + rebuild
+    %s targets claude opencode             # Set active tools
+    %s provider gemini                     # Switch AI provider
     %s status                              # What's deployed where?
-    %s self-update                         # Pull + build + deploy
-    %s doctor                              # Check deployment health
-    %s diff skills                         # Changes in skills only
-    %s diff agents/developer               # Changes in one agent
-    %s registry list                       # Browse remote agents/skills
-    %s registry add my-agent               # Install from registry
+    %s doctor                              # Check health
 
   TARGETS:
     claude    ~/.claude/          agents + skills + commands
-    opencode  ~/.config/opencode/ agents + commands
+    opencode  ~/.config/opencode/ agents (adapted) + commands
     gemini    ~/.gemini/          skills + commands (toml)
-    codex     ~/.codex/           skills + AGENTS.md (auto-generated)
-    cursor    per-project         rules from agents
+    codex     ~/.codex/           skills + AGENTS.md (generated)
+    cursor    per-project         rules (from agents)
 
-`, t, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName)
+`, t, appName, appName, appName, appName, appName, appName, appName, appName, appName)
 }

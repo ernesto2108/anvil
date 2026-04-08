@@ -26,7 +26,8 @@ type FileEntry struct {
 
 type Registry struct {
 	Name string `yaml:"name"`
-	URL  string `yaml:"url"`
+	URL  string `yaml:"url,omitempty"`
+	Path string `yaml:"path,omitempty"` // local path to registry.json (alternative to url)
 }
 
 type Manifest struct {

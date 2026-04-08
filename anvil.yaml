@@ -65,7 +65,8 @@ files:
 # Use `anvil registry list` to browse, `anvil registry add <name>` to install.
 registries:
   - name: official
-    url: https://raw.githubusercontent.com/ernesto2108/anvil/main/registry.json
+    path: .
+    # url: https://raw.githubusercontent.com/ernesto2108/anvil/main/registry.json
 #   - name: team
 #     url: https://raw.githubusercontent.com/myteam/anvil-agents/main/registry.json
 

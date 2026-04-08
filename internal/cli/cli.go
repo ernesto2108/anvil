@@ -33,14 +33,14 @@ func Run(args []string) {
 	cmdArgs := args[2:]
 
 	switch cmd {
-	case "deploy":
-		cmdDeploy(cfg, git, cmdArgs)
+	case "init":
+		cmdInit(cfg, git)
+	case "browse":
+		registryBrowse(cfg, git)
 	case "targets":
 		cmdTargets(cfg, cmdArgs)
 	case "provider":
 		cmdProvider(cfg, cmdArgs)
-	case "rollback":
-		cmdRollback(cfg, git)
 	case "uninstall":
 		cmdUninstall(cfg)
 	case "status":
@@ -49,13 +49,11 @@ func Run(args []string) {
 		cmdPin(cfg, git, cmdArgs)
 	case "unpin":
 		cmdUnpin(cfg, git, cmdArgs)
-	case "tags":
-		cmdTags(git)
 	case "diff":
 		cmdDiff(cfg, git, cmdArgs)
 	case "registry":
-		cmdRegistry(cfg, cmdArgs)
-	case "self-update":
+		cmdRegistry(cfg, git, cmdArgs)
+	case "update":
 		cmdSelfUpdate(cfg, git, cmdArgs)
 	case "doctor":
 		cmdDoctor(cfg, git)
