@@ -12,6 +12,35 @@ The system acts as **Orchestrator**. First triages, then runs only the agents th
 
 ## Step 0 — Triage (ALWAYS FIRST)
 
+### User-specified complexity (`-c` / `--complexity`)
+
+The user can override automatic triage by passing a complexity flag:
+
+```
+/orchestrate -c medium agregar endpoint de health check
+/orchestrate --complexity=trivial fix typo en README
+/orchestrate -c max nueva feature cross-cutting con UI y backend
+```
+
+**Accepted values:** `trivial` | `medium` | `complex` | `max`
+
+| Flag value | Maps to level | Behavior |
+|---|---|---|
+| `trivial` | Trivial | Direct execution — no agents |
+| `medium` | Medium | developer → tester (default medium pipeline) |
+| `complex` | Complex | pm → architect → developer → tester → qa |
+| `max` | Maximum | Full pipeline with all agents |
+
+**When `-c` is present:**
+1. **Skip automatic triage** — use the user's classification directly
+2. **Still apply triage modifiers** (touches UI → add designer, etc.) — the user sets the base, modifiers refine it
+3. **Still confirm with the user** before launching — show the resulting pipeline so they can adjust agents if needed
+4. **Do NOT second-guess** the user's choice — if they say `-c trivial`, trust it even if the task looks complex
+
+**When `-c` is absent:** fall through to automatic triage as usual (behavior unchanged).
+
+---
+
 Before launching any agent, classify the task and select the pipeline:
 
 | Signal | Level | Pipeline |
@@ -72,7 +101,7 @@ The designer uses these skills during their work (orchestrator does NOT invoke t
 - `/design-project` — opens the workspace
 - `/design-system` — creates/updates tokens, components, screens
 
-**After triage:** tell the user which level you chose and which agents will run. Proceed only after they confirm or adjust.
+**After triage:** tell the user which level you chose (or accepted from `-c`) and which agents will run. Proceed only after they confirm or adjust.
 
 ---
 
