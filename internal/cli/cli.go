@@ -27,10 +27,13 @@ func Run(args []string) {
 	}
 
 	cmd := "help"
+	var cmdArgs []string
 	if len(args) > 1 {
 		cmd = args[1]
 	}
-	cmdArgs := args[2:]
+	if len(args) > 2 {
+		cmdArgs = args[2:]
+	}
 
 	switch cmd {
 	case "init":

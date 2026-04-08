@@ -292,7 +292,7 @@ func (m Model) updateSearch(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m Model) updateNormal(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "q", "ctrl+c":
+	case "q", "ctrl+c", "esc":
 		m.quitting = true
 		return m, tea.Quit
 
@@ -821,7 +821,7 @@ func (m Model) renderHelp() string {
 		"C/O/X/R all→target",
 		"s mode",
 		"/ search",
-		"q quit",
+		"esc/q quit",
 	}
 	return helpStyle.Render("  " + strings.Join(keys, "  •  "))
 }
