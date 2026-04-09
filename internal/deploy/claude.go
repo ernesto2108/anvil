@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/ernesto2108/anvil/pkg/config"
 	"github.com/ernesto2108/anvil/pkg/fileutil"
@@ -54,7 +53,7 @@ func adaptClaude(cfg *config.App, agent AgentData) string {
 		tools := cfg.ResolvePermission(perm, config.TargetClaude)
 		if tools != "" {
 			content = frontmatter.ReplaceField(content, "permission", perm, tools)
-			content = replaceKey(content, "permission", "tools")
+			content = frontmatter.RenameField(content, "permission", "tools")
 		}
 	}
 
@@ -65,21 +64,6 @@ func adaptClaude(cfg *config.App, agent AgentData) string {
 	}
 
 	return content
-}
-
-func replaceKey(content, oldKey, newKey string) string {
-	// Replace first occurrence of "oldKey:" with "newKey:" in frontmatter
-	old := oldKey + ":"
-	new := newKey + ":"
-	replaced := false
-	lines := strings.Split(content, "\n")
-	for i, line := range lines {
-		if !replaced && len(line) > len(old) && line[:len(old)] == old {
-			lines[i] = new + line[len(old):]
-			replaced = true
-		}
-	}
-	return strings.Join(lines, "\n")
 }
 
 func deployClaudeMD(cfg *config.App, target string, ts *TargetStats) {

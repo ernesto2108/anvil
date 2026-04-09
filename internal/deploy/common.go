@@ -77,6 +77,10 @@ func deployAgents(cfg *config.App, agentDst string, ts *TargetStats, adapt Adapt
 
 		deployName := GetDeployName(name, renames)
 		dstPath := filepath.Join(agentDst, deployName)
+		// Remove any existing symlink to avoid writing through it to the source file
+		if IsAnvilSymlink(dstPath) {
+			os.Remove(dstPath)
+		}
 		if err := os.WriteFile(dstPath, []byte(adapted), 0o644); err != nil {
 			output.Error("write agent %s: %s", deployName, err)
 			continue

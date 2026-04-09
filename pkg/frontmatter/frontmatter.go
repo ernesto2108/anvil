@@ -59,6 +59,19 @@ func ReplaceField(content, key, oldVal, newVal string) string {
 	return strings.Replace(content, old, repl, 1)
 }
 
+// RenameField renames the first occurrence of a frontmatter key.
+func RenameField(content, oldKey, newKey string) string {
+	old := oldKey + ":"
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		if len(line) >= len(old) && line[:len(old)] == old {
+			lines[i] = newKey + ":" + line[len(old):]
+			break
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
 // HasField returns true if the frontmatter contains the given key with the given value.
 func HasField(content, key, value string) bool {
 	doc := Parse(content)

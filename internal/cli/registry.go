@@ -174,26 +174,28 @@ func registryBrowse(cfg *config.App, git *gitutil.Repo) {
 	// Process queued actions
 	result := finalModel.(tui.Model)
 	queue := result.Queue()
-	if len(queue) == 0 {
-		return
+
+	if len(queue) > 0 {
+		fmt.Println()
+		for _, action := range queue {
+			targetPath, ok := targetPaths[action.Target]
+			if !ok {
+				continue
+			}
+			if action.Action == "install" {
+				output.Info("Installing %s %q -> %s (%s)...",
+					action.Item.Type, action.Item.Name, action.Target, action.Mode)
+				installToTarget(cfg, action.Item, action.Target, targetPath, action.Mode)
+			} else {
+				output.Info("Uninstalling %s %q from %s...",
+					action.Item.Type, action.Item.Name, action.Target)
+				uninstallFromTarget(action.Item, action.Target, targetPath)
+			}
+		}
 	}
 
-	fmt.Println()
-	for _, action := range queue {
-		targetPath, ok := targetPaths[action.Target]
-		if !ok {
-			continue
-		}
-		if action.Action == "install" {
-			output.Info("Installing %s %q -> %s (%s)...",
-				action.Item.Type, action.Item.Name, action.Target, action.Mode)
-			installToTarget(cfg, action.Item, action.Target, targetPath, action.Mode)
-		} else {
-			output.Info("Uninstalling %s %q from %s...",
-				action.Item.Type, action.Item.Name, action.Target)
-			uninstallFromTarget(action.Item, action.Target, targetPath)
-		}
-	}
+	// Reconcile: upgrade stale symlinks to resolved copies
+	reconcileAgents(cfg, targetPaths)
 
 	// Sync metadata files (CLAUDE.md, GEMINI.md, AGENTS.md)
 	fmt.Println()
@@ -407,33 +409,34 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 		}
 		destFile := filepath.Join(destDir, it.Name+".md")
 
-		if mode == tui.ModeSymlink {
-			if err := fileutil.ForceSymlink(srcFile, destFile); err != nil {
-				output.Error("  symlink failed: %s", err)
-				return
-			}
-		} else {
-			content := string(data)
-			content = frontmatter.SetField(content, "managed-by", "anvil")
-			tier := doc.Fields["model"]
-			if config.IsTier(tier) {
-				if model, err := cfg.ResolveTier(tier, targetName); err == nil {
-					content = frontmatter.ReplaceField(content, "model", tier, model)
-				}
-			}
-			perm := doc.Fields["permission"]
-			if config.IsPerm(perm) {
-				tools := cfg.ResolvePermission(perm, targetName)
-				if tools != "" {
-					content = frontmatter.ReplaceField(content, "permission", perm, tools)
-				}
-			}
-			if err := os.WriteFile(destFile, []byte(content), 0o644); err != nil {
-				output.Error("  write agent: %s", err)
-				return
+		// Agents always need frontmatter resolution (model tier → actual model,
+		// permission level → tool list), so we always write a transformed copy
+		// regardless of the deploy mode. Symlinks would bypass this resolution.
+		content := string(data)
+		content = frontmatter.SetField(content, "managed-by", "anvil")
+		tier := doc.Fields["model"]
+		if config.IsTier(tier) {
+			if model, err := cfg.ResolveTier(tier, targetName); err == nil {
+				content = frontmatter.ReplaceField(content, "model", tier, model)
 			}
 		}
-		output.Info("  %s %s -> %s", output.Green("✓"), mode, destFile)
+		perm := doc.Fields["permission"]
+		if config.IsPerm(perm) {
+			tools := cfg.ResolvePermission(perm, targetName)
+			if tools != "" {
+				content = frontmatter.ReplaceField(content, "permission", perm, tools)
+				content = frontmatter.RenameField(content, "permission", "tools")
+			}
+		}
+		// Remove any existing symlink to avoid writing through it to the source
+		if deploy.IsAnvilSymlink(destFile) {
+			os.Remove(destFile)
+		}
+		if err := os.WriteFile(destFile, []byte(content), 0o644); err != nil {
+			output.Error("  write agent: %s", err)
+			return
+		}
+		output.Info("  %s %s -> %s", output.Green("✓"), "copy (resolved)", destFile)
 
 	case config.TargetOpenCode:
 		// OpenCode needs mode: subagent in frontmatter
@@ -611,6 +614,66 @@ func uninstallFromTarget(it tui.Item, targetName, targetPath string) {
 			return
 		}
 		output.Info("  %s removed %s", output.Red("✗"), path)
+	}
+}
+
+// reconcileAgents finds agent symlinks in target dirs and upgrades them
+// to resolved copies with proper model/permission values from config.
+func reconcileAgents(cfg *config.App, targetPaths map[string]string) {
+	upgraded := 0
+	for targetName, basePath := range targetPaths {
+		agentDir := filepath.Join(basePath, config.CompAgents)
+		entries, err := os.ReadDir(agentDir)
+		if err != nil {
+			continue
+		}
+		for _, e := range entries {
+			if e.IsDir() || filepath.Ext(e.Name()) != ".md" {
+				continue
+			}
+			path := filepath.Join(agentDir, e.Name())
+			if !deploy.IsAnvilSymlink(path) {
+				continue
+			}
+			// Read the symlink target (source agent file)
+			data, err := os.ReadFile(path)
+			if err != nil {
+				continue
+			}
+			doc := frontmatter.Parse(string(data))
+			content := string(data)
+			content = frontmatter.SetField(content, deploy.ManagedByKey, deploy.ManagedByValue)
+
+			tier := doc.Fields["model"]
+			if config.IsTier(tier) {
+				if model, err := cfg.ResolveTier(tier, targetName); err == nil {
+					content = frontmatter.ReplaceField(content, "model", tier, model)
+				}
+			}
+			perm := doc.Fields["permission"]
+			if config.IsPerm(perm) {
+				tools := cfg.ResolvePermission(perm, targetName)
+				if tools != "" {
+					content = frontmatter.ReplaceField(content, "permission", perm, tools)
+					// Claude uses "tools:" instead of "permission:" in frontmatter
+					if targetName == config.TargetClaude {
+						content = frontmatter.RenameField(content, "permission", "tools")
+					}
+				}
+			}
+
+			// Remove symlink, write resolved copy
+			os.Remove(path)
+			if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+				output.Error("  reconcile %s: %s", e.Name(), err)
+				continue
+			}
+			upgraded++
+		}
+	}
+	if upgraded > 0 {
+		fmt.Println()
+		output.Info("Reconciled %d agent(s): symlink → resolved copy", upgraded)
 	}
 }
 

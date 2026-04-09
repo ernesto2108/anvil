@@ -39,8 +39,23 @@ type CollisionResult struct {
 	Safe        []string
 }
 
-// IsManagedByAnvil reads a file and checks if it has managed-by: anvil in its frontmatter.
+// IsAnvilSymlink returns true if path is a symlink (symlinks in agent dirs
+// are always created by anvil, even if the target lacks managed-by frontmatter).
+func IsAnvilSymlink(path string) bool {
+	fi, err := os.Lstat(path)
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeSymlink != 0
+}
+
+// IsManagedByAnvil returns true if the file was deployed by anvil.
+// This includes files with managed-by: anvil frontmatter AND symlinks
+// (which are always created by anvil in deploy target directories).
 func IsManagedByAnvil(path string) bool {
+	if IsAnvilSymlink(path) {
+		return true
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return false
