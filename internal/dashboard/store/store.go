@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -29,6 +30,58 @@ func New(dbPath string, migrationsPath string, maxRuns int) (*SQLiteStore, error
 		maxRuns = defaultMaxRuns
 	}
 
+	db, err := openDB(dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := RunMigrations(db, migrationsPath); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+
+	return &SQLiteStore{db: db, maxRuns: maxRuns}, nil
+}
+
+// NewFS opens (or creates) a SQLite database at dbPath, applies migrations from
+// the provided filesystem (typically embed.FS), and returns a ready-to-use
+// SQLiteStore. Use this variant when migrations are embedded in the binary.
+// migrationsSubPath is the sub-directory inside the fs.FS where migrations live
+// (pass "migrations" if the embed root is the repo root, or "." if the embed
+// root is already the migrations dir).
+// maxRuns controls how many completed runs are retained before the oldest are
+// pruned; values <= 0 default to 500.
+func NewFS(dbPath string, migrations fs.FS, migrationsSubPath string, maxRuns int) (*SQLiteStore, error) {
+	if maxRuns <= 0 {
+		maxRuns = defaultMaxRuns
+	}
+
+	db, err := openDB(dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	subFS := migrations
+	if migrationsSubPath != "" && migrationsSubPath != "." {
+		subFS, err = fs.Sub(migrations, migrationsSubPath)
+		if err != nil {
+			_ = db.Close()
+			return nil, fmt.Errorf("dashboard/store: resolver sub-filesystem de migraciones %q: %w", migrationsSubPath, err)
+		}
+	}
+
+	if err := RunMigrationsFS(db, subFS); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+
+	return &SQLiteStore{db: db, maxRuns: maxRuns}, nil
+}
+
+// openDB creates the database file (with restrictive permissions) and opens a
+// *sql.DB with WAL journal mode and foreign keys enabled. The caller is
+// responsible for closing the returned *sql.DB on error.
+func openDB(dbPath string) (*sql.DB, error) {
 	dir := filepath.Dir(dbPath)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return nil, fmt.Errorf("dashboard/store: crear directorio de base de datos: %w", err)
@@ -59,12 +112,7 @@ func New(dbPath string, migrationsPath string, maxRuns int) (*SQLiteStore, error
 		return nil, fmt.Errorf("dashboard/store: configurar foreign_keys=ON: %w", err)
 	}
 
-	if err := RunMigrations(db, migrationsPath); err != nil {
-		_ = db.Close()
-		return nil, err
-	}
-
-	return &SQLiteStore{db: db, maxRuns: maxRuns}, nil
+	return db, nil
 }
 
 // WriteEvent implements instrumentation.EventWriter. It always appends a row to
