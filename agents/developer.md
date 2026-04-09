@@ -256,6 +256,42 @@ Fill the `## Handoff for tester` section of the handoff with:
 
 **Do NOT** write actual test code. You are forbidden. Your job is to give the tester a complete briefing so they can skip re-reading.
 
+### qa-fix mode (continuation after QA findings)
+
+When the orchestrator invokes you with `Mode: qa-fix`, you are resuming the same task you already implemented. The orchestrator is deliberately **NOT** reloading your previous context to save tokens — the handoff you already wrote is the memory of that work.
+
+**Rules for qa-fix mode (STRICT):**
+
+1. **Primary context is `.handoff/<TASK-ID>.md`** — read it first. It has your prior file list, patterns, decisions, and validation. That IS your memory.
+2. **Do NOT re-read:** PRD, design, context.md, or any production file not listed in the QA findings
+3. **Do NOT re-load the full convention skill.** The orchestrator injects only the specific rules (3-5 bullets) that apply to the fix inline in the prompt. Trust those rules — do not go fetch more
+4. **Read ONLY the files listed in the QA findings** — not the whole package, not the whole codebase
+5. **Apply SURGICAL fixes** — address ONLY the findings. No refactors, no "while I'm here" cleanups, no drive-by improvements. If you see other issues, mention them in handoff `## Notas` as backlog candidates — do NOT fix them in this pass
+6. **Re-run validation scoped to the files touched:**
+   - Go: `go vet -tags <tag> ./internal/<pkg>` (not `./...`), plus the relevant package tests if any
+   - Frontend: `npm run build` only if you touched `.ts` / `.tsx`
+7. **Update `## Notas`** of the handoff with a one-line entry per fix applied
+8. **Do NOT modify `## Handoff for tester`** unless a fix changed a public interface signature. If it did, update only the changed signature, do not rewrite the whole section
+
+**If the findings exceed qa-fix scope**, STOP and tell the orchestrator:
+
+> "Findings exceed qa-fix scope (too many files / architectural change / unclear root cause). Re-invoke me in normal mode with a new plan."
+
+Valid reasons to escalate out of qa-fix mode:
+- More than 5 files need changes
+- A finding requires a new pattern, new abstraction, or moving files between packages
+- The root cause is unclear and requires re-reading the PRD or design
+- A finding contradicts a decision recorded in the handoff (design conflict — needs user discussion)
+
+**Forbidden in qa-fix mode:**
+- Loading the full convention skill
+- Reading the PRD, design, or context.md
+- Touching files outside the findings
+- Running `go vet ./...` or full-project builds when scoped commands suffice
+- Creating new files (unless a finding explicitly demands it)
+
+**The same rules apply to `Mode: security-fix`** — the only difference is the source of findings.
+
 ## Task Lifecycle (MANDATORY when TASK-ID exists)
 
 The developer owns the task status from start to finish:

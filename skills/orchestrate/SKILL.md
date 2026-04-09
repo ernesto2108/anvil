@@ -47,10 +47,10 @@ Before launching any agent, classify the task and select the pipeline:
 |--------|-------|----------|
 | Typo, config change, 1-2 files, clear fix | **Trivial** | Direct — no agents |
 | 3-5 files, known pattern, no design decisions | **Medium** | developer → tester |
-| New feature, new endpoint, design decisions needed | **Complex** | pm → architect → developer → tester → qa |
+| New feature, new endpoint, design decisions needed | **Complex** | pm → architect → developer → tester → qa? |
 | Cross-cutting, UI+backend, multi-service | **Maximum** | scanner → pm → designer → architect → developer → tester → security → qa → reporter |
 | Bug fix (clear repro) | **Medium** | developer → tester |
-| Bug fix (unclear) | **Medium** | pm → developer → tester → qa |
+| Bug fix (unclear) | **Medium** | pm → developer → tester → qa? |
 | DB migration | **Complex** | architect → dba → qa |
 | Infra / CI | **Complex** | devops → security |
 | Security audit | **Medium** | security |
@@ -305,14 +305,50 @@ This inherits the full detection and response protocol from the global instructi
 | dba | no DB changes |
 | devops | no infra changes |
 | security | no auth, no sensitive data, no external APIs |
+| qa | see **QA gating rules** below — NOT always run |
 | reporter | trivial or medium tasks |
 | tester | no testable code (docs, config, infra) |
 | mkt-content | no marketing content needed |
 
 **What you NEVER skip:**
 - developer (if there's code to write)
-- qa (for Complex and Maximum — always review)
 - lint + run-tests (before any code ships)
+- tester (if there's testable code)
+
+### QA gating rules (when to run QA)
+
+QA costs ~40-60k tokens per invocation. It is NOT the default for every task. The orchestrator decides per task using these rules:
+
+**Run QA when ANY of:**
+1. Task complexity is **Large or Maximum** (≥8 pts)
+2. Task touches any **critical path**, regardless of size:
+   - Auth, permissions, sessions, tokens
+   - Database schema, migrations, PRAGMAs
+   - Payment, money, billing, pricing, invoicing
+   - Public DTOs / API contracts that cross service or process boundaries
+   - Security-sensitive code: crypto, secrets, input sanitization, SQL construction, file path handling
+   - Concurrency primitives with shared state (locks, channels, atomics, goroutines)
+3. User **explicitly requests** QA ("pásalo por QA", "quiero code review", "revisa con qa")
+4. Task is a **refactor** of a critical subsystem (store, event bus, middleware, request pipeline, migration runner)
+5. Previous task in the same feature series had QA findings score < 8 (higher risk of repeat issues)
+
+**Skip QA when ALL of:**
+- Task is Medium (3-5 pts), AND
+- Touches NONE of the critical paths above, AND
+- User did not explicitly request it, AND
+- No prior QA warning from a related task in the same series
+
+**What replaces QA on skipped tasks (quality floor):**
+- Developer's **Self-QA checklist** (already mandatory — see `agents/developer.md`)
+- `/lint` and `/run-tests` skills (mandatory for ALL tasks)
+- Tester coverage with enriched handoff (already mandatory)
+- Convention skill rules applied by the developer
+
+This floor is sufficient for Medium non-critical work. Reserve QA for where it actually moves the needle.
+
+**When in doubt: run QA.** The 40-60k cost is cheaper than shipping a regression. But stop auto-running it on 3-pt UI tweaks and small refactors.
+
+**Announce the QA decision to the user during triage** — e.g., "Pipeline: developer → tester. QA se salta (Medium, sin critical path). ¿OK?". The user may override before execution starts.
 
 ---
 
@@ -413,6 +449,69 @@ After the developer agent finishes and BEFORE launching the tester, the orchestr
 3. **Build passes:** Run `go build` / `npm run build` / equivalent to confirm the code compiles.
 
 **Why:** Subagents can claim they created files without actually doing so. Trust but verify. Catching this here avoids wasting the tester's tokens on non-existent code.
+
+---
+
+## QA fix loop — in-context re-invocation (token budget)
+
+When QA returns BLOCKING findings, the orchestrator must re-invoke the developer to apply fixes. A FRESH developer invocation costs ~20-30k tokens (re-loading convention skills, PRD, design, context.md, production files, handoff). That is pure waste — the previous developer invocation already had all that context and wrote the handoff to prove it.
+
+### Rule: re-invoke the developer in `qa-fix` mode
+
+The orchestrator passes `Mode: qa-fix` in the developer prompt. In this mode the developer:
+1. Reads `.handoff/<TASK-ID>.md` (the handoff from the first invocation) as PRIMARY context
+2. Does **NOT** re-read PRD, design, context.md
+3. Does **NOT** re-load the full convention skill — the orchestrator injects ONLY the specific rules that apply to the files being fixed (3-5 rules inline, not the whole dispatcher)
+4. Reads **ONLY** the files listed in the QA findings, not the whole package or the whole codebase
+5. Applies SURGICAL fixes — no refactors, no "while I'm here" cleanups
+6. Re-runs validation only for the files touched (`go vet -tags <tag> ./internal/<pkg>`, `npm run build` only if frontend changed)
+7. Updates `## Notas` in the handoff with a one-line entry per fix applied
+8. Does NOT rewrite `## Handoff for tester` unless a fix changed a public interface signature
+
+### qa-fix prompt template
+
+```
+Mode: qa-fix. TASK-ID: <TASK-ID>.
+
+The developer already completed the initial implementation for this task. The handoff at `.handoff/<TASK-ID>.md` contains the full context: files touched, patterns applied, decisions made, validation run. THAT is your primary context.
+
+QA review returned the following BLOCKING findings (must fix before this task can merge):
+
+<inline QA findings — exact issues with file paths and line numbers when available, one finding per bullet>
+
+Execution rules:
+1. Read `.handoff/<TASK-ID>.md` first. Do NOT re-read PRD, design, or context.md.
+2. Read ONLY the files mentioned in the QA findings above — not the whole package, not the whole codebase.
+3. Apply MINIMAL fixes — address ONLY the findings. No extra refactors, no cleanups, no "while I'm here".
+4. Re-run validation commands scoped to the files you touched:
+   - Go: `go vet -tags <tag> ./internal/<pkg>` + relevant unit test package
+   - Frontend: `npm run build` only if you touched .ts/.tsx
+5. Update `## Notas` in the handoff — one line per fix applied.
+6. Do NOT modify `## Handoff for tester` unless a fix changed a public interface signature.
+
+Convention rules that apply to your fix (injected inline — do NOT load the full skill):
+<inline ONLY the 3-5 specific rules from the convention skill that apply to the fix — e.g., "error wrapping: wrap SQL errors with fmt.Errorf('package: action: %w', err)" — NOT the whole dispatcher>
+
+Forbidden:
+- Loading the full convention skill
+- Reading PRD / design / context.md
+- Touching files outside the findings
+- Refactoring code that works
+```
+
+### When NOT to use qa-fix mode
+
+- **Findings are non-blocking** (rubric score still ≥7) → add them to the backlog as follow-up tasks, do NOT re-invoke the developer at all
+- **Findings require architectural changes** (new patterns, new abstractions, moving files) → re-invoke the developer in NORMAL mode with a new plan, not qa-fix
+- **Findings span > 5 files** → fixes are no longer surgical; use normal mode with a focused plan
+
+### Same rule applies to security findings
+
+When the security agent returns blocking findings on a completed task, use `Mode: security-fix` with the same template (swap "QA" for "security" in the prompt). The context-savings logic is identical.
+
+### Expected savings
+
+On tasks like DASH-FEAT-006, where a fresh developer re-invocation for a11y fixes cost **22k tokens**, qa-fix mode should bring that down to **~5-8k**. Savings per QA cycle: **~15-17k tokens**. Over 5 tasks with QA cycles, that is a full invocation's worth of budget reclaimed.
 
 ---
 
