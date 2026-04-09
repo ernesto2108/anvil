@@ -45,6 +45,34 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        brand: {
+          DEFAULT: 'hsl(var(--brand))',
+          subtle: 'hsl(var(--brand-subtle))',
+          text: 'hsl(var(--brand-text))',
+        },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          bg: 'hsl(var(--success-bg))',
+          border: 'hsl(var(--success-border))',
+        },
+        fail: {
+          DEFAULT: 'hsl(var(--fail))',
+          bg: 'hsl(var(--fail-bg))',
+          border: 'hsl(var(--fail-border))',
+        },
+        running: {
+          DEFAULT: 'hsl(var(--running))',
+          bg: 'hsl(var(--running-bg))',
+          border: 'hsl(var(--running-border))',
+        },
+        pending: {
+          DEFAULT: 'hsl(var(--pending))',
+          bg: 'hsl(var(--pending-bg))',
+          border: 'hsl(var(--pending-border))',
+        },
+        'text-secondary': 'hsl(var(--text-secondary))',
+        'text-muted': 'hsl(var(--text-muted))',
+        'border-strong': 'hsl(var(--border-strong))',
       },
       borderRadius: {
         lg: 'var(--radius)',

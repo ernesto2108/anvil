@@ -1,40 +1,32 @@
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { useState } from 'react'
+import { AppShell } from '@/components/layout/app-shell'
+import { RunsView } from '@/views/runs-view'
+import { FlowView } from '@/views/flow-view'
+
+type View = { name: 'runs' } | { name: 'flow'; runId: string }
 
 function App() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-8">
-      <div className="w-full max-w-lg space-y-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Anvil Dashboard</h1>
-          <p className="text-muted-foreground">
-            Observabilidad de ejecuciones de agentes
-          </p>
-        </div>
+  const [view, setView] = useState<View>({ name: 'runs' })
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Scaffold listo</CardTitle>
-            <CardDescription>Estado del proyecto</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Scaffold listo. Las vistas de Runs, Flow, Detail y Metrics se
-              cargaran en las proximas tareas (DASH-FEAT-005 al 010).
-            </p>
-            <Button variant="outline" disabled>
-              Ver ejecuciones
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+  const activeNav = view.name === 'flow' ? 'runs' : (view.name as 'runs' | 'metrics')
+
+  return (
+    <AppShell
+      title={view.name === 'runs' ? 'Runs' : 'Flow'}
+      activeView={activeNav}
+      onNavigate={(v) => setView({ name: v as 'runs' })}
+    >
+      {view.name === 'runs' && (
+        <RunsView onRowClick={(id) => setView({ name: 'flow', runId: id })} />
+      )}
+      {/* La navegación al detalle del agente se implementa en DASH-FEAT-007. */}
+      {view.name === 'flow' && (
+        <FlowView
+          runId={view.runId}
+          onBack={() => setView({ name: 'runs' })}
+        />
+      )}
+    </AppShell>
   )
 }
 
