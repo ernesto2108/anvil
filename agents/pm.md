@@ -122,6 +122,18 @@ When adding tasks, also check sprint health:
 - **If board.md doesn't exist** → create it with the Kanban plugin format (see `/backlog-management` Obsidian integration section)
 - **If dashboard.md doesn't exist** → create it with Dataview queries (see `/backlog-management` Obsidian integration section)
 - **All three files must exist together** — sprint-current.md, board.md, and dashboard.md are a unit. Never create one without the others.
+
+### Task state transitions — the 3-places rule
+
+When a task moves between states (Backlog → In Progress → Done, etc.), you MUST update **3 files** in the same operation:
+
+1. `<docs>/02-backlog/sprint-current.md` — move the row to the correct section
+2. `<docs>/02-backlog/board.md` — move the checkbox to the correct Kanban column
+3. `<docs>/03-tasks/<TASK-ID>/task.md` — update the `status` field in the frontmatter (and add `completed: YYYY-MM-DD` if done)
+
+**The third file is the one that gets forgotten.** `dashboard.md` uses Dataview queries that read task frontmatters — if `status` is stale, the dashboard lies about progress.
+
+Full rules, the state → frontmatter mapping table, and a grep recipe to catch drift live in `/backlog-management` → "State transitions — the 3-places rule". Read it if you are about to close tasks at sprint end.
 - **If current sprint is > 4 weeks old** → ask the user: "El sprint actual lleva más de 4 semanas. ¿Quieres cerrar este sprint y abrir uno nuevo?" If yes:
   1. Move incomplete tasks from Backlog/In Progress to a new sprint file
   2. Archive current sprint as `sprint-<N>.md`

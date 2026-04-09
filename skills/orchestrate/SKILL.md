@@ -105,6 +105,54 @@ The designer uses these skills during their work (orchestrator does NOT invoke t
 
 ---
 
+## Anti-patterns (the orchestrator MUST NOT do)
+
+These are real mistakes caught during past sessions. The orchestrator defaults to each of them under pressure — read this before triaging any task.
+
+### 1. Manual handoff as triage bypass
+
+**Wrong:** user asks for a Medium+ feature, orchestrator writes the plan directly in `.handoff/<TASK>.md` without spawning any agents, then executes it themselves.
+
+**Why it happens:** Feels faster. Feels "more direct". The orchestrator rationalizes "I already have the context, spawning agents is overhead."
+
+**Why it is wrong:** The `/orchestrate` skill IS the triage. Writing a handoff yourself skips pipeline selection, skill loading, and agent boundaries. Even if the plan is correct, it violates the "developer is the only code writer" rule the moment you start editing files.
+
+**Right:** Invoke the triage, select the pipeline, spawn the developer agent with the plan inline. The handoff file is written BY the developer, not instead of it.
+
+### 2. "This looks simple, I'll just do it"
+
+**Wrong:** orchestrator evaluates a task, decides it's "basically boilerplate" or "just a few config files", and skips straight to editing.
+
+**Why it is wrong:** "Boilerplate" does not mean trivial. A scaffold with 12 config files, new build tags, new Makefile targets, new package structure is Medium+ — it touches many files and affects every future build. Small per-file changes ≠ small task.
+
+**Right:** use the triage table. If in doubt, round UP. A task that feels simple but touches build infrastructure is Medium, not Trivial.
+
+### 3. Writing code "just this once"
+
+**Wrong:** orchestrator writes a small `.go`, `.ts`, `.tsx`, `.py`, `.rs`, `.dart` file directly because spawning the developer feels disproportionate.
+
+**Why it is wrong:** "Just this once" happens every time. Each direct edit bypasses the convention skills (react-conventions, go-conventions, etc.) that the developer agent loads. The resulting code drifts from project standards and the user notices.
+
+**Right:** if the change touches any application code file, delegate to the developer agent with the correct convention skill named explicitly in the prompt. If the overhead feels high, batch multiple changes into ONE developer call — do not bypass the boundary.
+
+**Exceptions (direct edit OK):**
+- `go.mod` via `go get` / `go mod tidy` (tooling, not hand-written code)
+- Config files: `Makefile`, `wails.json`, `.gitignore`, `tsconfig.json`, `package.json` (but validate versions carefully)
+- Shell commands for verification: `go build`, `go vet`, `npm run build`
+- Markdown docs, handoff files, sprint-current.md
+
+If the extension is `.go`, `.ts`, `.tsx`, `.jsx`, `.vue`, `.svelte`, `.py`, `.rs`, `.dart`, `.astro`, `.kt`, `.swift` — **always** delegate to developer.
+
+### 4. Claiming a skill was loaded without confirmation
+
+**Wrong:** the orchestrator names a skill in the agent prompt ("load react-conventions") and assumes the agent loaded it. The agent's report does not mention the skill, and the orchestrator does not re-check.
+
+**Why it is wrong:** the agent may have silently skipped the skill. The user catches it later with "did you load the skill?" — and the orchestrator has to re-run the validation.
+
+**Right:** after the agent completes, verify its report either names the skill explicitly or references rules from it. If neither, send a follow-up to the same agent: "confirm you loaded <skill> and re-validate the files against its rules". This is cheaper than a redo.
+
+---
+
 ## Clarification checkpoints (MANDATORY)
 
 Before launching certain agents, The orchestrator MUST ask the user questions. DO NOT assume — ask first.

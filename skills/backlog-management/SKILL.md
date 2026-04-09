@@ -112,6 +112,43 @@ Each task in board.md is a checkbox item with a wiki-link and relevant tags:
 - Update the task's frontmatter `status` field to match
 - The `dashboard.md` is self-updating via Dataview queries — no manual updates needed
 
+### State transitions — the 3-places rule (CRITICAL)
+
+Every time a task changes state, you MUST update **exactly 3 files**. Forgetting any one of them causes drift: `sprint-current.md` and `board.md` are manual views, but `dashboard.md` is built on Dataview queries that read from task frontmatters — if you only update the first two, the dashboard shows stale data and the next orchestrator session thinks the task is still pending.
+
+**Checklist for EVERY state transition:**
+
+1. **`<docs>/02-backlog/sprint-current.md`** — move the row to the correct section (Backlog / TODO / In Progress / Blocked / In Review / Done). Done rows include: `| ID | Title | Type | YYYY-MM-DD | Notes |`.
+
+2. **`<docs>/02-backlog/board.md`** — move the `- [ ]` / `- [x]` checkbox line to the correct Kanban column. When moving to Done, change `- [ ]` to `- [x]`.
+
+3. **`<docs>/03-tasks/<TASK-ID>/task.md`** frontmatter — update the `status` field. If moving to Done, ALSO add a `completed: YYYY-MM-DD` field. **This is the one that gets forgotten.**
+
+### State → frontmatter value mapping
+
+| Kanban column | Frontmatter `status` | Extra fields |
+|---|---|---|
+| Backlog | `backlog` | — |
+| TODO | `todo` | — |
+| In Progress | `in-progress` | `started: YYYY-MM-DD` |
+| Blocked | `blocked` | `blocked_by: <TASK-ID>` |
+| In Review | `in-review` | `pr: <URL>` |
+| Done | `done` | `completed: YYYY-MM-DD` |
+
+### Common mistake — Done with stale frontmatter
+
+**Symptom:** user says "I see task X still in the backlog" even though `sprint-current.md` and `board.md` show it in Done.
+
+**Cause:** `03-tasks/<ID>/task.md` still has `status: backlog`. The Dataview query in `dashboard.md` reads frontmatters, not the Kanban columns, so it shows the task as pending.
+
+**Fix:** grep for stale statuses before closing a sprint:
+```bash
+# Any task file whose status does not match the sprint-current section it is in
+grep -r "status: backlog" <docs>/03-tasks/ | grep -v "$(awk '/## Backlog/,/## TODO/' <docs>/02-backlog/sprint-current.md)"
+```
+
+**Prevention:** when moving to Done, do all 3 file edits in the same tool call batch. Never split across messages — that is where the third file gets forgotten.
+
 ## Sprint board format
 
 `<docs>/02-backlog/sprint-current.md`:
