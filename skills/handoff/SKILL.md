@@ -30,11 +30,18 @@ Applies whether the task comes from the backlog (TASK-ID) or is invoked directly
 1. Create `.handoff/` directory if it doesn't exist
 2. Read `template.md` from this skill and use it to write the handoff file
 3. Fill in the execution plan and empty Token usage table
-4. **Present the plan to the user for approval** (see Approval Gate below)
+4. **Return control to the orchestrator with the plan** — do NOT present the plan directly to the user and do NOT auto-continue. The orchestrator is responsible for the user approval gate (see Approval Gate below).
 
-### Approval Gate (MANDATORY before coding)
+### Approval Gate (MANDATORY — user must approve manually)
 
-After creating the handoff with the execution plan, the developer MUST pause and present a summary to the user in Spanish:
+The plan presented in the handoff MUST be approved by the **user**, not by the orchestrator. The orchestrator is a relay, not an authority on approvals.
+
+**Flow:**
+1. Developer finishes creating the handoff with the execution plan and returns control to the orchestrator with a plan summary
+2. **Orchestrator surfaces the plan to the user in Spanish** and waits for an explicit response. The orchestrator uses `AskUserQuestion` or a direct text prompt — never assumes approval from silence
+3. Developer does NOT continue coding until the orchestrator resumes it with explicit user approval (flag `plan_preapproved=true` or "plan approved — proceed")
+
+**Orchestrator presentation format (Spanish):**
 
 ```
 ## Plan de ejecución — <TASK-ID or slug>
@@ -51,15 +58,26 @@ After creating the handoff with the execution plan, the developer MUST pause and
 **Enfoque técnico:**
 <brief explanation of the approach>
 
-¿Apruebas este plan o quieres ajustar algo?
+¿Apruebas este plan, quieres ajustar algo, o prefieres otra cosa?
 ```
 
 **Rules:**
-- Do NOT write any production code until the user approves
-- The user may say: "dale", "ok", "aprobado" → proceed
-- The user may say: "cambia X", "no me gusta Y", "mejor usa Z" → update the handoff plan, present again
-- The user may say: "no, mejor hacemos otra cosa" → discard plan, start over
+- The orchestrator MUST NOT auto-approve. Phrases like "el plan coincide con las specs, apruebo y continúo" are forbidden — the user decides
+- The orchestrator waits for an explicit user response before resuming the developer
+- User may say: "dale", "ok", "aprobado", "sí" → orchestrator resumes developer with `plan_preapproved=true`
+- User may say: "cambia X", "no me gusta Y", "mejor usa Z" → orchestrator sends feedback back to developer, developer updates the handoff plan, loop
+- User may say: "no, mejor hacemos otra cosa" → orchestrator discards plan, restart with new scope
 - On **continuations** (handoff already exists with approved plan) → skip the gate, resume from "Siguiente paso"
+
+### Pre-approved plans (orchestrator shortcut)
+
+When the orchestrator has already designed the plan in detail in the main conversation AND the user has already approved it in the main conversation (before any agent was invoked), the orchestrator may pass `plan_preapproved=true` directly in the first developer invocation. In this case:
+
+1. Developer creates the handoff file as a progress artifact (NOT as a blocking gate)
+2. Developer proceeds to implementation immediately — no second invocation, no separate approval step
+3. This avoids the overhead of two developer invocations (plan + impl) when the orchestrator has already done the planning work
+
+**Orchestrator responsibility:** be honest about pre-approval. If there is ANY doubt that the user has explicitly approved the plan (not just said "continue" or "sigue" without seeing the details), use the normal flow, not the shortcut. When in doubt, ask.
 
 ### Update (after each milestone)
 

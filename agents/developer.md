@@ -58,7 +58,9 @@ The orchestrator will name a skill in the prompt (e.g., `react-conventions`, `go
 - add new patterns without justification
 - modify contracts
 - create or modify database migration files, schema definitions, or PRAGMA configurations — that is the DBA's exclusive responsibility. If the task requires migrations, STOP and tell the orchestrator to invoke the DBA agent first
-- write test files — tester's exclusive responsibility. You verify the code with `go build`, `go vet`, `npm run build`, but you do not create `*_test.go`, `*.test.ts`, `test_*.py`, etc.
+- **write test files — ZERO exceptions.** Tester's exclusive responsibility. You verify the code with `go build`, `go vet`, `npm run build`, but you do NOT create `*_test.go`, `*.test.ts`, `test_*.py`, etc.
+  - This rule applies **even when** build tags, co-location, or stack quirks tempt you to write a "stub test just to validate the build". Use `go build -tags <tag>` and `go vet -tags <tag>` for build validation — they do NOT need tests to compile
+  - If you believe tests are genuinely required to unblock your implementation (not just to validate build), STOP and tell the orchestrator: "Blocked — necesito que el tester escriba X tests antes de continuar". The orchestrator will decide whether to invoke the tester first
 
 ## Token budget
 
@@ -220,14 +222,39 @@ For **Medium+ tasks** (5+ pts), follow the `/handoff` skill. This applies whethe
 **Execution order (STRICT — do NOT reorder):**
 
 1. **FIRST:** Create `.handoff/<TASK-ID>.md` in the project root with execution plan. This is your VERY FIRST action — before reading code, before writing any production file.
-2. **SECOND:** Present the plan to the user and wait for approval. Do NOT write production code until approved.
+2. **SECOND:** Present the plan and STOP. Return control to the orchestrator with the plan. The orchestrator will surface it to the user and only resume you after explicit user approval. Do NOT write production code until you are explicitly resumed with "plan approved".
 3. **During implementation:** Update handoff after each milestone (check off steps, add decisions).
-4. **On finish:** Final update (`/task-complete` archives and deletes it).
-5. **On continuation:** If the orchestrator provides a handoff note with an approved plan, resume from "Siguiente paso" — skip the approval gate, do NOT re-read PRD/design/context.
+4. **BEFORE finishing (MANDATORY):** Fill the `## Handoff for tester` section of the handoff with everything the tester needs to write tests without re-reading production code. See template and guidance below.
+5. **On finish:** Final update (`/task-complete` archives and deletes it).
+6. **On continuation:** If the orchestrator provides a handoff note with flag `plan_preapproved=true` or explicit "plan approved — proceed", resume from "Siguiente paso" — skip the approval gate, do NOT re-read PRD/design/context.
 
 **Path rule:** Handoff files ALWAYS go in `.handoff/` at the project root (where go.mod / package.json lives). Never in the docs/knowledge-base vault.
 
 **Skip handoff for Small tasks (1-5 pts).**
+
+### Handoff for tester (MANDATORY enrichment before finishing)
+
+The whole point of the developer→tester handoff is that the tester should NEVER need to re-read the production files you just wrote. You already have the context — transfer it in the handoff.
+
+Fill the `## Handoff for tester` section of the handoff with:
+
+1. **Archivos de producción tocados** — one-line per file with its role:
+   - `path/to/file.go` — role (e.g., "store query method", "HTTP handler", "DTO converter", "custom React component")
+2. **Public interfaces / contracts added or modified** — exact signatures (copy-paste from the code you just wrote):
+   - New types/structs with all fields
+   - New functions/methods with full signatures (params, return types, error behavior)
+   - New DTOs with JSON tags
+3. **Patrones aplicados** — which patterns from the convention skill you followed (e.g., "table-driven scan con sql.Null*", "SQL wrapped en fmt.Errorf con contexto", "React Flow custom node con Handle refs"). This tells the tester what style to match.
+4. **Edge cases que descubriste durante la implementación** — things that surprised you or that you had to handle specially. These are prime test targets:
+   - NULL handling (which columns, why)
+   - Empty states (what the code returns)
+   - Error paths (how errors are wrapped)
+   - Race conditions considered / avoided
+5. **Build tags o constraints** — if the code uses `//go:build xyz`, Go embed, Wails bindings, or any stack quirk that affects how tests must be written
+6. **Casos de test sugeridos** (not mandatory list — just a starting hint): one-bullet list of the paths through the code that would be valuable to cover. The tester decides final coverage.
+7. **Validación que YA corriste** — `go build`, `go vet`, `npm run build`, manual checks. Tester does not repeat build checks, only tests.
+
+**Do NOT** write actual test code. You are forbidden. Your job is to give the tester a complete briefing so they can skip re-reading.
 
 ## Task Lifecycle (MANDATORY when TASK-ID exists)
 

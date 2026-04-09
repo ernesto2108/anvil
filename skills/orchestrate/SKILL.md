@@ -176,21 +176,62 @@ Ask:
 
 **Why:** The handoff prevents the Developer from wasting tokens re-reading PRD, design, and code already processed. If the user confirms prior work (and there's no handoff), be specific: "Only X, Y, Z are missing — don't read the rest."
 
-**Developer prompt for continuations (handoff exists):**
-```
-Resume <TASK-ID or slug>. Here is the handoff note from the previous session:
+#### Plan approval flow — who approves what (CRITICAL)
 
-<handoff content inline>
+**The USER approves plans, not the orchestrator.** This is a hard rule.
 
-Continue from "Siguiente paso". Do NOT re-read PRD or design — the handoff has all the context you need. Update the handoff file as you make progress.
+There are two valid flows:
+
+**Flow A — Orchestrator designs the plan AND user approves in the main conversation (shortcut)**
+
+When the orchestrator, before invoking any agent, has:
+1. Read the task, architecture, design, and code context itself
+2. Designed a concrete plan with file list, patterns, and decisions
+3. Presented this plan to the user in the main conversation
+4. Received an EXPLICIT approval ("sí", "dale", "apruebo", "sigue con ese plan") — not just "continue" or "ok" without seeing details
+
+Then the orchestrator invokes the developer **once** with `plan_preapproved=true` and the full plan inline:
+
+```
+Complexity: <Medium|Large>. Skill: <convention-skill>. plan_preapproved=true
+
+The user has already approved the following plan in the main conversation:
+
+<full plan inline with file list, approach, decisions>
+
+Execution:
+1. Create .handoff/<TASK-ID>.md as a progress artifact — record this plan there
+2. Proceed DIRECTLY to implementation — do NOT pause to present the plan, the user has already seen it
+3. Update the handoff as you work (check off steps, record decisions)
+4. Before finishing, fill the `## Handoff for tester` section of the handoff (MANDATORY)
 ```
 
-**Developer prompt for new Medium+ tasks (no handoff):**
-```
-Complexity: <Medium|Large>. Follow /handoff skill to create a handoff file as you work.
+This shortcut saves one full developer invocation (~50-60k tokens on Complex tasks).
 
-MANDATORY FIRST STEP: Create .handoff/<TASK-ID>.md with your execution plan BEFORE writing any production code. Present the plan to the user for approval. Do NOT skip this step.
-```
+**Flow B — Developer designs the plan, user approves via orchestrator (normal flow)**
+
+When the orchestrator does NOT have a pre-approved plan:
+
+1. Orchestrator invokes the developer with instructions to create a plan and STOP:
+   ```
+   Complexity: <Medium|Large>. Skill: <convention-skill>.
+
+   MANDATORY FIRST STEP: Create .handoff/<TASK-ID>.md with your execution plan.
+   Then STOP and return the plan summary to the orchestrator — do NOT write any production code.
+   Do NOT present the plan directly to the user; the orchestrator will do that.
+   ```
+2. Developer returns with a plan summary
+3. **Orchestrator surfaces the plan to the user and WAITS for explicit approval.** Use `AskUserQuestion` or a direct text prompt in Spanish. Forbidden phrases: "el plan coincide, apruebo y continúo", "el plan está bien, sigo adelante" — the user decides, not the orchestrator
+4. Orchestrator loops with developer until user says yes:
+   - If user says "dale"/"ok"/"aprobado" → invoke developer again with `plan_preapproved=true` and the approved plan inline, telling it to proceed with implementation
+   - If user asks for changes → send feedback to developer, get new plan, surface again
+   - If user rejects → restart scope
+
+**Never:**
+- Auto-approve plans on the user's behalf
+- Interpret silence as approval
+- Interpret a generic "sigue" (when the user has not seen the plan) as approval
+- Skip the approval surface step because "the user is busy"
 
 **Handoff path rule (CRITICAL — do NOT confuse):**
 - Handoff files go in `.handoff/` in the **project root** (where the code lives)
@@ -198,6 +239,42 @@ MANDATORY FIRST STEP: Create .handoff/<TASK-ID>.md with your execution plan BEFO
 - These are two different locations. Never put a handoff in `<docs>` and never put task docs in `.handoff/`
 
 **Skip handoff check for Small tasks (1-5 pts).**
+
+#### Developer → Tester handoff enrichment (MANDATORY)
+
+Before the orchestrator invokes the tester, it MUST verify that the developer filled the `## Handoff for tester` section of `.handoff/<TASK-ID>.md`. This section exists precisely so the tester does not re-read production files.
+
+**Verification checklist (before invoking tester):**
+
+1. [ ] `.handoff/<TASK-ID>.md` has a non-empty `## Handoff for tester` section
+2. [ ] "Public interfaces / contracts" has the exact signatures of new/modified functions, types, DTOs
+3. [ ] "Edge cases descubiertos" is filled (not just "N/A" — if there truly are none, the developer should say "sin edge cases no triviales")
+4. [ ] "Validación ya ejecutada" lists the commands the developer ran (go build, go vet, npm run build)
+
+**If the section is missing or incomplete:** re-invoke the developer with: "You forgot to fill the `## Handoff for tester` section of `.handoff/<TASK-ID>.md`. Fill it now with signatures, edge cases, patterns, and suggested test paths. Do NOT touch production code." This is cheaper than letting the tester re-read the codebase.
+
+**Tester prompt template (after verification passes):**
+
+```
+Stack: <go|react|flutter|...>. Skill: <convention-skill>.
+
+PRIMARY INPUT: Read `.handoff/<TASK-ID>.md` — specifically the `## Handoff for tester` section. That section contains:
+- files the developer touched (with their role)
+- exact signatures of new interfaces/DTOs
+- patterns applied
+- edge cases discovered
+- build tags / constraints
+- suggested test paths
+- validation already run (do NOT repeat build checks)
+
+Do NOT re-read the production files unless the handoff is missing a specific detail you need. If the handoff is incomplete, STOP and report to the orchestrator.
+
+Your job: write test files that cover the acceptance criteria below + any edge cases in the handoff.
+
+Acceptance criteria: <copy inline from task.md>
+```
+
+The developer boundary is strict: the developer does NOT write test files, ever. If the tester finds dev-authored test files in scope, report the violation (see tester.md Boundary Violation section).
 
 ### General rule
 

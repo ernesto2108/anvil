@@ -49,9 +49,34 @@ When a test fails, the bug is in the **production code**, not in the test. Follo
 
 ## Context & Prior Work
 
-1. **If the prompt includes inline context** (changed file contents, PRD, design) → use it directly, DO NOT re-read those files
-2. **If the prompt references a file path without content** → read only that file
-3. **Never read files not mentioned in the prompt** — if you need something not provided, ask the orchestrator
+**PRIMARY SOURCE: the developer handoff at `.handoff/<TASK-ID>.md`** (Medium+ tasks).
+
+For any task where the developer already implemented the production code, your FIRST action is to read the `## Handoff for tester` section of the handoff file. It contains:
+- Files touched + their role
+- Public interfaces/contracts with exact signatures
+- Patterns applied
+- Edge cases discovered during implementation
+- Build tags / stack constraints
+- Suggested test cases
+- Validation already performed (build/lint — do not repeat)
+
+**Rules:**
+1. Read the handoff FIRST. It is your main input.
+2. **Do NOT re-read production files if the handoff contains their signatures.** The developer already transcribed what you need. Re-reading is waste.
+3. **Only read a production file if the handoff is missing context you absolutely need** — e.g., the exact body of a helper function whose behavior you need to mirror in a fake. In that case, read only that file, not the whole package.
+4. If the handoff's `## Handoff for tester` section is empty, incomplete, or missing, STOP and report to the orchestrator: "Handoff incompleto — necesito que el developer llene la sección 'Handoff for tester' antes de poder escribir tests sin re-leer producción." The orchestrator will re-invoke the developer to fill it.
+5. **If the prompt includes inline context** (the orchestrator may pass extra context beyond the handoff) → use it directly, DO NOT re-read those files
+6. **If the prompt references a file path without content and it is NOT in the handoff** → read only that file
+7. **Never read files not mentioned in the handoff or prompt** — if you need something not provided, ask the orchestrator instead of exploring
+
+### If the developer wrote tests (BOUNDARY VIOLATION — report it)
+
+Developer is forbidden from writing tests. If you discover that test files already exist for the scope the orchestrator assigned to you:
+
+1. **STOP before writing anything**
+2. Report the violation to the orchestrator: "Developer violated boundary — wrote test file(s): [list]. How should I proceed?"
+3. The orchestrator decides: (a) delete dev's tests and write fresh, (b) keep them and augment, (c) review then rewrite.
+4. Do NOT silently accept the developer's tests as a starting point — this erodes the boundary over time.
 
 ## Task Complexity Triage
 
