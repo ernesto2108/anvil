@@ -1,12 +1,18 @@
 # <Nombre del Proyecto> — Contexto del Proyecto
 
-<!-- Este archivo lo genera el agente scanner. Podes correrlo con /orchestrate o invocando el scanner directamente. -->
+<!-- Este archivo lo genera el agente scanner. Se puede correr con /orchestrate o invocando el scanner directamente. -->
 
-## Objetivo del Producto
+## Descripcion General
 <!-- Que hace el producto y que problema resuelve -->
 
-## Reglas no negociables
-<!-- Restricciones que siempre se deben respetar -->
+## Stack Tecnologico
+<!-- Lenguajes, frameworks, bases de datos -->
 
-## Snapshot del Repositorio
-<!-- El scanner llena esta seccion automaticamente -->
+## Arquitectura
+<!-- Estructura de directorios y componentes principales -->
+
+## Decisiones de Diseno Clave
+<!-- Patrones, boundaries, convenciones importantes -->
+
+## Estado Actual
+<!-- Fecha, features disponibles, features faltantes -->

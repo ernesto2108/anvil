@@ -1,13 +1,34 @@
-# Sprint — Current
+# Sprint Backlog
 
-## PRDs this sprint
-<!-- List active PRDs -->
+> Sprint #N | YYYY-MM-DD → ongoing | Goal: <objetivo del sprint>
 
 ## Backlog
-<!-- Tasks not yet started -->
+
+| ID | Tarea | P | Tipo | Agente | Pts | Repo |
+|----|-------|---|------|--------|-----|------|
+| | **── Feature Name (TASK-ID, date) ──** | | | | | |
+
+## TODO
+
+| ID | Tarea | P | Tipo | Agente | Pts | Repo |
+|----|-------|---|------|--------|-----|------|
 
 ## In Progress
-<!-- Tasks being worked on -->
+
+| ID | Tarea | P | Agente | Inicio | Branch |
+|----|-------|---|--------|--------|--------|
+
+## Blocked
+
+| ID | Tarea | P | Agente | Bloqueado por |
+|----|-------|---|--------|---------------|
+
+## In Review
+
+| ID | Tarea | Agente | Reviewer | PR |
+|----|-------|--------|----------|-----|
 
 ## Done
-<!-- Completed tasks with date -->
+
+| ID | Tarea | Tipo | Fecha | Notas |
+|----|-------|------|-------|-------|
