@@ -167,10 +167,15 @@ All stack-specific rules (pre-implementation checklists, post-implementation che
 
 For **Medium+ tasks** (5+ pts), follow the `/handoff` skill. This applies whether the task has a TASK-ID or not.
 
-1. **On start:** create handoff with execution plan → **wait for user approval before coding**
-2. **After milestones:** update handoff
-3. **On finish:** final update (`/task-complete` archives and deletes it)
-4. **On continuation:** if the orchestrator provides a handoff note with an approved plan, resume from "Siguiente paso" — skip the approval gate, do NOT re-read PRD/design/context
+**Execution order (STRICT — do NOT reorder):**
+
+1. **FIRST:** Create `.handoff/<TASK-ID>.md` in the project root with execution plan. This is your VERY FIRST action — before reading code, before writing any production file.
+2. **SECOND:** Present the plan to the user and wait for approval. Do NOT write production code until approved.
+3. **During implementation:** Update handoff after each milestone (check off steps, add decisions).
+4. **On finish:** Final update (`/task-complete` archives and deletes it).
+5. **On continuation:** If the orchestrator provides a handoff note with an approved plan, resume from "Siguiente paso" — skip the approval gate, do NOT re-read PRD/design/context.
+
+**Path rule:** Handoff files ALWAYS go in `.handoff/` at the project root (where go.mod / package.json lives). Never in the docs/knowledge-base vault.
 
 **Skip handoff for Small tasks (1-5 pts).**
 

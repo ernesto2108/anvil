@@ -112,6 +112,49 @@ Tool-specific implementation: load `reference/pencil-workflow.md` or `reference/
 
 **Gate:** Components MUST exist BEFORE any screen design.
 
+#### Pre-check: Verify Design System Exists (BLOCKING)
+
+Before creating ANY component, run `get_variables()` and verify:
+
+1. **Color variables exist** — at least one hue family with full 50→950 ramp
+2. **Typography variables exist** — font-family, font-size scale (display→xs), font-weight set
+3. **Spacing variables exist** — at least 4 spacing tokens
+
+If ANY of these checks fail → **STOP. Do NOT proceed.** Go back to Step 3 and create the missing variables first. Creating components without variables leads to hardcoded values that must be rebuilt later.
+
+```
+# Verification pseudocode
+variables = get_variables()
+has_colors = any variable with type "color" and name matching scale pattern (e.g., *-500, *-600)
+has_typography = any variable with name matching font-size pattern (e.g., fs-*, font-*)
+has_spacing = any variable with name matching spacing pattern (e.g., sp-*, space-*)
+
+if not (has_colors and has_typography and has_spacing):
+    STOP → "Design system variables incomplete. Create variables before components."
+```
+
+#### Pre-check: Deduplicate Before Creating (BLOCKING)
+
+Before creating ANY new component, search for existing ones:
+
+1. Run `batch_get({ patterns: [{ reusable: true }] })` to list ALL existing reusable components
+2. For each component you plan to create, check if a similar one already exists by name or structure
+3. If a match exists → **use the existing component** (create instances with `ref`, override via `descendants`)
+4. Only create a new component if NO existing component serves the same purpose
+
+```
+# Deduplication pseudocode
+existing = batch_get({ patterns: [{ reusable: true }] })
+for each planned_component:
+    match = find in existing where name or structure is similar
+    if match:
+        USE match (ref + descendants) → do NOT create new
+    else:
+        CREATE new component
+```
+
+**Anti-pattern:** Creating "CardA" and "CardB" when they differ only in content = 1 component + 2 instances with different `descendants`. If you catch yourself creating two components with the same layout but different text/images, you are duplicating.
+
 Each component needs: **properties** (boolean, text, instance swap), **variants** (state, size, type), and **all values from variables**.
 
 #### Library Structure

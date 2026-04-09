@@ -109,6 +109,31 @@ Check if `<docs>/01-project/design-system.md` exists:
 
 This enforces the order: **variables → components → screens**. Skipping this gate wastes tokens rebuilding screens when tokens change.
 
+#### Verification Checklist (BLOCKING — do NOT skip)
+
+The design system section in ui-spec.md is incomplete if ANY of these are missing:
+
+| Check | Required |
+|---|---|
+| Color variables with full 50→950 ramp per hue family | YES |
+| Typography scale (display→xs) with specific Google Font | YES |
+| Font weight set (400, 500, 600, 700 minimum) | YES |
+| Spacing scale (at least 4 tokens) | YES |
+| Border radius tokens | YES |
+| Semantic token mapping (light + dark values) | YES |
+
+If any row is missing → **do NOT proceed to component or screen specs.** Complete the design system section first.
+
+#### Component Deduplication Rule (BLOCKING)
+
+Before specifying ANY component in the ui-spec:
+
+1. Review the full component list you are about to define
+2. If two components share the same layout structure but differ only in content (text, images, icons) → they are the SAME component with different instance overrides
+3. Merge duplicates into a single component definition with properties/variants that cover all use cases
+
+**Test:** If you can describe the difference between two components using only "different text" or "different icon" → they are duplicates. One component, multiple instances.
+
 ### Step 2.5 — Screen Inventory Validation (MANDATORY)
 
 **Gate:** Before finishing ui-spec.md, verify completeness with this audit.
@@ -240,7 +265,8 @@ Link + new tokens proposed. MUST include:
 - **color matches context** — match the domain, not your preference
 - **show all requested modes** — if user wants dark+light, show both from the start
 - **accessibility is not optional**
-- **reuse, never recreate** — same pattern N times = 1 component + N instances
+- **reuse, never recreate** — same pattern N times = 1 component + N instances. Before defining a new component, scan the existing list for structural duplicates. Two components that share layout but differ in content = 1 component + instance overrides
+- **deduplicate before creating** — if your component list has CardA/CardB, SectionA/SectionB, or any pattern where names differ by suffix but structure is identical → merge them. This is a blocking error, not a suggestion
 - **user-first** — if the user needs instructions, the design failed
 - **start subtle** — when adding secondary information (tags, metadata, links), begin with low opacity/small size. It's easier to make something more prominent than to walk back visual noise
 - **real data only** — never invent content (summaries, descriptions). Ask for the source document (CV, LinkedIn, brief) and derive text from it. Made-up data erodes trust

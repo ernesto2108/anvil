@@ -76,6 +76,42 @@ The standard format uses **tables**, not markdown headers:
 | TASK-ID | Task | Type | Date | Notes |
 ```
 
+## Obsidian integration (MANDATORY)
+
+The backlog lives in an Obsidian vault. Every task and sprint file must be compatible with Obsidian plugins: **Dataview** (queries) and **Kanban** (visual board).
+
+**All templates live in `vault-template/` in the Anvil repo root.** Read them directly — never hardcode templates inline in skills or agents.
+
+### Task file frontmatter (MANDATORY for every task.md)
+
+Every `<docs>/03-tasks/<TASK-ID>/task.md` MUST include Dataview frontmatter. Read `vault-template/03-tasks/task-template.md` for the exact format and fields.
+
+**Without this frontmatter, Dataview queries and the Kanban board will not work.** This is not optional.
+
+### Sprint companion files (create alongside sprint-current.md)
+
+When creating a new sprint, the PM MUST create 3 files based on the templates in `vault-template/02-backlog/`:
+
+| File | Template source | Purpose |
+|---|---|---|
+| `<docs>/02-backlog/sprint-current.md` | `vault-template/02-backlog/sprint-current.md` | Sprint table with sections |
+| `<docs>/02-backlog/board.md` | `vault-template/02-backlog/board.md` | Kanban board (Obsidian plugin) |
+| `<docs>/02-backlog/dashboard.md` | `vault-template/02-backlog/dashboard.md` | Dataview dashboard queries |
+
+**All three files must exist together.** Never create one without the others.
+
+Each task in board.md is a checkbox item with a wiki-link and relevant tags:
+```
+- [ ] [[TASK-ID/task]] Titulo de la tarea #proyecto #tag
+```
+
+### Updating companion files
+
+- When tasks move between states → update both `sprint-current.md` AND `board.md` (move the checkbox to the correct column)
+- When tasks are added → add to `sprint-current.md` table AND `board.md` Backlog column
+- Update the task's frontmatter `status` field to match
+- The `dashboard.md` is self-updating via Dataview queries — no manual updates needed
+
 ## Sprint board format
 
 `<docs>/02-backlog/sprint-current.md`:

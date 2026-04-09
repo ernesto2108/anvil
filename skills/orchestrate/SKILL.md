@@ -140,7 +140,14 @@ Continue from "Siguiente paso". Do NOT re-read PRD or design — the handoff has
 **Developer prompt for new Medium+ tasks (no handoff):**
 ```
 Complexity: <Medium|Large>. Follow /handoff skill to create a handoff file as you work.
+
+MANDATORY FIRST STEP: Create .handoff/<TASK-ID>.md with your execution plan BEFORE writing any production code. Present the plan to the user for approval. Do NOT skip this step.
 ```
+
+**Handoff path rule (CRITICAL — do NOT confuse):**
+- Handoff files go in `.handoff/` in the **project root** (where the code lives)
+- Documentation goes in `<docs>/` (the knowledge base / Obsidian vault)
+- These are two different locations. Never put a handoff in `<docs>` and never put task docs in `.handoff/`
 
 **Skip handoff check for Small tasks (1-5 pts).**
 
@@ -222,6 +229,35 @@ Pass all metrics inline to the reporter at the end. This enables cross-run compa
 
 ---
 
+## Vault setup (before any agent runs)
+
+Before invoking any agent, the orchestrator MUST verify the documentation vault exists:
+
+1. Read `~/.claude/project-registry.md` to resolve `<docs>` for the current project
+2. **If the project is NOT in the registry:**
+   - Create the vault at `~/projects/<project-name>-knowledge-base/`
+   - Copy the structure from `vault-template/` in the Anvil repo (includes all directories, template files for sprint, board, dashboard, task, and context)
+   - Register the project in `~/.claude/project-registry.md`
+3. **If the vault exists but is missing key files:**
+   - `01-project/context.md` missing → run scanner or create from `vault-template/01-project/context.md`
+   - `02-backlog/sprint-current.md` missing → PM will create from `vault-template/02-backlog/sprint-current.md`
+   - `02-backlog/board.md` missing → PM will create from `vault-template/02-backlog/board.md`
+   - `02-backlog/dashboard.md` missing → PM will create from `vault-template/02-backlog/dashboard.md`
+4. **All vault content must be in Spanish** (code/keys in English) — this applies from the first file created, not as a translation step after
+
+## Path map (CRITICAL — never confuse these)
+
+| What | Location | Example |
+|---|---|---|
+| Source code | Project root | `/Users/x/projects/anvil/` |
+| Handoff files | `.handoff/` in project root | `/Users/x/projects/anvil/.handoff/DASH-FEAT-002.md` |
+| Task docs, PRDs, architecture | `<docs>/` (knowledge base vault) | `/Users/x/projects/anvil-knowledge-base/03-tasks/DASH-FEAT-002/task.md` |
+| Sprint backlog, board | `<docs>/02-backlog/` | `/Users/x/projects/anvil-knowledge-base/02-backlog/sprint-current.md` |
+
+**The orchestrator resolves `<docs>` from `~/.claude/project-registry.md`.** The project root is the current working directory. These are two separate locations — never mix them when composing agent prompts.
+
+---
+
 ## Orchestration rules
 
 - The orchestrator resolves `<docs>` from `~/.claude/project-registry.md` before invoking any agent
@@ -243,6 +279,18 @@ For Small tasks (1-5 pts), the orchestrator does NOT tell the developer to load 
 
 This ensures consistent code without the token overhead of loading the full skill dispatcher.
 
+## Post-developer verification (MANDATORY for Medium+ tasks)
+
+After the developer agent finishes and BEFORE launching the tester, the orchestrator MUST verify deliverables:
+
+1. **Handoff exists:** Check that `.handoff/<TASK-ID>.md` exists in the project root. If it does not exist, the developer skipped the handoff — this is an error. Re-invoke the developer with: "You forgot to create the handoff file. Create `.handoff/<TASK-ID>.md` now with a summary of what you implemented."
+2. **Production files exist:** Verify that the files the developer claimed to create actually exist (use Glob or Read).
+3. **Build passes:** Run `go build` / `npm run build` / equivalent to confirm the code compiles.
+
+**Why:** Subagents can claim they created files without actually doing so. Trust but verify. Catching this here avoids wasting the tester's tokens on non-existent code.
+
+---
+
 ## Post-completion (MANDATORY)
 
 After all agents finish and the task is done, The orchestrator MUST update the sprint backlog:
@@ -251,8 +299,10 @@ After all agents finish and the task is done, The orchestrator MUST update the s
 2. Add or update the task entry with: ID, title, status (`done`), service, type, story points
 3. Link to the task docs (prd.md, design.md)
 4. Update sprint metrics (total SP planned/completed)
+5. Update `<docs>/02-backlog/board.md` — move the task checkbox to the **Done** column
+6. Update the task's frontmatter: set `status: done`
 
-**Why:** If the task is not registered in the sprint, it doesn't exist for tracking purposes. This step closes the loop.
+**Why:** If the task is not registered in the sprint, it doesn't exist for tracking purposes. The board.md and task frontmatter must stay in sync for the Obsidian Kanban and Dataview dashboard to reflect reality.
 
 ## Language
 

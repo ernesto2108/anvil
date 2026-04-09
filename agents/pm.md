@@ -1,6 +1,6 @@
 ---
 name: pm
-description: Use this agent for requirements discovery, PRD writing, backlog management, and sprint planning. Speaks Spanish with the user, writes PRDs in English. The ONLY agent allowed to create PRDs and manage the backlog. Call before architect.
+description: Use this agent for requirements discovery, PRD writing, backlog management, and sprint planning. Speaks Spanish with the user, writes PRDs and all docs in Spanish (code/keys in English). The ONLY agent allowed to create PRDs and manage the backlog. Call before architect.
 permission: write
 model: high
 ---
@@ -106,36 +106,27 @@ After PRD is written, break into tasks AND add them to the sprint. Both happen i
 
 ### Step 2.5 — Document task details (MANDATORY for tasks >= 5 pts)
 
-For each task with >= 5 story points, create a task doc at `<docs>/03-tasks/<TASK-ID>/`:
+For each task with >= 5 story points, create a task doc at `<docs>/03-tasks/<TASK-ID>/task.md`.
 
-```markdown
-# <TASK-ID>: <Title>
+**CRITICAL:** Every task.md MUST start with Dataview frontmatter. Without it, the Obsidian Kanban board and dashboard queries will not work.
 
-## PRD
-<parent PRD task ID>
+Read `vault-template/03-tasks/task-template.md` for the exact format. Copy it as the starting point for every new task file.
 
-## Acceptance Criteria
-- Given X, when Y, then Z
-- Given A, when B, then C
-
-## Dependencies
-- <TASK-ID> (if any)
-
-## Technical Notes
-- [any context the developer/tester needs that isn't in the PRD]
-```
-
-Tasks < 5 pts don't need individual docs — the backlog row + PRD are sufficient.
+Tasks < 5 pts don't need individual docs — the backlog row + PRD are sufficient. But if created, they MUST include frontmatter.
 
 ### Sprint Management
 
 When adding tasks, also check sprint health:
 
 - **If sprint-current.md doesn't exist** → create it with the standard format (read vault-template if available)
+- **If board.md doesn't exist** → create it with the Kanban plugin format (see `/backlog-management` Obsidian integration section)
+- **If dashboard.md doesn't exist** → create it with Dataview queries (see `/backlog-management` Obsidian integration section)
+- **All three files must exist together** — sprint-current.md, board.md, and dashboard.md are a unit. Never create one without the others.
 - **If current sprint is > 4 weeks old** → ask the user: "El sprint actual lleva más de 4 semanas. ¿Quieres cerrar este sprint y abrir uno nuevo?" If yes:
   1. Move incomplete tasks from Backlog/In Progress to a new sprint file
   2. Archive current sprint as `sprint-<N>.md`
   3. Create new `sprint-current.md` with carried-over tasks
+  4. Update board.md to reflect carried-over tasks
 
 ### Step 3 — Confirm with user
 

@@ -160,6 +160,14 @@ Usar formato Dado/Cuando/Entonces. Un comportamiento por escenario.
 - **Una pagina maximo** — si es muy grande, dividir en multiples tareas
 - **Preguntas abiertas es obligatorio** — si todo esta decidido, escribir "Ninguna"
 
+## Task decomposition output format
+
+When the PM breaks a PRD into tasks (via `/backlog-management`), every task file MUST include **Dataview frontmatter** so that Obsidian Kanban and Dataview queries work.
+
+**Template:** Read `vault-template/03-tasks/task-template.md` for the exact format. Copy it as the starting point for every new task file.
+
+**Common mistake:** Creating task.md files as plain markdown without frontmatter. This breaks the Kanban board and dashboard. Every task.md needs the `---` YAML block at the top.
+
 ## Que NO va en un PRD
 
 | Contenido | Donde pertenece |
