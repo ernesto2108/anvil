@@ -14,3 +14,13 @@ These patterns reflect the real DB access layer used across projects:
 Repository method flow: `WithTimeout → query() → execute → scan into DTO → map to domain`
 
 See `examples/good-patterns.md` for complete code examples.
+
+## Migrations — `golang-migrate`
+
+Use `github.com/golang-migrate/migrate/v4` for all database migrations. Never write ad-hoc `CREATE TABLE` or schema DDL in application code.
+
+- **Embed migrations** with `//go:embed migrations/*.sql` so they ship inside the binary
+- **File naming:** `<number>_<action>_<target>.up.sql` / `.down.sql` (e.g., `000001_create_users.up.sql`)
+- **One change per pair** — a single up/down pair does one logical thing
+- **DBA agent owns migration files** — the developer does NOT create or modify `.up.sql`/`.down.sql` files. If your task needs schema changes, tell the orchestrator to invoke the DBA first
+- **Engine-specific rules** — see `/db-engines` for PRAGMAs, driver setup, and migration quirks per engine

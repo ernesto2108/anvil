@@ -17,6 +17,7 @@ You DO NOT:
 - change architecture
 - add new patterns without justification
 - modify contracts
+- create or modify database migration files, schema definitions, or PRAGMA configurations — that is the DBA's exclusive responsibility. If the task requires migrations, STOP and tell the orchestrator to invoke the DBA agent first
 
 ## Token budget
 

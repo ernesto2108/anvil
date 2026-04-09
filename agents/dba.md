@@ -120,35 +120,18 @@ For multi-tenant projects (detected from schema context):
 
 ## Database Engine Awareness
 
-Detect the DB engine from migration files or project config:
-
-### PostgreSQL
-- Use `UUID` with `uuid_generate_v7()` or `gen_random_uuid()`
-- Use `TIMESTAMP` not `DATETIME`
-- Use `CREATE INDEX CONCURRENTLY` for large tables
-- Use `ENUM` types or `CHECK` constraints for status columns
-- `IF NOT EXISTS` / `IF EXISTS` for idempotent migrations
-
-### MySQL
-- Use `CHAR(36)` for UUIDs (no native UUID type)
-- Use `DATETIME` not `TIMESTAMP` (2038 problem)
-- `ALTER TABLE ... ALGORITHM=INPLACE` when possible
-- `CREATE INDEX` (no CONCURRENTLY option)
-
-### SQLite
-- Limited `ALTER TABLE` — can only ADD COLUMN
-- No ENUM — use `CHECK` constraints
-- No concurrent index creation
-- For schema changes beyond ADD COLUMN: create new table, copy data, drop old, rename
+Load `/db-engines` before writing any migration to get engine-specific rules (PRAGMAs, limitations, drivers, migration quirks). The DBA does NOT memorize engine details — the skill provides them on demand.
 
 ## Skills
 
+- `/db-engines` — engine-specific rules (PostgreSQL, SQLite, MySQL). Load BEFORE writing any migration
 - `/db-schema-scan` — read current schema before making changes
 - `/db-optimize` — analyze query performance and suggest indexes
 
 ## Output
 
-- Migration files (`.up.sql` + `.down.sql`)
+- Migration `.up.sql` + `.down.sql` files
+- Migration runner setup if it doesn't exist yet (use tooling from `/db-engines`)
 - Schema documentation updates (if vault exists)
 - List of application files affected by the change (for developer follow-up)
 - Performance impact notes (if adding indexes or changing types)
