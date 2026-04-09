@@ -433,6 +433,17 @@ See `frontend/src/lib/dagre-layout.ts` (from DASH-FEAT-006). The helper `layoutF
 - `npm install` MUST always use `--ignore-scripts` (per DASH-SEC-002)
 - Version pinning: look at existing `package.json` — pin exact versions (no `^`, no `~`) unless the package requires semver flexibility
 - Never add deps that phone home, bundle analytics, or require network at runtime (this is a local desktop dashboard)
+- **Audit immediately after install:** after any `npm install --ignore-scripts`, run `npm audit`. If it reports moderate+ vulnerabilities, fix them BEFORE committing. Do not ship a scaffold with unresolved audit findings.
+- **Vite red list:** `vite < 6.4.2` has dev-server CVEs (CORS bypass, `server.fs.deny` bypass, path traversal, WebSocket arbitrary file read). `esbuild <= 0.24.2` (pinned by vite 5.x) has a related dev-server CORS bypass. Vite 5.x CANNOT be fully patched — upgrade to **vite 6.4.2+** which uses `esbuild ^0.25.0`.
+- **Known-safe React + Vite combo** (update when newer patched versions exist):
+  ```json
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.3.4",
+    "vite": "6.4.2"
+  }
+  ```
+  `@vitejs/plugin-react@4.x` supports `vite ^4 || ^5 || ^6` — do NOT jump to vite 7+ without upgrading plugin-react to 5.x+, and do NOT jump to vite 8+ without moving to plugin-react 6.x (which adds rolldown + react-compiler deps).
+- All known vite dev-server CVEs require the dev server to be running AND the user visiting a malicious site. Production builds (`vite build`) and embedded Wails bundles are NOT affected. But always fix anyway — dev server gets run during development.
 
 ## What this skill replaces
 
