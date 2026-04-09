@@ -84,6 +84,7 @@ Load **only** the files relevant to the current task:
 | Health checks, Prometheus, OpenTelemetry | `guides/observability.md` |
 | HTTP middleware composition | `guides/middleware.md` |
 | SQL injection, crypto, input validation | `guides/security.md` |
+| `//go:embed` rules, build tags, Wails desktop builds, CGO_LDFLAGS | `guides/embed-and-desktop-builds.md` |
 
 ### Detection & Checklists
 
