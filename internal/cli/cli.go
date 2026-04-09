@@ -52,6 +52,8 @@ func Run(args []string) {
 		cmdPin(cfg, git, cmdArgs)
 	case "unpin":
 		cmdUnpin(cfg, git, cmdArgs)
+	case "dashboard":
+		cmdDashboard(cfg)
 	case "diff":
 		cmdDiff(cfg, git, cmdArgs)
 	case "registry":

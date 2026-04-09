@@ -6,3 +6,9 @@ AGENTS.md
 /anvil
 
 .idea
+
+# Dashboard build artifacts
+frontend/node_modules/
+frontend/dist/
+build/bin/
+anvil-full

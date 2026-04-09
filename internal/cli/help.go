@@ -14,6 +14,7 @@ func cmdHelp(appName string) {
     %s <command> [args]
 
   COMMANDS:
+    dashboard            Open Anvil Dashboard (observability UI)
     init                 First-time setup — show config and launch browser
     browse               Interactive TUI to manage agents/skills/commands
     update               Pull latest + rebuild binary
