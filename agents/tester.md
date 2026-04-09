@@ -81,14 +81,19 @@ The orchestrator provides one of:
 
 ## Convention Skills
 
-Only invoke when the orchestrator specifies it:
+Only invoke when the orchestrator specifies it. **Read the actual files** — do not guess patterns.
 
-- `go-conventions` — Go testing patterns (mock strategy, table-driven tests, assert/require rules)
+- `go-conventions` — Read these files from `skills/go-conventions/`:
+  - `guides/testing/structure-tables.md` — test file structure, table-driven pattern, naming (`Test_FunctionName`)
+  - `guides/testing/helpers-mocking.md` — test helpers, interface mocking patterns
+  - `guides/testing/fixtures-integration.md` — testdata/, integration tests, build tags
 - `react-conventions` — React testing patterns (RTL, MSW, behavior-first)
 - `flutter-conventions` — Flutter testing patterns (widget tests, mocktail, bloc_test)
 - `python-conventions` — Python testing patterns (pytest fixtures, parametrize, async testing)
 - `typescript-conventions` — TypeScript testing patterns (Vitest, expectTypeOf, mocking)
 - `rust-conventions` — Rust testing patterns (proptest, criterion, insta, trait-based mocks)
+
+**IMPORTANT:** The orchestrator must pass the **absolute path** to skill files in the agent prompt (e.g., "Read `/absolute/path/skills/go-conventions/guides/testing/structure-tables.md`"). Do NOT say "Load /go-conventions" — agents cannot resolve skill names to paths.
 
 ## Universal Rules
 

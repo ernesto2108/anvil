@@ -75,11 +75,13 @@ The orchestrator reads the handoff and passes it inline to the developer. The de
 
 ### Archive (on task completion)
 
-Called by `/task-complete`:
+Called by `/task-complete` or manually by the orchestrator:
+
 1. Read handoff content
-2. Append `## Resumen de completacion` to the task file with: archivos modificados, decisiones tomadas, token usage summary
-3. Delete the handoff file
-4. If `.handoff/` is now empty, delete the directory
+2. **Append `## Resumen de completacion` to the task file in the Obsidian vault** (e.g., `anvil-knowledge-base/03-tasks/<TASK-ID>/task.md`). This is the permanent record — include: fecha, archivos creados, archivos modificados, decisiones tomadas, resultado de tests. Follow the same format as existing completed tasks in the vault.
+3. Move the handoff file to `.handoff/archive/<TASK-ID>.md`
+4. Update the board in the vault (`02-backlog/board.md`) — move task from current column to Done
+5. Update the task frontmatter: `status: done`, `completed: <date>`
 
 ## Template
 

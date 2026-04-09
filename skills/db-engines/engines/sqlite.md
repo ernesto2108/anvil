@@ -42,6 +42,8 @@ PRAGMA mmap_size = 268435456;       -- 256MB memory-mapped I/O for read performa
 - `ON DELETE CASCADE` must be declared at table creation — cannot be added later via ALTER
 - Include `CREATE INDEX` statements in the same migration as the table they index
 - Foreign keys are NOT enforced unless `PRAGMA foreign_keys = ON` — this is per-connection, not persistent
+- When using `golang-migrate` with `WithInstance(db, ...)`: do NOT call `m.Close()` — it closes the shared `*sql.DB` connection. Let the caller manage the connection lifecycle
+- When tables have FK relationships, order migrations so parent tables are created first (e.g., `000001_create_runs`, `000002_create_agents` where agents references runs)
 
 ## Go Driver
 - `github.com/mattn/go-sqlite3` — the only production-grade `database/sql` driver (requires CGO)

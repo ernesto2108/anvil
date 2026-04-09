@@ -96,15 +96,23 @@ The orchestrator provides one of:
 
 ## Convention Skills
 
-Only invoke when The orchestrator specifies it:
+Only invoke when the orchestrator specifies it. **Read the actual files** — do not guess patterns.
 
-- `go-conventions` — Go backend code
+Convention skills like `go-conventions` are **dispatchers** — they contain a routing table of sub-files. Read the SKILL.md first, then load ONLY the sub-files relevant to your task.
+
+- `go-conventions` — Read `skills/go-conventions/SKILL.md` for the routing table, then load by task:
+  - Writing handlers/services: `rules/coding.md`, `rules/architecture.md`
+  - Database/SQL code: `rules/database.md`
+  - Error handling patterns: `rules/coding.md`, `examples/errors.md`
+  - Concurrency: `guides/concurrency/decision-matrix.md` + relevant pattern guide
 - `react-conventions` — React/TypeScript frontend code
 - `flutter-conventions` — Flutter/Dart mobile code
 - `astro-conventions` — Astro static/content sites
 - `python-conventions` — Python (embeddings, ML, async, APIs)
 - `typescript-conventions` — TypeScript (Node.js, libraries, strict mode)
 - `rust-conventions` — Rust (systems, CLIs, blockchain/crypto)
+
+**IMPORTANT:** The orchestrator must pass **absolute paths** to skill files in the agent prompt. Do NOT say "Load /go-conventions" — agents cannot resolve skill names to paths.
 
 ## Post-implementation (ALWAYS)
 

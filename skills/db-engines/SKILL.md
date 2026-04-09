@@ -37,7 +37,7 @@ Each reference covers: types, limitations, migration patterns, performance tunin
 
 | Language | Tool | Notes |
 |----------|------|-------|
-| Go | `github.com/golang-migrate/migrate/v4` | Embed with `//go:embed`, use `iofs` source driver. See `/go-conventions` for setup code |
+| Go | `github.com/golang-migrate/migrate/v4` | Use `file://` source driver with `NewWithDatabaseInstance`. Do NOT use `embed.FS` / `iofs` — keep SQL files as plain files in `migrations/`. Do NOT call `m.Close()` when using `WithInstance` (it closes the shared `*sql.DB`). See `/go-conventions` for setup code |
 | Node.js | `knex` or `prisma migrate` | |
 | Python | `alembic` (SQLAlchemy) or `django.db.migrations` | |
 | Rust | `sqlx migrate` or `diesel migrations` | |

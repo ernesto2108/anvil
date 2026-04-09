@@ -164,3 +164,19 @@ Escribir `/orchestrate` seguido de la tarea:
 ```
 
 El orquestador responde con el triage y espera confirmacion antes de arrancar.
+
+## Checklist de orquestacion manual
+
+Cuando `/orchestrate` no esta disponible (disable-model-invocation) y se orquesta manualmente, seguir esta checklist:
+
+### Antes de empezar
+1. **Leer `skills/handoff/SKILL.md`** y `skills/handoff/template.md` — usar el template exacto para crear el handoff, respetar el approval gate
+2. **Leer `docs/orchestration.md`** (este archivo) — seguir triage, pipeline, gates, context injection
+
+### Antes de invocar cada agente
+3. **Skills del agente** — leer la spec del agente (`agents/<name>.md`) para saber que skills debe cargar. Pasar en el prompt del agente: "Read file `skills/<skill>/SKILL.md`" con **path absoluto**, no "Load /skill-name" (ambiguo, el agente no sabe resolverlo)
+4. **Sub-archivos de skills dispatcher** — si el skill es un dispatcher (como `go-conventions`), indicar al agente **que archivos especificos leer** segun la tarea (ej: `guides/testing/structure-tables.md` para el tester)
+
+### Al completar la tarea
+5. **Leer `skills/handoff/SKILL.md` seccion "Archive"** — el resumen de completacion va en la tarea de Obsidian (`## Resumen de completacion`), no solo en el handoff
+6. **Invocar `/task-complete`** o seguir su flujo manualmente: escribir resumen en la tarea del vault, mover handoff a archive, actualizar board

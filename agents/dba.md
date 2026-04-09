@@ -107,7 +107,9 @@ Run this for EVERY migration before presenting it:
 ### Migrations
 - **Format:** `<number>_<action>_<target>.up.sql` / `.down.sql`
 - **Examples:** `000014_add_avatar_to_users.up.sql`, `000015_create_audit_log.up.sql`
+- **One migration per table** — never bundle multiple CREATE TABLE in one migration file. Each table gets its own numbered pair (up + down). Enables granular rollbacks and clean history
 - **Number continues from last migration** — always check existing files first
+- **Plain SQL files only** — migrations live as `.sql` files in `migrations/`. No Go embed wrappers, no build tags on migration tooling. The consuming code decides how to load them
 
 ## Multi-Tenant Patterns
 
