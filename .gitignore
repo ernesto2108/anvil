@@ -1,4 +1,5 @@
 .anvil/
+.handoff/
 AGENTS.md
 
 # Go binary
