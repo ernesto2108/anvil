@@ -111,6 +111,26 @@ Run this for EVERY migration before presenting it:
 - **Number continues from last migration** — always check existing files first
 - **Plain SQL files only** — migrations live as `.sql` files in `migrations/`. No Go embed wrappers, no build tags on migration tooling. The consuming code decides how to load them
 
+## Migration source rule — `iofs` by default for shipped binaries
+
+When you design the **store constructor or migration runner** (the Go code that consumes the `.sql` files, not the files themselves), the source you choose decides whether the binary ships successfully.
+
+**Rule:** if the store will ever be embedded in a CLI, desktop app, or server binary distributed to users — design for `iofs` source (`embed.FS`) from the FIRST migration. Do not start with `file://` and plan to "refactor later".
+
+**Why:** `file://` requires the `.sql` files to exist on the user's filesystem at runtime. A binary distributed via `go install`, Homebrew, or a release tarball does not carry `./migrations/` with it. The first user to run it gets a cryptic `failed to open source "file:///home/user/.app/migrations": open .: no such file or directory` error.
+
+**Acceptable patterns:**
+
+1. **`iofs` only** — store has a single constructor `NewFS(dbPath string, migrations fs.FS, ...)`. Tests pass an `fstest.MapFS` or a real embed of the test migrations directory. Cleanest for new stores.
+
+2. **Both sources, shared helper** — store has `New(dbPath, migrationsPath)` (file://, for tests + CLI that pass a dev path) AND `NewFS(dbPath, migrations fs.FS, ...)` (iofs, for production). Both call a private `openDB()` helper to avoid duplicating setup logic (dir creation, permissions, PRAGMAs).
+
+**Anti-pattern:** single `New(dbPath, migrationsPath)` that only supports `file://`. Do not ship this design — it will break the first time someone tries to distribute the binary. If you inherit this design, refactor to add a `NewFS` variant in the same PR that ships a binary.
+
+**Context injection:** when you produce this kind of store, document BOTH sources in your handoff and explicitly mention "binary distribution uses `NewFS` with embedded migrations". This prevents the developer from using the wrong constructor in the CLI wiring.
+
+See `skills/db-engines/engines/sqlite.md` → "Migration sources: `iofs` vs `file://`" for the reference implementation.
+
 ## Multi-Tenant Patterns
 
 For multi-tenant projects (detected from schema context):
