@@ -58,11 +58,13 @@ export interface QAScoreResult {
   tone: QAScoreTone
 }
 
-// formatQAScore clasifica el qa_score en un tono visual y texto formateado.
-// null → "—" muted; >=80 success, >=60 warn, <60 fail.
+// formatQAScore clasifica el qa_score (escala 0-10) en un tono visual y texto formateado.
+// null → "—" muted; >=8 success (excellent/good); >=6 warn (needs work); <6 fail.
+// El texto incluye 1 decimal y sufijo "/10" (p.ej. "8.5/10", "7.0/10").
 export function formatQAScore(score: number | null): QAScoreResult {
   if (score === null) return { text: '—', tone: 'muted' }
-  if (score >= 80) return { text: `${score}`, tone: 'success' }
-  if (score >= 60) return { text: `${score}`, tone: 'warn' }
-  return { text: `${score}`, tone: 'fail' }
+  const text = `${score.toFixed(1)}/10`
+  if (score >= 8) return { text, tone: 'success' }
+  if (score >= 6) return { text, tone: 'warn' }
+  return { text, tone: 'fail' }
 }

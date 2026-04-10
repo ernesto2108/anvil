@@ -8,12 +8,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { StatusBadge } from '@/components/status-badge'
+import { QABadge } from '@/components/qa-badge'
 
 import {
   formatDate,
   formatDuration,
   formatTokens,
-  formatQAScore,
 } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useRunsPolling } from '@/hooks/use-runs-polling'
@@ -52,18 +52,6 @@ function EmptyState() {
       </div>
     </div>
   )
-}
-
-// Celda de QA Score con color según tono.
-function QACell({ score }: { score: number | null }) {
-  const { text, tone } = formatQAScore(score)
-  const colorClass = {
-    success: 'text-success',
-    warn: 'text-running',
-    fail: 'text-fail',
-    muted: 'text-muted-foreground',
-  }[tone]
-  return <span className={cn('font-mono text-xs', colorClass)}>{text}</span>
 }
 
 // Determina si un run está actualmente en ejecución.
@@ -118,7 +106,7 @@ export function RunsView({ onRowClick }: RunsViewProps) {
                 {formatTokens(run.totalTokens)}
               </TableCell>
               <TableCell className="w-[80px] text-right">
-                <QACell score={run.qaScore} />
+                <QABadge score={run.qaScore} />
               </TableCell>
               <TableCell className="w-[40px] text-right">
                 <ChevronRight size={14} className="text-muted-foreground ml-auto" />

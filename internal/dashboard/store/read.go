@@ -142,6 +142,96 @@ func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int) ([]RunSum
 	return results, nil
 }
 
+// GetRunSummary retorna el RunSummary del run identificado por runID.
+// Retorna (nil, nil) si el run no existe — NO es un error.
+func (s *SQLiteStore) GetRunSummary(ctx context.Context, runID string) (*RunSummary, error) {
+	const q = `
+		SELECT
+			id, task_id, task_desc, status, complexity, provider,
+			started_at, ended_at, duration_ms,
+			total_tokens, files_touched, agents_count, qa_score
+		FROM runs
+		WHERE id = ?
+		LIMIT 1`
+
+	rows, err := s.db.QueryContext(ctx, q, runID)
+	if err != nil {
+		return nil, fmt.Errorf("dashboard/store: consultar run %q: %w", runID, err)
+	}
+	defer rows.Close() //nolint:errcheck
+
+	if !rows.Next() {
+		// El run no existe — no es un error.
+		return nil, nil
+	}
+
+	var (
+		id           string
+		taskID       string
+		taskDesc     sql.NullString
+		status       string
+		complexity   sql.NullString
+		provider     sql.NullString
+		startedAtRaw string
+		endedAtRaw   sql.NullString
+		durationMs   sql.NullInt64
+		totalTokens  int
+		filesCount   int
+		agentsCount  int
+		qaScore      sql.NullFloat64
+	)
+
+	if err := rows.Scan(
+		&id, &taskID, &taskDesc, &status, &complexity, &provider,
+		&startedAtRaw, &endedAtRaw, &durationMs,
+		&totalTokens, &filesCount, &agentsCount, &qaScore,
+	); err != nil {
+		return nil, fmt.Errorf("dashboard/store: escanear fila de run: %w", err)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("dashboard/store: iterar fila de run: %w", err)
+	}
+
+	startedAt, err := time.Parse(time.RFC3339Nano, startedAtRaw)
+	if err != nil {
+		return nil, fmt.Errorf("dashboard/store: parsear started_at %q: %w", startedAtRaw, err)
+	}
+
+	r := RunSummary{
+		ID:          id,
+		TaskID:      taskID,
+		TaskDesc:    taskDesc.String,
+		Status:      status,
+		Complexity:  complexity.String,
+		Provider:    provider.String,
+		StartedAt:   startedAt,
+		TotalTokens: totalTokens,
+		FilesCount:  filesCount,
+		AgentsCount: agentsCount,
+	}
+
+	if endedAtRaw.Valid && endedAtRaw.String != "" {
+		t, err := time.Parse(time.RFC3339Nano, endedAtRaw.String)
+		if err != nil {
+			return nil, fmt.Errorf("dashboard/store: parsear ended_at %q: %w", endedAtRaw.String, err)
+		}
+		r.EndedAt = &t
+	}
+
+	if durationMs.Valid {
+		v := durationMs.Int64
+		r.DurationMs = &v
+	}
+
+	if qaScore.Valid {
+		v := qaScore.Float64
+		r.QAScore = &v
+	}
+
+	return &r, nil
+}
+
 // AgentDetail es la proyección completa de un agente para la vista de detalle.
 // Los campos nullables usan punteros para preservar la diferencia entre "cero" y "no seteado".
 type AgentDetail struct {

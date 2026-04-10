@@ -26,6 +26,9 @@ type fakeStore struct {
 	// campos configurables para GetMetrics
 	metricsResult store.Metrics
 	metricsErr    error
+	// campos configurables para GetRunSummary
+	runSummary    *store.RunSummary
+	runSummaryErr error
 }
 
 func (f *fakeStore) WriteEvent(_ instrumentation.Event) error              { return nil }
@@ -40,6 +43,9 @@ func (f *fakeStore) GetAgentDetail(_ context.Context, _, _ string) (*store.Agent
 }
 func (f *fakeStore) GetMetrics(_ context.Context) (store.Metrics, error) {
 	return f.metricsResult, f.metricsErr
+}
+func (f *fakeStore) GetRunSummary(_ context.Context, _ string) (*store.RunSummary, error) {
+	return f.runSummary, f.runSummaryErr
 }
 func (f *fakeStore) Close() error { return nil }
 
@@ -707,6 +713,96 @@ func Test_GetMetrics(t *testing.T) {
 		}
 		if !strings.Contains(jsonStr, `"successRateDelta":null`) {
 			t.Errorf("JSON: esperaba %q, obtuvo %q", `"successRateDelta":null`, jsonStr)
+		}
+	})
+}
+
+func Test_GetRunSummary(t *testing.T) {
+	qaScore := 8.5
+	startedAt := time.Date(2026, 4, 9, 10, 0, 0, 0, time.UTC)
+
+	t.Run("store retorna summary → GetRunSummary retorna RunDTO poblado", func(t *testing.T) {
+		fs := &fakeStore{
+			runSummary: &store.RunSummary{
+				ID:         "r_20260409_100000_abcd",
+				TaskID:     "DASH-FEAT-010",
+				TaskDesc:   "QA scores integration",
+				Status:     "success",
+				Complexity: "medium",
+				Provider:   "anthropic",
+				StartedAt:  startedAt,
+				QAScore:    &qaScore,
+			},
+		}
+		app := NewApp(fs)
+		dto, err := app.GetRunSummary("r_20260409_100000_abcd")
+		if err != nil {
+			t.Fatalf("GetRunSummary: %v", err)
+		}
+		if dto == nil {
+			t.Fatal("GetRunSummary: esperaba RunDTO no nil")
+		}
+		if dto.ID != "r_20260409_100000_abcd" {
+			t.Errorf("ID: esperado %q, obtuvo %q", "r_20260409_100000_abcd", dto.ID)
+		}
+		if dto.Status != "success" {
+			t.Errorf("Status: esperado %q, obtuvo %q", "success", dto.Status)
+		}
+		if dto.QAScore == nil {
+			t.Fatal("QAScore: esperaba valor no nil")
+		}
+		if *dto.QAScore != 8.5 {
+			t.Errorf("QAScore: esperado 8.5, obtuvo %f", *dto.QAScore)
+		}
+	})
+
+	t.Run("store retorna nil (run no existe) → GetRunSummary retorna (nil, nil)", func(t *testing.T) {
+		fs := &fakeStore{} // zero-value: runSummary=nil, runSummaryErr=nil
+		app := NewApp(fs)
+		dto, err := app.GetRunSummary("no-existe")
+		if err != nil {
+			t.Fatalf("GetRunSummary: esperaba nil error, obtuvo %v", err)
+		}
+		if dto != nil {
+			t.Errorf("GetRunSummary: esperaba nil DTO, obtuvo %+v", dto)
+		}
+	})
+
+	t.Run("store retorna error → GetRunSummary propaga el error", func(t *testing.T) {
+		fs := &fakeStore{runSummaryErr: errors.New("db error")}
+		app := NewApp(fs)
+		dto, err := app.GetRunSummary("run-x")
+		if err == nil {
+			t.Fatal("GetRunSummary: esperaba error, obtuvo nil")
+		}
+		if err.Error() != "db error" {
+			t.Errorf("error: esperado %q, obtuvo %q", "db error", err.Error())
+		}
+		if dto != nil {
+			t.Errorf("GetRunSummary: esperaba nil DTO en error, obtuvo %+v", dto)
+		}
+	})
+
+	t.Run("run sin qa_score → QAScore nil en DTO", func(t *testing.T) {
+		fs := &fakeStore{
+			runSummary: &store.RunSummary{
+				ID:        "r_running_001",
+				TaskID:    "task-x",
+				Status:    "running",
+				StartedAt: startedAt,
+				QAScore:   nil,
+			},
+		}
+		app := NewApp(fs)
+		dto, err := app.GetRunSummary("r_running_001")
+		if err != nil {
+			t.Fatalf("GetRunSummary: %v", err)
+		}
+		if dto == nil {
+			t.Fatal("GetRunSummary: esperaba RunDTO no nil")
+		}
+		if dto.QAScore != nil {
+			t.Errorf("QAScore: esperaba nil para run sin qa_score, obtuvo %f", *dto.QAScore)
 		}
 	})
 }

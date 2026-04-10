@@ -30,8 +30,8 @@ func writeQAScore(t *testing.T, s *store.TestableStore, runID string, score floa
 	t.Helper()
 	ev := mustNewEvent(t, runID, instrumentation.EventQAScore, instrumentation.QAScorePayload{
 		AgentID:  "agent-qa",
-		Score:    int(score),
-		MaxScore: 100,
+		Score:    score,
+		MaxScore: 10,
 	})
 	if err := s.WriteEvent(ev); err != nil {
 		t.Fatalf("escribir qa.score: %v", err)
@@ -116,7 +116,7 @@ func Test_ListRuns(t *testing.T) {
 		runID := mustNewRunID(t)
 		writeRunStart(t, s, runID)
 		writeRunEnd(t, s, runID, "success", 500, 1000)
-		writeQAScore(t, s, runID, 87)
+		writeQAScore(t, s, runID, 8.7)
 
 		got, err := s.ListRuns(context.Background(), 0, 0)
 		if err != nil {
@@ -128,8 +128,8 @@ func Test_ListRuns(t *testing.T) {
 		if got[0].QAScore == nil {
 			t.Fatal("QAScore: esperaba valor no nil")
 		}
-		if *got[0].QAScore != 87 {
-			t.Errorf("QAScore: esperado 87, obtuvo %f", *got[0].QAScore)
+		if *got[0].QAScore != 8.7 {
+			t.Errorf("QAScore: esperado 8.7, obtuvo %f", *got[0].QAScore)
 		}
 	})
 

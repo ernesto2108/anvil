@@ -10,8 +10,9 @@ import '@xyflow/react/dist/style.css'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AgentNode, type AgentNodeType } from '@/components/flow/agent-node'
+import { QABadge } from '@/components/qa-badge'
 import { layoutFlow } from '@/lib/dagre-layout'
-import { getFlow } from '@/lib/wails'
+import { getFlow, getRunSummary, type RunDTO } from '@/lib/wails'
 
 interface FlowViewProps {
   runId: string
@@ -32,14 +33,24 @@ const nodeTypes: NodeTypes = {
 
 export function FlowView({ runId, onBack, onAgentSelect }: FlowViewProps) {
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [runSummary, setRunSummary] = useState<RunDTO | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setState({ status: 'loading' })
+    setRunSummary(null)
 
-    getFlow(runId)
-      .then((dto) => {
+    const flowPromise = getFlow(runId)
+    const summaryPromise = getRunSummary(runId).catch((err: unknown) => {
+      console.warn('[FlowView] getRunSummary falló, continuando sin QA badge:', err)
+      return null
+    })
+
+    Promise.all([flowPromise, summaryPromise])
+      .then(([dto, summary]) => {
         if (cancelled) return
+
+        setRunSummary(summary)
 
         if (dto.nodes.length === 0) {
           setState({ status: 'empty' })
@@ -99,6 +110,9 @@ export function FlowView({ runId, onBack, onAgentSelect }: FlowViewProps) {
         </Button>
         <span className="text-sm text-muted-foreground">Run</span>
         <code className="font-mono text-xs text-brand-text">{runId}</code>
+        {runSummary?.qaScore != null && (
+          <QABadge score={runSummary.qaScore} />
+        )}
       </div>
 
       {/* Canvas area */}

@@ -363,9 +363,9 @@ func TestPayloadRoundTrips(t *testing.T) {
 			eventType: EventQAScore,
 			payload: QAScorePayload{
 				AgentID:  "qa",
-				Score:    8,
+				Score:    8.5,
 				MaxScore: 10,
-				Criteria: map[string]int{"coverage": 4, "style": 4},
+				Criteria: map[string]float64{"coverage": 4.5, "style": 4.0},
 				Notes:    "good coverage",
 			},
 			unmarshal: func(b []byte) (any, error) {

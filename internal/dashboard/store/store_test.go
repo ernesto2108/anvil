@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"path/filepath"
@@ -316,9 +317,9 @@ func Test_WriteEvent(t *testing.T) {
 			event: func(t *testing.T, runID string) instrumentation.Event {
 				return mustNewEvent(t, runID, instrumentation.EventQAScore, instrumentation.QAScorePayload{
 					AgentID:  "agent-qa",
-					Score:    85,
-					MaxScore: 100,
-					Criteria: map[string]int{"coverage": 90, "style": 80},
+					Score:    8.5,
+					MaxScore: 10,
+					Criteria: map[string]float64{"coverage": 9.0, "style": 8.0},
 				})
 			},
 			verify: func(t *testing.T, db *sql.DB, runID string) {
@@ -327,8 +328,8 @@ func Test_WriteEvent(t *testing.T) {
 				if err != nil {
 					t.Fatalf("consultar qa_score: %v", err)
 				}
-				if qaScore != 85 {
-					t.Errorf("qa_score: esperado 85, obtuvo %f", qaScore)
+				if qaScore != 8.5 {
+					t.Errorf("qa_score: esperado 8.5, obtuvo %f", qaScore)
 				}
 			},
 		},
@@ -553,4 +554,66 @@ func Test_Performance_1000Runs(t *testing.T) {
 	if queryDuration > 500*time.Millisecond {
 		t.Errorf("query tardó %v, debe ser < 500ms", queryDuration)
 	}
+}
+
+func Test_GetRunSummary(t *testing.T) {
+	t.Run("run existente retorna el summary correcto", func(t *testing.T) {
+		s := newTestStore(t, 500)
+		runID := mustNewRunID(t)
+		writeRunStart(t, s, runID)
+
+		got, err := s.GetRunSummary(context.Background(), runID)
+		if err != nil {
+			t.Fatalf("GetRunSummary: %v", err)
+		}
+		if got == nil {
+			t.Fatal("GetRunSummary: esperaba RunSummary no nil")
+		}
+		if got.ID != runID {
+			t.Errorf("ID: esperado %q, obtuvo %q", runID, got.ID)
+		}
+		if got.Status != "running" {
+			t.Errorf("Status: esperado %q, obtuvo %q", "running", got.Status)
+		}
+	})
+
+	t.Run("run inexistente retorna (nil, nil)", func(t *testing.T) {
+		s := newTestStore(t, 500)
+
+		got, err := s.GetRunSummary(context.Background(), "no-existe")
+		if err != nil {
+			t.Fatalf("GetRunSummary: esperaba nil error, obtuvo: %v", err)
+		}
+		if got != nil {
+			t.Errorf("GetRunSummary: esperaba nil, obtuvo %+v", got)
+		}
+	})
+
+	t.Run("run con qa_score retorna QAScore correcto", func(t *testing.T) {
+		s := newTestStore(t, 500)
+		runID := mustNewRunID(t)
+		writeRunStart(t, s, runID)
+		ev := mustNewEvent(t, runID, instrumentation.EventQAScore, instrumentation.QAScorePayload{
+			AgentID:  "agent-qa",
+			Score:    9.5,
+			MaxScore: 10,
+		})
+		if err := s.WriteEvent(ev); err != nil {
+			t.Fatalf("WriteEvent qa.score: %v", err)
+		}
+
+		got, err := s.GetRunSummary(context.Background(), runID)
+		if err != nil {
+			t.Fatalf("GetRunSummary: %v", err)
+		}
+		if got == nil {
+			t.Fatal("GetRunSummary: esperaba RunSummary no nil")
+		}
+		if got.QAScore == nil {
+			t.Fatal("QAScore: esperaba valor no nil")
+		}
+		if *got.QAScore != 9.5 {
+			t.Errorf("QAScore: esperado 9.5, obtuvo %f", *got.QAScore)
+		}
+	})
 }

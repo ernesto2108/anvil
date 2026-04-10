@@ -111,6 +111,7 @@ declare global {
           GetFlow?: (runId: string) => Promise<FlowDTO>
           GetAgent?: (runId: string, agentId: string) => Promise<AgentDetailDTO | null>
           GetMetrics?: () => Promise<MetricsDTO>
+          GetRunSummary?: (runId: string) => Promise<RunDTO | null>
         }
       }
     }
@@ -148,6 +149,17 @@ export async function getAgent(runId: string, agentId: string): Promise<AgentDet
     return null
   }
   return binding(runId, agentId)
+}
+
+// getRunSummary llama al binding Wails GetRunSummary para obtener el resumen de un run.
+// Cuando window.go no está disponible retorna null para no bloquear el desarrollo.
+export async function getRunSummary(runId: string): Promise<RunDTO | null> {
+  const binding = window.go?.dashboard?.App?.GetRunSummary
+  if (!binding) {
+    console.warn('[wails] window.go no disponible — retornando null (modo dev)')
+    return null
+  }
+  return binding(runId)
 }
 
 // MOCK_METRICS_DATA es el fallback en modo dev (sin Wails).

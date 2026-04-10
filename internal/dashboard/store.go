@@ -25,6 +25,9 @@ type Store interface {
 	// GetMetrics calcula los agregados sobre los últimos 30 runs terminados.
 	// Ver store.SQLiteStore.GetMetrics para la semántica completa.
 	GetMetrics(ctx context.Context) (store.Metrics, error)
+	// GetRunSummary retorna el RunSummary del run identificado por runID.
+	// Retorna (nil, nil) si el run no existe — NO es un error.
+	GetRunSummary(ctx context.Context, runID string) (*store.RunSummary, error)
 	// Close libera los recursos del store.
 	Close() error
 }

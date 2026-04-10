@@ -95,11 +95,11 @@ type FileTouchedPayload struct {
 }
 
 type QAScorePayload struct {
-	AgentID  string         `json:"agent_id"`
-	Score    int            `json:"score"`
-	MaxScore int            `json:"max_score"`
-	Criteria map[string]int `json:"criteria"`
-	Notes    string         `json:"notes,omitempty"`
+	AgentID  string             `json:"agent_id"`
+	Score    float64            `json:"score"`
+	MaxScore float64            `json:"max_score"`
+	Criteria map[string]float64 `json:"criteria"`
+	Notes    string             `json:"notes,omitempty"`
 }
 
 // NewEvent creates a new Event with a UUID v4 event ID, UTC timestamp, and

@@ -47,9 +47,22 @@ func (a *App) GetRuns(q RunsQuery) ([]RunDTO, error) {
 	return out, nil
 }
 
-// GetRun retorna el detalle de un run identificado por su ID.
-func (a *App) GetRun(_ string) (*RunDetailDTO, error) {
-	return nil, nil
+// GetRunSummary retorna el resumen de un run identificado por su ID.
+// Retorna (nil, nil) si el run no existe — NO es un error.
+func (a *App) GetRunSummary(runID string) (*RunDTO, error) {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	r, err := a.store.GetRunSummary(ctx, runID)
+	if err != nil {
+		return nil, err
+	}
+	if r == nil {
+		return nil, nil
+	}
+	dto := toRunDTO(*r)
+	return &dto, nil
 }
 
 // GetAgents retorna todos los agentes pertenecientes al run identificado por runID.
