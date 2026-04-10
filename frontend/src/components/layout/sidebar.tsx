@@ -17,7 +17,7 @@ interface NavItemConfig {
 
 const navItems: NavItemConfig[] = [
   { view: 'runs', label: 'Runs', icon: <List size={16} /> },
-  { view: 'metrics', label: 'Metrics', icon: <BarChart3 size={16} />, disabled: true },
+  { view: 'metrics', label: 'Metrics', icon: <BarChart3 size={16} /> },
 ]
 
 export function Sidebar({ activeView, onNavigate }: SidebarProps) {
