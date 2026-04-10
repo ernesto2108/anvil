@@ -4,17 +4,28 @@ package dashboard
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/ernesto2108/anvil/internal/dashboard/store"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 )
 
 // fakeStore implementa la interface Store completa con stubs no-op.
-// Solo ListAgentsByRun tiene comportamiento configurable para los tests.
+// ListAgentsByRun y GetAgentDetail tienen comportamiento configurable para los tests.
 type fakeStore struct {
 	agentRows []store.AgentRow
 	agentErr  error
+	// campos configurables para GetAgentDetail
+	agentDetail    *store.AgentDetail
+	agentFiles     []store.FileRow
+	agentDetailErr error
+	// campos configurables para GetMetrics
+	metricsResult store.Metrics
+	metricsErr    error
 }
 
 func (f *fakeStore) WriteEvent(_ instrumentation.Event) error              { return nil }
@@ -24,10 +35,17 @@ func (f *fakeStore) ListRuns(_ context.Context, _, _ int) ([]store.RunSummary, e
 func (f *fakeStore) ListAgentsByRun(_ context.Context, _ string) ([]store.AgentRow, error) {
 	return f.agentRows, f.agentErr
 }
+func (f *fakeStore) GetAgentDetail(_ context.Context, _, _ string) (*store.AgentDetail, []store.FileRow, error) {
+	return f.agentDetail, f.agentFiles, f.agentDetailErr
+}
+func (f *fakeStore) GetMetrics(_ context.Context) (store.Metrics, error) {
+	return f.metricsResult, f.metricsErr
+}
 func (f *fakeStore) Close() error { return nil }
 
 func intPtr(v int) *int         { return &v }
 func int64Ptr(v int64) *int64   { return &v }
+func timePtr(t time.Time) *time.Time { return &t }
 
 func Test_GetFlow(t *testing.T) {
 	t.Run("store vacío retorna FlowDTO sin nodos ni aristas", func(t *testing.T) {
@@ -395,6 +413,300 @@ func Test_toFlowDTO(t *testing.T) {
 		}
 		if got.Edges[0].Target != "agent/dev-02" {
 			t.Errorf("Target: esperado %q, obtuvo %q", "agent/dev-02", got.Edges[0].Target)
+		}
+	})
+}
+
+func Test_GetAgent(t *testing.T) {
+	t.Run("store retorna detalle → GetAgent retorna DTO poblado", func(t *testing.T) {
+		fs := &fakeStore{
+			agentDetail: &store.AgentDetail{
+				AgentID:      "a1",
+				AgentRole:    "developer",
+				Status:       "success",
+				DurationMs:   int64Ptr(500),
+				TokensTotal:  intPtr(1500),
+				TokensInput:  intPtr(1000),
+				TokensOutput: intPtr(500),
+			},
+			agentFiles: []store.FileRow{
+				{Path: "main.go", Operation: "touched"},
+			},
+		}
+		app := NewApp(fs)
+		dto, err := app.GetAgent("run-x", "a1")
+		if err != nil {
+			t.Fatalf("GetAgent: %v", err)
+		}
+		if dto == nil {
+			t.Fatal("GetAgent: esperaba DTO no nil")
+		}
+		if dto.Agent.ID != "a1" {
+			t.Errorf("Agent.ID: esperado %q, obtuvo %q", "a1", dto.Agent.ID)
+		}
+		if dto.Agent.Name != "developer" {
+			t.Errorf("Agent.Name: esperado %q (AgentRole), obtuvo %q", "developer", dto.Agent.Name)
+		}
+		if dto.Agent.Status != "success" {
+			t.Errorf("Agent.Status: esperado %q, obtuvo %q", "success", dto.Agent.Status)
+		}
+		if dto.Agent.DurationMs == nil {
+			t.Fatal("Agent.DurationMs: esperaba valor no nil")
+		}
+		if *dto.Agent.DurationMs != 500 {
+			t.Errorf("Agent.DurationMs: esperado 500, obtuvo %d", *dto.Agent.DurationMs)
+		}
+		if len(dto.Files) != 1 {
+			t.Fatalf("Files: esperaba 1, obtuvo %d", len(dto.Files))
+		}
+		if dto.Files[0].Path != "main.go" {
+			t.Errorf("Files[0].Path: esperado %q, obtuvo %q", "main.go", dto.Files[0].Path)
+		}
+		// Operation en store → Action en DTO (conversor renombra el campo)
+		if dto.Files[0].Action != "touched" {
+			t.Errorf("Files[0].Action: esperado %q, obtuvo %q", "touched", dto.Files[0].Action)
+		}
+		// CRÍTICO — opción B: Output siempre vacío hasta DASH-FEAT-013
+		if dto.Output != "" {
+			t.Errorf("Output: esperaba vacío (opción B, DASH-FEAT-013), obtuvo %q", dto.Output)
+		}
+	})
+
+	t.Run("store retorna nil (agente no existe) → GetAgent retorna (nil, nil)", func(t *testing.T) {
+		fs := &fakeStore{} // zero-value: agentDetail=nil, agentFiles=nil
+		app := NewApp(fs)
+		dto, err := app.GetAgent("run-x", "agente-inexistente")
+		if err != nil {
+			t.Fatalf("GetAgent: esperaba nil error, obtuvo %v", err)
+		}
+		if dto != nil {
+			t.Errorf("GetAgent: esperaba nil DTO, obtuvo %+v", dto)
+		}
+	})
+
+	t.Run("store retorna error → GetAgent propaga el error", func(t *testing.T) {
+		fs := &fakeStore{agentDetailErr: errors.New("boom")}
+		app := NewApp(fs)
+		dto, err := app.GetAgent("run-x", "a1")
+		if err == nil {
+			t.Fatal("GetAgent: esperaba error, obtuvo nil")
+		}
+		if err.Error() != "boom" {
+			t.Errorf("error: esperado %q, obtuvo %q", "boom", err.Error())
+		}
+		if dto != nil {
+			t.Errorf("GetAgent: esperaba nil DTO en error, obtuvo %+v", dto)
+		}
+	})
+
+	t.Run("agente sin archivos → dto.Files no-nil y vacío", func(t *testing.T) {
+		// Cubre AC2: "Sin archivos modificados" depende de slice vacío no-nil
+		fs := &fakeStore{
+			agentDetail: &store.AgentDetail{
+				AgentID:   "a1",
+				AgentRole: "pm",
+				Status:    "success",
+			},
+			agentFiles: []store.FileRow{}, // slice vacío pero no-nil
+		}
+		app := NewApp(fs)
+		dto, err := app.GetAgent("run-x", "a1")
+		if err != nil {
+			t.Fatalf("GetAgent: %v", err)
+		}
+		if dto == nil {
+			t.Fatal("GetAgent: esperaba DTO no nil")
+		}
+		if dto.Files == nil {
+			t.Error("Files: esperaba slice no-nil para agente sin archivos")
+		}
+		if len(dto.Files) != 0 {
+			t.Errorf("Files: esperaba 0 elementos, obtuvo %d", len(dto.Files))
+		}
+	})
+
+	t.Run("timestamps se formatean a RFC3339Nano cuando existen", func(t *testing.T) {
+		now := time.Now().UTC()
+		fs := &fakeStore{
+			agentDetail: &store.AgentDetail{
+				AgentID:   "a1",
+				AgentRole: "developer",
+				Status:    "success",
+				StartedAt: timePtr(now),
+				EndedAt:   nil, // nil → campo vacío en DTO
+			},
+			agentFiles: []store.FileRow{},
+		}
+		app := NewApp(fs)
+		dto, err := app.GetAgent("run-x", "a1")
+		if err != nil {
+			t.Fatalf("GetAgent: %v", err)
+		}
+		if dto == nil {
+			t.Fatal("GetAgent: esperaba DTO no nil")
+		}
+		// StartedAt debe ser no vacío y parseable como RFC3339Nano
+		if dto.Agent.StartedAt == "" {
+			t.Error("Agent.StartedAt: esperaba string no vacío")
+		}
+		if _, parseErr := time.Parse(time.RFC3339Nano, dto.Agent.StartedAt); parseErr != nil {
+			t.Errorf("Agent.StartedAt %q no es RFC3339Nano: %v", dto.Agent.StartedAt, parseErr)
+		}
+		// EndedAt nil → campo vacío
+		if dto.Agent.EndedAt != "" {
+			t.Errorf("Agent.EndedAt: esperaba vacío para EndedAt nil, obtuvo %q", dto.Agent.EndedAt)
+		}
+	})
+
+	t.Run("Output siempre vacío — protege decisión opción B", func(t *testing.T) {
+		// Este test falla intencionalmente si alguien agrega datos al campo Output
+		// antes de implementar DASH-FEAT-013.
+		fs := &fakeStore{
+			agentDetail: &store.AgentDetail{
+				AgentID:      "a1",
+				AgentRole:    "developer",
+				Status:       "success",
+				DurationMs:   int64Ptr(1000),
+				TokensInput:  intPtr(500),
+				TokensOutput: intPtr(300),
+				TokensTotal:  intPtr(800),
+				ErrorMsg:     "",
+			},
+			agentFiles: []store.FileRow{
+				{Path: "internal/app.go", Operation: "write"},
+				{Path: "internal/app_test.go", Operation: "write"},
+			},
+		}
+		app := NewApp(fs)
+		dto, err := app.GetAgent("run-x", "a1")
+		if err != nil {
+			t.Fatalf("GetAgent: %v", err)
+		}
+		if dto == nil {
+			t.Fatal("GetAgent: esperaba DTO no nil")
+		}
+		// Output DEBE ser "" — placeholder hasta DASH-FEAT-013.
+		// Si este test falla, alguien modificó toAgentDetailDTO antes de que
+		// exista la tabla/columna de output.
+		if dto.Output != "" {
+			t.Errorf("Output: esperaba vacío (placeholder DASH-FEAT-013), obtuvo %q", dto.Output)
+		}
+	})
+}
+
+func Test_GetMetrics(t *testing.T) {
+	t.Run("store_retorna_vacio", func(t *testing.T) {
+		// GetMetrics debe retornar *MetricsDTO no-nil con slices vacíos no-nil.
+		// json.Marshal debe producir "tokensPerRun":[] no "tokensPerRun":null.
+		fs := &fakeStore{
+			metricsResult: store.Metrics{
+				RunsCount:       0,
+				HasEnoughData:   false,
+				TokensPerRun:    []store.TokensPerRunRow{},
+				AvgTimePerAgent: []store.AgentTimeRow{},
+			},
+		}
+		app := NewApp(fs)
+		dto, err := app.GetMetrics()
+		if err != nil {
+			t.Fatalf("GetMetrics: %v", err)
+		}
+		if dto == nil {
+			t.Fatal("GetMetrics: esperaba *MetricsDTO no-nil, obtuvo nil")
+		}
+		if dto.RunsCount != 0 {
+			t.Errorf("dto.RunsCount: esperado 0, obtuvo %d", dto.RunsCount)
+		}
+		if dto.HasEnoughData {
+			t.Error("dto.HasEnoughData: esperado false")
+		}
+		// Slices no-nil para serialización correcta.
+		if dto.TokensPerRun == nil {
+			t.Error("dto.TokensPerRun: esperaba slice no-nil")
+		}
+		if dto.AvgTimePerAgent == nil {
+			t.Error("dto.AvgTimePerAgent: esperaba slice no-nil")
+		}
+		// Serialización: "tokensPerRun":[] no "tokensPerRun":null.
+		jsonBytes, marshalErr := json.Marshal(dto)
+		if marshalErr != nil {
+			t.Fatalf("json.Marshal: %v", marshalErr)
+		}
+		jsonStr := string(jsonBytes)
+		if !strings.Contains(jsonStr, `"tokensPerRun":[]`) {
+			t.Errorf("JSON: esperaba %q, obtuvo %q", `"tokensPerRun":[]`, jsonStr)
+		}
+		if !strings.Contains(jsonStr, `"avgTimePerAgent":[]`) {
+			t.Errorf("JSON: esperaba %q, obtuvo %q", `"avgTimePerAgent":[]`, jsonStr)
+		}
+	})
+
+	t.Run("store_retorna_error", func(t *testing.T) {
+		// Cuando el store retorna error, GetMetrics debe retornar (nil, error).
+		fs := &fakeStore{
+			metricsErr: errors.New("boom"),
+		}
+		app := NewApp(fs)
+		dto, err := app.GetMetrics()
+		if err == nil {
+			t.Fatal("GetMetrics: esperaba error, obtuvo nil")
+		}
+		if dto != nil {
+			t.Errorf("GetMetrics: esperaba nil DTO en error, obtuvo %+v", dto)
+		}
+	})
+
+	t.Run("deltas_nil_serializan_null", func(t *testing.T) {
+		// Deltas nil en store.Metrics → campos *float64/*int64 nil en DTO →
+		// json.Marshal produce "totalTokensDeltaPct":null no "totalTokensDeltaPct":0.
+		fs := &fakeStore{
+			metricsResult: store.Metrics{
+				RunsCount:           3,
+				HasEnoughData:       false,
+				TotalTokens:         900,
+				AvgDurationMs:       2000,
+				SuccessRate:         1.0,
+				TotalTokensDeltaPct: nil, // sin prev
+				AvgDurationDeltaMs:  nil,
+				SuccessRateDelta:    nil,
+				TokensPerRun:        []store.TokensPerRunRow{},
+				AvgTimePerAgent:     []store.AgentTimeRow{},
+			},
+		}
+		app := NewApp(fs)
+		dto, err := app.GetMetrics()
+		if err != nil {
+			t.Fatalf("GetMetrics: %v", err)
+		}
+		if dto == nil {
+			t.Fatal("GetMetrics: esperaba *MetricsDTO no-nil")
+		}
+
+		// Verificar que los campos nil del store se mapean a nil en el DTO.
+		if dto.TotalTokensDeltaPct != nil {
+			t.Errorf("dto.TotalTokensDeltaPct: esperado nil, obtuvo %f", *dto.TotalTokensDeltaPct)
+		}
+		if dto.AvgDurationDeltaMs != nil {
+			t.Errorf("dto.AvgDurationDeltaMs: esperado nil, obtuvo %d", *dto.AvgDurationDeltaMs)
+		}
+		if dto.SuccessRateDelta != nil {
+			t.Errorf("dto.SuccessRateDelta: esperado nil, obtuvo %f", *dto.SuccessRateDelta)
+		}
+
+		// Serialización: los campos nil deben aparecer como "null" no como "0" ni ausentes.
+		jsonBytes, marshalErr := json.Marshal(dto)
+		if marshalErr != nil {
+			t.Fatalf("json.Marshal: %v", marshalErr)
+		}
+		jsonStr := string(jsonBytes)
+		if !strings.Contains(jsonStr, `"totalTokensDeltaPct":null`) {
+			t.Errorf("JSON: esperaba %q, obtuvo %q", `"totalTokensDeltaPct":null`, jsonStr)
+		}
+		if !strings.Contains(jsonStr, `"avgDurationDeltaMs":null`) {
+			t.Errorf("JSON: esperaba %q, obtuvo %q", `"avgDurationDeltaMs":null`, jsonStr)
+		}
+		if !strings.Contains(jsonStr, `"successRateDelta":null`) {
+			t.Errorf("JSON: esperaba %q, obtuvo %q", `"successRateDelta":null`, jsonStr)
 		}
 	})
 }

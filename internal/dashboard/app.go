@@ -58,8 +58,20 @@ func (a *App) GetAgents(_ string) ([]AgentDTO, error) {
 }
 
 // GetAgent retorna el detalle de un agente individual dentro de un run.
-func (a *App) GetAgent(_, _ string) (*AgentDetailDTO, error) {
-	return nil, nil
+// Retorna (nil, nil) si el agente no existe.
+func (a *App) GetAgent(runID, agentID string) (*AgentDetailDTO, error) {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	detail, files, err := a.store.GetAgentDetail(ctx, runID, agentID)
+	if err != nil {
+		return nil, err
+	}
+	if detail == nil {
+		return nil, nil
+	}
+	return toAgentDetailDTO(detail, files), nil
 }
 
 // GetFlow retorna el grafo de flujo de ejecución para un run.
@@ -75,9 +87,19 @@ func (a *App) GetFlow(runID string) (*FlowDTO, error) {
 	return toFlowDTO(runID, rows), nil
 }
 
-// GetMetrics retorna métricas agregadas para el rango de tiempo dado.
-func (a *App) GetMetrics(_ MetricsQuery) (*MetricsDTO, error) {
-	return nil, nil
+// GetMetrics retorna los agregados de los últimos 30 runs terminados.
+// No toma parámetros en MVP (ver D7). Retorna (nil, err) si el store falla.
+func (a *App) GetMetrics() (*MetricsDTO, error) {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	m, err := a.store.GetMetrics(ctx)
+	if err != nil {
+		return nil, err
+	}
+	dto := toMetricsDTO(m)
+	return &dto, nil
 }
 
 // GetFiles retorna archivos producidos o consumidos por un agente dentro de un run.
@@ -210,6 +232,71 @@ func trimQuotes(s string) string {
 		s = s[1 : len(s)-1]
 	}
 	return s
+}
+
+// toAgentDetailDTO convierte los datos crudos del store al DTO expuesto al frontend.
+func toAgentDetailDTO(d *store.AgentDetail, files []store.FileRow) *AgentDetailDTO {
+	agent := AgentDTO{
+		ID:          d.AgentID,
+		Name:        d.AgentRole,
+		Status:      d.Status,
+		DurationMs:  d.DurationMs,
+		TokensIn:    d.TokensInput,
+		TokensOut:   d.TokensOutput,
+		TokensTotal: d.TokensTotal,
+		ErrorMsg:    d.ErrorMsg,
+	}
+	if d.StartedAt != nil {
+		agent.StartedAt = d.StartedAt.Format(time.RFC3339Nano)
+	}
+	if d.EndedAt != nil {
+		agent.EndedAt = d.EndedAt.Format(time.RFC3339Nano)
+	}
+
+	fileDTOs := make([]FileDTO, 0, len(files))
+	for _, f := range files {
+		fileDTOs = append(fileDTOs, FileDTO{Path: f.Path, Action: f.Operation})
+	}
+
+	return &AgentDetailDTO{
+		Agent:  agent,
+		Files:  fileDTOs,
+		Output: "", // placeholder — captura real pendiente de DASH-FEAT-013
+	}
+}
+
+// toMetricsDTO convierte un store.Metrics al DTO expuesto al frontend.
+func toMetricsDTO(m store.Metrics) MetricsDTO {
+	tokensPerRun := make([]TokensPerRunPoint, 0, len(m.TokensPerRun))
+	for _, r := range m.TokensPerRun {
+		tokensPerRun = append(tokensPerRun, TokensPerRunPoint{
+			RunID:     r.RunID,
+			StartedAt: r.StartedAt.Format(time.RFC3339Nano),
+			Tokens:    r.Tokens,
+		})
+	}
+
+	avgTimePerAgent := make([]AgentTimePoint, 0, len(m.AvgTimePerAgent))
+	for _, a := range m.AvgTimePerAgent {
+		avgTimePerAgent = append(avgTimePerAgent, AgentTimePoint{
+			Role:          a.Role,
+			AvgDurationMs: a.AvgDurationMs,
+			RunsIncluded:  a.RunsIncluded,
+		})
+	}
+
+	return MetricsDTO{
+		RunsCount:           m.RunsCount,
+		HasEnoughData:       m.HasEnoughData,
+		TotalTokens:         m.TotalTokens,
+		TotalTokensDeltaPct: m.TotalTokensDeltaPct,
+		AvgDurationMs:       m.AvgDurationMs,
+		AvgDurationDeltaMs:  m.AvgDurationDeltaMs,
+		SuccessRate:         m.SuccessRate,
+		SuccessRateDelta:    m.SuccessRateDelta,
+		TokensPerRun:        tokensPerRun,
+		AvgTimePerAgent:     avgTimePerAgent,
+	}
 }
 
 // toRunDTO convierte un RunSummary del store al DTO expuesto al frontend.

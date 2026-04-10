@@ -19,6 +19,12 @@ type Store interface {
 	// ListAgentsByRun retorna todos los agentes de un run ordenados por sequence ASC.
 	// Retorna nil, nil si el run no existe o no tiene agentes.
 	ListAgentsByRun(ctx context.Context, runID string) ([]store.AgentRow, error)
+	// GetAgentDetail retorna el detalle completo de un agente (runID + agentID) junto con sus archivos.
+	// Retorna (nil, nil, nil) si el agente no existe — NO es un error.
+	GetAgentDetail(ctx context.Context, runID, agentID string) (*store.AgentDetail, []store.FileRow, error)
+	// GetMetrics calcula los agregados sobre los últimos 30 runs terminados.
+	// Ver store.SQLiteStore.GetMetrics para la semántica completa.
+	GetMetrics(ctx context.Context) (store.Metrics, error)
 	// Close libera los recursos del store.
 	Close() error
 }
