@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Activity, ChevronRight } from 'lucide-react'
 import {
   Table,
@@ -9,7 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { StatusBadge } from '@/components/status-badge'
-import { getRuns, type RunDTO } from '@/lib/wails'
+
 import {
   formatDate,
   formatDuration,
@@ -17,6 +16,7 @@ import {
   formatQAScore,
 } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { useRunsPolling } from '@/hooks/use-runs-polling'
 
 interface RunsViewProps {
   onRowClick: (runId: string) => void
@@ -66,17 +66,13 @@ function QACell({ score }: { score: number | null }) {
   return <span className={cn('font-mono text-xs', colorClass)}>{text}</span>
 }
 
-export function RunsView({ onRowClick }: RunsViewProps) {
-  const [runs, setRuns] = useState<RunDTO[] | null>(null)
+// Determina si un run está actualmente en ejecución.
+function isRunning(status: string): boolean {
+  return status === 'running' || status === 'in_progress' || status === 'in-progress'
+}
 
-  useEffect(() => {
-    getRuns({ limit: 100, offset: 0, status: '' })
-      .then((data) => setRuns(data))
-      .catch((err) => {
-        console.error('[RunsView] error al cargar runs:', err)
-        setRuns([])
-      })
-  }, [])
+export function RunsView({ onRowClick }: RunsViewProps) {
+  const { runs } = useRunsPolling()
 
   if (runs === null) return <LoadingSkeleton />
   if (runs.length === 0) return <EmptyState />
@@ -99,7 +95,11 @@ export function RunsView({ onRowClick }: RunsViewProps) {
           {runs.map((run) => (
             <TableRow
               key={run.id}
-              className="border-border cursor-pointer hover:bg-secondary/50 transition-colors"
+              className={cn(
+                'border-border cursor-pointer hover:bg-secondary/50 transition-colors',
+                // Fila activa recibe un tinte sutil del color "running".
+                isRunning(run.status) && 'bg-running-bg/20',
+              )}
               onClick={() => onRowClick(run.id)}
             >
               <TableCell className="font-mono text-xs text-text-secondary w-[140px] truncate max-w-[140px]">
@@ -112,7 +112,7 @@ export function RunsView({ onRowClick }: RunsViewProps) {
                 <StatusBadge status={run.status} />
               </TableCell>
               <TableCell className="font-mono text-xs text-foreground w-[100px]">
-                {run.status === 'running' ? '—' : formatDuration(run.durationMs)}
+                {isRunning(run.status) ? '—' : formatDuration(run.durationMs)}
               </TableCell>
               <TableCell className="font-mono text-xs text-foreground w-[110px] text-right">
                 {formatTokens(run.totalTokens)}

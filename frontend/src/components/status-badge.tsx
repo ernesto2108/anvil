@@ -34,7 +34,7 @@ function getStatusConfig(status: string): StatusConfig {
     case 'in-progress':
       return {
         label: 'Running',
-        icon: <Loader2 size={11} className="animate-spin" />,
+        icon: <Loader2 size={11} className="motion-safe:animate-spin" />,
         className:
           'text-running bg-running-bg border-running-border',
       }
