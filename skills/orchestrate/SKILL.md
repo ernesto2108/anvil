@@ -6,45 +6,64 @@ disable-model-invocation: true
 
 # Orchestration Workflow
 
-The system acts as **Orchestrator**. First triages, then runs only the agents the task needs.
+The system acts as **Orchestrator**. This skill is activated ONLY when the user explicitly requests it.
+
+---
+
+## Rule #0 — User activates the orchestrator
+
+This skill runs ONLY when the user says "orquesta", "pipeline", "usa agentes", or passes `-c`. The orchestrator NEVER self-activates. If the user said "hazlo directo", this skill does not apply — work directly without agents.
+
+## Rule #1 — Human gates between agents (MANDATORY)
+
+After each agent completes:
+1. Show the user a concise summary of what the agent produced
+2. Ask (in Spanish): "¿Paso al siguiente agente (X)?" or "¿Quieres revisar primero?"
+3. Continue ONLY with explicit user confirmation ("sí", "dale", "siguiente")
+
+The user may at any point:
+- Skip an agent: "salta el tester"
+- Stop the pipeline: "hasta aquí"
+- Switch to direct mode: "el resto hazlo directo"
 
 ---
 
 ## Step -1 — In-flight snapshot (before triage)
 
-Run `git status --short`. If non-empty, capture the list as **"Archivos ya modificados en esta sesión"** and pass it inline in every Medium+ developer invocation. Without this, agents collide with pending work from earlier tasks (the `stringPtr` incident in DASH-FEAT-008 traces to this gap). Skip only when `git status` is empty.
+Run `git status --short`. If non-empty, capture the list as **"Archivos ya modificados en esta sesión"** and pass it inline in every developer invocation. Skip only when `git status` is empty.
 
 ---
 
-## Step 0 — Triage (ALWAYS FIRST)
+## Step 0 — Triage
 
 ### User-specified complexity (`-c` / `--complexity`)
 
-**Accepted values:** `trivial` (direct, no agents) | `medium` (developer → tester) | `complex` (pm → architect → developer → tester → qa) | `max` (full pipeline).
+**Accepted values:** `medium` (developer → tester) | `complex` (pm → architect → developer → tester → qa) | `max` (full pipeline).
 
-When `-c` is present: skip automatic triage, still apply modifiers, confirm pipeline before launching, do NOT second-guess the user's choice. When `-c` is absent: fall through to automatic triage below.
+When `-c` is present: use that classification, apply modifiers, confirm pipeline before launching.
 
-### Automatic triage table
+### When user does NOT specify `-c`
 
-| Signal | Level | Pipeline |
-|--------|-------|----------|
-| Typo, config change, 1-2 files, clear fix | **Trivial** | Direct — no agents |
-| 3-5 files, known pattern, no design decisions | **Medium** | developer → tester |
-| New feature, new endpoint, design decisions needed | **Complex** | pm → architect → developer → tester → qa? |
-| Cross-cutting, UI+backend, multi-service | **Maximum** | scanner → pm → designer → architect → developer → tester → security → qa → reporter |
-| Bug fix (clear repro) | **Medium** | developer → tester |
-| Bug fix (unclear) | **Medium** | pm → developer → tester → qa? |
-| DB migration | **Complex** | architect → dba → qa |
-| Infra / CI | **Complex** | devops → security |
-| Security audit | **Medium** | security |
-| Docs only | **Trivial** | tech-writer |
-| Architecture docs | **Medium** | → `/document-service` (dedicated skill) |
-| Refactor | **Complex** | architect → developer → tester → qa |
-| LinkedIn post / social content | **Medium** | mkt-content |
-| Content campaign / series | **Complex** | pm → mkt-content |
-| Unclear scope | — | pm first — always |
+Present a recommended pipeline to the user using this reference table. **Do NOT auto-execute — always ask for confirmation.**
 
-**Triage modifiers:** UI → designer; DB schema → dba; infra/CI → devops; auth/sensitive data → security; context.md stale → scanner; marketing → mkt-content; two stacks → `docs/parallel-dev-phase.md`. **Reporter is NOT a default modifier** — see reporter gating below.
+| Signal | Recommended pipeline |
+|--------|---------------------|
+| 3-5 files, known pattern, no design decisions | developer → tester |
+| New feature, new endpoint, design decisions needed | pm → architect → developer → tester → qa? |
+| Cross-cutting, UI+backend, multi-service | scanner → pm → designer → architect → developer → tester → security → qa |
+| Bug fix (clear repro) | developer → tester |
+| Bug fix (unclear) | pm → developer → tester → qa? |
+| DB migration | architect → dba → qa |
+| Infra / CI | devops → security |
+| Security audit | security |
+| Docs only | tech-writer |
+| Refactor | architect → developer → tester → qa |
+| LinkedIn post / social content | mkt-content |
+| Unclear scope | pm first — always |
+
+**Modifiers:** UI → designer; DB schema → dba; infra/CI → devops; auth/sensitive data → security; context.md stale → scanner; marketing → mkt-content.
+
+Ask the user (in Spanish): "Recomiendo este pipeline: [lista]. ¿Apruebas o quieres ajustar?"
 
 ### Scope-based routing (read from PRD)
 
@@ -54,13 +73,13 @@ When `-c` is present: skip automatic triage, still apply modifiers, confirm pipe
 | `visual-improvement` | yes | skip | yes |
 | `functional-improvement` | skip | yes | skip |
 
-UI work + design file (.pen / Figma) → use `/design-to-code`, pass design.md. No file → orchestrator → developer.
-
-**After triage:** tell user the level and agents. Proceed only after they confirm.
+UI work + design file (.pen / Figma) → use `/design-to-code`, pass design.md. No file → developer.
 
 ---
 
-## Boundary rule (summary)
+## Boundary rule (orchestration mode only)
+
+These boundaries apply when running agents. In direct mode (user's choice), the orchestrator reads and writes code freely.
 
 | | MAY | MUST NOT |
 |---|---|---|
@@ -89,7 +108,8 @@ UI work + design file (.pen / Figma) → use `/design-to-code`, pass design.md. 
 | tester | no testable code (docs, config, infra) |
 | mkt-content | no marketing content needed |
 
-**Never skip:** developer (code to write), lint + run-tests (before ship), tester (testable code).
+**Never skip without asking:** developer (code to write), tester (testable code). The user may override ("salta el tester").
+**Always run (no user override):** lint + run-tests before ship.
 
 ### QA gating rules
 
@@ -99,27 +119,23 @@ UI work + design file (.pen / Figma) → use `/design-to-code`, pass design.md. 
 
 **Quality floor when skipped:** Self-QA checklist (developer.md) + lint + run-tests + enriched tester handoff.
 
-**Announce QA decision during triage.** User may override. **When in doubt: run QA.**
+**Include QA recommendation in triage proposal.** User decides. **When in doubt: recommend QA.**
 
-### Reporter gating rules (skip by default)
+### Reporter gating
 
-**Run reporter ONLY when:** cross-service run · incident/postmortem · release/tag · user explicitly asks · `/document-service` flow.
-
-**Skip when:** single task + `.handoff/` complete + sprint-current.md Done row updated. In that case, the `## Post-completion` block below IS the report.
-
-Rationale and full trigger list: `agents/reporter.md`. **Announce the decision during triage.**
+**Run ONLY when:** cross-service run · incident/postmortem · release/tag · user explicitly asks. **Skip by default** for single tasks.
 
 ---
 
-## Gates (hard stops)
+## Gates (hard stops — in addition to Rule #1 human gates)
 
-- **PM gate:** user must approve PRD before architect starts
-- **Design execution gate:** after designer produces ui-spec.md → PAUSE. Tell user: "Las specs de diseño están listas. Ejecuta el diseño en Pencil/Figma. Cuando termines, dime 'ya acabé' para continuar." Resume ONLY when user confirms. Verification checklist: see `vault-setup.md`.
+- **PM gate:** user approves PRD before architect starts
+- **Design execution gate:** after designer produces ui-spec.md → PAUSE for user to execute in Pencil/Figma
 - **Architect gate:** veto → STOP, re-discuss with user
-- **QA gate:** score < 7 → STOP, fix issues before continuing
+- **QA gate:** score < 7 → STOP, fix before continuing
 - **Security gate:** CVE critical/high → STOP, fix before continuing
-- **PM backlog gate:** after PM produces PRD → verify tasks exist in sprint-current.md. If not, invoke PM again: "Break the PRD into backlog tasks in sprint-current.md."
-- **Cross-repo sync gate:** backend DTO/endpoint/auth changes → developer MUST list affected frontend files in completion notes. Orchestrator adds these as follow-up tasks.
+- **PM backlog gate:** after PRD → verify tasks in sprint-current.md
+- **Cross-repo sync gate:** backend DTO/endpoint/auth changes → developer lists affected frontend files
 
 ---
 
@@ -145,51 +161,38 @@ Before launching tester, verify ALL. Any fail → re-invoke developer, do NOT pr
 
 ## Language
 
-All docs MUST be in Spanish. Titles, headers, Mermaid labels → Spanish. Code, YAML keys, file names, paths → English.
+All docs in Spanish. Titles, headers, Mermaid labels → Spanish. Code, YAML keys, file names, paths → English.
+Questions to user → always in Spanish.
 
 ---
 
 ## Post-completion (MANDATORY)
 
-After all agents finish:
-1. `<docs>/02-backlog/sprint-current.md` — add/update: ID, title, status `done`, service, type, story points, links, sprint metrics
-2. `<docs>/02-backlog/board.md` — move task to **Done** column
-3. Task frontmatter: set `status: done`
+After all agents finish: update `sprint-current.md` (Done row), `board.md` (Done column), task frontmatter (`status: done`).
 
 ---
 
-## Agent scope limits
+## Context passing
 
-Each agent: MAX 1 document per invocation. Multiple docs → run agent twice. Never 3+ files in a single run.
-
----
-
-## Context passing (summary)
-
-- **Content in context from legitimate source** (user messages, prior subagent output, vault docs) → pass inline in the agent prompt
-- **Content NOT in context, subagent needs it** → tell subagent the file path to read
-- **Content needs synthesis across many files** → spawn scanner/Explore, do NOT read them yourself
-- **Agent output feeds the next agent** → pass relevant output inline (you already have it)
-
-Reading production source code just to relay it = anti-pattern #5. See `anti-patterns.md`.
+- Content already in context → pass inline to agent. Content NOT in context → tell agent the file path.
+- Agent output feeds next agent → pass inline. Never read source code just to relay it (anti-pattern #5).
+- Each agent: MAX 1 document per invocation. Multiple docs → run agent twice.
 
 ---
 
 ## Sub-files — load on trigger
 
-Absolute path: `/Users/ernestodiaz/projects/anvil/skills/orchestrate/<sub-file>.md`.
+Path: `/Users/ernestodiaz/projects/anvil/skills/orchestrate/<sub-file>.md`.
 
 | Trigger | Load |
 |---|---|
-| Invoking developer for Medium+ task (Flow 0/A/B) | `plan-approval.md` |
-| Re-invoking developer after QA/security findings | `qa-fix.md` |
-| Session start — project not in registry OR context.md stale OR Design Execution GATE resume | `vault-setup.md` |
-| Any Read/Write that might violate boundary | `anti-patterns.md` |
+| Invoking developer (Flow 0/A/B) | `plan-approval.md` |
+| Re-invoking developer after QA/security | `qa-fix.md` |
+| Session start — registry/context stale | `vault-setup.md` |
+| Boundary doubt | `anti-patterns.md` |
 
 ---
 
-## Size budget (enforced)
+## Size budget
 
-- SKILL.md ≤ 200 líneas · sub-files ≤ 150 (vault-setup.md ≤ 120)
-- New rule que no cabe → borrar una vieja o mover a `agents/<agent>.md`
-- Measure: `wc -l skills/orchestrate/*.md`
+SKILL.md ≤ 200 lines · sub-files ≤ 150. `wc -l skills/orchestrate/*.md`

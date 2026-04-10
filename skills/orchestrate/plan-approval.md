@@ -102,9 +102,10 @@ Before the orchestrator invokes the tester, it MUST verify that the developer fi
 1. [ ] `.handoff/<TASK-ID>.md` has a non-empty `## Handoff for tester` section
 2. [ ] "Public interfaces / contracts" has the exact signatures of new/modified functions, types, DTOs
 3. [ ] "Edge cases descubiertos" is filled (not just "N/A" — if there truly are none, the developer should say "sin edge cases no triviales")
-4. [ ] "Validación ya ejecutada" lists the commands the developer ran (go build, go vet, npm run build)
+4. [ ] "Tests requeridos" has a numbered, closed list of tests (not empty, not "N/A")
+5. [ ] "Validación ya ejecutada" lists the commands the developer ran (go build, go vet, npm run build)
 
-**If the section is missing or incomplete:** re-invoke the developer with: "You forgot to fill the `## Handoff for tester` section of `.handoff/<TASK-ID>.md`. Fill it now with signatures, edge cases, patterns, and suggested test paths. Do NOT touch production code." This is cheaper than letting the tester re-read the codebase.
+**If the section is missing or incomplete:** re-invoke the developer with: "You forgot to fill the `## Handoff for tester` section of `.handoff/<TASK-ID>.md`. Fill it now with signatures, edge cases, patterns, and the closed list of tests requeridos. Do NOT touch production code." This is cheaper than letting the tester re-read the codebase.
 
 **Tester prompt template (after verification passes):**
 
@@ -117,14 +118,12 @@ PRIMARY INPUT: Read `.handoff/<TASK-ID>.md` — specifically the `## Handoff for
 - patterns applied
 - edge cases discovered
 - build tags / constraints
-- suggested test paths
+- **tests requeridos** — closed list of tests to implement (your ONLY scope)
 - validation already run (do NOT repeat build checks)
 
 Do NOT re-read the production files unless the handoff is missing a specific detail you need. If the handoff is incomplete, STOP and report to the orchestrator.
 
-Your job: write test files that cover the acceptance criteria below + any edge cases in the handoff.
-
-Acceptance criteria: <copy inline from task.md>
+Your job: implement ONLY the tests listed in "Tests requeridos". Do NOT add extra tests beyond this list.
 ```
 
 Developer boundary: never writes test files. If tester finds dev-authored tests, report violation (see tester.md).

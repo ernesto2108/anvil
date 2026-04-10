@@ -29,10 +29,12 @@ function MetaCard({ label, children }: { label: string; children: React.ReactNod
 
 export function AgentView({ runId, agentId, onBack }: AgentViewProps) {
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [outputExpanded, setOutputExpanded] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     setState({ status: 'loading' })
+    setOutputExpanded(false)
 
     getAgent(runId, agentId)
       .then((detail) => {
@@ -202,13 +204,36 @@ export function AgentView({ runId, agentId, onBack }: AgentViewProps) {
             )}
           </section>
 
-          {/* Output — placeholder hasta DASH-FEAT-013 */}
+          {/* Output */}
           <section aria-label="Output del agente">
             <h3 className="mb-2 text-sm font-medium text-foreground">Output</h3>
-            <div className="rounded-lg border border-border bg-card px-4 py-6 text-center">
-              <p className="text-sm text-text-muted">Captura de output pendiente</p>
-              <p className="mt-1 text-xs text-text-muted">Ver DASH-FEAT-013 en el backlog</p>
-            </div>
+            {state.detail.output === '' ? (
+              <p className="text-sm text-text-muted">Sin output registrado.</p>
+            ) : (() => {
+              const outputLines = state.detail.output.split('\n')
+              const isTruncated = outputLines.length > 20
+              const displayText = outputExpanded
+                ? state.detail.output
+                : outputLines.slice(0, 20).join('\n')
+              return (
+                <>
+                  <div className={`rounded-lg border border-border bg-card p-4${outputExpanded ? ' max-h-[600px] overflow-auto' : ' overflow-hidden'}`}>
+                    <pre className="whitespace-pre-wrap break-all font-mono text-xs text-foreground">
+                      {displayText}
+                    </pre>
+                  </div>
+                  {isTruncated && (
+                    <button
+                      type="button"
+                      onClick={() => setOutputExpanded((prev) => !prev)}
+                      className="mt-2 cursor-pointer text-xs text-brand-text hover:underline"
+                    >
+                      {outputExpanded ? 'Colapsar' : 'Expandir'}
+                    </button>
+                  )}
+                </>
+              )
+            })()}
           </section>
         </div>
       )}

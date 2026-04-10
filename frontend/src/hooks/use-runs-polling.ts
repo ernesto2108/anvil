@@ -3,6 +3,12 @@ import { getRuns, type RunDTO } from '@/lib/wails'
 
 const POLL_INTERVAL_MS = 2000
 
+export interface RunsFilter {
+  status: string
+  startDate: string
+  endDate: string
+}
+
 interface UseRunsPollingResult {
   runs: RunDTO[] | null
   error: boolean
@@ -17,8 +23,9 @@ interface UseRunsPollingResult {
  * - Error en primer fetch: `error` es true y `runs` queda null.
  * - Error en refetch posterior: log a consola, mantiene datos previos (no bloquea UI).
  * - Cleanup en unmount: el interval se limpia y se cancela cualquier setState pendiente.
+ * - Cambio de filtros: reinicia el estado a null (skeleton) y hace un nuevo fetch.
  */
-export function useRunsPolling(): UseRunsPollingResult {
+export function useRunsPolling(filter: RunsFilter): UseRunsPollingResult {
   const [runs, setRuns] = useState<RunDTO[] | null>(null)
   const [error, setError] = useState(false)
 
@@ -29,10 +36,19 @@ export function useRunsPolling(): UseRunsPollingResult {
 
   useEffect(() => {
     mountedRef.current = true
+    initialFetchDoneRef.current = false
+    setRuns(null)
+    setError(false)
 
     async function fetchRuns() {
       try {
-        const data = await getRuns({ limit: 100, offset: 0, status: '' })
+        const data = await getRuns({
+          limit: 100,
+          offset: 0,
+          status: filter.status,
+          startDate: filter.startDate,
+          endDate: filter.endDate,
+        })
         if (!mountedRef.current) return
         setRuns(data)
         setError(false)
@@ -62,7 +78,7 @@ export function useRunsPolling(): UseRunsPollingResult {
       mountedRef.current = false
       clearInterval(interval)
     }
-  }, [])
+  }, [filter.status, filter.startDate, filter.endDate])
 
   return { runs, error }
 }

@@ -5,6 +5,8 @@ export interface RunsQuery {
   limit: number
   offset: number
   status: string
+  startDate: string
+  endDate: string
 }
 
 export interface RunDTO {
@@ -44,7 +46,7 @@ export interface AgentDTO {
 export interface AgentDetailDTO {
   agent: AgentDTO
   files: FileDTO[]
-  output: string // siempre "" hasta DASH-FEAT-013
+  output: string
 }
 
 // TokensPerRunPoint es una barra del chart "Tokens per run".

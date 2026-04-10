@@ -260,7 +260,10 @@ Fill the `## Handoff for tester` section of the handoff with:
    - Error paths (how errors are wrapped)
    - Race conditions considered / avoided
 5. **Build tags o constraints** — if the code uses `//go:build xyz`, Go embed, Wails bindings, or any stack quirk that affects how tests must be written
-6. **Casos de test sugeridos** (not mandatory list — just a starting hint): one-bullet list of the paths through the code that would be valuable to cover. The tester decides final coverage.
+6. **Tests requeridos** (lista cerrada — el tester SOLO implementa estos): lista numerada de los tests concretos que cubren la funcionalidad. Incluir: nombre descriptivo del test + qué valida. El tester NO agrega tests fuera de esta lista salvo que descubra un bug real (failing test = bug en producción). Escalar con story points:
+   - 1-3 pts: max 10 tests
+   - 5 pts: max 15 tests
+   - 8+ pts: max 25 tests
 7. **Validación que YA corriste** — build + lint + vet, per stack. Required entries (record exact commands and outputs):
    - Go: `go build -tags <tag> ./...`, `go vet -tags <tag> ./...`, **`golangci-lint run --build-tags <tag> ./<scope>/...` → 0 issues**
    - Frontend: `npm run build`, **`npm run lint` (or `eslint <paths>`) → 0 errors**, `npm audit` when you added deps (0 HIGH/CRITICAL)

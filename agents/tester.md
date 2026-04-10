@@ -71,7 +71,7 @@ Path: `.handoff/<TASK-ID>.md`. Focus on the `## Handoff for tester` section. It 
 - Patterns applied (including test patterns you should reuse — see `### Test patterns` if present)
 - Edge cases discovered during implementation
 - Build tags / stack constraints
-- Suggested test cases
+- **Tests requeridos** — lista cerrada de tests a implementar
 - Validation already performed (build/lint — do not repeat)
 
 If the orchestrator passed the `## Handoff for tester` section inline in your prompt, **do not even read the handoff file** — use the inline content.
@@ -97,15 +97,22 @@ If the baseline does NOT compile → **STOP** and report to the orchestrator: *"
 
 If the baseline compiles and runs clean → proceed to STEP 3.
 
-### STEP 3 — Write tests using ONLY the handoff + inline prompt content
+### STEP 3 — Write ONLY the tests listed in the handoff
 
-**Rules (enforced by the read budget cap):**
-1. Do NOT re-read production files that appear in the handoff's file list. The developer already transcribed what you need.
-2. Do NOT read production files to "confirm the signature matches" — the baseline test run in STEP 2 will catch any drift at compile time.
-3. If the prompt includes inline context (file contents, patterns, test cases) → use it directly, do NOT re-read those files.
-4. If the handoff points to an existing test file as a "pattern to follow" (e.g., "reuse seed helper from `store/list_runs_test.go`") → that file is a legitimate read, and does NOT count against the production-code cap.
-5. If you genuinely need the body of a helper that the handoff only named (not just the signature) → allowed, but counts against your 3-read cap.
-6. **Never explore the codebase** with Glob/Grep beyond locating the specific test helper the handoff told you to use.
+The handoff contains a `### Tests requeridos` section with a **closed list** of tests to implement. This is your scope — no more, no less.
+
+**Scope rules:**
+1. **Implement ONLY the tests in the list.** Do NOT add extra tests "for completeness" or "just in case". The developer already scoped the coverage.
+2. **Exception:** If a test you write fails and reveals a bug in production code, report it per the Failing Tests Policy. You may add a regression test for the bug ONLY if it's not already in the list.
+3. **If the list is missing or says "N/A"** → STOP and report: "Handoff sin lista de tests requeridos — necesito que el developer la llene."
+
+**Read rules (enforced by the read budget cap):**
+4. Do NOT re-read production files that appear in the handoff's file list. The developer already transcribed what you need.
+5. Do NOT read production files to "confirm the signature matches" — the baseline test run in STEP 2 will catch any drift at compile time.
+6. If the prompt includes inline context (file contents, patterns, test cases) → use it directly, do NOT re-read those files.
+7. If the handoff points to an existing test file as a "pattern to follow" → that file is a legitimate read, and does NOT count against the production-code cap.
+8. If you genuinely need the body of a helper that the handoff only named (not just the signature) → allowed, but counts against your 3-read cap.
+9. **Never explore the codebase** with Glob/Grep beyond locating the specific test helper the handoff told you to use.
 
 ### STEP 4 — Run tests + lint, report
 

@@ -1,4 +1,5 @@
-import { Activity, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
+import { Activity, ChevronRight, X } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -16,11 +17,18 @@ import {
   formatTokens,
 } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { useRunsPolling } from '@/hooks/use-runs-polling'
+import { useRunsPolling, type RunsFilter } from '@/hooks/use-runs-polling'
 
 interface RunsViewProps {
   onRowClick: (runId: string) => void
 }
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'Todos' },
+  { value: 'running', label: 'Running' },
+  { value: 'success', label: 'Success' },
+  { value: 'failed', label: 'Failed' },
+] as const
 
 // Skeleton de carga: tres filas de barras animadas.
 function LoadingSkeleton() {
@@ -59,62 +67,147 @@ function isRunning(status: string): boolean {
   return status === 'running' || status === 'in_progress' || status === 'in-progress'
 }
 
-export function RunsView({ onRowClick }: RunsViewProps) {
-  const { runs } = useRunsPolling()
-
-  if (runs === null) return <LoadingSkeleton />
-  if (runs.length === 0) return <EmptyState />
+function FilterBar({
+  filter,
+  onChange,
+}: {
+  filter: RunsFilter
+  onChange: (f: RunsFilter) => void
+}) {
+  const hasFilters = filter.status !== '' || filter.startDate !== '' || filter.endDate !== ''
 
   return (
-    <div className="p-6">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-border hover:bg-transparent">
-            <TableHead className="w-[140px]">ID</TableHead>
-            <TableHead className="w-[160px]">Fecha</TableHead>
-            <TableHead className="w-[110px]">Estado</TableHead>
-            <TableHead className="w-[100px]">Duración</TableHead>
-            <TableHead className="w-[110px] text-right">Tokens</TableHead>
-            <TableHead className="w-[80px] text-right">QA</TableHead>
-            <TableHead className="w-[40px]" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {runs.map((run) => (
-            <TableRow
-              key={run.id}
-              className={cn(
-                'border-border cursor-pointer hover:bg-secondary/50 transition-colors',
-                // Fila activa recibe un tinte sutil del color "running".
-                isRunning(run.status) && 'bg-running-bg/20',
-              )}
-              onClick={() => onRowClick(run.id)}
+    <div className="flex items-center gap-3 px-6 pt-6 pb-2">
+      <select
+        value={filter.status}
+        onChange={(e) => onChange({ ...filter, status: e.target.value })}
+        className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+      >
+        {STATUS_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+
+      <div className="flex items-center gap-1.5">
+        <label className="text-xs text-muted-foreground">Desde</label>
+        <input
+          type="date"
+          value={filter.startDate}
+          onChange={(e) => onChange({ ...filter, startDate: e.target.value })}
+          className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <label className="text-xs text-muted-foreground">Hasta</label>
+        <input
+          type="date"
+          value={filter.endDate}
+          onChange={(e) => onChange({ ...filter, endDate: e.target.value })}
+          className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+
+      {hasFilters && (
+        <button
+          type="button"
+          onClick={() => onChange({ status: '', startDate: '', endDate: '' })}
+          className="inline-flex items-center gap-1 h-8 rounded-md px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+        >
+          <X size={12} />
+          Limpiar
+        </button>
+      )}
+    </div>
+  )
+}
+
+export function RunsView({ onRowClick }: RunsViewProps) {
+  const [filter, setFilter] = useState<RunsFilter>({
+    status: '',
+    startDate: '',
+    endDate: '',
+  })
+
+  const { runs } = useRunsPolling(filter)
+
+  if (runs === null) return <LoadingSkeleton />
+
+  return (
+    <div>
+      <FilterBar filter={filter} onChange={setFilter} />
+
+      {runs.length === 0 ? (
+        filter.status !== '' || filter.startDate !== '' || filter.endDate !== '' ? (
+          <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 px-6">
+            <Activity size={36} className="text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Sin resultados para los filtros seleccionados
+            </p>
+            <button
+              type="button"
+              onClick={() => setFilter({ status: '', startDate: '', endDate: '' })}
+              className="text-xs text-muted-foreground hover:text-foreground underline"
             >
-              <TableCell className="font-mono text-xs text-text-secondary w-[140px] truncate max-w-[140px]">
-                {run.id}
-              </TableCell>
-              <TableCell className="text-xs text-foreground w-[160px]">
-                {formatDate(run.startedAt)}
-              </TableCell>
-              <TableCell className="w-[110px]">
-                <StatusBadge status={run.status} />
-              </TableCell>
-              <TableCell className="font-mono text-xs text-foreground w-[100px]">
-                {isRunning(run.status) ? '—' : formatDuration(run.durationMs)}
-              </TableCell>
-              <TableCell className="font-mono text-xs text-foreground w-[110px] text-right">
-                {formatTokens(run.totalTokens)}
-              </TableCell>
-              <TableCell className="w-[80px] text-right">
-                <QABadge score={run.qaScore} />
-              </TableCell>
-              <TableCell className="w-[40px] text-right">
-                <ChevronRight size={14} className="text-muted-foreground ml-auto" />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              Limpiar filtros
+            </button>
+          </div>
+        ) : (
+          <EmptyState />
+        )
+      ) : (
+        <div className="px-6 pb-6">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="w-[140px]">ID</TableHead>
+                <TableHead className="w-[160px]">Fecha</TableHead>
+                <TableHead className="w-[110px]">Estado</TableHead>
+                <TableHead className="w-[100px]">Duración</TableHead>
+                <TableHead className="w-[110px] text-right">Tokens</TableHead>
+                <TableHead className="w-[80px] text-right">QA</TableHead>
+                <TableHead className="w-[40px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {runs.map((run) => (
+                <TableRow
+                  key={run.id}
+                  className={cn(
+                    'border-border cursor-pointer hover:bg-secondary/50 transition-colors',
+                    isRunning(run.status) && 'bg-running-bg/20',
+                  )}
+                  onClick={() => onRowClick(run.id)}
+                >
+                  <TableCell className="font-mono text-xs text-text-secondary w-[140px] truncate max-w-[140px]">
+                    {run.id}
+                  </TableCell>
+                  <TableCell className="text-xs text-foreground w-[160px]">
+                    {formatDate(run.startedAt)}
+                  </TableCell>
+                  <TableCell className="w-[110px]">
+                    <StatusBadge status={run.status} />
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-foreground w-[100px]">
+                    {isRunning(run.status) ? '—' : formatDuration(run.durationMs)}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-foreground w-[110px] text-right">
+                    {formatTokens(run.totalTokens)}
+                  </TableCell>
+                  <TableCell className="w-[80px] text-right">
+                    <QABadge score={run.qaScore} />
+                  </TableCell>
+                  <TableCell className="w-[40px] text-right">
+                    <ChevronRight size={14} className="text-muted-foreground ml-auto" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   )
 }

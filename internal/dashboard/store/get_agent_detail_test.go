@@ -24,6 +24,23 @@ func writeAgentEndWithFiles(t *testing.T, s *store.TestableStore, runID, agentID
 	}
 }
 
+// writeAgentEndWithOutput escribe un evento agent.end con Output configurable.
+func writeAgentEndWithOutput(t *testing.T, s *store.TestableStore, runID, agentID, status string, durationMs int64, tokens int, output string) {
+	t.Helper()
+	ev := mustNewEvent(t, runID, instrumentation.EventAgentEnd, instrumentation.AgentEndPayload{
+		AgentID:      agentID,
+		Status:       status,
+		DurationMs:   durationMs,
+		TokensTotal:  tokens,
+		FilesTouched: []string{},
+		ExitCode:     0,
+		Output:       output,
+	})
+	if err := s.WriteEvent(ev); err != nil {
+		t.Fatalf("escribir agent.end con output para %q: %v", agentID, err)
+	}
+}
+
 // writeAgentError escribe un evento agent.error para simular un agente fallido.
 func writeAgentError(t *testing.T, s *store.TestableStore, runID, agentID, errMsg string, durationMs int64) {
 	t.Helper()
@@ -279,6 +296,48 @@ func Test_GetAgentDetail(t *testing.T) {
 		}
 		if filesA[0].Path != "file-a.go" {
 			t.Errorf("files[0].Path: esperado %q, obtuvo %q", "file-a.go", filesA[0].Path)
+		}
+	})
+
+	t.Run("GetAgentDetail retorna output cuando está presente", func(t *testing.T) {
+		s := newTestStore(t, 500)
+		runID := mustNewRunID(t)
+
+		writeRunStart(t, s, runID)
+		writeAgentStartWithDeps(t, s, runID, "agent-with-output", "developer", 1, []string{})
+		writeAgentEndWithOutput(t, s, runID, "agent-with-output", "success", 600, 1000, "resultado del agente")
+
+		detail, _, err := s.GetAgentDetail(context.Background(), runID, "agent-with-output")
+		if err != nil {
+			t.Fatalf("GetAgentDetail: %v", err)
+		}
+		if detail == nil {
+			t.Fatal("detail: esperaba valor no nil")
+		}
+		if detail.Output != "resultado del agente" {
+			t.Errorf("Output: esperado %q, obtuvo %q", "resultado del agente", detail.Output)
+		}
+	})
+
+	t.Run("GetAgentDetail retorna string vacío cuando output es NULL (agente pre-migración)", func(t *testing.T) {
+		s := newTestStore(t, 500)
+		runID := mustNewRunID(t)
+
+		writeRunStart(t, s, runID)
+		writeAgentStartWithDeps(t, s, runID, "agent-pre-migration", "tester", 1, []string{})
+		// Escribir agent.end sin Output (campo vacío = "" que se almacena como NULL o "")
+		writeAgentEndWithOutput(t, s, runID, "agent-pre-migration", "success", 400, 800, "")
+
+		detail, _, err := s.GetAgentDetail(context.Background(), runID, "agent-pre-migration")
+		if err != nil {
+			t.Fatalf("GetAgentDetail: %v", err)
+		}
+		if detail == nil {
+			t.Fatal("detail: esperaba valor no nil")
+		}
+		// Output vacío o NULL debe retornarse como "" (nunca nil panic)
+		if detail.Output != "" {
+			t.Errorf("Output: esperado string vacío para agente pre-migración, obtuvo %q", detail.Output)
 		}
 	})
 

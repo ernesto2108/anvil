@@ -32,7 +32,7 @@ type fakeStore struct {
 }
 
 func (f *fakeStore) WriteEvent(_ instrumentation.Event) error              { return nil }
-func (f *fakeStore) ListRuns(_ context.Context, _, _ int) ([]store.RunSummary, error) {
+func (f *fakeStore) ListRuns(_ context.Context, _, _ int, _, _, _ string) ([]store.RunSummary, error) {
 	return nil, nil
 }
 func (f *fakeStore) ListAgentsByRun(_ context.Context, _ string) ([]store.AgentRow, error) {
@@ -472,7 +472,7 @@ func Test_GetAgent(t *testing.T) {
 		if dto.Files[0].Action != "touched" {
 			t.Errorf("Files[0].Action: esperado %q, obtuvo %q", "touched", dto.Files[0].Action)
 		}
-		// CRÍTICO — opción B: Output siempre vacío hasta DASH-FEAT-013
+		// Output es "" porque el mock no setea Output en AgentDetail.
 		if dto.Output != "" {
 			t.Errorf("Output: esperaba vacío (opción B, DASH-FEAT-013), obtuvo %q", dto.Output)
 		}
@@ -591,11 +591,34 @@ func Test_GetAgent(t *testing.T) {
 		if dto == nil {
 			t.Fatal("GetAgent: esperaba DTO no nil")
 		}
-		// Output DEBE ser "" — placeholder hasta DASH-FEAT-013.
-		// Si este test falla, alguien modificó toAgentDetailDTO antes de que
-		// exista la tabla/columna de output.
+		// Output DEBE ser "" cuando el store retorna AgentDetail con Output vacío (zero-value).
+		// DASH-FEAT-013: la columna output ya existe; este test verifica que toAgentDetailDTO
+		// mapea correctamente el campo Output del store al DTO.
 		if dto.Output != "" {
-			t.Errorf("Output: esperaba vacío (placeholder DASH-FEAT-013), obtuvo %q", dto.Output)
+			t.Errorf("Output: esperaba vacío cuando store retorna zero-value, obtuvo %q", dto.Output)
+		}
+	})
+
+	t.Run("toAgentDetailDTO mapea Output del store al DTO correctamente", func(t *testing.T) {
+		fs := &fakeStore{
+			agentDetail: &store.AgentDetail{
+				AgentID:   "a2",
+				AgentRole: "tester",
+				Status:    "success",
+				Output:    "hello world",
+			},
+			agentFiles: []store.FileRow{},
+		}
+		app := NewApp(fs)
+		dto, err := app.GetAgent("run-y", "a2")
+		if err != nil {
+			t.Fatalf("GetAgent: %v", err)
+		}
+		if dto == nil {
+			t.Fatal("GetAgent: esperaba DTO no nil")
+		}
+		if dto.Output != "hello world" {
+			t.Errorf("Output: esperado %q, obtuvo %q", "hello world", dto.Output)
 		}
 	})
 }

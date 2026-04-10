@@ -15,7 +15,8 @@ type Store interface {
 	// WriteEvent persiste un evento de instrumentación en el almacenamiento subyacente.
 	WriteEvent(ev instrumentation.Event) error
 	// ListRuns retorna runs paginados ordenados por started_at DESC.
-	ListRuns(ctx context.Context, limit, offset int) ([]store.RunSummary, error)
+	// status, startDate y endDate son filtros opcionales (cadena vacía = sin filtro).
+	ListRuns(ctx context.Context, limit, offset int, status, startDate, endDate string) ([]store.RunSummary, error)
 	// ListAgentsByRun retorna todos los agentes de un run ordenados por sequence ASC.
 	// Retorna nil, nil si el run no existe o no tiene agentes.
 	ListAgentsByRun(ctx context.Context, runID string) ([]store.AgentRow, error)

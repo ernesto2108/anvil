@@ -79,6 +79,7 @@ type AgentEndPayload struct {
 	TokensTotal  int      `json:"tokens_total"`
 	FilesTouched []string `json:"files_touched"`
 	ExitCode     int      `json:"exit_code"`
+	Output       string   `json:"output"`
 }
 
 type AgentErrorPayload struct {

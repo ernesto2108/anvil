@@ -6,9 +6,11 @@ package dashboard
 
 // RunsQuery contiene los parámetros de filtro para listar runs.
 type RunsQuery struct {
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-	Status string `json:"status"` // reservado para filtro P1
+	Limit     int    `json:"limit"`
+	Offset    int    `json:"offset"`
+	Status    string `json:"status"`
+	StartDate string `json:"startDate"` // RFC3339, opcional
+	EndDate   string `json:"endDate"`   // RFC3339, opcional
 }
 
 // RunDTO es la representación resumida de un run individual.
@@ -49,11 +51,10 @@ type AgentDTO struct {
 }
 
 // AgentDetailDTO agrega un agente con sus archivos y salida.
-// Output queda siempre vacío hasta DASH-FEAT-013 (captura de output pendiente).
 type AgentDetailDTO struct {
 	Agent  AgentDTO  `json:"agent"`
 	Files  []FileDTO `json:"files"`
-	Output string    `json:"output"` // placeholder — captura real pendiente de DASH-FEAT-013
+	Output string    `json:"output"`
 }
 
 // FlowDTO representa el grafo dirigido del flujo de ejecución de un run.

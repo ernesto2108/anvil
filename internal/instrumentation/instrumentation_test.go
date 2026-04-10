@@ -230,6 +230,7 @@ func TestNewEvent_PayloadMarshaledAsJSON(t *testing.T) {
 		TokensTotal:  300,
 		FilesTouched: []string{"main.go"},
 		ExitCode:     0,
+		Output:       "some output",
 	}
 	ev := mustNewEvent(t, "r_x", EventAgentEnd, p)
 
@@ -325,6 +326,7 @@ func TestPayloadRoundTrips(t *testing.T) {
 				TokensTotal:  1000,
 				FilesTouched: []string{"pkg/foo.go"},
 				ExitCode:     0,
+				Output:       "some output",
 			},
 			unmarshal: func(b []byte) (any, error) {
 				var v AgentEndPayload

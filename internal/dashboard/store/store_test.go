@@ -254,6 +254,78 @@ func Test_WriteEvent(t *testing.T) {
 			},
 		},
 		{
+			name: "agent.end persiste output en la DB",
+			setup: func(t *testing.T, s *store.TestableStore, runID string) {
+				writeRunStart(t, s, runID)
+				writeAgentStart(t, s, runID, "agent-out")
+			},
+			event: func(t *testing.T, runID string) instrumentation.Event {
+				return mustNewEvent(t, runID, instrumentation.EventAgentEnd, instrumentation.AgentEndPayload{
+					AgentID:      "agent-out",
+					Status:       "success",
+					DurationMs:   100,
+					TokensTotal:  50,
+					FilesTouched: []string{},
+					ExitCode:     0,
+					Output:       "hello from agent",
+				})
+			},
+			verify: func(t *testing.T, db *sql.DB, runID string) {
+				var output sql.NullString
+				err := db.QueryRow(
+					"SELECT output FROM agents WHERE run_id = ? AND agent_id = ?", runID, "agent-out",
+				).Scan(&output)
+				if err != nil {
+					t.Fatalf("consultar output: %v", err)
+				}
+				if !output.Valid {
+					t.Fatal("output: esperaba valor no-NULL")
+				}
+				if output.String != "hello from agent" {
+					t.Errorf("output: esperado %q, obtuvo %q", "hello from agent", output.String)
+				}
+			},
+		},
+		{
+			name: "agent.end trunca output mayor a 100KB",
+			setup: func(t *testing.T, s *store.TestableStore, runID string) {
+				writeRunStart(t, s, runID)
+				writeAgentStart(t, s, runID, "agent-big")
+			},
+			event: func(t *testing.T, runID string) instrumentation.Event {
+				// 101KB de datos — debe ser truncado a 100KB (102400 bytes)
+				bigOutput := strings.Repeat("x", 101*1024)
+				return mustNewEvent(t, runID, instrumentation.EventAgentEnd, instrumentation.AgentEndPayload{
+					AgentID:      "agent-big",
+					Status:       "success",
+					DurationMs:   200,
+					TokensTotal:  10,
+					FilesTouched: []string{},
+					ExitCode:     0,
+					Output:       bigOutput,
+				})
+			},
+			verify: func(t *testing.T, db *sql.DB, runID string) {
+				var output sql.NullString
+				err := db.QueryRow(
+					"SELECT output FROM agents WHERE run_id = ? AND agent_id = ?", runID, "agent-big",
+				).Scan(&output)
+				if err != nil {
+					t.Fatalf("consultar output truncado: %v", err)
+				}
+				if !output.Valid {
+					t.Fatal("output: esperaba valor no-NULL")
+				}
+				const maxBytes = 100 * 1024
+				if len(output.String) > maxBytes {
+					t.Errorf("output no truncado: longitud %d > %d", len(output.String), maxBytes)
+				}
+				if len(output.String) != maxBytes {
+					t.Errorf("output truncado: esperaba exactamente %d bytes, obtuvo %d", maxBytes, len(output.String))
+				}
+			},
+		},
+		{
 			name: "agent.error marks agent as failed",
 			setup: func(t *testing.T, s *store.TestableStore, runID string) {
 				writeRunStart(t, s, runID)

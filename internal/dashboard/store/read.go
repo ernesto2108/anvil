@@ -43,7 +43,8 @@ type RunSummary struct {
 
 // ListRuns devuelve los runs ordenados por started_at DESC.
 // limit <= 0 aplica defaultListLimit (100). offset < 0 se normaliza a 0.
-func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int) ([]RunSummary, error) {
+// status, startDate y endDate son filtros opcionales (cadena vacía = sin filtro).
+func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int, status, startDate, endDate string) ([]RunSummary, error) {
 	if limit <= 0 {
 		limit = defaultListLimit
 	}
@@ -51,16 +52,40 @@ func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int) ([]RunSum
 		offset = 0
 	}
 
-	const q = `
+	q := `
 		SELECT
 			id, task_id, task_desc, status, complexity, provider,
 			started_at, ended_at, duration_ms,
 			total_tokens, files_touched, agents_count, qa_score
-		FROM runs
-		ORDER BY started_at DESC
-		LIMIT ? OFFSET ?`
+		FROM runs`
 
-	rows, err := s.db.QueryContext(ctx, q, limit, offset)
+	var conditions []string
+	var args []any
+
+	if status != "" {
+		conditions = append(conditions, "status = ?")
+		args = append(args, status)
+	}
+	if startDate != "" {
+		conditions = append(conditions, "started_at >= ?")
+		args = append(args, startDate)
+	}
+	if endDate != "" {
+		conditions = append(conditions, "started_at <= ?")
+		args = append(args, endDate)
+	}
+
+	if len(conditions) > 0 {
+		q += " WHERE " + conditions[0]
+		for _, c := range conditions[1:] {
+			q += " AND " + c
+		}
+	}
+
+	q += " ORDER BY started_at DESC LIMIT ? OFFSET ?"
+	args = append(args, limit, offset)
+
+	rows, err := s.db.QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, fmt.Errorf("dashboard/store: consultar runs: %w", err)
 	}
@@ -246,6 +271,7 @@ type AgentDetail struct {
 	TokensTotal  *int
 	ExitCode     *int
 	ErrorMsg     string
+	Output       string
 }
 
 // FileRow es una fila de la tabla files asociada a un agente.
@@ -260,7 +286,7 @@ type FileRow struct {
 func (s *SQLiteStore) GetAgentDetail(ctx context.Context, runID, agentID string) (*AgentDetail, []FileRow, error) {
 	const agentQ = `
 		SELECT agent_id, agent_role, status, started_at, ended_at, duration_ms,
-		       tokens_input, tokens_output, tokens_total, exit_code, error_msg
+		       tokens_input, tokens_output, tokens_total, exit_code, error_msg, output
 		FROM agents
 		WHERE run_id = ? AND agent_id = ?`
 
@@ -287,13 +313,14 @@ func (s *SQLiteStore) GetAgentDetail(ctx context.Context, runID, agentID string)
 		dbTokensTotal  sql.NullInt64
 		dbExitCode     sql.NullInt64
 		dbErrorMsg     sql.NullString
+		dbOutput       sql.NullString
 	)
 
 	if err := rows.Scan(
 		&dbAgentID, &dbAgentRole, &dbStatus,
 		&dbStartedAtRaw, &dbEndedAtRaw, &dbDurationMs,
 		&dbTokensInput, &dbTokensOutput, &dbTokensTotal,
-		&dbExitCode, &dbErrorMsg,
+		&dbExitCode, &dbErrorMsg, &dbOutput,
 	); err != nil {
 		return nil, nil, fmt.Errorf("dashboard/store: escanear fila de agents: %w", err)
 	}
@@ -307,6 +334,7 @@ func (s *SQLiteStore) GetAgentDetail(ctx context.Context, runID, agentID string)
 		AgentRole: dbAgentRole,
 		Status:    dbStatus,
 		ErrorMsg:  dbErrorMsg.String,
+		Output:    dbOutput.String,
 	}
 
 	if dbStartedAtRaw.Valid && dbStartedAtRaw.String != "" {

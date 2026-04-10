@@ -308,6 +308,21 @@ func (s *SQLiteStore) handleAgentEnd(tx *sql.Tx, ev instrumentation.Event) error
 		return fmt.Errorf("dashboard/store: deserializar AgentEndPayload: %w", err)
 	}
 
+	const maxOutputBytes = 100 * 1024 // 100 KB
+
+	output := p.Output
+	if len(output) > maxOutputBytes {
+		output = output[:maxOutputBytes]
+		// Retroceder si cortamos a mitad de un carácter UTF-8 multibyte.
+		for len(output) > 0 && output[len(output)-1]&0xC0 == 0x80 {
+			output = output[:len(output)-1]
+		}
+		// Si el último byte es un líder UTF-8 incompleto, eliminarlo también.
+		if len(output) > 0 && output[len(output)-1]&0xC0 == 0xC0 {
+			output = output[:len(output)-1]
+		}
+	}
+
 	const updateAgent = `
 		UPDATE agents
 		SET status        = ?,
@@ -316,7 +331,8 @@ func (s *SQLiteStore) handleAgentEnd(tx *sql.Tx, ev instrumentation.Event) error
 		    tokens_input  = ?,
 		    tokens_output = ?,
 		    tokens_total  = ?,
-		    exit_code     = ?
+		    exit_code     = ?,
+		    output        = ?
 		WHERE run_id = ? AND agent_id = ?`
 
 	res, err := tx.Exec(updateAgent,
@@ -327,6 +343,7 @@ func (s *SQLiteStore) handleAgentEnd(tx *sql.Tx, ev instrumentation.Event) error
 		p.TokensOutput,
 		p.TokensTotal,
 		p.ExitCode,
+		output,
 		ev.RunID,
 		p.AgentID,
 	)

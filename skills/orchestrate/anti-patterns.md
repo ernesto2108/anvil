@@ -21,29 +21,27 @@ description: The 7 orchestrator anti-patterns with full reasoning, examples, and
 
 ## 2. "This looks simple, I'll just do it"
 
-**Wrong:** orchestrator decides a task is "basically boilerplate" or "just config files" and skips straight to editing.
+**Wrong:** orchestrator decides a task is "basically boilerplate" and skips straight to editing WITHOUT the user choosing direct mode.
 
-**Why it is wrong:** "Boilerplate" ≠ trivial. A scaffold with 12 config files, new build tags, new Makefile targets is Medium+ — touches many files, affects every future build. Small per-file changes ≠ small task.
+**Why it is wrong:** The user controls execution mode (see Rule #0). The orchestrator does not get to decide "this is simple enough to skip agents." If the user activated the orchestrator, use agents. If the user said "hazlo directo", then direct execution is correct.
 
-**Right:** use the triage table. If in doubt, round UP.
+**Right:** follow the user's chosen execution mode. If in doubt, ask.
 
 ---
 
-## 3. Writing code "just this once"
+## 3. Writing code without user authorization
 
-**Wrong:** orchestrator writes a small `.go`, `.ts`, `.tsx`, `.py`, `.rs`, `.dart` file directly because spawning the developer feels disproportionate.
+**Wrong:** orchestrator writes `.go`, `.ts`, `.tsx` etc. while running in orchestration mode (agents activated).
 
-**Why it is wrong:** "Just this once" happens every time. Each direct edit bypasses the convention skills (react-conventions, go-conventions, etc.) that the developer agent loads. The resulting code drifts from project standards and the user notices.
+**Why it is wrong:** In orchestration mode, code writing is the developer agent's job. The orchestrator's role is routing, gates, and user confirmations — not implementation.
 
-**Right:** if the change touches any application code file, delegate to the developer agent with the correct convention skill named explicitly in the prompt. If the overhead feels high, batch multiple changes into ONE developer call — do not bypass the boundary.
+**Right:** In orchestration mode, delegate all code to the developer agent. In direct mode (user's choice), writing code yourself is correct and expected.
 
-**Exceptions (direct edit OK):**
-- `go.mod` via `go get` / `go mod tidy` (tooling, not hand-written code)
-- Config files: `Makefile`, `wails.json`, `.gitignore`, `tsconfig.json`, `package.json` (but validate versions carefully)
-- Shell commands for verification: `go build`, `go vet`, `npm run build`
+**Always OK regardless of mode:**
+- `go.mod` via `go get` / `go mod tidy`
+- Config files: `Makefile`, `wails.json`, `.gitignore`, `tsconfig.json`, `package.json`
+- Shell commands: `go build`, `go vet`, `npm run build`
 - Markdown docs, handoff files, sprint-current.md
-
-If the extension is `.go`, `.ts`, `.tsx`, `.jsx`, `.vue`, `.svelte`, `.py`, `.rs`, `.dart`, `.astro`, `.kt`, `.swift` — **always** delegate to developer.
 
 ---
 
@@ -59,30 +57,27 @@ If the extension is `.go`, `.ts`, `.tsx`, `.jsx`, `.vue`, `.svelte`, `.py`, `.rs
 
 ## 5. Building context in Opus instead of delegating to a subagent
 
-**Wrong:** orchestrator reads 10+ production source files (Go, React, DTOs, store internals, migrations, existing views) to "understand the feature" before invoking any agent. The content then gets pasted inline into the developer prompt — paying Opus rates for a read the developer would have done in Sonnet anyway.
+**Applies ONLY in orchestration mode (agents activated).** In direct mode, reading source code is expected and correct.
 
-**Why it happens:** feels like due diligence. The orchestrator rationalizes "I'm only gathering context, not writing code, so the code-writer boundary doesn't apply." It also feels faster than spawning a scanner.
+**Wrong (orchestration mode):** orchestrator reads 10+ production source files to "understand the feature" before invoking any agent, paying Opus rates for reads the developer would have done in Sonnet.
 
 **Why it is wrong:**
-1. **Cost ratio.** Opus is roughly 4x Sonnet per token. Every file the orchestrator reads costs 4x the same read inside any subagent. 15 files × average 300 lines × 4x = tens of thousands of wasted Opus tokens per task.
-2. **Double-counting.** Any content the orchestrator reads AND then pastes inline into a subagent prompt is paid for twice. The context-passing rule says "pass inline only when you already have it" — reading files SO THAT you can pass them inline is the failure mode, not the intent.
-3. **Subagents read better.** `scanner`, `Explore`, and domain agents read with the right conventions loaded and the right framing. The orchestrator reads raw.
+1. **Cost ratio.** Opus is roughly 4x Sonnet per token. Every file the orchestrator reads costs 4x the same read inside any subagent.
+2. **Double-counting.** Reading files SO THAT you can pass them inline is the failure mode, not the intent.
+3. **Subagents read better.** They load convention skills and have domain framing.
 
-**Right:**
-- For initial codebase understanding: spawn `scanner` (if `context.md` is stale) OR the `Explore` subagent with a precise question — "list existing stubs, DTOs, and affected files for <feature>; summarize the pattern used by <sibling feature>". Consume the summary, not the files.
-- For feature-specific details the developer will need: let the developer subagent read them during its planning pass (Flow B) — that is exactly what Flow B is for.
-- If the orchestrator already has content from PRIOR conversation turns (user pasted code, previous agent result, docs read for routing), that is legitimate inline-pass material. Freshly reading code in order to relay it is not.
+**Right (orchestration mode):**
+- For codebase understanding: spawn `Explore` subagent with a precise question. Consume the summary, not the files.
+- For feature-specific details: let the developer read them during its planning pass (Flow B).
+- Content from PRIOR turns (user pasted code, previous agent result, docs read for routing) is legitimate inline-pass material.
 
-**Hard rule — the Opus read allow-list:** the orchestrator MAY read these paths with the `Read` tool:
-- `<docs>/01-project/context.md`
-- `<docs>/02-backlog/sprint-current.md`, `board.md`, `dashboard.md`
-- `<docs>/03-tasks/<TASK-ID>/*.md` (task.md, prd.md, design.md, ui-spec.md)
-- `<docs>/04-architecture/*.md`
-- `.handoff/<TASK-ID>.md` (own and sibling handoffs for pattern reference)
+**Opus read allow-list (orchestration mode only):**
+- `<docs>/01-project/context.md`, `02-backlog/*.md`, `03-tasks/<TASK-ID>/*.md`, `04-architecture/*.md`
+- `.handoff/<TASK-ID>.md`
 - `~/.claude/project-registry.md`
 - Other markdown docs in the vault
 
-The orchestrator MUST NOT `Read` source files with these extensions: `.go`, `.ts`, `.tsx`, `.jsx`, `.vue`, `.svelte`, `.py`, `.rs`, `.dart`, `.astro`, `.kt`, `.swift`, `.sql`, `.css`, `.scss`. Even to "just check the signature of one function." Delegate to a subagent with the exact question. `Glob` to verify file existence and `Bash` for `go build`/`npm run build` verification are allowed — they do not consume file contents.
+In orchestration mode, the orchestrator MUST NOT `Read` source files (`.go`, `.ts`, `.tsx`, `.py`, `.rs`, `.dart`, etc.). Delegate to a subagent. `Glob` and `Bash` (build/test) are always allowed.
 
 ---
 

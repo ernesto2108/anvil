@@ -36,7 +36,12 @@ func (a *App) GetRuns(q RunsQuery) ([]RunDTO, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	rows, err := a.store.ListRuns(ctx, q.Limit, q.Offset)
+
+	// Normalizar fechas YYYY-MM-DD del frontend a RFC3339 para comparación con started_at.
+	startDate := normalizeDate(q.StartDate, false)
+	endDate := normalizeDate(q.EndDate, true)
+
+	rows, err := a.store.ListRuns(ctx, q.Limit, q.Offset, q.Status, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +279,7 @@ func toAgentDetailDTO(d *store.AgentDetail, files []store.FileRow) *AgentDetailD
 	return &AgentDetailDTO{
 		Agent:  agent,
 		Files:  fileDTOs,
-		Output: "", // placeholder — captura real pendiente de DASH-FEAT-013
+		Output: d.Output,
 	}
 }
 
@@ -339,4 +344,21 @@ func toRunDTO(r store.RunSummary) RunDTO {
 		AgentsCount: r.AgentsCount,
 		QAScore:     r.QAScore,
 	}
+}
+
+// normalizeDate convierte una fecha YYYY-MM-DD del frontend a RFC3339.
+// Si endOfDay es true, usa 23:59:59.999999999 UTC para incluir todo el día.
+// Retorna cadena vacía si raw está vacío o no es una fecha válida.
+func normalizeDate(raw string, endOfDay bool) string {
+	if raw == "" {
+		return ""
+	}
+	t, err := time.Parse("2006-01-02", raw)
+	if err != nil {
+		return ""
+	}
+	if endOfDay {
+		t = t.Add(24*time.Hour - time.Nanosecond)
+	}
+	return t.Format(time.RFC3339Nano)
 }
