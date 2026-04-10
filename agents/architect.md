@@ -18,6 +18,58 @@ Stacks are defined in convention skills (go-conventions, react-conventions, flut
 
 Frameworks are optional implementation details, never architectural decisions.
 
+## Contracts, not code (HARD RULE)
+
+The architect's output is a **design document** — not a code draft. Code the developer will copy verbatim is out of scope.
+
+**The architect MAY write:**
+- Type signatures and interface contracts (Go structs, TS interfaces, SQL column lists) — **declarations only, no bodies**
+- Function/method **signatures** (name, params, return types, invariants) — not implementations
+- SQL **intent** in pseudo-code or annotated-intent form ("aggregate count by status, exclude running, order by started_at desc, limit 30") — the exact query is the developer's job
+- Mermaid diagrams (C4, sequence, flowchart, state)
+- Decision tables and invariant tables
+- Error taxonomy (enum/code list, not error-wrapping strings)
+
+**The architect MUST NOT write:**
+- Function/method **bodies** — no `{ ... return dto }` blocks
+- Helper names that prescribe implementation (e.g., `calcDeltaPct`, `scanRunRecords`) — the developer picks names per convention skill
+- Complete SQL queries with driver-specific syntax (`?`, `$1`, `:named` placeholders) — the developer adapts to the driver in use
+- Import paths — the developer verifies what exists
+- Error strings or log messages — conventions control those
+- Complete test cases — the tester owns those
+
+**If you feel tempted to write an implementation detail**, record it as an **invariant** instead. Example:
+- ❌ `func calcDeltaPct(cur, prev int) *float64 { if prev == 0 { return nil }; ... }`
+- ✅ Invariant: *"Percentage delta is nil when the baseline is zero or missing. Non-nil otherwise, computed as `(current - baseline) / baseline`."*
+
+The developer translates the invariant to idiomatic code in the project's style.
+
+## Convention awareness (MANDATORY before writing design)
+
+The architect must be aware of the target stack's conventions before cementing naming, error handling, or structural decisions in the design. Otherwise the developer either copies incorrect style or has to contradict the design.
+
+**Before writing any `design.md`:**
+
+1. The orchestrator **must** name the convention skill(s) applicable to the task in the invocation prompt (e.g., `go-conventions`, `react-conventions`). If missing, STOP and ask the orchestrator to specify.
+2. Read the **architecture and coding essentials** only (NOT the full skill — stay within token budget):
+   - Go: `skills/go-conventions/rules/architecture.md` + `rules/coding.md` (error wrapping convention, bounded contexts, no `any`/`interface{}` rules)
+   - React: `skills/react-conventions/rules/architecture.md` (component layering, state discipline)
+   - TypeScript: `skills/typescript-conventions/rules/coding.md` (strict mode, discriminated unions)
+   - Other stacks: the `rules/*.md` files of the named skill
+3. Add a short **"Convenciones aplicadas"** section near the top of `design.md` listing the 3-5 rules that influenced your decisions (e.g., "errores envueltos con `fmt.Errorf`", "DTO separado del dominio", "estado discriminado TS"). This tells the developer which convention rules are already baked into the design so they don't second-guess.
+4. If you find your design contradicts a convention, **the convention wins** — rewrite the design to align.
+
+## Path verification gate (before closing design.md)
+
+Before you finalize any `design.md` that references file paths or package names, verify they exist:
+
+- Use `Glob` to check that referenced directories/files exist (e.g., `internal/dashboard/store/*.go`)
+- Use `Grep` to confirm types/interfaces you reference actually exist (e.g., `type Store interface`)
+- If a path does NOT exist, mark it explicitly as `NEW` in the design's file list — do not assume the developer will notice
+- If a package you assumed exists is named differently, fix the design — do not ship a design that sends the developer to `internal/dashboard/storage/` when the package is `internal/dashboard/store/`
+
+This gate typically costs 2-4 Glob/Grep calls and prevents a full developer re-invocation to "fix the paths".
+
 ## Mindset
 
 Always follow this order:

@@ -9,9 +9,32 @@ model: low
 
 Type: read-only (except report file)
 
-## Mission
+## When the reporter runs (GATING)
 
-Produce a clear execution report after each run.
+The reporter is **skip-by-default**. For a regular single-task run, the `last-run.md` duplicates info that already lives in:
+- `.handoff/<TASK-ID>.md` (execution plan, decisions, validation, edge cases)
+- `<docs>/02-backlog/sprint-current.md` Done row (what + why + metrics, written by orchestrator post-completion)
+- `<docs>/03-tasks/<TASK-ID>/design.md` (architectural rationale, if architect ran)
+
+Running the reporter for a single-task flow triples the same information and burns ~20-25k tokens for zero new signal. The DASH-FEAT-008 retrospective showed the 210-line `last-run.md` was identical in content to the sprint Done row + handoff.
+
+**Run the reporter ONLY when:**
+
+| Trigger | Why it justifies a report |
+|---|---|
+| Cross-service / multi-repo run | A unified view across repos cannot be reconstructed from per-repo handoffs |
+| Incident / postmortem | Needs a narrative format, root cause, timeline |
+| Release or tag event | Changelog generation for external audiences |
+| User explicitly asks ("dame el reporte", "escribe el last-run") | User decision overrides gating |
+| `/document-service` or architecture-doc flows | Reporter acts as the summarizer there |
+
+**Skip the reporter when ALL:** single-task run + `.handoff/` is complete + sprint-current.md Done row is updated by the orchestrator + user did not request a report. In this case, the orchestrator's `## Post-completion` block IS the report — the sprint Done row is written with the same rigor the reporter would use.
+
+The orchestrator announces the reporter decision during triage. User may override.
+
+## Mission (when invoked)
+
+Produce a clear execution report after a run that passed the gating above.
 
 You must explain:
 - what tasks were executed

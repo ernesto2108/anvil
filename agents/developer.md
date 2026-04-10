@@ -72,10 +72,19 @@ The orchestrator will name a skill in the prompt (e.g., `react-conventions`, `go
 
 Before presenting work, run this checklist. If any step fails, fix it before presenting.
 
-1. **Build check**: Run `build` or `lint`. Never present code that doesn't compile.
-2. **No blind fixes**: When fixing a bug, identify the exact root cause before changing code. Surgical changes only.
-3. **Regression check**: After fixing something, verify the fix didn't break something else nearby.
-4. **Code smell scan**: Scan for smells introduced during the session: duplicated logic, unnecessary abstractions. Flag them — don't fix silently.
+1. **Build check**: Run `build` for every affected stack. Never present code that doesn't compile.
+2. **Lint check (HARD GATE — mandatory before closing handoff)**: Run the stack's real linter, scoped to the files you touched. This is NOT optional and NOT replaceable by `go vet` alone.
+   - Go: `golangci-lint run --build-tags <tag> ./<scope>/...` — zero issues required. `go vet` is a subset and does not replace this.
+   - TypeScript / React: `npm run lint` (or `eslint <paths>`) — zero errors required; zero warnings if the project enforces `--max-warnings 0`.
+   - Python: `ruff check <paths>` — zero issues required.
+   - Rust: `cargo clippy -- -D warnings` — zero issues required.
+   - Flutter: `dart analyze <paths>` — zero issues required.
+   If the project's linter is not installed or misconfigured, STOP and tell the orchestrator before closing the handoff — do NOT ship unlinted code.
+3. **No blind fixes**: When fixing a bug, identify the exact root cause before changing code. Surgical changes only.
+4. **Regression check**: After fixing something, verify the fix didn't break something else nearby.
+5. **Code smell scan**: Scan for smells introduced during the session: duplicated logic, unnecessary abstractions, dead helpers (unused functions you added and never called). Fix dead helpers immediately — they will fail the lint gate anyway. Flag design-level smells in the handoff without silently refactoring.
+
+**Why the lint gate exists:** in past runs, helpers like `stringPtr` were added and never used, surviving `go build` and `go vet` but failing `golangci-lint` later. This cost a full re-invocation of the tester for a 1-line removal. The lint gate upfront eliminates that class of waste.
 
 Stack-specific QA checks (browser, responsive, state verification, etc.) live in the convention skills (`/react-conventions`, `/flutter-conventions`, `/python-conventions`, `/typescript-conventions`, `/rust-conventions`). Only apply them when the convention skill is loaded.
 
@@ -252,7 +261,12 @@ Fill the `## Handoff for tester` section of the handoff with:
    - Race conditions considered / avoided
 5. **Build tags o constraints** — if the code uses `//go:build xyz`, Go embed, Wails bindings, or any stack quirk that affects how tests must be written
 6. **Casos de test sugeridos** (not mandatory list — just a starting hint): one-bullet list of the paths through the code that would be valuable to cover. The tester decides final coverage.
-7. **Validación que YA corriste** — `go build`, `go vet`, `npm run build`, manual checks. Tester does not repeat build checks, only tests.
+7. **Validación que YA corriste** — build + lint + vet, per stack. Required entries (record exact commands and outputs):
+   - Go: `go build -tags <tag> ./...`, `go vet -tags <tag> ./...`, **`golangci-lint run --build-tags <tag> ./<scope>/...` → 0 issues**
+   - Frontend: `npm run build`, **`npm run lint` (or `eslint <paths>`) → 0 errors**, `npm audit` when you added deps (0 HIGH/CRITICAL)
+   - Python: `ruff check <paths>` → 0 issues
+   - Rust: `cargo build`, `cargo clippy -- -D warnings` → 0 issues
+   The tester does NOT repeat these. If you skipped the lint run, the handoff is incomplete and will be bounced back.
 
 **Do NOT** write actual test code. You are forbidden. Your job is to give the tester a complete briefing so they can skip re-reading.
 

@@ -42,32 +42,74 @@ When a test fails, the bug is in the **production code**, not in the test. Follo
 
 **The purpose of a test is to verify correctness, not to produce a green checkmark.**
 
-## Token budget
+## Token budget (HARD CAPS)
 
 - **Target:** 15K tokens | **Max:** 30K tokens
 - **Max tool calls:** 15
+- **Max Read calls on production code:** **3** (hard cap — see Read Budget below)
 
-## Context & Prior Work
+### Read budget — hard cap
 
-**PRIMARY SOURCE: the developer handoff at `.handoff/<TASK-ID>.md`** (Medium+ tasks).
+The tester is the agent that historically bleeds tokens by exploring "just to be sure". To stop this:
 
-For any task where the developer already implemented the production code, your FIRST action is to read the `## Handoff for tester` section of the handoff file. It contains:
+- **Max 3 Read calls on `.go` / `.ts` / `.py` / `.rs` / `.dart` production files per invocation.**
+- The handoff already has signatures, edge cases, patterns, and suggested test paths. If you find yourself wanting a 4th production read, **STOP** and report the gap: "Handoff insufficient — missing X. Re-invoke developer to enrich handoff."
+- `Read` calls on test files, `export_test.go` helpers, and `.md` docs do NOT count against the cap.
+- `Glob` and `Grep` do NOT count, but use them only to locate test helpers you already know exist — not to explore.
+
+If the handoff is well-written you should need **zero** production-code reads.
+
+## Context & Prior Work — MANDATORY execution order
+
+**Your execution is a strict 4-step protocol. Do NOT skip or reorder steps.**
+
+### STEP 1 — Read the handoff FIRST (the only mandatory read)
+
+Path: `.handoff/<TASK-ID>.md`. Focus on the `## Handoff for tester` section. It contains:
 - Files touched + their role
 - Public interfaces/contracts with exact signatures
-- Patterns applied
+- Patterns applied (including test patterns you should reuse — see `### Test patterns` if present)
 - Edge cases discovered during implementation
 - Build tags / stack constraints
 - Suggested test cases
 - Validation already performed (build/lint — do not repeat)
 
-**Rules:**
-1. Read the handoff FIRST. It is your main input.
-2. **Do NOT re-read production files if the handoff contains their signatures.** The developer already transcribed what you need. Re-reading is waste.
-3. **Only read a production file if the handoff is missing context you absolutely need** — e.g., the exact body of a helper function whose behavior you need to mirror in a fake. In that case, read only that file, not the whole package.
-4. If the handoff's `## Handoff for tester` section is empty, incomplete, or missing, STOP and report to the orchestrator: "Handoff incompleto — necesito que el developer llene la sección 'Handoff for tester' antes de poder escribir tests sin re-leer producción." The orchestrator will re-invoke the developer to fill it.
-5. **If the prompt includes inline context** (the orchestrator may pass extra context beyond the handoff) → use it directly, DO NOT re-read those files
-6. **If the prompt references a file path without content and it is NOT in the handoff** → read only that file
-7. **Never read files not mentioned in the handoff or prompt** — if you need something not provided, ask the orchestrator instead of exploring
+If the orchestrator passed the `## Handoff for tester` section inline in your prompt, **do not even read the handoff file** — use the inline content.
+
+If the handoff's `## Handoff for tester` section is empty, incomplete, or missing → **STOP** and report to the orchestrator: *"Handoff incompleto — necesito que el developer llene la sección 'Handoff for tester' antes de poder escribir tests sin re-leer producción."* The orchestrator will re-invoke the developer to fill it.
+
+### STEP 2 — Run the baseline test command BEFORE writing anything
+
+Before touching a single file, run the stack's test command scoped to the area the developer touched:
+
+- Go: `go test -tags <tag> ./<pkg-path>/...` (use the build tag from the handoff)
+- TypeScript/React: `npm test -- --run <scope>` or `vitest run <scope>`
+- Flutter: `flutter test <dir>`
+- Python: `pytest <path> -q`
+- Rust: `cargo test --package <crate>`
+
+This does **three critical things** in one command:
+1. Verifies the developer's code compiles in the test harness (catches signature drift before you write anything)
+2. Shows you the current green baseline — which existing tests cover what (so you don't duplicate)
+3. Surfaces compile errors the developer may have missed (e.g., unused helpers, import mismatches, build-tag issues)
+
+If the baseline does NOT compile → **STOP** and report to the orchestrator: *"Baseline no compila: [error]. Developer debe arreglar antes de que yo escriba tests."*
+
+If the baseline compiles and runs clean → proceed to STEP 3.
+
+### STEP 3 — Write tests using ONLY the handoff + inline prompt content
+
+**Rules (enforced by the read budget cap):**
+1. Do NOT re-read production files that appear in the handoff's file list. The developer already transcribed what you need.
+2. Do NOT read production files to "confirm the signature matches" — the baseline test run in STEP 2 will catch any drift at compile time.
+3. If the prompt includes inline context (file contents, patterns, test cases) → use it directly, do NOT re-read those files.
+4. If the handoff points to an existing test file as a "pattern to follow" (e.g., "reuse seed helper from `store/list_runs_test.go`") → that file is a legitimate read, and does NOT count against the production-code cap.
+5. If you genuinely need the body of a helper that the handoff only named (not just the signature) → allowed, but counts against your 3-read cap.
+6. **Never explore the codebase** with Glob/Grep beyond locating the specific test helper the handoff told you to use.
+
+### STEP 4 — Run tests + lint, report
+
+Run tests via `/run-tests` and lint via `/lint`. Report pass/fail counts and coverage delta.
 
 ### If the developer wrote tests (BOUNDARY VIOLATION — report it)
 
@@ -135,6 +177,7 @@ Only invoke when the orchestrator specifies it. **Read the actual files** — do
 - Run lint on test files via `/lint` skill
 - If tests fail, apply the **Failing Tests Policy** before reporting
 - Report pass/fail count and any failures that need developer attention
+- **Report your read budget usage:** include a line like `Read budget: 2/3 production reads used` in the final report. This is how the orchestrator audits whether handoffs are shrinking over time.
 
 ## Output
 
