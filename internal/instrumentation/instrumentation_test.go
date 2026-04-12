@@ -752,3 +752,186 @@ func TestAgentError_FailedStatus(t *testing.T) {
 		t.Errorf("EventType = %q, want %q", events[0].EventType, EventAgentError)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Event JSON serialization — required fields (acceptance criterion 1)
+// ---------------------------------------------------------------------------
+
+func TestEvent_JSONSerialization_RequiredFields(t *testing.T) {
+	runID, err := NewRunID()
+	if err != nil {
+		t.Fatalf("NewRunID: %v", err)
+	}
+	ev, err := NewEvent(runID, EventRunStart, RunStartPayload{
+		TaskID:          "TASK-001",
+		TaskDescription: "test json serialization",
+		Complexity:      "small",
+		Provider:        "anthropic",
+		TriggeredBy:     "user",
+	})
+	if err != nil {
+		t.Fatalf("NewEvent error: %v", err)
+	}
+
+	raw, err := json.Marshal(ev)
+	if err != nil {
+		t.Fatalf("json.Marshal error: %v", err)
+	}
+
+	var m map[string]any
+	if err := json.Unmarshal(raw, &m); err != nil {
+		t.Fatalf("json.Unmarshal error: %v", err)
+	}
+
+	requiredFields := []string{
+		"schema_version",
+		"event_id",
+		"run_id",
+		"event_type",
+		"timestamp",
+		"payload",
+	}
+	for _, field := range requiredFields {
+		val, ok := m[field]
+		if !ok {
+			t.Errorf("required field %q missing from JSON", field)
+			continue
+		}
+		switch v := val.(type) {
+		case string:
+			if v == "" {
+				t.Errorf("required field %q is an empty string", field)
+			}
+		case nil:
+			t.Errorf("required field %q is null", field)
+		}
+	}
+
+	// Timestamp must be parseable as RFC3339 / ISO 8601.
+	tsStr, _ := m["timestamp"].(string)
+	if tsStr == "" {
+		t.Fatal("timestamp field is missing or not a string")
+	}
+	ts, err := time.Parse(time.RFC3339Nano, tsStr)
+	if err != nil {
+		// Fallback: try plain RFC3339 without sub-seconds.
+		ts, err = time.Parse(time.RFC3339, tsStr)
+		if err != nil {
+			t.Errorf("timestamp %q is not valid RFC3339: %v", tsStr, err)
+		}
+	}
+	if !ts.IsZero() && ts.Year() < 2020 {
+		t.Errorf("timestamp year %d looks implausible", ts.Year())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// AgentEnd with "failed" status (acceptance criterion 2)
+// ---------------------------------------------------------------------------
+
+func TestAgentEnd_FailedStatus_IncludesErrorInfo(t *testing.T) {
+	store := &mockWriter{}
+	em := New(store)
+	em.Start()
+
+	const wantStatus = "failed"
+	const wantOutput = "panic: runtime error: index out of range"
+
+	ev, err := NewEvent("r_agentend", EventAgentEnd, AgentEndPayload{
+		AgentID:    "developer",
+		Status:     wantStatus,
+		ExitCode:   1,
+		Output:     wantOutput,
+		DurationMs: 500,
+	})
+	if err != nil {
+		t.Fatalf("NewEvent error: %v", err)
+	}
+
+	em.Emit(ev)
+	em.Stop()
+
+	events := store.all()
+	if len(events) != 1 {
+		t.Fatalf("expected 1 stored event, got %d", len(events))
+	}
+
+	stored := events[0]
+	if stored.EventType != EventAgentEnd {
+		t.Errorf("EventType = %q, want %q", stored.EventType, EventAgentEnd)
+	}
+
+	var payload AgentEndPayload
+	if err := json.Unmarshal(stored.Payload, &payload); err != nil {
+		t.Fatalf("unmarshal AgentEndPayload: %v", err)
+	}
+	if payload.Status != wantStatus {
+		t.Errorf("Status = %q, want %q", payload.Status, wantStatus)
+	}
+	if payload.ExitCode != 1 {
+		t.Errorf("ExitCode = %d, want 1", payload.ExitCode)
+	}
+	if !strings.Contains(payload.Output, "panic") {
+		t.Errorf("Output = %q, want it to contain error info", payload.Output)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Benchmarks (acceptance criterion 4: < 200 ms overhead)
+// ---------------------------------------------------------------------------
+
+// fastWriter is a no-op EventWriter with zero latency for benchmark use.
+type fastWriter struct{}
+
+func (f *fastWriter) WriteEvent(_ Event) error { return nil }
+
+func BenchmarkNewEvent(b *testing.B) {
+	runID, err := NewRunID()
+	if err != nil {
+		b.Fatalf("NewRunID: %v", err)
+	}
+	payload := AgentStartPayload{
+		AgentID:   "developer",
+		AgentRole: "developer",
+		Model:     "claude-opus-4-5",
+		Sequence:  1,
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if _, err := NewEvent(runID, EventAgentStart, payload); err != nil {
+			b.Fatalf("NewEvent: %v", err)
+		}
+	}
+}
+
+func BenchmarkEmit(b *testing.B) {
+	em := New(&fastWriter{})
+	em.Start()
+	b.Cleanup(func() { em.Stop() })
+
+	runID, err := NewRunID()
+	if err != nil {
+		b.Fatalf("NewRunID: %v", err)
+	}
+	ev, err := NewEvent(runID, EventAgentStart, AgentStartPayload{
+		AgentID:   "developer",
+		AgentRole: "developer",
+		Model:     "claude-opus-4-5",
+		Sequence:  1,
+	})
+	if err != nil {
+		b.Fatalf("NewEvent: %v", err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		em.Emit(ev)
+	}
+}
+
+func BenchmarkNewRunID(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = NewRunID()
+	}
+}

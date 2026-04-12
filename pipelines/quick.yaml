@@ -1,0 +1,9 @@
+# Trivial change — dev + tester
+nodes:
+  - id: dev
+    role: developer
+    timeout: 10m
+  - id: test
+    role: tester
+    depends_on: [dev]
+    timeout: 5m

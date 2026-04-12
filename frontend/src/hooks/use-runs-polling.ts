@@ -7,6 +7,7 @@ export interface RunsFilter {
   status: string
   startDate: string
   endDate: string
+  project: string
 }
 
 interface UseRunsPollingResult {
@@ -48,6 +49,7 @@ export function useRunsPolling(filter: RunsFilter): UseRunsPollingResult {
           status: filter.status,
           startDate: filter.startDate,
           endDate: filter.endDate,
+          project: filter.project,
         })
         if (!mountedRef.current) return
         setRuns(data)
@@ -78,7 +80,7 @@ export function useRunsPolling(filter: RunsFilter): UseRunsPollingResult {
       mountedRef.current = false
       clearInterval(interval)
     }
-  }, [filter.status, filter.startDate, filter.endDate])
+  }, [filter.status, filter.startDate, filter.endDate, filter.project])
 
   return { runs, error }
 }

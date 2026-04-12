@@ -1,0 +1,13 @@
+# Database change — dba + dev + tester
+nodes:
+  - id: dba
+    role: dba
+    timeout: 5m
+  - id: dev
+    role: developer
+    depends_on: [dba]
+    timeout: 10m
+  - id: test
+    role: tester
+    depends_on: [dev]
+    timeout: 5m

@@ -42,7 +42,7 @@ func Test_ListRuns(t *testing.T) {
 	t.Run("store vacío retorna slice vacío", func(t *testing.T) {
 		s := newTestStore(t, 500)
 
-		got, err := s.ListRuns(context.Background(), 0, 0, "", "", "")
+		got, err := s.ListRuns(context.Background(), 0, 0, "", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns: %v", err)
 		}
@@ -68,7 +68,7 @@ func Test_ListRuns(t *testing.T) {
 		writeRunEnd(t, s, runID2, "success", 200, 600)
 		writeRunEnd(t, s, runID3, "success", 300, 700)
 
-		got, err := s.ListRuns(context.Background(), 0, 0, "", "", "")
+		got, err := s.ListRuns(context.Background(), 0, 0, "", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns: %v", err)
 		}
@@ -90,7 +90,7 @@ func Test_ListRuns(t *testing.T) {
 		runID := mustNewRunID(t)
 		writeRunStart(t, s, runID)
 
-		got, err := s.ListRuns(context.Background(), 0, 0, "", "", "")
+		got, err := s.ListRuns(context.Background(), 0, 0, "", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns: %v", err)
 		}
@@ -118,7 +118,7 @@ func Test_ListRuns(t *testing.T) {
 		writeRunEnd(t, s, runID, "success", 500, 1000)
 		writeQAScore(t, s, runID, 8.7)
 
-		got, err := s.ListRuns(context.Background(), 0, 0, "", "", "")
+		got, err := s.ListRuns(context.Background(), 0, 0, "", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns: %v", err)
 		}
@@ -142,7 +142,7 @@ func Test_ListRuns(t *testing.T) {
 		}
 
 		// Primera página: 2 runs más recientes.
-		page1, err := s.ListRuns(context.Background(), 2, 0, "", "", "")
+		page1, err := s.ListRuns(context.Background(), 2, 0, "", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns página 1: %v", err)
 		}
@@ -151,7 +151,7 @@ func Test_ListRuns(t *testing.T) {
 		}
 
 		// Segunda página: siguientes 2.
-		page2, err := s.ListRuns(context.Background(), 2, 2, "", "", "")
+		page2, err := s.ListRuns(context.Background(), 2, 2, "", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns página 2: %v", err)
 		}
@@ -160,7 +160,7 @@ func Test_ListRuns(t *testing.T) {
 		}
 
 		// Tercera página: el último.
-		page3, err := s.ListRuns(context.Background(), 2, 4, "", "", "")
+		page3, err := s.ListRuns(context.Background(), 2, 4, "", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns página 3: %v", err)
 		}
@@ -186,7 +186,7 @@ func Test_ListRuns(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel() // cancelar inmediatamente
 
-		_, err := s.ListRuns(ctx, 0, 0, "", "", "")
+		_, err := s.ListRuns(ctx, 0, 0, "", "", "", "")
 		if err == nil {
 			t.Fatal("esperaba error con contexto cancelado, obtuvo nil")
 		}

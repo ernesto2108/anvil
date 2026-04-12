@@ -18,6 +18,9 @@ const (
 	EventAgentError  = "agent.error"
 	EventFileTouched = "file.touched"
 	EventQAScore     = "qa.score"
+
+	EventOrchestratorStart = "orchestrator.start"
+	EventOrchestratorGate  = "orchestrator.gate"
 )
 
 // Event is the envelope for all instrumentation events.
@@ -51,6 +54,9 @@ type RunStartPayload struct {
 	AgentsPlanned   []string `json:"agents_planned"`
 	Provider        string   `json:"provider"`
 	TriggeredBy     string   `json:"triggered_by"`
+	SessionID       string   `json:"session_id,omitempty"`
+	Project         string   `json:"project,omitempty"`
+	ParentRunID     string   `json:"parent_run_id,omitempty"`
 }
 
 type RunEndPayload struct {
@@ -93,6 +99,7 @@ type FileTouchedPayload struct {
 	AgentID   string `json:"agent_id"`
 	Path      string `json:"path"`
 	Operation string `json:"operation"`
+	Diff      string `json:"diff,omitempty"`
 }
 
 type QAScorePayload struct {
@@ -101,6 +108,18 @@ type QAScorePayload struct {
 	MaxScore float64            `json:"max_score"`
 	Criteria map[string]float64 `json:"criteria"`
 	Notes    string             `json:"notes,omitempty"`
+}
+
+type OrchestratorStartPayload struct {
+	NodeCount      int      `json:"node_count"`
+	MaxConcurrency int      `json:"max_concurrency"`
+	AgentIDs       []string `json:"agent_ids"`
+}
+
+type OrchestratorGatePayload struct {
+	AgentID        string `json:"agent_id"`
+	Decision       string `json:"decision"`
+	WaitDurationMs int64  `json:"wait_duration_ms"`
 }
 
 // NewEvent creates a new Event with a UUID v4 event ID, UTC timestamp, and

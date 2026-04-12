@@ -30,6 +30,15 @@ func (a *App) Startup(ctx context.Context) {
 
 // --- Bindings ---------------------------------------------------------------
 
+// GetProjects returns distinct project names for the project filter.
+func (a *App) GetProjects() ([]string, error) {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return a.store.ListProjects(ctx)
+}
+
 // GetRuns retorna una lista paginada de runs que coinciden con la consulta dada.
 func (a *App) GetRuns(q RunsQuery) ([]RunDTO, error) {
 	ctx := a.ctx
@@ -41,7 +50,7 @@ func (a *App) GetRuns(q RunsQuery) ([]RunDTO, error) {
 	startDate := normalizeDate(q.StartDate, false)
 	endDate := normalizeDate(q.EndDate, true)
 
-	rows, err := a.store.ListRuns(ctx, q.Limit, q.Offset, q.Status, startDate, endDate)
+	rows, err := a.store.ListRuns(ctx, q.Limit, q.Offset, q.Status, startDate, endDate, q.Project)
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +101,23 @@ func (a *App) GetAgent(runID, agentID string) (*AgentDetailDTO, error) {
 	return toAgentDetailDTO(detail, files), nil
 }
 
+// GetChildRuns returns child runs for a parent run (cross-service orchestration).
+func (a *App) GetChildRuns(parentRunID string) ([]RunDTO, error) {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	rows, err := a.store.ListChildRuns(ctx, parentRunID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]RunDTO, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, toRunDTO(r))
+	}
+	return out, nil
+}
+
 // GetFlow retorna el grafo de flujo de ejecución para un run.
 func (a *App) GetFlow(runID string) (*FlowDTO, error) {
 	ctx := a.ctx
@@ -105,24 +131,60 @@ func (a *App) GetFlow(runID string) (*FlowDTO, error) {
 	return toFlowDTO(runID, rows), nil
 }
 
-// GetMetrics retorna los agregados de los últimos 30 runs terminados.
-// No toma parámetros en MVP (ver D7). Retorna (nil, err) si el store falla.
-func (a *App) GetMetrics() (*MetricsDTO, error) {
+// GetSessionDetail returns run summary + files changed + agent outputs
+// for the session detail view.
+func (a *App) GetSessionDetail(runID string) (*SessionDetailDTO, error) {
 	ctx := a.ctx
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	m, err := a.store.GetMetrics(ctx)
+
+	// Run summary
+	r, err := a.store.GetRunSummary(ctx, runID)
 	if err != nil {
 		return nil, err
 	}
-	dto := toMetricsDTO(m)
-	return &dto, nil
-}
+	if r == nil {
+		return nil, nil
+	}
 
-// GetFiles retorna archivos producidos o consumidos por un agente dentro de un run.
-func (a *App) GetFiles(_, _ string) ([]FileDTO, error) {
-	return []FileDTO{}, nil
+	// Files
+	fileRows, err := a.store.ListFilesByRun(ctx, runID)
+	if err != nil {
+		return nil, err
+	}
+	files := make([]FileDTO, 0, len(fileRows))
+	for _, f := range fileRows {
+		files = append(files, FileDTO{Path: f.Path, Action: f.Operation, Diff: f.Diff})
+	}
+
+	// Agents (reuse existing query for roles/status, then fetch output per agent)
+	agentRows, err := a.store.ListAgentsByRun(ctx, runID)
+	if err != nil {
+		return nil, err
+	}
+	agents := make([]SessionAgentDTO, 0, len(agentRows))
+	for _, ag := range agentRows {
+		sa := SessionAgentDTO{
+			ID:         ag.AgentID,
+			Role:       ag.AgentRole,
+			Status:     ag.Status,
+			DurationMs: ag.DurationMs,
+		}
+		// Fetch output from agent detail
+		detail, _, detailErr := a.store.GetAgentDetail(ctx, runID, ag.AgentID)
+		if detailErr == nil && detail != nil {
+			sa.Output = detail.Output
+		}
+		agents = append(agents, sa)
+	}
+
+	dto := &SessionDetailDTO{
+		Run:    toRunDTO(*r),
+		Files:  files,
+		Agents: agents,
+	}
+	return dto, nil
 }
 
 // --- conversores privados ----------------------------------------------------
@@ -149,7 +211,6 @@ func toFlowDTO(runID string, rows []store.AgentRow) *FlowDTO {
 				Label:      r.AgentRole,
 				Status:     r.Status,
 				DurationMs: r.DurationMs,
-				Tokens:     r.TokensTotal,
 			},
 		}
 		nodes = append(nodes, node)
@@ -255,14 +316,11 @@ func trimQuotes(s string) string {
 // toAgentDetailDTO convierte los datos crudos del store al DTO expuesto al frontend.
 func toAgentDetailDTO(d *store.AgentDetail, files []store.FileRow) *AgentDetailDTO {
 	agent := AgentDTO{
-		ID:          d.AgentID,
-		Name:        d.AgentRole,
-		Status:      d.Status,
-		DurationMs:  d.DurationMs,
-		TokensIn:    d.TokensInput,
-		TokensOut:   d.TokensOutput,
-		TokensTotal: d.TokensTotal,
-		ErrorMsg:    d.ErrorMsg,
+		ID:         d.AgentID,
+		Name:       d.AgentRole,
+		Status:     d.Status,
+		DurationMs: d.DurationMs,
+		ErrorMsg:   d.ErrorMsg,
 	}
 	if d.StartedAt != nil {
 		agent.StartedAt = d.StartedAt.Format(time.RFC3339Nano)
@@ -273,47 +331,13 @@ func toAgentDetailDTO(d *store.AgentDetail, files []store.FileRow) *AgentDetailD
 
 	fileDTOs := make([]FileDTO, 0, len(files))
 	for _, f := range files {
-		fileDTOs = append(fileDTOs, FileDTO{Path: f.Path, Action: f.Operation})
+		fileDTOs = append(fileDTOs, FileDTO{Path: f.Path, Action: f.Operation, Diff: f.Diff})
 	}
 
 	return &AgentDetailDTO{
 		Agent:  agent,
 		Files:  fileDTOs,
 		Output: d.Output,
-	}
-}
-
-// toMetricsDTO convierte un store.Metrics al DTO expuesto al frontend.
-func toMetricsDTO(m store.Metrics) MetricsDTO {
-	tokensPerRun := make([]TokensPerRunPoint, 0, len(m.TokensPerRun))
-	for _, r := range m.TokensPerRun {
-		tokensPerRun = append(tokensPerRun, TokensPerRunPoint{
-			RunID:     r.RunID,
-			StartedAt: r.StartedAt.Format(time.RFC3339Nano),
-			Tokens:    r.Tokens,
-		})
-	}
-
-	avgTimePerAgent := make([]AgentTimePoint, 0, len(m.AvgTimePerAgent))
-	for _, a := range m.AvgTimePerAgent {
-		avgTimePerAgent = append(avgTimePerAgent, AgentTimePoint{
-			Role:          a.Role,
-			AvgDurationMs: a.AvgDurationMs,
-			RunsIncluded:  a.RunsIncluded,
-		})
-	}
-
-	return MetricsDTO{
-		RunsCount:           m.RunsCount,
-		HasEnoughData:       m.HasEnoughData,
-		TotalTokens:         m.TotalTokens,
-		TotalTokensDeltaPct: m.TotalTokensDeltaPct,
-		AvgDurationMs:       m.AvgDurationMs,
-		AvgDurationDeltaMs:  m.AvgDurationDeltaMs,
-		SuccessRate:         m.SuccessRate,
-		SuccessRateDelta:    m.SuccessRateDelta,
-		TokensPerRun:        tokensPerRun,
-		AvgTimePerAgent:     avgTimePerAgent,
 	}
 }
 
@@ -330,19 +354,20 @@ func toRunDTO(r store.RunSummary) RunDTO {
 	}
 
 	return RunDTO{
-		ID:          r.ID,
-		TaskID:      r.TaskID,
-		TaskDesc:    r.TaskDesc,
-		Status:      r.Status,
-		Complexity:  r.Complexity,
-		Provider:    r.Provider,
-		StartedAt:   r.StartedAt.Format(time.RFC3339Nano),
-		EndedAt:     endedAt,
-		DurationMs:  durationMs,
-		TotalTokens: r.TotalTokens,
-		FilesCount:  r.FilesCount,
-		AgentsCount: r.AgentsCount,
-		QAScore:     r.QAScore,
+		ID:            r.ID,
+		TaskID:        r.TaskID,
+		TaskDesc:      r.TaskDesc,
+		Status:        r.Status,
+		Complexity:    r.Complexity,
+		Provider:      r.Provider,
+		Project:       r.Project,
+		StartedAt:     r.StartedAt.Format(time.RFC3339Nano),
+		EndedAt:       endedAt,
+		DurationMs:    durationMs,
+		FilesCount:    r.FilesCount,
+		AgentsCount:   r.AgentsCount,
+		ParentRunID:   r.ParentRunID,
+		ChildrenCount: r.ChildrenCount,
 	}
 }
 

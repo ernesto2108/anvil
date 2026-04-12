@@ -52,6 +52,12 @@ func Run(args []string) {
 		cmdPin(cfg, git, cmdArgs)
 	case "unpin":
 		cmdUnpin(cfg, git, cmdArgs)
+	case "emit":
+		cmdEmit(cfg)
+	case "run":
+		cmdRun(cfg, cmdArgs)
+	case "quick", "bug", "feat", "design", "epic", "db", "infra":
+		cmdPreset(cfg, cmd, cmdArgs)
 	case "dashboard":
 		cmdDashboard(cfg)
 	case "diff":

@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -214,6 +215,187 @@ func expectRowsAffected(res sql.Result, table, id string) error {
 	return nil
 }
 
+// ResolveRunBySession returns the run_id associated with the given session_id.
+// Returns ("", nil) if no run exists for that session.
+func (s *SQLiteStore) ResolveRunBySession(sessionID string) (string, error) {
+	var runID string
+	err := s.db.QueryRow(
+		`SELECT id FROM runs WHERE session_id = ? LIMIT 1`, sessionID,
+	).Scan(&runID)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("dashboard/store: resolver run por session_id: %w", err)
+	}
+	return runID, nil
+}
+
+// UpdateTaskDesc sets task_desc for a run only if it is currently empty or NULL.
+func (s *SQLiteStore) UpdateTaskDesc(runID, desc string) error {
+	const q = `UPDATE runs SET task_desc = ? WHERE id = ? AND (task_desc IS NULL OR task_desc = '')`
+	_, err := s.db.Exec(q, desc, runID)
+	if err != nil {
+		return fmt.Errorf("dashboard/store: actualizar task_desc: %w", err)
+	}
+	return nil
+}
+
+// ComputeRunTotals calculates files_touched, agents_count, and duration_ms
+// from the DB and updates the run row. Called when closing a run via SessionEnd.
+func (s *SQLiteStore) ComputeRunTotals(runID string) error {
+	const q = `
+		UPDATE runs
+		SET files_touched = (SELECT COUNT(DISTINCT path) FROM files WHERE run_id = ?),
+		    agents_count  = (SELECT COUNT(*) FROM agents WHERE run_id = ?),
+		    duration_ms   = CASE
+		        WHEN started_at IS NOT NULL AND ended_at IS NOT NULL
+		        THEN CAST((julianday(ended_at) - julianday(started_at)) * 86400000 AS INTEGER)
+		        ELSE duration_ms
+		    END
+		WHERE id = ?`
+	_, err := s.db.Exec(q, runID, runID, runID)
+	if err != nil {
+		return fmt.Errorf("dashboard/store: calcular totales de run: %w", err)
+	}
+	return nil
+}
+
+// CleanupStaleRuns marks runs stuck in 'running' status as 'abandoned'
+// if they have no activity for more than the given minutes threshold.
+// Called at dashboard startup to clean up orphaned sessions.
+func (s *SQLiteStore) CleanupStaleRuns(staleMinutes int) (int64, error) {
+	const q = `
+		UPDATE runs
+		SET status    = 'abandoned',
+		    ended_at  = datetime('now'),
+		    duration_ms = CAST((julianday(datetime('now')) - julianday(started_at)) * 86400000 AS INTEGER)
+		WHERE status = 'running'
+		  AND started_at < datetime('now', ? || ' minutes')`
+	res, err := s.db.Exec(q, fmt.Sprintf("-%d", staleMinutes))
+	if err != nil {
+		return 0, fmt.Errorf("dashboard/store: limpiar runs huérfanos: %w", err)
+	}
+	return res.RowsAffected()
+}
+
+// BackfillProjects sets the project column for runs that have project = ''
+// by deriving it from the most common file path prefix in the files table.
+func (s *SQLiteStore) BackfillProjects() (int64, error) {
+	// For each run with empty project that has files, extract project name
+	// from the first file path's directory structure.
+	const q = `
+		UPDATE runs
+		SET project = (
+			SELECT REPLACE(
+				RTRIM(SUBSTR(f.path, 1, INSTR(SUBSTR(f.path, 2), '/') + 1), '/'),
+				'/', ''
+			)
+			FROM files f
+			WHERE f.run_id = runs.id
+			  AND f.path LIKE '/%'
+			LIMIT 1
+		)
+		WHERE project = ''
+		  AND EXISTS (SELECT 1 FROM files WHERE run_id = runs.id AND path LIKE '/%')`
+
+	// The above is fragile with deep paths. Use a simpler approach:
+	// get the basename of the common prefix directory.
+	// Actually, let's just do it in Go for reliability.
+	rows, err := s.db.Query(`
+		SELECT DISTINCT r.id, f.path
+		FROM runs r
+		JOIN files f ON f.run_id = r.id
+		WHERE r.project = '' AND f.path LIKE '/%'
+		ORDER BY r.id`)
+	if err != nil {
+		return 0, fmt.Errorf("dashboard/store: backfill projects query: %w", err)
+	}
+	defer rows.Close() //nolint:errcheck
+
+	// Collect first file path per run
+	runProject := make(map[string]string)
+	for rows.Next() {
+		var runID, path string
+		if err := rows.Scan(&runID, &path); err != nil {
+			return 0, err
+		}
+		if _, ok := runProject[runID]; ok {
+			continue // already have one
+		}
+		// Extract project: find common project root
+		// e.g. /Users/ernesto/projects/anvil/src/foo.go → anvil
+		runProject[runID] = extractProjectFromPath(path)
+	}
+	if err := rows.Err(); err != nil {
+		return 0, err
+	}
+
+	var updated int64
+	for runID, project := range runProject {
+		if project == "" {
+			continue
+		}
+		res, err := s.db.Exec(`UPDATE runs SET project = ? WHERE id = ? AND project = ''`, project, runID)
+		if err != nil {
+			return updated, err
+		}
+		n, _ := res.RowsAffected()
+		updated += n
+	}
+	return updated, nil
+}
+
+// extractProjectFromPath finds the project directory name from a file path.
+// Heuristic: look for a "projects" or "repos" parent, take the next segment.
+// Fallback: take the 4th path segment (usually /Users/x/projects/NAME/...).
+func extractProjectFromPath(path string) string {
+	parts := strings.Split(path, "/")
+	for i, p := range parts {
+		if (p == "projects" || p == "repos" || p == "src" || p == "workspace") && i+1 < len(parts) {
+			return parts[i+1]
+		}
+	}
+	if len(parts) >= 5 {
+		return parts[4]
+	}
+	return ""
+}
+
+// AgentStartedAt returns the started_at timestamp for a given agent.
+// Returns zero time if not found.
+func (s *SQLiteStore) AgentStartedAt(runID, agentID string) (string, bool) {
+	var startedAt string
+	err := s.db.QueryRow(
+		`SELECT started_at FROM agents WHERE run_id = ? AND agent_id = ? LIMIT 1`,
+		runID, agentID,
+	).Scan(&startedAt)
+	if err != nil {
+		return "", false
+	}
+	return startedAt, true
+}
+
+// ActiveAgentID returns the agent_id of the most recently started agent
+// with status "running" for the given run. Returns "" if none found.
+func (s *SQLiteStore) ActiveAgentID(runID string) string {
+	var agentID string
+	err := s.db.QueryRow(
+		`SELECT agent_id FROM agents WHERE run_id = ? AND status = 'running' ORDER BY started_at DESC LIMIT 1`,
+		runID,
+	).Scan(&agentID)
+	if err != nil {
+		return ""
+	}
+	return agentID
+}
+
+// DB returns the underlying *sql.DB. Exported for use by the emit command
+// which needs direct access for busy_timeout pragma.
+func (s *SQLiteStore) DB() *sql.DB {
+	return s.db
+}
+
 // --- private handlers -------------------------------------------------------
 
 func (s *SQLiteStore) handleRunStart(tx *sql.Tx, ev instrumentation.Event) error {
@@ -222,9 +404,19 @@ func (s *SQLiteStore) handleRunStart(tx *sql.Tx, ev instrumentation.Event) error
 		return fmt.Errorf("dashboard/store: deserializar RunStartPayload: %w", err)
 	}
 
+	var sessionID *string
+	if p.SessionID != "" {
+		sessionID = &p.SessionID
+	}
+
+	var parentRunID *string
+	if p.ParentRunID != "" {
+		parentRunID = &p.ParentRunID
+	}
+
 	const q = `
-		INSERT INTO runs (id, task_id, task_desc, status, complexity, provider, started_at)
-		VALUES (?, ?, ?, 'running', ?, ?, ?)`
+		INSERT INTO runs (id, task_id, task_desc, status, complexity, provider, started_at, session_id, project, parent_run_id)
+		VALUES (?, ?, ?, 'running', ?, ?, ?, ?, ?, ?)`
 
 	if _, err := tx.Exec(q,
 		ev.RunID,
@@ -233,6 +425,9 @@ func (s *SQLiteStore) handleRunStart(tx *sql.Tx, ev instrumentation.Event) error
 		p.Complexity,
 		p.Provider,
 		ev.Timestamp.Format("2006-01-02T15:04:05.999999999Z07:00"),
+		sessionID,
+		p.Project,
+		parentRunID,
 	); err != nil {
 		return fmt.Errorf("dashboard/store: insertar en runs (run.start): %w", err)
 	}
@@ -399,8 +594,13 @@ func (s *SQLiteStore) handleFileTouched(tx *sql.Tx, ev instrumentation.Event) er
 		return fmt.Errorf("dashboard/store: deserializar FileTouchedPayload: %w", err)
 	}
 
-	const q = `INSERT INTO files (run_id, agent_id, path, operation) VALUES (?, ?, ?, ?)`
-	if _, err := tx.Exec(q, ev.RunID, p.AgentID, p.Path, p.Operation); err != nil {
+	var diff *string
+	if p.Diff != "" {
+		diff = &p.Diff
+	}
+
+	const q = `INSERT INTO files (run_id, agent_id, path, operation, diff) VALUES (?, ?, ?, ?, ?)`
+	if _, err := tx.Exec(q, ev.RunID, p.AgentID, p.Path, p.Operation, diff); err != nil {
 		return fmt.Errorf("dashboard/store: insertar en files (file.touched): %w", err)
 	}
 	return nil

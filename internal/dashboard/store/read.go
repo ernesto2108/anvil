@@ -26,25 +26,28 @@ const defaultListLimit = 100
 // Los campos nullables usan punteros para preservar la diferencia entre
 // "cero" y "no seteado" (p.ej. qa_score o ended_at en runs en progreso).
 type RunSummary struct {
-	ID          string
-	TaskID      string
-	TaskDesc    string
-	Status      string
-	Complexity  string
-	Provider    string
-	StartedAt   time.Time
-	EndedAt     *time.Time
-	DurationMs  *int64
-	TotalTokens int
-	FilesCount  int
-	AgentsCount int
-	QAScore     *float64
+	ID            string
+	TaskID        string
+	TaskDesc      string
+	Status        string
+	Complexity    string
+	Provider      string
+	Project       string
+	StartedAt     time.Time
+	EndedAt       *time.Time
+	DurationMs    *int64
+	TotalTokens   int
+	FilesCount    int
+	AgentsCount   int
+	QAScore       *float64
+	ParentRunID   string
+	ChildrenCount int
 }
 
 // ListRuns devuelve los runs ordenados por started_at DESC.
 // limit <= 0 aplica defaultListLimit (100). offset < 0 se normaliza a 0.
-// status, startDate y endDate son filtros opcionales (cadena vacía = sin filtro).
-func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int, status, startDate, endDate string) ([]RunSummary, error) {
+// status, startDate, endDate y project son filtros opcionales (cadena vacía = sin filtro).
+func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int, status, startDate, endDate, project string) ([]RunSummary, error) {
 	if limit <= 0 {
 		limit = defaultListLimit
 	}
@@ -54,12 +57,15 @@ func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int, status, s
 
 	q := `
 		SELECT
-			id, task_id, task_desc, status, complexity, provider,
+			id, task_id, task_desc, status, complexity, provider, project,
 			started_at, ended_at, duration_ms,
-			total_tokens, files_touched, agents_count, qa_score
+			total_tokens, files_touched, agents_count, qa_score,
+			COALESCE(parent_run_id, ''),
+			(SELECT COUNT(*) FROM runs c WHERE c.parent_run_id = runs.id) AS children_count
 		FROM runs`
 
-	var conditions []string
+	// parent_run_id IS NULL siempre se aplica para listar solo runs top-level.
+	conditions := []string{"parent_run_id IS NULL"}
 	var args []any
 
 	if status != "" {
@@ -74,12 +80,14 @@ func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int, status, s
 		conditions = append(conditions, "started_at <= ?")
 		args = append(args, endDate)
 	}
+	if project != "" {
+		conditions = append(conditions, "project = ?")
+		args = append(args, project)
+	}
 
-	if len(conditions) > 0 {
-		q += " WHERE " + conditions[0]
-		for _, c := range conditions[1:] {
-			q += " AND " + c
-		}
+	q += " WHERE " + conditions[0]
+	for _, c := range conditions[1:] {
+		q += " AND " + c
 	}
 
 	q += " ORDER BY started_at DESC LIMIT ? OFFSET ?"
@@ -94,25 +102,29 @@ func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int, status, s
 	var results []RunSummary
 	for rows.Next() {
 		var (
-			id           string
-			taskID       string
-			taskDesc     sql.NullString
-			status       string
-			complexity   sql.NullString
-			provider     sql.NullString
-			startedAtRaw string
-			endedAtRaw   sql.NullString
-			durationMs   sql.NullInt64
-			totalTokens  int
-			filesCount   int
-			agentsCount  int
-			qaScore      sql.NullFloat64
+			id            string
+			taskID        string
+			taskDesc      sql.NullString
+			status        string
+			complexity    sql.NullString
+			provider      sql.NullString
+			project       sql.NullString
+			startedAtRaw  string
+			endedAtRaw    sql.NullString
+			durationMs    sql.NullInt64
+			totalTokens   int
+			filesCount    int
+			agentsCount   int
+			qaScore       sql.NullFloat64
+			parentRunID   string
+			childrenCount int
 		)
 
 		if err := rows.Scan(
-			&id, &taskID, &taskDesc, &status, &complexity, &provider,
+			&id, &taskID, &taskDesc, &status, &complexity, &provider, &project,
 			&startedAtRaw, &endedAtRaw, &durationMs,
 			&totalTokens, &filesCount, &agentsCount, &qaScore,
+			&parentRunID, &childrenCount,
 		); err != nil {
 			return nil, fmt.Errorf("dashboard/store: escanear fila de runs: %w", err)
 		}
@@ -123,16 +135,19 @@ func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int, status, s
 		}
 
 		r := RunSummary{
-			ID:          id,
-			TaskID:      taskID,
-			TaskDesc:    taskDesc.String,
-			Status:      status,
-			Complexity:  complexity.String,
-			Provider:    provider.String,
-			StartedAt:   startedAt,
-			TotalTokens: totalTokens,
-			FilesCount:  filesCount,
-			AgentsCount: agentsCount,
+			ID:            id,
+			TaskID:        taskID,
+			TaskDesc:      taskDesc.String,
+			Status:        status,
+			Complexity:    complexity.String,
+			Provider:      provider.String,
+			Project:       project.String,
+			StartedAt:     startedAt,
+			TotalTokens:   totalTokens,
+			FilesCount:    filesCount,
+			AgentsCount:   agentsCount,
+			ParentRunID:   parentRunID,
+			ChildrenCount: childrenCount,
 		}
 
 		if endedAtRaw.Valid && endedAtRaw.String != "" {
@@ -172,9 +187,11 @@ func (s *SQLiteStore) ListRuns(ctx context.Context, limit, offset int, status, s
 func (s *SQLiteStore) GetRunSummary(ctx context.Context, runID string) (*RunSummary, error) {
 	const q = `
 		SELECT
-			id, task_id, task_desc, status, complexity, provider,
+			id, task_id, task_desc, status, complexity, provider, project,
 			started_at, ended_at, duration_ms,
-			total_tokens, files_touched, agents_count, qa_score
+			total_tokens, files_touched, agents_count, qa_score,
+			COALESCE(parent_run_id, ''),
+			(SELECT COUNT(*) FROM runs c WHERE c.parent_run_id = runs.id) AS children_count
 		FROM runs
 		WHERE id = ?
 		LIMIT 1`
@@ -186,30 +203,33 @@ func (s *SQLiteStore) GetRunSummary(ctx context.Context, runID string) (*RunSumm
 	defer rows.Close() //nolint:errcheck
 
 	if !rows.Next() {
-		// El run no existe — no es un error.
 		return nil, nil
 	}
 
 	var (
-		id           string
-		taskID       string
-		taskDesc     sql.NullString
-		status       string
-		complexity   sql.NullString
-		provider     sql.NullString
-		startedAtRaw string
-		endedAtRaw   sql.NullString
-		durationMs   sql.NullInt64
-		totalTokens  int
-		filesCount   int
-		agentsCount  int
-		qaScore      sql.NullFloat64
+		id            string
+		taskID        string
+		taskDesc      sql.NullString
+		status        string
+		complexity    sql.NullString
+		provider      sql.NullString
+		project       sql.NullString
+		startedAtRaw  string
+		endedAtRaw    sql.NullString
+		durationMs    sql.NullInt64
+		totalTokens   int
+		filesCount    int
+		agentsCount   int
+		qaScore       sql.NullFloat64
+		parentRunID   string
+		childrenCount int
 	)
 
 	if err := rows.Scan(
-		&id, &taskID, &taskDesc, &status, &complexity, &provider,
+		&id, &taskID, &taskDesc, &status, &complexity, &provider, &project,
 		&startedAtRaw, &endedAtRaw, &durationMs,
 		&totalTokens, &filesCount, &agentsCount, &qaScore,
+		&parentRunID, &childrenCount,
 	); err != nil {
 		return nil, fmt.Errorf("dashboard/store: escanear fila de run: %w", err)
 	}
@@ -224,16 +244,19 @@ func (s *SQLiteStore) GetRunSummary(ctx context.Context, runID string) (*RunSumm
 	}
 
 	r := RunSummary{
-		ID:          id,
-		TaskID:      taskID,
-		TaskDesc:    taskDesc.String,
-		Status:      status,
-		Complexity:  complexity.String,
-		Provider:    provider.String,
-		StartedAt:   startedAt,
-		TotalTokens: totalTokens,
-		FilesCount:  filesCount,
-		AgentsCount: agentsCount,
+		ID:            id,
+		TaskID:        taskID,
+		TaskDesc:      taskDesc.String,
+		Status:        status,
+		Complexity:    complexity.String,
+		Provider:      provider.String,
+		Project:       project.String,
+		StartedAt:     startedAt,
+		TotalTokens:   totalTokens,
+		FilesCount:    filesCount,
+		AgentsCount:   agentsCount,
+		ParentRunID:   parentRunID,
+		ChildrenCount: childrenCount,
 	}
 
 	if endedAtRaw.Valid && endedAtRaw.String != "" {
@@ -278,6 +301,7 @@ type AgentDetail struct {
 type FileRow struct {
 	Path      string
 	Operation string
+	Diff      string
 }
 
 // GetAgentDetail retorna el detalle de un agente individual (runID + agentID) junto con sus archivos.
@@ -380,7 +404,7 @@ func (s *SQLiteStore) GetAgentDetail(ctx context.Context, runID, agentID string)
 
 	// Consultar archivos del agente.
 	const filesQ = `
-		SELECT path, operation
+		SELECT path, operation, COALESCE(diff, '')
 		FROM files
 		WHERE run_id = ? AND agent_id = ?
 		ORDER BY id ASC`
@@ -393,11 +417,11 @@ func (s *SQLiteStore) GetAgentDetail(ctx context.Context, runID, agentID string)
 
 	files := make([]FileRow, 0)
 	for fileRows.Next() {
-		var path, operation string
-		if err := fileRows.Scan(&path, &operation); err != nil {
+		var path, operation, diff string
+		if err := fileRows.Scan(&path, &operation, &diff); err != nil {
 			return nil, nil, fmt.Errorf("dashboard/store: escanear fila de files: %w", err)
 		}
-		files = append(files, FileRow{Path: path, Operation: operation})
+		files = append(files, FileRow{Path: path, Operation: operation, Diff: diff})
 	}
 
 	if err := fileRows.Err(); err != nil {
@@ -470,5 +494,156 @@ func (s *SQLiteStore) ListAgentsByRun(ctx context.Context, runID string) ([]Agen
 		return nil, fmt.Errorf("dashboard/store: iterar filas de agents: %w", err)
 	}
 
+	return results, nil
+}
+
+// ListProjects returns distinct non-empty project names, ordered alphabetically.
+func (s *SQLiteStore) ListProjects(ctx context.Context) ([]string, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT DISTINCT project FROM runs WHERE project != '' ORDER BY project ASC`)
+	if err != nil {
+		return nil, fmt.Errorf("dashboard/store: listar proyectos: %w", err)
+	}
+	defer rows.Close() //nolint:errcheck
+
+	var results []string
+	for rows.Next() {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			return nil, err
+		}
+		results = append(results, p)
+	}
+	return results, rows.Err()
+}
+
+// ListChildRuns returns runs whose parent_run_id matches the given parentID.
+// Ordered by started_at ASC (chronological within the parent).
+func (s *SQLiteStore) ListChildRuns(ctx context.Context, parentRunID string) ([]RunSummary, error) {
+	const q = `
+		SELECT
+			id, task_id, task_desc, status, complexity, provider, project,
+			started_at, ended_at, duration_ms,
+			total_tokens, files_touched, agents_count, qa_score,
+			COALESCE(parent_run_id, ''),
+			(SELECT COUNT(*) FROM runs c WHERE c.parent_run_id = runs.id) AS children_count
+		FROM runs
+		WHERE parent_run_id = ?
+		ORDER BY started_at ASC`
+
+	rows, err := s.db.QueryContext(ctx, q, parentRunID)
+	if err != nil {
+		return nil, fmt.Errorf("dashboard/store: consultar child runs de %q: %w", parentRunID, err)
+	}
+	defer rows.Close() //nolint:errcheck
+
+	var results []RunSummary
+	for rows.Next() {
+		var (
+			id            string
+			taskID        string
+			taskDesc      sql.NullString
+			status        string
+			complexity    sql.NullString
+			provider      sql.NullString
+			project       sql.NullString
+			startedAtRaw  string
+			endedAtRaw    sql.NullString
+			durationMs    sql.NullInt64
+			totalTokens   int
+			filesCount    int
+			agentsCount   int
+			qaScore       sql.NullFloat64
+			pRunID        string
+			childrenCount int
+		)
+
+		if err := rows.Scan(
+			&id, &taskID, &taskDesc, &status, &complexity, &provider, &project,
+			&startedAtRaw, &endedAtRaw, &durationMs,
+			&totalTokens, &filesCount, &agentsCount, &qaScore,
+			&pRunID, &childrenCount,
+		); err != nil {
+			return nil, fmt.Errorf("dashboard/store: escanear fila de child run: %w", err)
+		}
+
+		startedAt, err := time.Parse(time.RFC3339Nano, startedAtRaw)
+		if err != nil {
+			return nil, fmt.Errorf("dashboard/store: parsear started_at %q: %w", startedAtRaw, err)
+		}
+
+		r := RunSummary{
+			ID:            id,
+			TaskID:        taskID,
+			TaskDesc:      taskDesc.String,
+			Status:        status,
+			Complexity:    complexity.String,
+			Provider:      provider.String,
+			Project:       project.String,
+			StartedAt:     startedAt,
+			TotalTokens:   totalTokens,
+			FilesCount:    filesCount,
+			AgentsCount:   agentsCount,
+			ParentRunID:   pRunID,
+			ChildrenCount: childrenCount,
+		}
+
+		if endedAtRaw.Valid && endedAtRaw.String != "" {
+			t, err := time.Parse(time.RFC3339Nano, endedAtRaw.String)
+			if err != nil {
+				return nil, fmt.Errorf("dashboard/store: parsear ended_at %q: %w", endedAtRaw.String, err)
+			}
+			r.EndedAt = &t
+		}
+
+		if durationMs.Valid {
+			v := durationMs.Int64
+			r.DurationMs = &v
+		}
+
+		if qaScore.Valid {
+			v := qaScore.Float64
+			r.QAScore = &v
+		}
+
+		results = append(results, r)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("dashboard/store: iterar filas de child runs: %w", err)
+	}
+
+	if results == nil {
+		results = []RunSummary{}
+	}
+
+	return results, nil
+}
+
+// ListFilesByRun returns all files touched in a run, ordered by id ASC.
+// Returns nil, nil if the run has no files.
+func (s *SQLiteStore) ListFilesByRun(ctx context.Context, runID string) ([]FileRow, error) {
+	const q = `
+		SELECT path, operation, COALESCE(diff, '')
+		FROM files
+		WHERE run_id = ?
+		ORDER BY id ASC`
+
+	rows, err := s.db.QueryContext(ctx, q, runID)
+	if err != nil {
+		return nil, fmt.Errorf("dashboard/store: consultar files del run %q: %w", runID, err)
+	}
+	defer rows.Close() //nolint:errcheck
+
+	var results []FileRow
+	for rows.Next() {
+		var f FileRow
+		if err := rows.Scan(&f.Path, &f.Operation, &f.Diff); err != nil {
+			return nil, fmt.Errorf("dashboard/store: escanear fila de files: %w", err)
+		}
+		results = append(results, f)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("dashboard/store: iterar filas de files: %w", err)
+	}
 	return results, nil
 }

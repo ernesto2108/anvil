@@ -11,10 +11,29 @@ func cmdHelp(appName string) {
     Claude Code, OpenCode, Gemini CLI, Codex, and Cursor
 
   USAGE:
-    %s <command> [args]
+    %s <command> --task "description" [flags]
 
-  COMMANDS:
+  PIPELINES (preset):
+    quick   --task "desc"        Trivial change        dev → tester
+    bug     --task "desc"        Bug fix + review       dev → tester → qa
+    feat    --task "desc"        Standard feature       arch → dev → tester → qa
+    design  --task "desc"        Feature with UI/UX     designer → arch → dev → tester → qa
+    epic    --task "desc"        Full pipeline          pm → designer → arch → dba → dev → tester → qa → security
+    db      --task "desc"        Database change        dba → dev → tester
+    infra   --task "desc"        Infrastructure         devops → security
+
+  PIPELINES (custom):
+    run <pipeline.yaml> --task "desc"   Run a custom pipeline via DAG orchestrator
+
+  FLAGS (all pipelines):
+    --task, -t "desc"            Task description (required)
+    --model, -m <name>           Override AI model
+    --concurrency, -c <N>        Max parallel agents (default: 4)
+    --auto-approve, -y           Skip human gates
+
+  OTHER COMMANDS:
     dashboard            Open Anvil Dashboard (observability UI)
+    emit                 Ingest a Claude Code hook event (reads JSON from stdin)
     init                 First-time setup — show config and launch browser
     browse               Interactive TUI to manage agents/skills/commands
     update               Pull latest + rebuild binary
@@ -29,13 +48,14 @@ func cmdHelp(appName string) {
     help                 Show this help
 
   EXAMPLES:
-    %s init                                # First-time setup
-    %s browse                              # Manage agents/skills/commands
-    %s update                              # Pull + rebuild
-    %s targets claude opencode             # Set active tools
-    %s provider gemini                     # Switch AI provider
-    %s status                              # What's deployed where?
-    %s doctor                              # Check health
+    %s quick --task "Fix typo in README"
+    %s bug --task "Fix null pointer in /api/users" -y
+    %s feat --task "Add GET /users/:id endpoint"
+    %s design --task "New onboarding flow with wizard"
+    %s epic --task "Implement OAuth2 authentication system"
+    %s db --task "Add indexes to orders table"
+    %s infra --task "Add GitHub Actions CI pipeline"
+    %s run pipeline.yaml --task "Custom workflow"
 
   TARGETS:
     claude    ~/.claude/          agents + skills + commands
@@ -44,5 +64,5 @@ func cmdHelp(appName string) {
     codex     ~/.codex/           skills + AGENTS.md (generated)
     cursor    per-project         rules (from agents)
 
-`, t, appName, appName, appName, appName, appName, appName, appName, appName, appName)
+`, t, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName)
 }

@@ -78,7 +78,7 @@ func Test_ListRuns_FiltroStatus(t *testing.T) {
 
 		writeRunStart(t, s, runRunning)
 
-		got, err := s.ListRuns(ctx, 0, 0, "success", "", "")
+		got, err := s.ListRuns(ctx, 0, 0, "success", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns con status=success: %v", err)
 		}
@@ -112,7 +112,7 @@ func Test_ListRuns_FiltroStatus(t *testing.T) {
 
 		writeRunStart(t, s, runRunning)
 
-		got, err := s.ListRuns(ctx, 0, 0, "failed", "", "")
+		got, err := s.ListRuns(ctx, 0, 0, "failed", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns con status=failed: %v", err)
 		}
@@ -137,7 +137,7 @@ func Test_ListRuns_FiltroStatus(t *testing.T) {
 		writeRunStart(t, s, runSuccess)
 		writeRunEnd(t, s, runSuccess, "success", 100, 100)
 
-		got, err := s.ListRuns(ctx, 0, 0, "running", "", "")
+		got, err := s.ListRuns(ctx, 0, 0, "running", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns con status=running: %v", err)
 		}
@@ -160,7 +160,7 @@ func Test_ListRuns_FiltroStatus(t *testing.T) {
 		}
 		writeRunStart(t, s, mustNewRunID(t)) // running
 
-		got, err := s.ListRuns(ctx, 0, 0, "", "", "")
+		got, err := s.ListRuns(ctx, 0, 0, "", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns sin filtros: %v", err)
 		}
@@ -177,7 +177,7 @@ func Test_ListRuns_FiltroStatus(t *testing.T) {
 		writeRunStart(t, s, id)
 		writeRunEnd(t, s, id, "success", 100, 100)
 
-		got, err := s.ListRuns(ctx, 0, 0, "failed", "", "")
+		got, err := s.ListRuns(ctx, 0, 0, "failed", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns sin coincidencias: %v", err)
 		}
@@ -197,7 +197,7 @@ func Test_ListRuns_FiltroFecha(t *testing.T) {
 		ctx := context.Background()
 
 		// Solo runs desde 2026-01-30 inclusive.
-		got, err := s.ListRuns(ctx, 0, 0, "", "2026-01-30T00:00:00Z", "")
+		got, err := s.ListRuns(ctx, 0, 0, "", "2026-01-30T00:00:00Z", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns con startDate: %v", err)
 		}
@@ -214,7 +214,7 @@ func Test_ListRuns_FiltroFecha(t *testing.T) {
 		ctx := context.Background()
 
 		// Solo runs hasta fin del día 2026-01-10.
-		got, err := s.ListRuns(ctx, 0, 0, "", "", "2026-01-10T23:59:59.999999999Z")
+		got, err := s.ListRuns(ctx, 0, 0, "", "", "2026-01-10T23:59:59.999999999Z", "")
 		if err != nil {
 			t.Fatalf("ListRuns con endDate: %v", err)
 		}
@@ -231,7 +231,7 @@ func Test_ListRuns_FiltroFecha(t *testing.T) {
 		ctx := context.Background()
 
 		// startDate y endDate exactamente en el día de runMedio (2026-01-20).
-		got, err := s.ListRuns(ctx, 0, 0, "", "2026-01-20T00:00:00Z", "2026-01-20T23:59:59.999999999Z")
+		got, err := s.ListRuns(ctx, 0, 0, "", "2026-01-20T00:00:00Z", "2026-01-20T23:59:59.999999999Z", "")
 		if err != nil {
 			t.Fatalf("ListRuns endDate mismo día: %v", err)
 		}
@@ -248,7 +248,7 @@ func Test_ListRuns_FiltroFecha(t *testing.T) {
 		ctx := context.Background()
 
 		// Rango: 2026-01-20 a fin de 2026-01-30 — excluye runAntiguo.
-		got, err := s.ListRuns(ctx, 0, 0, "", "2026-01-20T00:00:00Z", "2026-01-30T23:59:59.999999999Z")
+		got, err := s.ListRuns(ctx, 0, 0, "", "2026-01-20T00:00:00Z", "2026-01-30T23:59:59.999999999Z", "")
 		if err != nil {
 			t.Fatalf("ListRuns con rango de fechas: %v", err)
 		}
@@ -268,7 +268,7 @@ func Test_ListRuns_FiltroFecha(t *testing.T) {
 		s, _, _, _ := setupTresRuns(t)
 		ctx := context.Background()
 
-		got, err := s.ListRuns(ctx, 0, 0, "", "2030-01-01T00:00:00Z", "")
+		got, err := s.ListRuns(ctx, 0, 0, "", "2030-01-01T00:00:00Z", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns con startDate futuro: %v", err)
 		}
@@ -281,7 +281,7 @@ func Test_ListRuns_FiltroFecha(t *testing.T) {
 		s, _, _, _ := setupTresRuns(t)
 		ctx := context.Background()
 
-		got, err := s.ListRuns(ctx, 0, 0, "", "", "2020-01-01T23:59:59.999999999Z")
+		got, err := s.ListRuns(ctx, 0, 0, "", "", "2020-01-01T23:59:59.999999999Z", "")
 		if err != nil {
 			t.Fatalf("ListRuns con endDate pasado: %v", err)
 		}
@@ -322,7 +322,7 @@ func Test_ListRuns_FiltrosCombinados(t *testing.T) {
 		writeRunEnd(t, s, runFuera, "success", 300, 300)
 		setRunStartedAt(t, s, runFuera, fuera)
 
-		got, err := s.ListRuns(ctx, 0, 0, "success", dia, finDia)
+		got, err := s.ListRuns(ctx, 0, 0, "success", dia, finDia, "")
 		if err != nil {
 			t.Fatalf("ListRuns con 3 filtros: %v", err)
 		}
@@ -346,7 +346,7 @@ func Test_ListRuns_FiltrosCombinados(t *testing.T) {
 		writeRunEnd(t, s, id, "success", 100, 100)
 		setRunStartedAt(t, s, id, "2026-05-10T00:00:00Z")
 
-		got, err := s.ListRuns(ctx, 0, 0, "failed", "2026-01-01T00:00:00Z", "2026-01-31T23:59:59.999999999Z")
+		got, err := s.ListRuns(ctx, 0, 0, "failed", "2026-01-01T00:00:00Z", "2026-01-31T23:59:59.999999999Z", "")
 		if err != nil {
 			t.Fatalf("ListRuns con filtros sin coincidencias: %v", err)
 		}
@@ -359,7 +359,7 @@ func Test_ListRuns_FiltrosCombinados(t *testing.T) {
 		s, _, _, _ := setupTresRuns(t)
 		ctx := context.Background()
 
-		got, err := s.ListRuns(ctx, 0, 0, "", "", "")
+		got, err := s.ListRuns(ctx, 0, 0, "", "", "", "")
 		if err != nil {
 			t.Fatalf("ListRuns sin filtros (no-regresión): %v", err)
 		}

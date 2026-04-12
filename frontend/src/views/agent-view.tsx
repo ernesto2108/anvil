@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { getAgent, type AgentDetailDTO } from '@/lib/wails'
-import { formatDate, formatDuration, formatTokens } from '@/lib/format'
+import { formatDate, formatDuration } from '@/lib/format'
 
 interface AgentViewProps {
   runId: string
@@ -30,11 +30,13 @@ function MetaCard({ label, children }: { label: string; children: React.ReactNod
 export function AgentView({ runId, agentId, onBack }: AgentViewProps) {
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [outputExpanded, setOutputExpanded] = useState(false)
+  const [expandedFiles, setExpandedFiles] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     let cancelled = false
     setState({ status: 'loading' })
     setOutputExpanded(false)
+    setExpandedFiles(new Set())
 
     getAgent(runId, agentId)
       .then((detail) => {
@@ -127,30 +129,6 @@ export function AgentView({ runId, agentId, onBack }: AgentViewProps) {
                 </span>
               </MetaCard>
 
-              <MetaCard label="Tokens entrada">
-                <span className="font-mono text-sm text-foreground">
-                  {state.detail.agent.tokensIn !== null
-                    ? formatTokens(state.detail.agent.tokensIn)
-                    : '—'}
-                </span>
-              </MetaCard>
-
-              <MetaCard label="Tokens salida">
-                <span className="font-mono text-sm text-foreground">
-                  {state.detail.agent.tokensOut !== null
-                    ? formatTokens(state.detail.agent.tokensOut)
-                    : '—'}
-                </span>
-              </MetaCard>
-
-              <MetaCard label="Tokens total">
-                <span className="font-mono text-sm text-foreground">
-                  {state.detail.agent.tokensTotal !== null
-                    ? formatTokens(state.detail.agent.tokensTotal)
-                    : '—'}
-                </span>
-              </MetaCard>
-
               <MetaCard label="Inicio">
                 <span className="text-sm text-foreground">
                   {formatDate(state.detail.agent.startedAt)}
@@ -184,22 +162,60 @@ export function AgentView({ runId, agentId, onBack }: AgentViewProps) {
               <p className="text-sm text-text-muted">Sin archivos modificados.</p>
             ) : (
               <ul role="list" className="space-y-1">
-                {state.detail.files.map((file, idx) => (
-                  <li
-                    key={idx}
-                    // TODO(DASH-FEAT-futura): habilitar acción de "abrir archivo" cuando esté disponible.
-                    tabIndex={0}
-                    onKeyDown={handleFileKeyDown}
-                    className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2 cursor-pointer hover:bg-secondary/50 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    <span className="flex-1 truncate font-mono text-xs text-text-secondary">
-                      {file.path}
-                    </span>
-                    <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-text-muted">
-                      {file.action}
-                    </span>
-                  </li>
-                ))}
+                {state.detail.files.map((file, idx) => {
+                  const hasDiff = !!file.diff
+                  const isExpanded = expandedFiles.has(idx)
+                  return (
+                    <li key={idx}>
+                      <button
+                        type="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          if (!hasDiff) return
+                          setExpandedFiles((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(idx)) next.delete(idx)
+                            else next.add(idx)
+                            return next
+                          })
+                        }}
+                        onKeyDown={handleFileKeyDown}
+                        className={`flex w-full items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${hasDiff ? 'cursor-pointer hover:bg-secondary/50' : 'cursor-default'}`}
+                      >
+                        {hasDiff && (
+                          <ChevronRight
+                            size={14}
+                            className={`shrink-0 text-text-muted transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                          />
+                        )}
+                        <span className="flex-1 truncate font-mono text-xs text-text-secondary">
+                          {file.path}
+                        </span>
+                        <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-text-muted">
+                          {file.action}
+                        </span>
+                      </button>
+                      {hasDiff && isExpanded && (
+                        <div className="mt-1 ml-5 rounded-md border border-border bg-[#1a1a2e] p-3 max-h-[400px] overflow-auto">
+                          <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-relaxed">
+                            {file.diff!.split('\n').map((line, i) => {
+                              let cls = 'text-text-muted'
+                              if (line.startsWith('+')) cls = 'text-success'
+                              else if (line.startsWith('-')) cls = 'text-fail'
+                              else if (line.startsWith('@@')) cls = 'text-brand-text'
+                              return (
+                                <span key={i} className={cls}>
+                                  {line}
+                                  {'\n'}
+                                </span>
+                              )
+                            })}
+                          </pre>
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </section>

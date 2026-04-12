@@ -1,7 +1,7 @@
-import { Hammer, List, BarChart3 } from 'lucide-react'
+import { Hammer, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type NavView = 'runs' | 'flow' | 'metrics'
+type NavView = 'runs'
 
 interface SidebarProps {
   activeView: NavView
@@ -12,12 +12,10 @@ interface NavItemConfig {
   view: NavView
   label: string
   icon: React.ReactNode
-  disabled?: boolean
 }
 
 const navItems: NavItemConfig[] = [
   { view: 'runs', label: 'Runs', icon: <List size={16} /> },
-  { view: 'metrics', label: 'Metrics', icon: <BarChart3 size={16} /> },
 ]
 
 export function Sidebar({ activeView, onNavigate }: SidebarProps) {
@@ -36,14 +34,11 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
         {navItems.map((item) => (
           <button
             key={item.view}
-            disabled={item.disabled}
-            onClick={() => !item.disabled && onNavigate(item.view)}
+            onClick={() => onNavigate(item.view)}
             className={cn(
               'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors text-left',
-              item.disabled
-                ? 'text-muted-foreground cursor-not-allowed opacity-50'
-                : activeView === item.view
-                ? 'bg-secondary text-foreground'
+              activeView === item.view
+                ? 'bg-[hsl(var(--brand-subtle))] text-[hsl(var(--brand-text))]'
                 : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
             )}
           >

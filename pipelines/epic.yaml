@@ -1,0 +1,36 @@
+# Full pipeline — pm + designer + architect + dba + dev + tester + qa + security
+nodes:
+  - id: pm
+    role: pm
+    timeout: 5m
+  - id: designer
+    role: designer
+    depends_on: [pm]
+    gate: true
+    timeout: 5m
+  - id: arch
+    role: architect
+    depends_on: [designer]
+    gate: true
+    timeout: 5m
+  - id: dba
+    role: dba
+    depends_on: [arch]
+    timeout: 5m
+  - id: dev
+    role: developer
+    depends_on: [arch, dba]
+    timeout: 10m
+  - id: test
+    role: tester
+    depends_on: [dev]
+    timeout: 5m
+  - id: qa
+    role: qa
+    depends_on: [test]
+    gate: true
+    timeout: 5m
+  - id: sec
+    role: security
+    depends_on: [dev]
+    timeout: 5m

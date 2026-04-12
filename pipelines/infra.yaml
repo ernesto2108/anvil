@@ -1,0 +1,9 @@
+# Infrastructure — devops + security audit
+nodes:
+  - id: devops
+    role: devops
+    timeout: 10m
+  - id: sec
+    role: security
+    depends_on: [devops]
+    timeout: 5m
