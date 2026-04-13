@@ -8,7 +8,7 @@ AGENTS.md
 .idea
 
 # Dashboard build artifacts
-frontend/node_modules/
+node_modules/
 frontend/dist/
 build/bin/
 anvil-full
