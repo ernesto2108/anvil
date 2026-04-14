@@ -71,8 +71,10 @@ Path: `.handoff/<TASK-ID>.md`. Focus on the `## Handoff for tester` section. It 
 - Patterns applied (including test patterns you should reuse — see `### Test patterns` if present)
 - Edge cases discovered during implementation
 - Build tags / stack constraints
-- **Tests requeridos** — lista cerrada de tests a implementar
+- **Tests requeridos — por stack** — lista cerrada de tests agrupados por stack (ver abajo)
 - Validation already performed (build/lint — do not repeat)
+
+**Cross-stack handoffs:** tests are grouped under `#### Tests Go`, `#### Tests React/TS`, etc. Each group has its own file path and run command. Execute each stack's tests independently — a Go test failure does NOT block writing React tests (and vice versa). Also check `## Puente de contratos` for the contract bridge between stacks — if your test touches the boundary (e.g., testing a DTO shape), verify both sides match.
 
 If the orchestrator passed the `## Handoff for tester` section inline in your prompt, **do not even read the handoff file** — use the inline content.
 
@@ -99,12 +101,13 @@ If the baseline compiles and runs clean → proceed to STEP 3.
 
 ### STEP 3 — Write ONLY the tests listed in the handoff
 
-The handoff contains a `### Tests requeridos` section with a **closed list** of tests to implement. This is your scope — no more, no less.
+The handoff contains a `### Tests requeridos — por stack` section with tests grouped by stack (e.g., `#### Tests Go`, `#### Tests React/TS`). Each group is a **closed list** with its own file path and run command.
 
 **Scope rules:**
-1. **Implement ONLY the tests in the list.** Do NOT add extra tests "for completeness" or "just in case". The developer already scoped the coverage.
-2. **Exception:** If a test you write fails and reveals a bug in production code, report it per the Failing Tests Policy. You may add a regression test for the bug ONLY if it's not already in the list.
-3. **If the list is missing or says "N/A"** → STOP and report: "Handoff sin lista de tests requeridos — necesito que el developer la llene."
+1. **Implement ONLY the tests listed in each stack group.** Do NOT add extra tests "for completeness" or "just in case". The developer already scoped the coverage.
+2. **Work one stack at a time.** Write all Go tests first, run them, then move to React/TS tests. This prevents context-switching and makes failures easier to diagnose.
+3. **Exception:** If a test you write fails and reveals a bug in production code, report it per the Failing Tests Policy. You may add a regression test for the bug ONLY if it's not already in the list.
+4. **If the list is missing, not grouped by stack, or says "N/A"** → STOP and report: "Handoff sin lista de tests requeridos por stack — necesito que el developer la llene con agrupación por stack."
 
 **Read rules (enforced by the read budget cap):**
 4. Do NOT re-read production files that appear in the handoff's file list. The developer already transcribed what you need.

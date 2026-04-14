@@ -116,6 +116,57 @@ At the end of every session (complete or not), append a row to the **Token usage
 - **Files read**: number of files read
 - **Files written**: number of files created or modified
 
+## Cross-stack tasks
+
+When a task touches multiple stacks (e.g., Go backend + React frontend):
+
+1. Use `## Fases` instead of `## Estado actual` — one phase per stack, ordered by dependency (backend first)
+2. Fill `## Puente de contratos` — the exact struct/DTO/interface that connects both sides, with JSON tags and TypeScript types side by side
+3. Group `### Tests requeridos — por stack` by stack — each group with its own file path, run command, and numbered test list
+
+**Why this matters:** cross-stack bugs almost always happen at the contract boundary. If the Go struct has `json:"runId"` but the TS interface expects `run_id`, a flat handoff won't catch it. The contract bridge makes both sides visible in one place.
+
+For single-stack tasks, use the flat `## Estado actual` checklist and omit `## Fases`, `## Puente de contratos`, and the stack grouping in tests.
+
+## Cross-service tasks
+
+When a task touches multiple repos/services:
+
+1. Fill `## Dependencias cross-service` — table with service, repo, what changes, and deploy order
+2. Document shared contracts (API endpoints, event schemas, DB tables that cross boundaries)
+3. Flag breaking changes and migration plan
+
+The orchestrator MUST verify deploy order before closing the task.
+
+## Input/Output tracking
+
+### Input recibido (on task start)
+
+The developer fills `## Input recibido` when creating the handoff. This is a receipt of what the orchestrator provided — if the next session finds a gap, it knows what was missing vs. what was lost.
+
+### Output entregado (before finishing)
+
+The developer fills `## Output entregado` before reporting done. This is the delivery checklist the orchestrator verifies. Must include: build result, lint result, existing tests result, file counts, contract bridge verification (if cross-stack), and cross-service impact.
+
+## Retro (on task completion)
+
+After the task is done (all agents finished, QA passed or skipped), fill `## Retro` before archiving. This is NOT optional for Medium+ tasks.
+
+**What to record:**
+- **Qué funcionó** — patterns, decisions, approaches worth repeating
+- **Qué no funcionó** — rework, QA bounces, wrong assumptions, wasted reads. Be specific: "assumed nullable column was NOT NULL, caused QA bounce" not "should have checked"
+- **Métricas** — estimated vs actual: story points, QA bounces, developer invocations, tester invocations
+- **Aprendizaje** — one concrete takeaway for future tasks (not generic)
+
+**Who fills it:**
+- Developer fills "qué funcionó" and "qué no funcionó" from their perspective
+- Orchestrator fills "métricas" (has the full picture of agent invocations and bounces)
+- Either fills "aprendizaje"
+
+**How it feeds improvement:**
+- The orchestrator reads retros from `.handoff/archive/` when planning similar tasks
+- Patterns that repeat across 3+ retros should become memory entries or convention skill updates
+
 ## Rules
 
 - One file per task

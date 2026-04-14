@@ -139,12 +139,35 @@ The orchestrator specifies the execution mode when invoking you. Default is `nor
 3. **If the prompt says "user has progress on [detail]"** → adjust scope to pending work only
 4. **If the prompt has NO inline context and NO prior work indication** → read the files you need before implementing
 
-## Input
+## Input (checklist — verify before starting)
 
-The orchestrator provides one of:
-- **Inline context** (small tasks): everything you need is in the prompt — files content, what to change, patterns to follow
-- **Doc references** (medium/large): paths to PRD, design, contracts
-- **Mode + contracts** (parallel phase): execution mode, mock data contracts or real API contracts
+The orchestrator MUST provide these fields. If any required field is missing, STOP and ask the orchestrator before proceeding.
+
+| Field | Small (1-5) | Medium (5-8) | Large (8-13+) |
+|---|---|---|---|
+| Complexity + pts | REQUIRED | REQUIRED | REQUIRED |
+| Stack(s) | REQUIRED | REQUIRED | REQUIRED |
+| Convention skill | optional (inline rules) | REQUIRED | REQUIRED |
+| What to do (objective) | REQUIRED | REQUIRED | REQUIRED |
+| Files to change | REQUIRED (listed) | REQUIRED (listed or in PRD) | REQUIRED (in design §8) |
+| PRD path or inline | optional | recommended | REQUIRED |
+| Design path or inline | N/A | optional | REQUIRED |
+| Context.md | optional (inline) | recommended | REQUIRED |
+| Mode | default: normal | default: normal | REQUIRED |
+| TASK-ID | optional | REQUIRED | REQUIRED |
+| Existing handoff | N/A | check `.handoff/` | check `.handoff/` |
+| `<docs>` path | optional | REQUIRED | REQUIRED |
+
+**Cross-stack tasks** additionally require:
+- Which stack goes first (dependency order)
+- Contract format between stacks (DTO shape, JSON tags)
+
+**Cross-service tasks** additionally require:
+- List of services/repos affected
+- Deploy order
+- Shared contracts (API, events, schemas)
+
+Record what you actually received in `## Input recibido` of the handoff (Medium+ only).
 
 ## Convention Skills
 
@@ -230,10 +253,10 @@ For **Medium+ tasks** (5+ pts), follow the `/handoff` skill. This applies whethe
 
 **Execution order (STRICT — do NOT reorder):**
 
-1. **FIRST:** Create `.handoff/<TASK-ID>.md` in the project root with execution plan. This is your VERY FIRST action — before reading code, before writing any production file.
+1. **FIRST:** Create `.handoff/<TASK-ID>.md` in the project root with execution plan. Fill `## Input recibido` with what the orchestrator provided. For cross-stack tasks, use `## Fases` instead of `## Estado actual`. This is your VERY FIRST action — before reading code, before writing any production file.
 2. **SECOND:** Present the plan and STOP. Return control to the orchestrator with the plan. The orchestrator will surface it to the user and only resume you after explicit user approval. Do NOT write production code until you are explicitly resumed with "plan approved".
-3. **During implementation:** Update handoff after each milestone (check off steps, add decisions).
-4. **BEFORE finishing (MANDATORY):** Fill the `## Handoff for tester` section of the handoff with everything the tester needs to write tests without re-reading production code. See template and guidance below.
+3. **During implementation:** Update handoff after each milestone (check off steps, add decisions). For cross-stack tasks, fill `## Puente de contratos` as soon as both sides are defined.
+4. **BEFORE finishing (MANDATORY):** Fill `## Handoff for tester` (with tests grouped by stack), `## Output entregado` table, and `## Puente de contratos` (if cross-stack). See template and guidance below.
 5. **On finish:** Final update (`/task-complete` archives and deletes it).
 6. **On continuation:** If the orchestrator provides a handoff note with flag `plan_preapproved=true` or explicit "plan approved — proceed", resume from "Siguiente paso" — skip the approval gate, do NOT re-read PRD/design/context.
 
@@ -260,7 +283,7 @@ Fill the `## Handoff for tester` section of the handoff with:
    - Error paths (how errors are wrapped)
    - Race conditions considered / avoided
 5. **Build tags o constraints** — if the code uses `//go:build xyz`, Go embed, Wails bindings, or any stack quirk that affects how tests must be written
-6. **Tests requeridos** (lista cerrada — el tester SOLO implementa estos): lista numerada de los tests concretos que cubren la funcionalidad. Incluir: nombre descriptivo del test + qué valida. El tester NO agrega tests fuera de esta lista salvo que descubra un bug real (failing test = bug en producción). Escalar con story points:
+6. **Tests requeridos — por stack** (lista cerrada — el tester SOLO implementa estos): para tareas cross-stack, agrupar por stack con subsecciones (`#### Tests Go`, `#### Tests React/TS`, etc.). Cada grupo incluye: archivo de test, comando de ejecución, y lista numerada de tests con nombre descriptivo + qué valida. Para tareas single-stack, usar un solo grupo. El tester NO agrega tests fuera de esta lista salvo que descubra un bug real (failing test = bug en producción). Escalar con story points:
    - 1-3 pts: max 10 tests
    - 5 pts: max 15 tests
    - 8+ pts: max 25 tests
@@ -324,6 +347,22 @@ The developer owns the task status from start to finish:
 
 If no TASK-ID exists (direct invocation), skip backlog updates — only manage the handoff file.
 
-## Output
+## Output (checklist — verify before reporting done)
 
-- production application code only
+**Always:**
+- Production application code
+- Build passes (all affected stacks)
+- Lint passes with 0 issues (all affected stacks)
+- Existing tests still pass
+
+**Medium+ tasks (in the handoff):**
+- `## Input recibido` filled (receipt of what was provided)
+- `## Archivos modificados` complete
+- `## Decisiones tomadas` filled
+- `## Handoff for tester` complete with signatures, edge cases, tests por stack
+- `## Output entregado` table filled with build/lint/test results
+- `## Puente de contratos` filled (cross-stack only)
+- `## Dependencias cross-service` filled (cross-service only)
+
+**After QA passes (before archive):**
+- `## Retro` → fill "Qué funcionó" and "Qué no funcionó" from your perspective

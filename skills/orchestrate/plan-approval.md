@@ -102,15 +102,20 @@ Before the orchestrator invokes the tester, it MUST verify that the developer fi
 1. [ ] `.handoff/<TASK-ID>.md` has a non-empty `## Handoff for tester` section
 2. [ ] "Public interfaces / contracts" has the exact signatures of new/modified functions, types, DTOs
 3. [ ] "Edge cases descubiertos" is filled (not just "N/A" — if there truly are none, the developer should say "sin edge cases no triviales")
-4. [ ] "Tests requeridos" has a numbered, closed list of tests (not empty, not "N/A")
+4. [ ] "Tests requeridos — por stack" has tests grouped by stack (`#### Tests Go`, `#### Tests React/TS`, etc.) — each group with file path, run command, and numbered list. **Single flat list is NOT accepted for cross-stack tasks.**
 5. [ ] "Validación ya ejecutada" lists the commands the developer ran (go build, go vet, npm run build)
+6. [ ] `## Output entregado` table is filled with build/lint/test results
+7. [ ] `## Puente de contratos` is filled (cross-stack tasks only) — both "Backend expone" and "Frontend consume" have exact types
+8. [ ] `## Dependencias cross-service` is filled (cross-service tasks only)
 
-**If the section is missing or incomplete:** re-invoke the developer with: "You forgot to fill the `## Handoff for tester` section of `.handoff/<TASK-ID>.md`. Fill it now with signatures, edge cases, patterns, and the closed list of tests requeridos. Do NOT touch production code." This is cheaper than letting the tester re-read the codebase.
+**If any check fails:** re-invoke the developer with the specific gap: "Fill [missing section] in `.handoff/<TASK-ID>.md`. Do NOT touch production code." This is cheaper than letting the tester re-read the codebase.
+
+**After QA passes (before archive):** verify the developer filled `## Retro` → "Qué funcionó" and "Qué no funcionó". The orchestrator fills "Métricas" with actual invocation counts and QA bounces.
 
 **Tester prompt template (after verification passes):**
 
 ```
-Stack: <go|react|flutter|...>. Skill: <convention-skill>.
+Stack(s): <go|react|flutter|...>. Skill: <convention-skill>.
 
 PRIMARY INPUT: Read `.handoff/<TASK-ID>.md` — specifically the `## Handoff for tester` section. That section contains:
 - files the developer touched (with their role)
@@ -118,12 +123,14 @@ PRIMARY INPUT: Read `.handoff/<TASK-ID>.md` — specifically the `## Handoff for
 - patterns applied
 - edge cases discovered
 - build tags / constraints
-- **tests requeridos** — closed list of tests to implement (your ONLY scope)
+- **tests requeridos — por stack** — tests grouped by stack (#### Tests Go, #### Tests React/TS, etc.), each with file path, run command, and numbered list. Work one stack at a time.
 - validation already run (do NOT repeat build checks)
+
+For cross-stack tasks, also check `## Puente de contratos` — it shows the exact contract between backend and frontend. If your tests touch the boundary, verify both sides match.
 
 Do NOT re-read the production files unless the handoff is missing a specific detail you need. If the handoff is incomplete, STOP and report to the orchestrator.
 
-Your job: implement ONLY the tests listed in "Tests requeridos". Do NOT add extra tests beyond this list.
+Your job: implement ONLY the tests listed in each stack group of "Tests requeridos — por stack". Do NOT add extra tests beyond these lists.
 ```
 
 Developer boundary: never writes test files. If tester finds dev-authored tests, report violation (see tester.md).
