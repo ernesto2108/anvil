@@ -70,7 +70,7 @@ export function AgentView({ runId, agentId, onBack }: AgentViewProps) {
   const agentName = state.status === 'data' ? state.detail.agent.name : agentId
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 min-h-0 flex-col">
       {/* Header */}
       <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
         <Button

@@ -45,7 +45,7 @@ describe('RunsView', () => {
   })
 
   it('muestra skeleton de carga cuando runs es null', () => {
-    mockUseRunsPolling.mockReturnValue({ runs: null, error: false })
+    mockUseRunsPolling.mockReturnValue({ runs: null, error: false, refresh: vi.fn() })
     render(<RunsView onRowClick={vi.fn()} />)
     // El skeleton contiene divs con la clase animate-pulse
     const skeletons = document.querySelectorAll('.animate-pulse')
@@ -53,13 +53,13 @@ describe('RunsView', () => {
   })
 
   it('muestra estado vacío cuando no hay runs y no hay filtros', () => {
-    mockUseRunsPolling.mockReturnValue({ runs: [], error: false })
+    mockUseRunsPolling.mockReturnValue({ runs: [], error: false, refresh: vi.fn() })
     render(<RunsView onRowClick={vi.fn()} />)
     expect(screen.getByText('Sin ejecuciones todavía')).toBeInTheDocument()
   })
 
   it('renderiza filas de la tabla con datos correctos', () => {
-    mockUseRunsPolling.mockReturnValue({ runs: RUNS_FIXTURE, error: false })
+    mockUseRunsPolling.mockReturnValue({ runs: RUNS_FIXTURE, error: false, refresh: vi.fn() })
     render(<RunsView onRowClick={vi.fn()} />)
     // Los tres IDs deben aparecer en la tabla
     expect(screen.getByText('run-001')).toBeInTheDocument()
@@ -68,16 +68,17 @@ describe('RunsView', () => {
   })
 
   it('aplica clase bg-running-bg/20 a filas con status running', () => {
-    mockUseRunsPolling.mockReturnValue({ runs: RUNS_FIXTURE, error: false })
+    mockUseRunsPolling.mockReturnValue({ runs: RUNS_FIXTURE, error: false, refresh: vi.fn() })
     render(<RunsView onRowClick={vi.fn()} />)
     const runningCell = screen.getByText('run-003')
-    const row = runningCell.closest('button')
+    // RunRow wraps content in a div (outer) > button (inner); bg class is on the outer div
+    const row = runningCell.closest('div.group')
     expect(row).toHaveClass('bg-running-bg/20')
   })
 
   it('llama a onRowClick con el id correcto al hacer click en una fila', () => {
     const onRowClick = vi.fn()
-    mockUseRunsPolling.mockReturnValue({ runs: RUNS_FIXTURE, error: false })
+    mockUseRunsPolling.mockReturnValue({ runs: RUNS_FIXTURE, error: false, refresh: vi.fn() })
     render(<RunsView onRowClick={onRowClick} />)
     const cell = screen.getByText('run-001')
     const row = cell.closest('button')!
@@ -90,7 +91,7 @@ describe('RunsView', () => {
     // Pero necesitamos que el estado de filtro interno tenga un valor.
     // Como el estado de filtro es interno al componente, lo manipulamos
     // cambiando el mock para que devuelva [] y luego disparamos un cambio de filtro.
-    mockUseRunsPolling.mockReturnValue({ runs: [], error: false })
+    mockUseRunsPolling.mockReturnValue({ runs: [], error: false, refresh: vi.fn() })
     render(<RunsView onRowClick={vi.fn()} />)
 
     // Cambiar el select de estado para activar un filtro

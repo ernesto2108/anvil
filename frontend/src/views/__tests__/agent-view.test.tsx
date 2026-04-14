@@ -28,8 +28,8 @@ const makeDetail = (overrides: Partial<AgentDetailDTO> = {}): AgentDetailDTO => 
     errorMsg: '',
   },
   files: [
-    { path: 'src/index.ts', action: 'modified' },
-    { path: 'src/utils.ts', action: 'created', diff: '+const x = 1\n-const y = 2' },
+    { path: 'src/index.ts', action: 'modified', agentId: 'a1' },
+    { path: 'src/utils.ts', action: 'created', diff: '+const x = 1\n-const y = 2', agentId: 'a1' },
   ],
   output: Array.from({ length: 5 }, (_, i) => `Línea de output ${i + 1}`).join('\n'),
   ...overrides,

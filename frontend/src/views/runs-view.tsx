@@ -1,13 +1,48 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, ChevronRight, FolderOpen, Folder, GitBranch, X } from 'lucide-react'
+import { Activity, ChevronRight, FolderOpen, Folder, GitBranch, Trash2, X } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
 import { formatDate, formatDuration } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { getChildRuns, getProjects, type RunDTO } from '@/lib/wails'
+import { deleteRun, getChildRuns, getProjects, type RunDTO } from '@/lib/wails'
 import { useRunsPolling, type RunsFilter } from '@/hooks/use-runs-polling'
 
 interface RunsViewProps {
   onRowClick: (runId: string) => void
+  refreshRef?: React.MutableRefObject<(() => void) | null>
+}
+
+function ConfirmDialog({
+  message,
+  onConfirm,
+  onCancel,
+}: {
+  message: string
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="bg-card border border-border rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
+        <p className="text-sm text-foreground mb-4">{message}</p>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-3 py-1.5 text-xs rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="px-3 py-1.5 text-xs rounded-md bg-fail text-white hover:bg-fail/80 transition-colors"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 const STATUS_OPTIONS = [
@@ -118,43 +153,73 @@ function FilterBar({
   )
 }
 
-function RunRow({ run, onRowClick }: { run: RunDTO; onRowClick: (id: string) => void }) {
+function RunRow({
+  run,
+  onRowClick,
+  onDelete,
+}: {
+  run: RunDTO
+  onRowClick: (id: string) => void
+  onDelete: (id: string) => void
+}) {
   return (
-    <button
-      type="button"
-      onClick={() => onRowClick(run.id)}
+    <div
       className={cn(
-        'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors',
-        'hover:bg-secondary/50 cursor-pointer',
+        'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors group',
+        'hover:bg-secondary/50',
         isRunning(run.status) && 'bg-running-bg/20',
       )}
     >
-      <span className="font-mono text-xs text-text-secondary w-[160px] truncate shrink-0">
-        {run.id}
-      </span>
-      <span className="text-xs text-foreground w-[140px] shrink-0">
-        {formatDate(run.startedAt)}
-      </span>
-      <span className="w-[100px] shrink-0">
-        <StatusBadge status={run.status} />
-      </span>
-      <span className="font-mono text-xs text-foreground w-[80px] shrink-0">
-        {isRunning(run.status) ? '—' : formatDuration(run.durationMs)}
-      </span>
-      <span className="flex-1 text-xs text-text-muted truncate">
-        {run.taskDesc ? run.taskDesc.slice(0, 60) : ''}
-      </span>
+      <button
+        type="button"
+        onClick={() => onRowClick(run.id)}
+        className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+      >
+        <span className="font-mono text-xs text-text-secondary w-[160px] truncate shrink-0">
+          {run.id}
+        </span>
+        <span className="text-xs text-foreground w-[140px] shrink-0">
+          {formatDate(run.startedAt)}
+        </span>
+        <span className="w-[100px] shrink-0 flex items-center gap-1.5">
+          <StatusBadge status={run.status} />
+          {run.errorReason && (
+            <span className="text-[10px] font-mono text-fail truncate max-w-[60px]" title={run.errorReason}>
+              {run.errorReason}
+            </span>
+          )}
+        </span>
+        <span className="font-mono text-xs text-foreground w-[80px] shrink-0">
+          {isRunning(run.status) ? '—' : formatDuration(run.durationMs)}
+        </span>
+        <span className="flex-1 text-xs text-text-muted truncate">
+          {run.taskDesc ? run.taskDesc.slice(0, 60) : ''}
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onDelete(run.id)
+        }}
+        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-fail/20 text-muted-foreground hover:text-fail transition-all shrink-0"
+        title="Eliminar run"
+      >
+        <Trash2 size={14} />
+      </button>
       <ChevronRight size={14} className="text-muted-foreground shrink-0" />
-    </button>
+    </div>
   )
 }
 
 function ParentRunRow({
   run,
   onRowClick,
+  onDelete,
 }: {
   run: RunDTO
   onRowClick: (id: string) => void
+  onDelete: (id: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const [children, setChildren] = useState<RunDTO[] | null>(null)
@@ -222,7 +287,7 @@ function ParentRunRow({
                 {project}
               </div>
               {projectRuns.map((child) => (
-                <RunRow key={child.id} run={child} onRowClick={onRowClick} />
+                <RunRow key={child.id} run={child} onRowClick={onRowClick} onDelete={onDelete} />
               ))}
             </div>
           ))}
@@ -241,12 +306,14 @@ function ProjectGroup({
   expanded,
   onToggle,
   onRowClick,
+  onDelete,
 }: {
   name: string
   runs: RunDTO[]
   expanded: boolean
   onToggle: () => void
   onRowClick: (id: string) => void
+  onDelete: (id: string) => void
 }) {
   const successCount = runs.filter((r) => r.status === 'success').length
   const failedCount = runs.filter((r) => r.status === 'failed').length
@@ -287,9 +354,9 @@ function ProjectGroup({
         <div className="border-t border-border bg-background px-2 py-1 space-y-0.5">
           {runs.map((run) =>
             (run.childrenCount ?? 0) > 0 ? (
-              <ParentRunRow key={run.id} run={run} onRowClick={onRowClick} />
+              <ParentRunRow key={run.id} run={run} onRowClick={onRowClick} onDelete={onDelete} />
             ) : (
-              <RunRow key={run.id} run={run} onRowClick={onRowClick} />
+              <RunRow key={run.id} run={run} onRowClick={onRowClick} onDelete={onDelete} />
             )
           )}
         </div>
@@ -298,7 +365,7 @@ function ProjectGroup({
   )
 }
 
-export function RunsView({ onRowClick }: RunsViewProps) {
+export function RunsView({ onRowClick, refreshRef }: RunsViewProps) {
   const [filter, setFilter] = useState<RunsFilter>({
     status: '',
     startDate: '',
@@ -307,6 +374,7 @@ export function RunsView({ onRowClick }: RunsViewProps) {
   })
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [didInitialExpand, setDidInitialExpand] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   // Load projects list for auto-expanding the first time
   const [, setProjects] = useState<string[]>([])
@@ -314,7 +382,29 @@ export function RunsView({ onRowClick }: RunsViewProps) {
     getProjects().then(setProjects).catch(() => {})
   }, [])
 
-  const { runs } = useRunsPolling(filter)
+  const { runs, refresh } = useRunsPolling(filter)
+
+  // Expose refresh to parent via ref
+  useEffect(() => {
+    if (refreshRef) refreshRef.current = refresh
+    return () => { if (refreshRef) refreshRef.current = null }
+  }, [refresh, refreshRef])
+
+  const handleDelete = (runId: string) => {
+    setPendingDeleteId(runId)
+  }
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return
+    try {
+      await deleteRun(pendingDeleteId)
+      refresh()
+    } catch (err) {
+      console.error('Error al eliminar run:', err)
+    } finally {
+      setPendingDeleteId(null)
+    }
+  }
 
   const grouped = useMemo(() => {
     if (!runs) return null
@@ -344,6 +434,13 @@ export function RunsView({ onRowClick }: RunsViewProps) {
 
   return (
     <div>
+      {pendingDeleteId && (
+        <ConfirmDialog
+          message={`¿Eliminar el run ${pendingDeleteId.slice(0, 20)}... y todos sus datos?`}
+          onConfirm={confirmDelete}
+          onCancel={() => setPendingDeleteId(null)}
+        />
+      )}
       <FilterBar filter={filter} onChange={setFilter} />
 
       {runs.length === 0 ? (
@@ -374,6 +471,7 @@ export function RunsView({ onRowClick }: RunsViewProps) {
               expanded={expandedProjects.has(project)}
               onToggle={() => toggleProject(project)}
               onRowClick={onRowClick}
+              onDelete={handleDelete}
             />
           ))}
         </div>

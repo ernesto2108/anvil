@@ -38,6 +38,12 @@ function getStatusConfig(status: string): StatusConfig {
         className:
           'text-running bg-running-bg border-running-border',
       }
+    case 'abandoned':
+      return {
+        label: 'Abandoned',
+        icon: <CircleX size={11} />,
+        className: 'text-muted-foreground bg-secondary border-border',
+      }
     default:
       return {
         label: 'Pending',

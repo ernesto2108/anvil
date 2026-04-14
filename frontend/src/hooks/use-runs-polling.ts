@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getRuns, type RunDTO } from '@/lib/wails'
 
 const POLL_INTERVAL_MS = 2000
@@ -13,6 +13,7 @@ export interface RunsFilter {
 interface UseRunsPollingResult {
   runs: RunDTO[] | null
   error: boolean
+  refresh: () => void
 }
 
 /**
@@ -29,6 +30,9 @@ interface UseRunsPollingResult {
 export function useRunsPolling(filter: RunsFilter): UseRunsPollingResult {
   const [runs, setRuns] = useState<RunDTO[] | null>(null)
   const [error, setError] = useState(false)
+  const [refreshTick, setRefreshTick] = useState(0)
+
+  const refresh = useCallback(() => setRefreshTick((t) => t + 1), [])
 
   // Ref para rastrear si el componente está montado y evitar setState tras unmount.
   const mountedRef = useRef(true)
@@ -80,7 +84,7 @@ export function useRunsPolling(filter: RunsFilter): UseRunsPollingResult {
       mountedRef.current = false
       clearInterval(interval)
     }
-  }, [filter.status, filter.startDate, filter.endDate, filter.project])
+  }, [filter.status, filter.startDate, filter.endDate, filter.project, refreshTick])
 
-  return { runs, error }
+  return { runs, error, refresh }
 }

@@ -8,6 +8,9 @@ import type { SessionDetailDTO, RunDTO } from '@/lib/wails'
 // --- Mock de @/lib/wails ---------------------------------------------------
 vi.mock('@/lib/wails', () => ({
   getSessionDetail: vi.fn(),
+  getPrompts: vi.fn().mockResolvedValue([]),
+  getTurnStats: vi.fn().mockResolvedValue([]),
+  revertFile: vi.fn(),
 }))
 
 import { getSessionDetail } from '@/lib/wails'
@@ -35,11 +38,18 @@ const makeRun = (overrides: Partial<RunDTO> = {}): RunDTO => ({
 const makeDetail = (overrides: Partial<SessionDetailDTO> = {}): SessionDetailDTO => ({
   run: makeRun(),
   files: [
-    { path: 'src/index.ts', action: 'modify', diff: '+const x = 1' },
+    { path: 'src/index.ts', action: 'modify', diff: '+const x = 1', agentId: '' },
   ],
   agents: [
-    { id: 'agent-1', role: 'developer', status: 'success', durationMs: 120_000, output: 'Done' },
+    { id: 'agent-1', role: 'developer', status: 'success', startedAt: '2024-01-15T10:00:00Z', endedAt: '2024-01-15T10:02:00Z', durationMs: 120_000, output: 'Done' },
   ],
+  activityEvents: [
+    { timestamp: '2024-01-15T10:01:00Z', agentId: '' },
+    { timestamp: '2024-01-15T10:03:00Z', agentId: 'agent-1' },
+  ],
+  toolUsage: [],
+  toolDetails: [],
+  tasks: [],
   ...overrides,
 })
 
@@ -83,12 +93,17 @@ describe('FlowView (Session Detail)', () => {
     expect(defaultProps.onBack).toHaveBeenCalledTimes(1)
   })
 
-  it('muestra archivos y agentes cuando hay datos', async () => {
+  it('muestra traza y agentes cuando hay datos', async () => {
     mockGetSessionDetail.mockResolvedValue(makeDetail())
     render(<FlowView {...defaultProps} />)
     await waitFor(() => {
+      // Default tab is "traza" — agent timeline shows agent roles
+      expect(screen.getAllByText('developer').length).toBeGreaterThanOrEqual(1)
+    })
+    // Navigate to "cambios" tab to see files
+    fireEvent.click(screen.getByRole('tab', { name: /archivos/i }))
+    await waitFor(() => {
       expect(screen.getByText('src/index.ts')).toBeInTheDocument()
-      expect(screen.getByText('developer')).toBeInTheDocument()
     })
   })
 })

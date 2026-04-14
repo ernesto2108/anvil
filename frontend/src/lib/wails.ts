@@ -20,17 +20,27 @@ export interface RunDTO {
   project: string
   parentRunId?: string
   childrenCount?: number
+  branch?: string
   startedAt: string
   endedAt: string
   durationMs: number
   filesCount: number
   agentsCount: number
+  errorReason?: string
+  toolUsesCount?: number
+  compactionsCount?: number
 }
 
 export interface FileDTO {
   path: string
   action: string
   diff?: string
+  agentId: string
+}
+
+export interface ActivityEventDTO {
+  timestamp: string
+  agentId: string
 }
 
 export interface AgentDTO {
@@ -53,14 +63,56 @@ export interface SessionAgentDTO {
   id: string
   role: string
   status: string
+  startedAt: string
+  endedAt: string
   durationMs: number | null
   output: string
+}
+
+export interface ToolUsageDTO {
+  toolName: string
+  count: number
+}
+
+export interface ToolUseDetailDTO {
+  toolName: string
+  command: string
+  agentId: string
+  timestamp: string
+}
+
+export interface TaskDTO {
+  id: string
+  title: string
+  status: string
+  createdAt: string
+  completedAt: string
 }
 
 export interface SessionDetailDTO {
   run: RunDTO
   files: FileDTO[]
   agents: SessionAgentDTO[]
+  activityEvents: ActivityEventDTO[]
+  toolUsage: ToolUsageDTO[]
+  toolDetails: ToolUseDetailDTO[]
+  tasks: TaskDTO[]
+}
+
+export interface PromptDTO {
+  sequence: number
+  prompt: string
+  timestamp: string
+}
+
+export interface TurnStatsDTO {
+  turnNumber: number
+  prompt: string
+  timestamp: string
+  endTimestamp: string
+  filesCount: number
+  toolUsesCount: number
+  agentsCount: number
 }
 
 // Forma del objeto global window.go inyectado por Wails en producción.
@@ -75,6 +127,13 @@ declare global {
           GetRunSummary?: (runId: string) => Promise<RunDTO | null>
           GetSessionDetail?: (runId: string) => Promise<SessionDetailDTO | null>
           GetChildRuns?: (parentRunId: string) => Promise<RunDTO[]>
+          RevertFile?: (project: string, filePath: string, diff: string) => Promise<void>
+          GetToolUsage?: (runId: string) => Promise<ToolUsageDTO[]>
+          GetTasks?: (runId: string) => Promise<TaskDTO[]>
+          GetPrompts?: (runId: string) => Promise<PromptDTO[]>
+          GetTurnStats?: (runId: string) => Promise<TurnStatsDTO[]>
+          DeleteRun?: (runId: string) => Promise<void>
+          DeleteRuns?: (runIds: string[]) => Promise<void>
         }
       }
     }
@@ -141,6 +200,73 @@ export async function getRunSummary(runId: string): Promise<RunDTO | null> {
   if (!binding) {
     console.warn('[wails] window.go no disponible — retornando null (modo dev)')
     return null
+  }
+  return binding(runId)
+}
+
+// revertFile aplica el parche inverso (git apply -R) para revertir un archivo.
+export async function revertFile(project: string, filePath: string, diff: string): Promise<void> {
+  const binding = window.go?.dashboard?.App?.RevertFile
+  if (!binding) {
+    throw new Error('Binding RevertFile no disponible (modo dev)')
+  }
+  return binding(project, filePath, diff)
+}
+
+// getToolUsage returns tool usage breakdown for a run.
+export async function getToolUsage(runId: string): Promise<ToolUsageDTO[]> {
+  const binding = window.go?.dashboard?.App?.GetToolUsage
+  if (!binding) {
+    console.warn('[wails] window.go no disponible — retornando [] (modo dev)')
+    return []
+  }
+  return binding(runId)
+}
+
+// getTasks returns all tasks tracked within a run.
+export async function getTasks(runId: string): Promise<TaskDTO[]> {
+  const binding = window.go?.dashboard?.App?.GetTasks
+  if (!binding) {
+    console.warn('[wails] window.go no disponible — retornando [] (modo dev)')
+    return []
+  }
+  return binding(runId)
+}
+
+// getPrompts returns all prompts for a run, ordered by sequence ASC.
+export async function getPrompts(runId: string): Promise<PromptDTO[]> {
+  const binding = window.go?.dashboard?.App?.GetPrompts
+  if (!binding) {
+    console.warn('[wails] window.go no disponible — retornando [] (modo dev)')
+    return []
+  }
+  return binding(runId)
+}
+
+// deleteRun deletes a single run and all associated data.
+export async function deleteRun(runId: string): Promise<void> {
+  const binding = window.go?.dashboard?.App?.DeleteRun
+  if (!binding) {
+    throw new Error('Binding DeleteRun no disponible (modo dev)')
+  }
+  return binding(runId)
+}
+
+// deleteRuns deletes multiple runs in a single transaction.
+export async function deleteRuns(runIds: string[]): Promise<void> {
+  const binding = window.go?.dashboard?.App?.DeleteRuns
+  if (!binding) {
+    throw new Error('Binding DeleteRuns no disponible (modo dev)')
+  }
+  return binding(runIds)
+}
+
+// getTurnStats returns activity statistics per turn for a run.
+export async function getTurnStats(runId: string): Promise<TurnStatsDTO[]> {
+  const binding = window.go?.dashboard?.App?.GetTurnStats
+  if (!binding) {
+    console.warn('[wails] window.go no disponible — retornando [] (modo dev)')
+    return []
   }
   return binding(runId)
 }

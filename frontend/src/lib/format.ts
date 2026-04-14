@@ -4,8 +4,9 @@ const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   day: 'numeric',
   month: 'short',
   year: 'numeric',
-  hour: '2-digit',
+  hour: 'numeric',
   minute: '2-digit',
+  hour12: true,
 })
 
 // formatDate convierte un string ISO-8601 a formato legible en español.
