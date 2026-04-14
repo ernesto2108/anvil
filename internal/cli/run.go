@@ -10,8 +10,6 @@ import (
 	"strings"
 	"syscall"
 
-	anvilroot "github.com/ernesto2108/anvil"
-	"github.com/ernesto2108/anvil/internal/dashboard/store"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 	"github.com/ernesto2108/anvil/internal/orchestrator"
 	"github.com/ernesto2108/anvil/internal/runner"
@@ -140,7 +138,7 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 		os.Exit(1)
 	}
 	dbPath := filepath.Join(home, ".anvil", "runs.db")
-	s, err := store.NewFS(dbPath, anvilroot.MigrationsFS, "migrations", 0)
+	s, err := openStorePreferFilesystem(dbPath)
 	if err != nil {
 		output.Error("open store: %s", err)
 		os.Exit(1)

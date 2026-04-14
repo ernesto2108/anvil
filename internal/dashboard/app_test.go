@@ -4,9 +4,7 @@ package dashboard
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"strings"
 	"testing"
 	"time"
 
@@ -23,16 +21,13 @@ type fakeStore struct {
 	agentDetail    *store.AgentDetail
 	agentFiles     []store.FileRow
 	agentDetailErr error
-	// campos configurables para GetMetrics
-	metricsResult store.Metrics
-	metricsErr    error
 	// campos configurables para GetRunSummary
 	runSummary    *store.RunSummary
 	runSummaryErr error
 }
 
-func (f *fakeStore) WriteEvent(_ instrumentation.Event) error              { return nil }
-func (f *fakeStore) ListRuns(_ context.Context, _, _ int, _, _, _ string) ([]store.RunSummary, error) {
+func (f *fakeStore) WriteEvent(_ instrumentation.Event) error { return nil }
+func (f *fakeStore) ListRuns(_ context.Context, _, _ int, _, _, _, _ string) ([]store.RunSummary, error) {
 	return nil, nil
 }
 func (f *fakeStore) ListAgentsByRun(_ context.Context, _ string) ([]store.AgentRow, error) {
@@ -41,13 +36,26 @@ func (f *fakeStore) ListAgentsByRun(_ context.Context, _ string) ([]store.AgentR
 func (f *fakeStore) GetAgentDetail(_ context.Context, _, _ string) (*store.AgentDetail, []store.FileRow, error) {
 	return f.agentDetail, f.agentFiles, f.agentDetailErr
 }
-func (f *fakeStore) GetMetrics(_ context.Context) (store.Metrics, error) {
-	return f.metricsResult, f.metricsErr
-}
 func (f *fakeStore) GetRunSummary(_ context.Context, _ string) (*store.RunSummary, error) {
 	return f.runSummary, f.runSummaryErr
 }
-func (f *fakeStore) Close() error { return nil }
+func (f *fakeStore) ListProjects(_ context.Context) ([]string, error)                        { return nil, nil }
+func (f *fakeStore) ListFilesByRun(_ context.Context, _ string) ([]store.FileRow, error)     { return nil, nil }
+func (f *fakeStore) ListChildRuns(_ context.Context, _ string) ([]store.RunSummary, error)   { return nil, nil }
+func (f *fakeStore) ListActivityEvents(_ context.Context, _ string) ([]store.ActivityEvent, error) { return nil, nil }
+func (f *fakeStore) ListToolUsageByRun(_ context.Context, _ string) ([]store.ToolUseSummary, error) { return nil, nil }
+func (f *fakeStore) TotalToolUsesByRun(_ context.Context, _ string) (int, error)             { return 0, nil }
+func (f *fakeStore) ListToolUseDetailsByRun(_ context.Context, _ string) ([]store.ToolUseDetail, error) { return nil, nil }
+func (f *fakeStore) ListTasksByRun(_ context.Context, _ string) ([]store.TaskRow, error)     { return nil, nil }
+func (f *fakeStore) CountCompactions(_ context.Context, _ string) (int, error)               { return 0, nil }
+func (f *fakeStore) CountPermissionDenied(_ context.Context, _ string) (int, error)          { return 0, nil }
+func (f *fakeStore) CleanupStaleRuns(_ int) (int64, error)                                   { return 0, nil }
+func (f *fakeStore) BackfillProjects() (int64, error)                                        { return 0, nil }
+func (f *fakeStore) ListPromptsByRun(_ context.Context, _ string) ([]store.PromptRow, error) { return nil, nil }
+func (f *fakeStore) GetTurnStats(_ context.Context, _ string) ([]store.TurnStatsRow, error)  { return nil, nil }
+func (f *fakeStore) DeleteRun(_ context.Context, _ string) error                             { return nil }
+func (f *fakeStore) DeleteRuns(_ context.Context, _ []string) error                          { return nil }
+func (f *fakeStore) Close() error                                                            { return nil }
 
 func intPtr(v int) *int         { return &v }
 func int64Ptr(v int64) *int64   { return &v }
@@ -241,13 +249,7 @@ func Test_toFlowDTO(t *testing.T) {
 		if n.Data.Status != "success" {
 			t.Errorf("Data.Status: esperado %q, obtuvo %q", "success", n.Data.Status)
 		}
-		// Tokens
-		if n.Data.Tokens == nil {
-			t.Fatal("Data.Tokens: esperaba valor no nil")
-		}
-		if *n.Data.Tokens != 5000 {
-			t.Errorf("Data.Tokens: esperado 5000, obtuvo %d", *n.Data.Tokens)
-		}
+		// Tokens field was removed from FlowNodeData — skip assertion.
 	})
 
 	// AC3: agente con status failed debe preservar ese status en el nodo.
@@ -623,122 +625,7 @@ func Test_GetAgent(t *testing.T) {
 	})
 }
 
-func Test_GetMetrics(t *testing.T) {
-	t.Run("store_retorna_vacio", func(t *testing.T) {
-		// GetMetrics debe retornar *MetricsDTO no-nil con slices vacíos no-nil.
-		// json.Marshal debe producir "tokensPerRun":[] no "tokensPerRun":null.
-		fs := &fakeStore{
-			metricsResult: store.Metrics{
-				RunsCount:       0,
-				HasEnoughData:   false,
-				TokensPerRun:    []store.TokensPerRunRow{},
-				AvgTimePerAgent: []store.AgentTimeRow{},
-			},
-		}
-		app := NewApp(fs)
-		dto, err := app.GetMetrics()
-		if err != nil {
-			t.Fatalf("GetMetrics: %v", err)
-		}
-		if dto == nil {
-			t.Fatal("GetMetrics: esperaba *MetricsDTO no-nil, obtuvo nil")
-		}
-		if dto.RunsCount != 0 {
-			t.Errorf("dto.RunsCount: esperado 0, obtuvo %d", dto.RunsCount)
-		}
-		if dto.HasEnoughData {
-			t.Error("dto.HasEnoughData: esperado false")
-		}
-		// Slices no-nil para serialización correcta.
-		if dto.TokensPerRun == nil {
-			t.Error("dto.TokensPerRun: esperaba slice no-nil")
-		}
-		if dto.AvgTimePerAgent == nil {
-			t.Error("dto.AvgTimePerAgent: esperaba slice no-nil")
-		}
-		// Serialización: "tokensPerRun":[] no "tokensPerRun":null.
-		jsonBytes, marshalErr := json.Marshal(dto)
-		if marshalErr != nil {
-			t.Fatalf("json.Marshal: %v", marshalErr)
-		}
-		jsonStr := string(jsonBytes)
-		if !strings.Contains(jsonStr, `"tokensPerRun":[]`) {
-			t.Errorf("JSON: esperaba %q, obtuvo %q", `"tokensPerRun":[]`, jsonStr)
-		}
-		if !strings.Contains(jsonStr, `"avgTimePerAgent":[]`) {
-			t.Errorf("JSON: esperaba %q, obtuvo %q", `"avgTimePerAgent":[]`, jsonStr)
-		}
-	})
-
-	t.Run("store_retorna_error", func(t *testing.T) {
-		// Cuando el store retorna error, GetMetrics debe retornar (nil, error).
-		fs := &fakeStore{
-			metricsErr: errors.New("boom"),
-		}
-		app := NewApp(fs)
-		dto, err := app.GetMetrics()
-		if err == nil {
-			t.Fatal("GetMetrics: esperaba error, obtuvo nil")
-		}
-		if dto != nil {
-			t.Errorf("GetMetrics: esperaba nil DTO en error, obtuvo %+v", dto)
-		}
-	})
-
-	t.Run("deltas_nil_serializan_null", func(t *testing.T) {
-		// Deltas nil en store.Metrics → campos *float64/*int64 nil en DTO →
-		// json.Marshal produce "totalTokensDeltaPct":null no "totalTokensDeltaPct":0.
-		fs := &fakeStore{
-			metricsResult: store.Metrics{
-				RunsCount:           3,
-				HasEnoughData:       false,
-				TotalTokens:         900,
-				AvgDurationMs:       2000,
-				SuccessRate:         1.0,
-				TotalTokensDeltaPct: nil, // sin prev
-				AvgDurationDeltaMs:  nil,
-				SuccessRateDelta:    nil,
-				TokensPerRun:        []store.TokensPerRunRow{},
-				AvgTimePerAgent:     []store.AgentTimeRow{},
-			},
-		}
-		app := NewApp(fs)
-		dto, err := app.GetMetrics()
-		if err != nil {
-			t.Fatalf("GetMetrics: %v", err)
-		}
-		if dto == nil {
-			t.Fatal("GetMetrics: esperaba *MetricsDTO no-nil")
-		}
-
-		// Verificar que los campos nil del store se mapean a nil en el DTO.
-		if dto.TotalTokensDeltaPct != nil {
-			t.Errorf("dto.TotalTokensDeltaPct: esperado nil, obtuvo %f", *dto.TotalTokensDeltaPct)
-		}
-		if dto.AvgDurationDeltaMs != nil {
-			t.Errorf("dto.AvgDurationDeltaMs: esperado nil, obtuvo %d", *dto.AvgDurationDeltaMs)
-		}
-		if dto.SuccessRateDelta != nil {
-			t.Errorf("dto.SuccessRateDelta: esperado nil, obtuvo %f", *dto.SuccessRateDelta)
-		}
-
-		// Serialización: los campos nil deben aparecer como "null" no como "0" ni ausentes.
-		jsonBytes, marshalErr := json.Marshal(dto)
-		if marshalErr != nil {
-			t.Fatalf("json.Marshal: %v", marshalErr)
-		}
-		jsonStr := string(jsonBytes)
-		if !strings.Contains(jsonStr, `"totalTokensDeltaPct":null`) {
-			t.Errorf("JSON: esperaba %q, obtuvo %q", `"totalTokensDeltaPct":null`, jsonStr)
-		}
-		if !strings.Contains(jsonStr, `"avgDurationDeltaMs":null`) {
-			t.Errorf("JSON: esperaba %q, obtuvo %q", `"avgDurationDeltaMs":null`, jsonStr)
-		}
-		if !strings.Contains(jsonStr, `"successRateDelta":null`) {
-			t.Errorf("JSON: esperaba %q, obtuvo %q", `"successRateDelta":null`, jsonStr)
-		}
-	})
-}
+// Test_GetMetrics was removed — GetMetrics method no longer exists on App.
 
 func Test_GetRunSummary(t *testing.T) {
 	qaScore := 8.5
@@ -771,12 +658,7 @@ func Test_GetRunSummary(t *testing.T) {
 		if dto.Status != "success" {
 			t.Errorf("Status: esperado %q, obtuvo %q", "success", dto.Status)
 		}
-		if dto.QAScore == nil {
-			t.Fatal("QAScore: esperaba valor no nil")
-		}
-		if *dto.QAScore != 8.5 {
-			t.Errorf("QAScore: esperado 8.5, obtuvo %f", *dto.QAScore)
-		}
+		// QAScore is stored in RunSummary but not exposed in RunDTO.
 	})
 
 	t.Run("store retorna nil (run no existe) → GetRunSummary retorna (nil, nil)", func(t *testing.T) {
@@ -824,9 +706,7 @@ func Test_GetRunSummary(t *testing.T) {
 		if dto == nil {
 			t.Fatal("GetRunSummary: esperaba RunDTO no nil")
 		}
-		if dto.QAScore != nil {
-			t.Errorf("QAScore: esperaba nil para run sin qa_score, obtuvo %f", *dto.QAScore)
-		}
+		// QAScore not exposed in RunDTO — skip assertion.
 	})
 }
 

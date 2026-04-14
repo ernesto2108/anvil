@@ -21,6 +21,15 @@ const (
 
 	EventOrchestratorStart = "orchestrator.start"
 	EventOrchestratorGate  = "orchestrator.gate"
+
+	// New hook-driven events
+	EventToolUse          = "tool.use"
+	EventRunError         = "run.error"
+	EventTaskCreated      = "task.created"
+	EventTaskCompleted    = "task.completed"
+	EventCompaction       = "context.compacted"
+	EventPermissionDenied = "permission.denied"
+	EventUserPrompt       = "user.prompt"
 )
 
 // Event is the envelope for all instrumentation events.
@@ -57,6 +66,7 @@ type RunStartPayload struct {
 	SessionID       string   `json:"session_id,omitempty"`
 	Project         string   `json:"project,omitempty"`
 	ParentRunID     string   `json:"parent_run_id,omitempty"`
+	Branch          string   `json:"branch,omitempty"`
 }
 
 type RunEndPayload struct {
@@ -120,6 +130,39 @@ type OrchestratorGatePayload struct {
 	AgentID        string `json:"agent_id"`
 	Decision       string `json:"decision"`
 	WaitDurationMs int64  `json:"wait_duration_ms"`
+}
+
+// Hook-driven payload types
+
+type ToolUsePayload struct {
+	AgentID   string          `json:"agent_id"`
+	ToolName  string          `json:"tool_name"`
+	ToolInput json.RawMessage `json:"tool_input,omitempty"`
+}
+
+type RunErrorPayload struct {
+	ErrorReason string `json:"error_reason"`
+}
+
+type TaskCreatedPayload struct {
+	TaskID string `json:"task_id"`
+	Title  string `json:"title"`
+}
+
+type TaskCompletedPayload struct {
+	TaskID string `json:"task_id"`
+}
+
+type CompactionPayload struct {
+	Type string `json:"type"` // "auto" | "manual"
+}
+
+type PermissionDeniedPayload struct {
+	ToolName string `json:"tool_name"`
+}
+
+type UserPromptPayload struct {
+	Prompt string `json:"prompt"`
 }
 
 // NewEvent creates a new Event with a UUID v4 event ID, UTC timestamp, and

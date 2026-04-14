@@ -17,15 +17,6 @@ func Run(args []string) {
 	appName := detectAppName(args[0])
 	output.SetAppName(appName)
 
-	repoDir := resolveRepoDir(appName)
-	git := gitutil.New(repoDir)
-
-	cfg, err := config.Load(repoDir, appName)
-	if err != nil {
-		output.Error("load config: %s", err)
-		os.Exit(1)
-	}
-
 	cmd := "help"
 	var cmdArgs []string
 	if len(args) > 1 {
@@ -33,6 +24,32 @@ func Run(args []string) {
 	}
 	if len(args) > 2 {
 		cmdArgs = args[2:]
+	}
+
+	// When launched from a .app bundle (double-click), macOS passes no args
+	// but the executable lives inside X.app/Contents/MacOS/. Auto-route to dashboard.
+	if cmd == "help" && strings.Contains(args[0], ".app/Contents/MacOS/") {
+		cmd = "dashboard"
+	}
+
+	// Commands that don't need repo config — launch early to avoid config errors
+	// when run outside a project directory (no anvil.yaml in cwd).
+	switch cmd {
+	case "dashboard":
+		cmdDashboard(nil)
+		return
+	case "emit":
+		cmdEmit(nil)
+		return
+	}
+
+	repoDir := resolveRepoDir(appName)
+	git := gitutil.New(repoDir)
+
+	cfg, err := config.Load(repoDir, appName)
+	if err != nil {
+		output.Error("load config: %s", err)
+		os.Exit(1)
 	}
 
 	switch cmd {
@@ -52,14 +69,10 @@ func Run(args []string) {
 		cmdPin(cfg, git, cmdArgs)
 	case "unpin":
 		cmdUnpin(cfg, git, cmdArgs)
-	case "emit":
-		cmdEmit(cfg)
 	case "run":
 		cmdRun(cfg, cmdArgs)
 	case "quick", "bug", "feat", "design", "epic", "db", "infra":
 		cmdPreset(cfg, cmd, cmdArgs)
-	case "dashboard":
-		cmdDashboard(cfg)
 	case "diff":
 		cmdDiff(cfg, git, cmdArgs)
 	case "registry":

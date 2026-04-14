@@ -16,7 +16,7 @@ import (
 // provided by the caller to keep the embed directive at the cmd level.
 func Run(assets embed.FS, s Store) error {
 	// Clean up runs stuck in 'running' for more than 10 minutes.
-	if cleaned, err := s.CleanupStaleRuns(10); err != nil {
+	if cleaned, err := s.CleanupStaleRuns(2); err != nil {
 		log.Printf("dashboard: cleanup stale runs: %v", err)
 	} else if cleaned > 0 {
 		log.Printf("dashboard: marked %d stale runs as abandoned", cleaned)

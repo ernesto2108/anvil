@@ -4,7 +4,12 @@ package dashboard
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/ernesto2108/anvil/internal/dashboard/store"
@@ -26,6 +31,26 @@ func NewApp(s Store) *App {
 // Startup es invocado por Wails una vez que la ventana nativa está lista.
 func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
+	go a.cleanupLoop(ctx)
+}
+
+// cleanupLoop marks stale runs as abandoned every 5 minutes.
+// Stops when the Wails context is cancelled (app shutdown).
+func (a *App) cleanupLoop(ctx context.Context) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if cleaned, err := a.store.CleanupStaleRuns(2); err != nil {
+				log.Printf("dashboard: periodic cleanup: %v", err)
+			} else if cleaned > 0 {
+				log.Printf("dashboard: marked %d stale runs as abandoned", cleaned)
+			}
+		}
+	}
 }
 
 // --- Bindings ---------------------------------------------------------------
@@ -155,7 +180,7 @@ func (a *App) GetSessionDetail(runID string) (*SessionDetailDTO, error) {
 	}
 	files := make([]FileDTO, 0, len(fileRows))
 	for _, f := range fileRows {
-		files = append(files, FileDTO{Path: f.Path, Action: f.Operation, Diff: f.Diff})
+		files = append(files, FileDTO{Path: f.Path, Action: f.Operation, Diff: f.Diff, AgentID: f.AgentID})
 	}
 
 	// Agents (reuse existing query for roles/status, then fetch output per agent)
@@ -171,6 +196,12 @@ func (a *App) GetSessionDetail(runID string) (*SessionDetailDTO, error) {
 			Status:     ag.Status,
 			DurationMs: ag.DurationMs,
 		}
+		if ag.StartedAt != nil {
+			sa.StartedAt = ag.StartedAt.Format(time.RFC3339Nano)
+		}
+		if ag.EndedAt != nil {
+			sa.EndedAt = ag.EndedAt.Format(time.RFC3339Nano)
+		}
 		// Fetch output from agent detail
 		detail, _, detailErr := a.store.GetAgentDetail(ctx, runID, ag.AgentID)
 		if detailErr == nil && detail != nil {
@@ -179,12 +210,271 @@ func (a *App) GetSessionDetail(runID string) (*SessionDetailDTO, error) {
 		agents = append(agents, sa)
 	}
 
+	// Activity events for trace timeline (with agent attribution)
+	rawEvents, _ := a.store.ListActivityEvents(ctx, runID)
+	activityEvents := make([]ActivityEventDTO, 0, len(rawEvents))
+	for _, ev := range rawEvents {
+		activityEvents = append(activityEvents, ActivityEventDTO{
+			Timestamp: ev.Timestamp,
+			AgentID:   ev.AgentID,
+		})
+	}
+
+	runDTO := toRunDTO(*r)
+
+	// If branch is empty (pre-migration runs), resolve it live from the project dir.
+	if runDTO.Branch == "" && runDTO.Project != "" {
+		runDTO.Branch = liveBranch(runDTO.Project)
+	}
+
+	// Tool usage breakdown
+	toolRows, _ := a.store.ListToolUsageByRun(ctx, runID)
+	toolUsage := make([]ToolUsageDTO, 0, len(toolRows))
+	for _, t := range toolRows {
+		toolUsage = append(toolUsage, ToolUsageDTO{ToolName: t.ToolName, Count: t.Count})
+	}
+
+	// Enrich RunDTO with counts
+	toolTotal, _ := a.store.TotalToolUsesByRun(ctx, runID)
+	runDTO.ToolUsesCount = toolTotal
+	compactions, _ := a.store.CountCompactions(ctx, runID)
+	runDTO.CompactionsCount = compactions
+
+	// Tool use details (individual commands)
+	detailRows, _ := a.store.ListToolUseDetailsByRun(ctx, runID)
+	toolDetails := make([]ToolUseDetailDTO, 0, len(detailRows))
+	for _, d := range detailRows {
+		cmd := extractCommand(d.ToolName, d.ToolInput)
+		if cmd != "" {
+			toolDetails = append(toolDetails, ToolUseDetailDTO{
+				ToolName:  d.ToolName,
+				Command:   cmd,
+				AgentID:   d.AgentID,
+				Timestamp: d.Timestamp,
+			})
+		}
+	}
+
+	// Tasks
+	taskRows, _ := a.store.ListTasksByRun(ctx, runID)
+	tasks := make([]TaskDTO, 0, len(taskRows))
+	for _, t := range taskRows {
+		tasks = append(tasks, TaskDTO{
+			ID:          t.TaskID,
+			Title:       t.Title,
+			Status:      t.Status,
+			CreatedAt:   t.CreatedAt,
+			CompletedAt: t.CompletedAt,
+		})
+	}
+
 	dto := &SessionDetailDTO{
-		Run:    toRunDTO(*r),
-		Files:  files,
-		Agents: agents,
+		Run:            runDTO,
+		Files:          files,
+		Agents:         agents,
+		ActivityEvents: activityEvents,
+		ToolUsage:      toolUsage,
+		ToolDetails:    toolDetails,
+		Tasks:          tasks,
 	}
 	return dto, nil
+}
+
+// GetToolUsage returns tool usage breakdown for a run.
+func (a *App) GetToolUsage(runID string) ([]ToolUsageDTO, error) {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	rows, err := a.store.ListToolUsageByRun(ctx, runID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]ToolUsageDTO, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, ToolUsageDTO{ToolName: r.ToolName, Count: r.Count})
+	}
+	return out, nil
+}
+
+// GetPrompts returns all prompts for a run, ordered by sequence ASC.
+func (a *App) GetPrompts(runID string) ([]PromptDTO, error) {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	rows, err := a.store.ListPromptsByRun(ctx, runID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]PromptDTO, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, PromptDTO{
+			Sequence:  r.Sequence,
+			Prompt:    r.Prompt,
+			Timestamp: r.Timestamp,
+		})
+	}
+	return out, nil
+}
+
+// GetTurnStats returns activity statistics per turn for a run.
+func (a *App) GetTurnStats(runID string) ([]TurnStatsDTO, error) {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	rows, err := a.store.GetTurnStats(ctx, runID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]TurnStatsDTO, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, TurnStatsDTO{
+			TurnNumber:    r.TurnNumber,
+			Prompt:        r.Prompt,
+			Timestamp:     r.Timestamp,
+			EndTimestamp:  r.EndTimestamp,
+			FilesCount:    r.FilesCount,
+			ToolUsesCount: r.ToolUsesCount,
+			AgentsCount:   r.AgentsCount,
+		})
+	}
+	return out, nil
+}
+
+// GetTasks returns all tasks for a run.
+func (a *App) GetTasks(runID string) ([]TaskDTO, error) {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	rows, err := a.store.ListTasksByRun(ctx, runID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]TaskDTO, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, TaskDTO{
+			ID:          r.TaskID,
+			Title:       r.Title,
+			Status:      r.Status,
+			CreatedAt:   r.CreatedAt,
+			CompletedAt: r.CompletedAt,
+		})
+	}
+	return out, nil
+}
+
+// DeleteRun deletes a single run and all associated data.
+func (a *App) DeleteRun(runID string) error {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return a.store.DeleteRun(ctx, runID)
+}
+
+// DeleteRuns deletes multiple runs in a single transaction.
+func (a *App) DeleteRuns(runIDs []string) error {
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return a.store.DeleteRuns(ctx, runIDs)
+}
+
+// RevertFile applies the reverse of the given diff to restore a file.
+// It uses git apply -R in the project directory ~/projects/<project>.
+func (a *App) RevertFile(project, filePath, diff string) error {
+	if project == "" {
+		return fmt.Errorf("proyecto no especificado")
+	}
+	if diff == "" {
+		return fmt.Errorf("diff vacío — no hay cambios que revertir")
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("no se pudo obtener el directorio home: %w", err)
+	}
+
+	projectDir := filepath.Join(home, "projects", project)
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		return fmt.Errorf("directorio del proyecto no encontrado: %s", projectDir)
+	}
+
+	// Write diff to temp file for git apply
+	tmp, err := os.CreateTemp("", "anvil-revert-*.patch")
+	if err != nil {
+		return fmt.Errorf("crear archivo temporal: %w", err)
+	}
+	defer os.Remove(tmp.Name()) //nolint:errcheck
+
+	if _, err := tmp.WriteString(diff); err != nil {
+		tmp.Close() //nolint:errcheck
+		return fmt.Errorf("escribir diff temporal: %w", err)
+	}
+	tmp.Close() //nolint:errcheck
+
+	cmd := exec.Command("git", "-C", projectDir, "apply", "-R", "--", tmp.Name())
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git apply -R falló: %s: %w", string(out), err)
+	}
+
+	return nil
+}
+
+// liveBranch runs `git branch --show-current` in ~/projects/<project>.
+// Returns "" silently on any failure.
+func liveBranch(project string) string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	dir := filepath.Join(home, "projects", project)
+	out, err := exec.Command("git", "-C", dir, "branch", "--show-current").Output()
+	if err != nil {
+		return ""
+	}
+	s := string(out)
+	// trim newline
+	for len(s) > 0 && (s[len(s)-1] == '\n' || s[len(s)-1] == '\r') {
+		s = s[:len(s)-1]
+	}
+	return s
+}
+
+// extractCommand extracts a human-readable command string from a tool_input JSON.
+// For Bash, returns the "command" field. For other tools, returns a short summary.
+func extractCommand(toolName, rawInput string) string {
+	if rawInput == "" {
+		return ""
+	}
+	var m map[string]any
+	if err := json.Unmarshal([]byte(rawInput), &m); err != nil {
+		return ""
+	}
+	switch toolName {
+	case "Bash":
+		if cmd, ok := m["command"].(string); ok {
+			return cmd
+		}
+	case "Grep":
+		if pat, ok := m["pattern"].(string); ok {
+			return "grep: " + pat
+		}
+	case "Glob":
+		if pat, ok := m["pattern"].(string); ok {
+			return "glob: " + pat
+		}
+	case "Read":
+		if fp, ok := m["file_path"].(string); ok {
+			return "read: " + fp
+		}
+	}
+	return ""
 }
 
 // --- conversores privados ----------------------------------------------------
@@ -331,7 +621,7 @@ func toAgentDetailDTO(d *store.AgentDetail, files []store.FileRow) *AgentDetailD
 
 	fileDTOs := make([]FileDTO, 0, len(files))
 	for _, f := range files {
-		fileDTOs = append(fileDTOs, FileDTO{Path: f.Path, Action: f.Operation, Diff: f.Diff})
+		fileDTOs = append(fileDTOs, FileDTO{Path: f.Path, Action: f.Operation, Diff: f.Diff, AgentID: f.AgentID})
 	}
 
 	return &AgentDetailDTO{
@@ -368,22 +658,24 @@ func toRunDTO(r store.RunSummary) RunDTO {
 		AgentsCount:   r.AgentsCount,
 		ParentRunID:   r.ParentRunID,
 		ChildrenCount: r.ChildrenCount,
+		Branch:        r.Branch,
+		ErrorReason:   r.ErrorReason,
 	}
 }
 
-// normalizeDate convierte una fecha YYYY-MM-DD del frontend a RFC3339.
-// Si endOfDay es true, usa 23:59:59.999999999 UTC para incluir todo el día.
+// normalizeDate convierte una fecha YYYY-MM-DD del frontend a RFC3339 en zona local.
+// Si endOfDay es true, usa 23:59:59.999999999 para incluir todo el día.
 // Retorna cadena vacía si raw está vacío o no es una fecha válida.
 func normalizeDate(raw string, endOfDay bool) string {
 	if raw == "" {
 		return ""
 	}
-	t, err := time.Parse("2006-01-02", raw)
+	t, err := time.ParseInLocation("2006-01-02", raw, time.Local)
 	if err != nil {
 		return ""
 	}
 	if endOfDay {
 		t = t.Add(24*time.Hour - time.Nanosecond)
 	}
-	return t.Format(time.RFC3339Nano)
+	return t.UTC().Format(time.RFC3339Nano)
 }

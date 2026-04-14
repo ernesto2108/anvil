@@ -7,9 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	anvilroot "github.com/ernesto2108/anvil"
 	"github.com/ernesto2108/anvil/internal/dashboard"
-	"github.com/ernesto2108/anvil/internal/dashboard/store"
 	"github.com/ernesto2108/anvil/pkg/config"
 	"github.com/ernesto2108/anvil/pkg/output"
 )
@@ -28,7 +26,11 @@ func cmdDashboard(_ *config.App) {
 
 	dbPath := filepath.Join(home, ".anvil", "runs.db")
 
-	s, err := store.NewFS(dbPath, anvilroot.MigrationsFS, "migrations", 0)
+	// Prefer filesystem migrations over embedded ones. This prevents the
+	// "stale binary" problem where the dashboard binary was built before
+	// new migrations were added — the DB schema would be outdated and the
+	// frontend would crash on missing columns/tables.
+	s, err := openStorePreferFilesystem(dbPath)
 	if err != nil {
 		output.Error("open dashboard store: %s", err)
 		os.Exit(1)

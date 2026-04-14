@@ -81,6 +81,10 @@ func (s *SQLiteStore) GetMetrics(ctx context.Context) (Metrics, error) {
 		return empty, fmt.Errorf("dashboard/store: escanear runs actuales: %w", err)
 	}
 
+	// Close currentRows BEFORE the next query to release the connection.
+	// With MaxOpenConns(1), holding rows open while opening another deadlocks.
+	currentRows.Close()
+
 	if len(current) == 0 {
 		return empty, nil
 	}
@@ -106,6 +110,9 @@ func (s *SQLiteStore) GetMetrics(ctx context.Context) (Metrics, error) {
 	if err != nil {
 		return empty, fmt.Errorf("dashboard/store: escanear runs anteriores: %w", err)
 	}
+
+	// Close prevRows before queryAvgTimePerAgent needs the connection.
+	prevRows.Close()
 
 	// Calcular métricas del período actual.
 	curStats := calcStats(current)

@@ -33,11 +33,33 @@ type Store interface {
 	// ListChildRuns retorna los runs cuyo parent_run_id coincide con parentRunID.
 	// Ordenados por started_at ASC (orden cronológico dentro del run padre).
 	ListChildRuns(ctx context.Context, parentRunID string) ([]store.RunSummary, error)
+	// ListActivityEvents returns file.touched events with timestamps and agent attribution.
+	ListActivityEvents(ctx context.Context, runID string) ([]store.ActivityEvent, error)
+	// ListToolUsageByRun returns tool usage counts grouped by tool name.
+	ListToolUsageByRun(ctx context.Context, runID string) ([]store.ToolUseSummary, error)
+	// TotalToolUsesByRun returns the total count of tool invocations for a run.
+	TotalToolUsesByRun(ctx context.Context, runID string) (int, error)
+	// ListToolUseDetailsByRun returns individual tool invocations with their input.
+	ListToolUseDetailsByRun(ctx context.Context, runID string) ([]store.ToolUseDetail, error)
+	// ListTasksByRun returns all tasks for a run, ordered by creation time.
+	ListTasksByRun(ctx context.Context, runID string) ([]store.TaskRow, error)
+	// CountCompactions returns the number of context compaction events for a run.
+	CountCompactions(ctx context.Context, runID string) (int, error)
+	// CountPermissionDenied returns the number of permission denied events for a run.
+	CountPermissionDenied(ctx context.Context, runID string) (int, error)
 	// CleanupStaleRuns marks runs stuck in 'running' as 'abandoned'
 	// if inactive for more than staleMinutes. Returns count of cleaned runs.
 	CleanupStaleRuns(staleMinutes int) (int64, error)
 	// BackfillProjects derives project names for runs that don't have one.
 	BackfillProjects() (int64, error)
+	// ListPromptsByRun retorna todos los prompts de un run ordenados por secuencia.
+	ListPromptsByRun(ctx context.Context, runID string) ([]store.PromptRow, error)
+	// GetTurnStats retorna estadisticas por turn (periodo entre prompts consecutivos).
+	GetTurnStats(ctx context.Context, runID string) ([]store.TurnStatsRow, error)
+	// DeleteRun elimina un run y todos sus datos asociados (cascade).
+	DeleteRun(ctx context.Context, runID string) error
+	// DeleteRuns elimina múltiples runs en una sola transacción.
+	DeleteRuns(ctx context.Context, runIDs []string) error
 	// Close libera los recursos del store.
 	Close() error
 }

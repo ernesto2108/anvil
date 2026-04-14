@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -98,20 +99,30 @@ func openDB(dbPath string) (*sql.DB, error) {
 		_ = f.Close()
 	}
 
-	db, err := sql.Open("sqlite3", dbPath)
+	// busy_timeout avoids SQLITE_BUSY when anvil-emit writes concurrently.
+	// _txlock=deferred is the default; reads use a fresh snapshot each time.
+	dsn := dbPath + "?_busy_timeout=5000&_journal_mode=WAL"
+	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("dashboard/store: abrir base de datos: %w", err)
-	}
-
-	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
-		_ = db.Close()
-		return nil, fmt.Errorf("dashboard/store: configurar journal_mode=WAL: %w", err)
 	}
 
 	if _, err := db.Exec("PRAGMA foreign_keys=ON"); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("dashboard/store: configurar foreign_keys=ON: %w", err)
 	}
+
+	// Allow up to 4 concurrent connections for parallel reads from the
+	// dashboard frontend (GetSessionDetail + GetPrompts + GetTurnStats land
+	// simultaneously). SQLite WAL mode supports concurrent readers. Writes
+	// still serialize via SQLite's internal locking + busy_timeout.
+	db.SetMaxOpenConns(4)
+
+	// Recycle idle connections quickly so each new query re-reads the WAL
+	// index and sees rows written by external processes (anvil emit).
+	// This replaces the old MaxOpenConns(1) strategy for freshness.
+	db.SetConnMaxIdleTime(2 * time.Second)
+	db.SetMaxIdleConns(2)
 
 	return db, nil
 }
@@ -161,6 +172,29 @@ func (s *SQLiteStore) WriteEvent(ev instrumentation.Event) error {
 
 	case instrumentation.EventQAScore:
 		if err := s.handleQAScore(tx, ev); err != nil {
+			return err
+		}
+
+	case instrumentation.EventToolUse:
+		if err := s.handleToolUse(tx, ev); err != nil {
+			return err
+		}
+	case instrumentation.EventRunError:
+		if err := s.handleRunError(tx, ev); err != nil {
+			return err
+		}
+	case instrumentation.EventTaskCreated:
+		if err := s.handleTaskCreated(tx, ev); err != nil {
+			return err
+		}
+	case instrumentation.EventTaskCompleted:
+		if err := s.handleTaskCompleted(tx, ev); err != nil {
+			return err
+		}
+	case instrumentation.EventCompaction, instrumentation.EventPermissionDenied:
+		// Raw-only events: no structured table needed.
+	case instrumentation.EventUserPrompt:
+		if err := s.handleUserPrompt(tx, ev); err != nil {
 			return err
 		}
 	}
@@ -262,16 +296,24 @@ func (s *SQLiteStore) ComputeRunTotals(runID string) error {
 }
 
 // CleanupStaleRuns marks runs stuck in 'running' status as 'abandoned'
-// if they have no activity for more than the given minutes threshold.
-// Called at dashboard startup to clean up orphaned sessions.
+// if they have no recent activity (last event) for more than the given
+// minutes threshold. Called at dashboard startup to clean up orphaned sessions.
 func (s *SQLiteStore) CleanupStaleRuns(staleMinutes int) (int64, error) {
+	// Use the most recent event timestamp as the "last activity" indicator.
+	// If a run has no events, fall back to started_at.
+	// NOTE: stored timestamps use RFC3339 format (with 'T' separator),
+	// but SQLite datetime() returns 'YYYY-MM-DD HH:MM:SS' (space separator).
+	// String comparison fails because 'T' > ' '. Use strftime with 'T' to match.
 	const q = `
 		UPDATE runs
-		SET status    = 'abandoned',
-		    ended_at  = datetime('now'),
-		    duration_ms = CAST((julianday(datetime('now')) - julianday(started_at)) * 86400000 AS INTEGER)
+		SET status      = 'abandoned',
+		    ended_at    = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+		    duration_ms = CAST((julianday('now') - julianday(started_at)) * 86400000 AS INTEGER)
 		WHERE status = 'running'
-		  AND started_at < datetime('now', ? || ' minutes')`
+		  AND COALESCE(
+		        (SELECT MAX(timestamp) FROM events WHERE events.run_id = runs.id),
+		        started_at
+		      ) < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', ? || ' minutes')`
 	res, err := s.db.Exec(q, fmt.Sprintf("-%d", staleMinutes))
 	if err != nil {
 		return 0, fmt.Errorf("dashboard/store: limpiar runs huérfanos: %w", err)
@@ -284,24 +326,8 @@ func (s *SQLiteStore) CleanupStaleRuns(staleMinutes int) (int64, error) {
 func (s *SQLiteStore) BackfillProjects() (int64, error) {
 	// For each run with empty project that has files, extract project name
 	// from the first file path's directory structure.
-	const q = `
-		UPDATE runs
-		SET project = (
-			SELECT REPLACE(
-				RTRIM(SUBSTR(f.path, 1, INSTR(SUBSTR(f.path, 2), '/') + 1), '/'),
-				'/', ''
-			)
-			FROM files f
-			WHERE f.run_id = runs.id
-			  AND f.path LIKE '/%'
-			LIMIT 1
-		)
-		WHERE project = ''
-		  AND EXISTS (SELECT 1 FROM files WHERE run_id = runs.id AND path LIKE '/%')`
-
-	// The above is fragile with deep paths. Use a simpler approach:
-	// get the basename of the common prefix directory.
-	// Actually, let's just do it in Go for reliability.
+	// Note: a pure-SQL UPDATE approach proved fragile with deep paths, so the
+	// logic is implemented in Go below for reliability.
 	rows, err := s.db.Query(`
 		SELECT DISTINCT r.id, f.path
 		FROM runs r
@@ -330,6 +356,10 @@ func (s *SQLiteStore) BackfillProjects() (int64, error) {
 	if err := rows.Err(); err != nil {
 		return 0, err
 	}
+
+	// Close rows BEFORE the UPDATE loop to release the connection.
+	// With MaxOpenConns(1), holding rows open while calling Exec deadlocks.
+	rows.Close()
 
 	var updated int64
 	for runID, project := range runProject {
@@ -415,8 +445,8 @@ func (s *SQLiteStore) handleRunStart(tx *sql.Tx, ev instrumentation.Event) error
 	}
 
 	const q = `
-		INSERT INTO runs (id, task_id, task_desc, status, complexity, provider, started_at, session_id, project, parent_run_id)
-		VALUES (?, ?, ?, 'running', ?, ?, ?, ?, ?, ?)`
+		INSERT INTO runs (id, task_id, task_desc, status, complexity, provider, started_at, session_id, project, parent_run_id, branch)
+		VALUES (?, ?, ?, 'running', ?, ?, ?, ?, ?, ?, ?)`
 
 	if _, err := tx.Exec(q,
 		ev.RunID,
@@ -428,6 +458,7 @@ func (s *SQLiteStore) handleRunStart(tx *sql.Tx, ev instrumentation.Event) error
 		sessionID,
 		p.Project,
 		parentRunID,
+		p.Branch,
 	); err != nil {
 		return fmt.Errorf("dashboard/store: insertar en runs (run.start): %w", err)
 	}
@@ -622,3 +653,92 @@ func (s *SQLiteStore) handleQAScore(tx *sql.Tx, ev instrumentation.Event) error 
 	}
 	return nil
 }
+
+func (s *SQLiteStore) handleToolUse(tx *sql.Tx, ev instrumentation.Event) error {
+	var p instrumentation.ToolUsePayload
+	if err := json.Unmarshal(ev.Payload, &p); err != nil {
+		return fmt.Errorf("dashboard/store: deserializar ToolUsePayload: %w", err)
+	}
+
+	toolInput := string(p.ToolInput)
+
+	const q = `INSERT INTO tool_uses (run_id, agent_id, tool_name, tool_input, timestamp) VALUES (?, ?, ?, ?, ?)`
+	if _, err := tx.Exec(q, ev.RunID, p.AgentID, p.ToolName, toolInput,
+		ev.Timestamp.Format("2006-01-02T15:04:05.999999999Z07:00"),
+	); err != nil {
+		return fmt.Errorf("dashboard/store: insertar en tool_uses: %w", err)
+	}
+	return nil
+}
+
+func (s *SQLiteStore) handleRunError(tx *sql.Tx, ev instrumentation.Event) error {
+	var p instrumentation.RunErrorPayload
+	if err := json.Unmarshal(ev.Payload, &p); err != nil {
+		return fmt.Errorf("dashboard/store: deserializar RunErrorPayload: %w", err)
+	}
+
+	const q = `UPDATE runs SET status = 'failed', error_reason = ?, ended_at = ? WHERE id = ?`
+	_, err := tx.Exec(q, p.ErrorReason,
+		ev.Timestamp.Format("2006-01-02T15:04:05.999999999Z07:00"),
+		ev.RunID,
+	)
+	if err != nil {
+		return fmt.Errorf("dashboard/store: actualizar runs (run.error): %w", err)
+	}
+	return nil
+}
+
+func (s *SQLiteStore) handleTaskCreated(tx *sql.Tx, ev instrumentation.Event) error {
+	var p instrumentation.TaskCreatedPayload
+	if err := json.Unmarshal(ev.Payload, &p); err != nil {
+		return fmt.Errorf("dashboard/store: deserializar TaskCreatedPayload: %w", err)
+	}
+
+	const q = `INSERT INTO tasks (run_id, task_id, title, status, created_at) VALUES (?, ?, ?, 'pending', ?)`
+	if _, err := tx.Exec(q, ev.RunID, p.TaskID, p.Title,
+		ev.Timestamp.Format("2006-01-02T15:04:05.999999999Z07:00"),
+	); err != nil {
+		return fmt.Errorf("dashboard/store: insertar en tasks: %w", err)
+	}
+	return nil
+}
+
+func (s *SQLiteStore) handleTaskCompleted(tx *sql.Tx, ev instrumentation.Event) error {
+	var p instrumentation.TaskCompletedPayload
+	if err := json.Unmarshal(ev.Payload, &p); err != nil {
+		return fmt.Errorf("dashboard/store: deserializar TaskCompletedPayload: %w", err)
+	}
+
+	const q = `UPDATE tasks SET status = 'completed', completed_at = ? WHERE run_id = ? AND task_id = ?`
+	_, err := tx.Exec(q,
+		ev.Timestamp.Format("2006-01-02T15:04:05.999999999Z07:00"),
+		ev.RunID, p.TaskID,
+	)
+	if err != nil {
+		return fmt.Errorf("dashboard/store: actualizar tasks (task.completed): %w", err)
+	}
+	return nil
+}
+
+func (s *SQLiteStore) handleUserPrompt(tx *sql.Tx, ev instrumentation.Event) error {
+	var p instrumentation.UserPromptPayload
+	if err := json.Unmarshal(ev.Payload, &p); err != nil {
+		return fmt.Errorf("dashboard/store: deserializar UserPromptPayload: %w", err)
+	}
+
+	// Atomic sequence calculation inside the transaction to prevent race conditions.
+	// COALESCE handles the case where no prompts exist yet (returns 0 + 1 = 1).
+	const q = `
+		INSERT INTO prompts (run_id, sequence, prompt, timestamp)
+		VALUES (?, COALESCE((SELECT MAX(sequence) FROM prompts WHERE run_id = ?), 0) + 1, ?, ?)`
+	if _, err := tx.Exec(q,
+		ev.RunID,
+		ev.RunID,
+		p.Prompt,
+		ev.Timestamp.Format("2006-01-02T15:04:05.999999999Z07:00"),
+	); err != nil {
+		return fmt.Errorf("dashboard/store: insertar en prompts: %w", err)
+	}
+	return nil
+}
+

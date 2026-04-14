@@ -28,8 +28,12 @@ type RunDTO struct {
 	DurationMs    int64  `json:"durationMs"`  // 0 si todavía no terminó
 	FilesCount    int    `json:"filesCount"`
 	AgentsCount   int    `json:"agentsCount"`
-	ParentRunID   string `json:"parentRunId"`
-	ChildrenCount int    `json:"childrenCount"`
+	ParentRunID      string `json:"parentRunId"`
+	ChildrenCount    int    `json:"childrenCount"`
+	Branch           string `json:"branch"`
+	ErrorReason      string `json:"errorReason"`
+	ToolUsesCount    int    `json:"toolUsesCount"`
+	CompactionsCount int    `json:"compactionsCount"`
 }
 
 // RunDetailDTO agrega un run con sus agentes.
@@ -84,12 +88,45 @@ type FlowEdge struct {
 	Target string `json:"target"`
 }
 
+// ToolUsageDTO is a count of tool invocations grouped by tool name.
+type ToolUsageDTO struct {
+	ToolName string `json:"toolName"`
+	Count    int    `json:"count"`
+}
+
+// ToolUseDetailDTO is a single tool invocation with its input/command.
+type ToolUseDetailDTO struct {
+	ToolName  string `json:"toolName"`
+	Command   string `json:"command"`   // Extracted command (for Bash) or summary
+	AgentID   string `json:"agentId"`
+	Timestamp string `json:"timestamp"` // RFC3339Nano
+}
+
+// TaskDTO represents a task tracked within a run.
+type TaskDTO struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Status      string `json:"status"` // pending | completed
+	CreatedAt   string `json:"createdAt"`
+	CompletedAt string `json:"completedAt"`
+}
+
 // SessionDetailDTO is the response for the session detail view.
 // Combines run summary, files changed, and agent summaries.
 type SessionDetailDTO struct {
-	Run    RunDTO           `json:"run"`
-	Files  []FileDTO        `json:"files"`
-	Agents []SessionAgentDTO `json:"agents"`
+	Run            RunDTO              `json:"run"`
+	Files          []FileDTO           `json:"files"`
+	Agents         []SessionAgentDTO   `json:"agents"`
+	ActivityEvents []ActivityEventDTO  `json:"activityEvents"`
+	ToolUsage      []ToolUsageDTO      `json:"toolUsage"`
+	ToolDetails    []ToolUseDetailDTO  `json:"toolDetails"`
+	Tasks          []TaskDTO           `json:"tasks"`
+}
+
+// ActivityEventDTO is a file edit event with timestamp and agent attribution.
+type ActivityEventDTO struct {
+	Timestamp string `json:"timestamp"` // RFC3339Nano
+	AgentID   string `json:"agentId"`   // "" = main session (Claude direct)
 }
 
 // SessionAgentDTO is a lightweight agent summary for the session detail view.
@@ -97,13 +134,34 @@ type SessionAgentDTO struct {
 	ID         string `json:"id"`
 	Role       string `json:"role"`
 	Status     string `json:"status"`
+	StartedAt  string `json:"startedAt"`  // RFC3339Nano, "" si no seteado
+	EndedAt    string `json:"endedAt"`    // RFC3339Nano, "" si no terminó
 	DurationMs *int64 `json:"durationMs"`
 	Output     string `json:"output"`
 }
 
 // FileDTO representa un archivo producido o consumido por un agente.
 type FileDTO struct {
-	Path   string `json:"path"`
-	Action string `json:"action"`
-	Diff   string `json:"diff,omitempty"`
+	Path    string `json:"path"`
+	Action  string `json:"action"`
+	Diff    string `json:"diff,omitempty"`
+	AgentID string `json:"agentId"` // "" = editado por sesión principal (Claude directo)
+}
+
+// PromptDTO es un prompt individual dentro de un run.
+type PromptDTO struct {
+	Sequence  int    `json:"sequence"`
+	Prompt    string `json:"prompt"`
+	Timestamp string `json:"timestamp"` // RFC3339Nano
+}
+
+// TurnStatsDTO son las estadísticas de actividad por turn.
+type TurnStatsDTO struct {
+	TurnNumber    int    `json:"turnNumber"`
+	Prompt        string `json:"prompt"`
+	Timestamp     string `json:"timestamp"`    // inicio del turn
+	EndTimestamp  string `json:"endTimestamp"` // fin del turn
+	FilesCount    int    `json:"filesCount"`
+	ToolUsesCount int    `json:"toolUsesCount"`
+	AgentsCount   int    `json:"agentsCount"`
 }

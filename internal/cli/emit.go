@@ -6,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	anvilroot "github.com/ernesto2108/anvil"
-	"github.com/ernesto2108/anvil/internal/dashboard/store"
 	"github.com/ernesto2108/anvil/pkg/config"
 )
 
@@ -43,7 +41,7 @@ func runEmit() error {
 
 	dbPath := filepath.Join(home, ".anvil", "runs.db")
 
-	s, err := store.NewFS(dbPath, anvilroot.MigrationsFS, "migrations", 0)
+	s, err := openStorePreferFilesystem(dbPath)
 	if err != nil {
 		return fmt.Errorf("open store: %w", err)
 	}
