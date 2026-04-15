@@ -32,7 +32,6 @@ func cmdHelp(appName string) {
     --auto-approve, -y           Skip human gates
 
   OTHER COMMANDS:
-    dashboard            Open Anvil Dashboard (observability UI)
     emit                 Ingest a Claude Code hook event (reads JSON from stdin)
     init                 First-time setup — show config and launch browser
     browse               Interactive TUI to manage agents/skills/commands
@@ -64,5 +63,5 @@ func cmdHelp(appName string) {
     codex     ~/.codex/           skills + AGENTS.md (generated)
     cursor    per-project         rules (from agents)
 
-`, t, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName)
+`, t, appName, appName, appName, appName, appName, appName, appName, appName, appName, appName)
 }

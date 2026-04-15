@@ -26,18 +26,9 @@ func Run(args []string) {
 		cmdArgs = args[2:]
 	}
 
-	// When launched from a .app bundle (double-click), macOS passes no args
-	// but the executable lives inside X.app/Contents/MacOS/. Auto-route to dashboard.
-	if cmd == "help" && strings.Contains(args[0], ".app/Contents/MacOS/") {
-		cmd = "dashboard"
-	}
-
 	// Commands that don't need repo config — launch early to avoid config errors
 	// when run outside a project directory (no anvil.yaml in cwd).
 	switch cmd {
-	case "dashboard":
-		cmdDashboard(nil, cmdArgs)
-		return
 	case "emit":
 		cmdEmit(nil)
 		return
