@@ -5,61 +5,42 @@ package dashboard
 import (
 	"context"
 
-	"github.com/ernesto2108/anvil/internal/dashboard/store"
-	"github.com/ernesto2108/anvil/internal/instrumentation"
+	"github.com/ernesto2108/anvil/internal/dashboard/entity"
 )
 
-// Store es la interfaz de lectura/escritura que usa el paquete dashboard.
-// *store.SQLiteStore satisface esta interfaz.
-type Store interface {
-	// WriteEvent persiste un evento de instrumentación en el almacenamiento subyacente.
-	WriteEvent(ev instrumentation.Event) error
-	// ListRuns retorna runs paginados ordenados por started_at DESC.
-	// status, startDate y endDate son filtros opcionales (cadena vacía = sin filtro).
-	ListRuns(ctx context.Context, limit, offset int, status, startDate, endDate, project string) ([]store.RunSummary, error)
-	// ListAgentsByRun retorna todos los agentes de un run ordenados por sequence ASC.
-	// Retorna nil, nil si el run no existe o no tiene agentes.
-	ListAgentsByRun(ctx context.Context, runID string) ([]store.AgentRow, error)
-	// GetAgentDetail retorna el detalle completo de un agente (runID + agentID) junto con sus archivos.
-	// Retorna (nil, nil, nil) si el agente no existe — NO es un error.
-	GetAgentDetail(ctx context.Context, runID, agentID string) (*store.AgentDetail, []store.FileRow, error)
-	// ListProjects returns distinct non-empty project names.
+// DashboardReader provides read-only access to dashboard data.
+// *query.Reader satisfies this interface.
+type DashboardReader interface {
+	ListRuns(ctx context.Context, limit, offset int, status, startDate, endDate, project string) ([]entity.RunSummary, error)
+	GetRunSummary(ctx context.Context, runID string) (*entity.RunSummary, error)
+	ListChildRuns(ctx context.Context, parentRunID string) ([]entity.RunSummary, error)
 	ListProjects(ctx context.Context) ([]string, error)
-	// ListFilesByRun returns all files touched in a run, ordered by id ASC.
-	ListFilesByRun(ctx context.Context, runID string) ([]store.FileRow, error)
-	// GetRunSummary retorna el RunSummary del run identificado por runID.
-	// Retorna (nil, nil) si el run no existe — NO es un error.
-	GetRunSummary(ctx context.Context, runID string) (*store.RunSummary, error)
-	// ListChildRuns retorna los runs cuyo parent_run_id coincide con parentRunID.
-	// Ordenados por started_at ASC (orden cronológico dentro del run padre).
-	ListChildRuns(ctx context.Context, parentRunID string) ([]store.RunSummary, error)
-	// ListActivityEvents returns file.touched events with timestamps and agent attribution.
-	ListActivityEvents(ctx context.Context, runID string) ([]store.ActivityEvent, error)
-	// ListToolUsageByRun returns tool usage counts grouped by tool name.
-	ListToolUsageByRun(ctx context.Context, runID string) ([]store.ToolUseSummary, error)
-	// TotalToolUsesByRun returns the total count of tool invocations for a run.
+	ListAgentsByRun(ctx context.Context, runID string) ([]entity.AgentRow, error)
+	GetAgentDetail(ctx context.Context, runID, agentID string) (*entity.AgentDetail, []entity.FileRecord, error)
+	ListFilesByRun(ctx context.Context, runID string) ([]entity.FileRecord, error)
+	ListActivityEvents(ctx context.Context, runID string) ([]entity.ActivityEvent, error)
+	ListToolUsageByRun(ctx context.Context, runID string) ([]entity.ToolUsage, error)
 	TotalToolUsesByRun(ctx context.Context, runID string) (int, error)
-	// ListToolUseDetailsByRun returns individual tool invocations with their input.
-	ListToolUseDetailsByRun(ctx context.Context, runID string) ([]store.ToolUseDetail, error)
-	// ListTasksByRun returns all tasks for a run, ordered by creation time.
-	ListTasksByRun(ctx context.Context, runID string) ([]store.TaskRow, error)
-	// CountCompactions returns the number of context compaction events for a run.
+	ListToolUseDetailsByRun(ctx context.Context, runID string) ([]entity.ToolUseDetail, error)
+	ListTasksByRun(ctx context.Context, runID string) ([]entity.Task, error)
 	CountCompactions(ctx context.Context, runID string) (int, error)
-	// CountPermissionDenied returns the number of permission denied events for a run.
-	CountPermissionDenied(ctx context.Context, runID string) (int, error)
-	// CleanupStaleRuns marks runs stuck in 'running' as 'abandoned'
-	// if inactive for more than staleMinutes. Returns count of cleaned runs.
-	CleanupStaleRuns(staleMinutes int) (int64, error)
-	// BackfillProjects derives project names for runs that don't have one.
-	BackfillProjects() (int64, error)
-	// ListPromptsByRun retorna todos los prompts de un run ordenados por secuencia.
-	ListPromptsByRun(ctx context.Context, runID string) ([]store.PromptRow, error)
-	// GetTurnStats retorna estadisticas por turn (periodo entre prompts consecutivos).
-	GetTurnStats(ctx context.Context, runID string) ([]store.TurnStatsRow, error)
-	// DeleteRun elimina un run y todos sus datos asociados (cascade).
+	ListPromptsByRun(ctx context.Context, runID string) ([]entity.Prompt, error)
+	GetTurnStats(ctx context.Context, runID string) ([]entity.TurnStats, error)
 	DeleteRun(ctx context.Context, runID string) error
-	// DeleteRuns elimina múltiples runs en una sola transacción.
 	DeleteRuns(ctx context.Context, runIDs []string) error
-	// Close libera los recursos del store.
+	ListErrorGroups(ctx context.Context, status, search string) ([]entity.ErrorGroup, error)
+	GetErrorGroup(ctx context.Context, groupID string) (*entity.ErrorGroup, error)
+	ListErrorGroupRuns(ctx context.Context, groupID string) ([]entity.ErrorGroupRun, error)
+	ListErrorGroupHistory(ctx context.Context, groupID string) ([]entity.ErrorGroupHistory, error)
+	GetErrorTrend(ctx context.Context, groupID string) ([]entity.TrendPoint, error)
+	GetErrorCounts(ctx context.Context) (entity.ErrorCounts, error)
+}
+
+// DashboardWriter provides write access to dashboard data.
+// *writer.EventWriter satisfies this interface.
+type DashboardWriter interface {
+	CleanupStaleRuns(staleMinutes int) (int64, error)
+	BackfillProjects() (int64, error)
+	UpdateErrorResolution(ctx context.Context, groupID, status, notes, commitLink string) error
 	Close() error
 }
