@@ -1,7 +1,7 @@
-import { Hammer, List } from 'lucide-react'
+import { AlertTriangle, Hammer, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type NavView = 'runs'
+type NavView = 'runs' | 'errors'
 
 interface SidebarProps {
   activeView: NavView
@@ -16,6 +16,7 @@ interface NavItemConfig {
 
 const navItems: NavItemConfig[] = [
   { view: 'runs', label: 'Runs', icon: <List size={16} /> },
+  { view: 'errors', label: 'Errors', icon: <AlertTriangle size={16} /> },
 ]
 
 export function Sidebar({ activeView, onNavigate }: SidebarProps) {

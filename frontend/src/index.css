@@ -52,6 +52,33 @@
     --pending-border: 240 6% 25%;
 
     --border-strong: 240 6% 25%;
+
+    /* Resolution workflow */
+    --status-new: 0 91% 71%;
+    --status-new-bg: 0 79% 16%;
+    --status-new-border: 0 72% 35%;
+
+    --status-investigating: 42 96% 56%;
+    --status-investigating-bg: 22 85% 13%;
+    --status-investigating-border: 33 91% 31%;
+
+    --status-resolved: 142 71% 58%;
+    --status-resolved-bg: 148 89% 9%;
+    --status-resolved-border: 142 72% 24%;
+
+    --status-ignored: 240 4% 46%;
+    --status-ignored-bg: 240 6% 10%;
+    --status-ignored-border: 240 6% 25%;
+
+    /* Trend indicators */
+    --trend-up: 0 91% 71%;
+    --trend-down: 142 71% 58%;
+    --trend-flat: 240 4% 46%;
+
+    /* Severity */
+    --severity-error: 25 95% 60%;
+    --severity-error-bg: 20 80% 12%;
+    --severity-error-border: 25 85% 30%;
   }
 
   html,

@@ -1,7 +1,7 @@
 import { Sidebar } from './sidebar'
 import { Topbar } from './topbar'
 
-type NavView = 'runs'
+type NavView = 'runs' | 'errors'
 
 interface AppShellProps {
   title: string

@@ -115,6 +115,67 @@ export interface TurnStatsDTO {
   agentsCount: number
 }
 
+// --- Error types ---
+
+export interface ErrorsQuery {
+  status: string
+  search: string
+}
+
+export interface ErrorGroupDTO {
+  id: string
+  fingerprint: string
+  title: string
+  normalizedMsg: string
+  resolutionStatus: string
+  firstSeenAt: string
+  lastSeenAt: string
+  occurrenceCount: number
+  notes: string
+  commitLink: string
+}
+
+export interface ErrorGroupRunDTO {
+  runId: string
+  agentName: string
+  errorMsg: string
+  exitCode: number | null
+  occurredAt: string
+}
+
+export interface ErrorGroupHistoryDTO {
+  oldStatus: string
+  newStatus: string
+  note: string
+  commitLink: string
+  createdAt: string
+}
+
+export interface TrendPointDTO {
+  date: string
+  count: number
+}
+
+export interface ErrorGroupDetailDTO {
+  group: ErrorGroupDTO
+  runs: ErrorGroupRunDTO[]
+  history: ErrorGroupHistoryDTO[]
+  trend: TrendPointDTO[]
+}
+
+export interface ErrorsCountDTO {
+  new: number
+  investigating: number
+  weekTotal: number
+}
+
+export interface UpdateResolutionRequest {
+  groupId: string
+  status: string
+  notes: string
+  commitLink: string
+}
+
 // Forma del objeto global window.go inyectado por Wails en producción.
 declare global {
   interface Window {
@@ -134,6 +195,10 @@ declare global {
           GetTurnStats?: (runId: string) => Promise<TurnStatsDTO[]>
           DeleteRun?: (runId: string) => Promise<void>
           DeleteRuns?: (runIds: string[]) => Promise<void>
+          GetErrorGroups?: (q: ErrorsQuery) => Promise<ErrorGroupDTO[]>
+          GetErrorGroup?: (groupId: string) => Promise<ErrorGroupDetailDTO | null>
+          UpdateErrorResolution?: (req: UpdateResolutionRequest) => Promise<void>
+          GetErrorsCounts?: () => Promise<ErrorsCountDTO>
         }
       }
     }
@@ -269,5 +334,42 @@ export async function getTurnStats(runId: string): Promise<TurnStatsDTO[]> {
     return []
   }
   return binding(runId)
+}
+
+// --- Error bindings ---
+
+export async function getErrorGroups(q: ErrorsQuery): Promise<ErrorGroupDTO[]> {
+  const binding = window.go?.dashboard?.App?.GetErrorGroups
+  if (!binding) {
+    console.warn('[wails] window.go no disponible — retornando [] (modo dev)')
+    return []
+  }
+  return binding(q)
+}
+
+export async function getErrorGroup(groupId: string): Promise<ErrorGroupDetailDTO | null> {
+  const binding = window.go?.dashboard?.App?.GetErrorGroup
+  if (!binding) {
+    console.warn('[wails] window.go no disponible — retornando null (modo dev)')
+    return null
+  }
+  return binding(groupId)
+}
+
+export async function updateErrorResolution(req: UpdateResolutionRequest): Promise<void> {
+  const binding = window.go?.dashboard?.App?.UpdateErrorResolution
+  if (!binding) {
+    throw new Error('Binding UpdateErrorResolution no disponible (modo dev)')
+  }
+  return binding(req)
+}
+
+export async function getErrorsCounts(): Promise<ErrorsCountDTO> {
+  const binding = window.go?.dashboard?.App?.GetErrorsCounts
+  if (!binding) {
+    console.warn('[wails] window.go no disponible — retornando zeros (modo dev)')
+    return { new: 0, investigating: 0, weekTotal: 0 }
+  }
+  return binding()
 }
 
