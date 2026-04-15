@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/pkg/config"
 )
 
@@ -41,16 +42,18 @@ func runEmit() error {
 
 	dbPath := filepath.Join(home, ".anvil", "runs.db")
 
-	s, err := openStorePreferFilesystem(dbPath)
+	db, err := openDashboardDB(dbPath, false)
 	if err != nil {
 		return fmt.Errorf("open store: %w", err)
 	}
-	defer s.Close()
+
+	w := writer.New(db, 0)
+	defer w.Close()
 
 	// Set busy_timeout for concurrent access with the dashboard.
-	if _, err := s.DB().Exec("PRAGMA busy_timeout=5000"); err != nil {
+	if _, err := w.DB().Exec("PRAGMA busy_timeout=5000"); err != nil {
 		return fmt.Errorf("set busy_timeout: %w", err)
 	}
 
-	return translateHook(raw, s)
+	return translateHook(raw, w)
 }

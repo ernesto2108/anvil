@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/ernesto2108/anvil/internal/dashboard"
+	"github.com/ernesto2108/anvil/internal/dashboard/query"
+	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/pkg/config"
 	"github.com/ernesto2108/anvil/pkg/output"
 )
@@ -17,7 +19,14 @@ import (
 // `go build -tags dashboard`.
 var DashboardAssets embed.FS
 
-func cmdDashboard(_ *config.App) {
+func cmdDashboard(_ *config.App, args []string) {
+	var forceMigrate bool
+	for _, arg := range args {
+		if arg == "--force-migrate" {
+			forceMigrate = true
+		}
+	}
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		output.Error("resolve home dir: %s", err)
@@ -26,22 +35,21 @@ func cmdDashboard(_ *config.App) {
 
 	dbPath := filepath.Join(home, ".anvil", "runs.db")
 
-	// Prefer filesystem migrations over embedded ones. This prevents the
-	// "stale binary" problem where the dashboard binary was built before
-	// new migrations were added — the DB schema would be outdated and the
-	// frontend would crash on missing columns/tables.
-	s, err := openStorePreferFilesystem(dbPath)
+	db, err := openDashboardDB(dbPath, forceMigrate)
 	if err != nil {
 		output.Error("open dashboard store: %s", err)
 		os.Exit(1)
 	}
+
+	reader := query.NewReader(db)
+	w := writer.New(db, 0)
 	defer func() {
-		if cerr := s.Close(); cerr != nil {
+		if cerr := w.Close(); cerr != nil {
 			output.Error("close dashboard store: %s", cerr)
 		}
 	}()
 
-	if err := dashboard.Run(DashboardAssets, s); err != nil {
+	if err := dashboard.Run(DashboardAssets, reader, w); err != nil {
 		output.Error("dashboard: %s", err)
 		os.Exit(1)
 	}

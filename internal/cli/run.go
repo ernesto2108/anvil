@@ -10,6 +10,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 	"github.com/ernesto2108/anvil/internal/orchestrator"
 	"github.com/ernesto2108/anvil/internal/runner"
@@ -31,13 +32,14 @@ func (s *storeEventSink) Emit(ev instrumentation.Event) {
 
 // runFlags holds the parsed flags shared by all run commands.
 type runFlags struct {
-	task        string
-	model       string
-	concurrency int
-	autoApprove bool
+	task         string
+	model        string
+	concurrency  int
+	autoApprove  bool
+	forceMigrate bool
 }
 
-// parseRunFlags extracts --task, --model, --concurrency, -y from args.
+// parseRunFlags extracts --task, --model, --concurrency, -y, --force-migrate from args.
 func parseRunFlags(args []string) (runFlags, []string) {
 	f := runFlags{concurrency: 4}
 	var rest []string
@@ -60,6 +62,8 @@ func parseRunFlags(args []string) (runFlags, []string) {
 			}
 		case "--auto-approve", "-y":
 			f.autoApprove = true
+		case "--force-migrate":
+			f.forceMigrate = true
 		default:
 			rest = append(rest, args[i])
 		}
@@ -138,11 +142,12 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 		os.Exit(1)
 	}
 	dbPath := filepath.Join(home, ".anvil", "runs.db")
-	s, err := openStorePreferFilesystem(dbPath)
+	db, err := openDashboardDB(dbPath, flags.forceMigrate)
 	if err != nil {
 		output.Error("open store: %s", err)
 		os.Exit(1)
 	}
+	s := writer.New(db, 0)
 	defer func() { _ = s.Close() }()
 
 	// Set busy_timeout for concurrent access with dashboard.

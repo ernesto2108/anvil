@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ernesto2108/anvil/internal/dashboard/store"
+	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 )
 
@@ -57,7 +57,7 @@ const maxOutputBytes = 100 * 1024 // 100 KB
 // translateHook parses the hook JSON and writes the corresponding Anvil events
 // to the store. It resolves the run by session_id, creating an orphan run if
 // needed (except for SessionStart which always creates a new run).
-func translateHook(raw []byte, s *store.SQLiteStore) error {
+func translateHook(raw []byte, w *writer.EventWriter) error {
 	var env hookEnvelope
 	if err := json.Unmarshal(raw, &env); err != nil {
 		return fmt.Errorf("parse hook JSON: %w", err)
@@ -69,44 +69,38 @@ func translateHook(raw []byte, s *store.SQLiteStore) error {
 
 	switch env.HookEventName {
 	case "SessionStart":
-		// No-op: defer run creation to the first UserPromptSubmit so that
-		// sessions opened but never used don't pollute the runs list.
 		return nil
 	case "UserPromptSubmit":
-		return handleUserPromptSubmit(s, env.SessionID, env.Prompt, env.CWD)
+		return handleUserPromptSubmit(w, env.SessionID, env.Prompt, env.CWD)
 	case "SubagentStart":
-		return handleSubagentStart(s, env.SessionID, env.AgentID, env.AgentType, env.CWD)
+		return handleSubagentStart(w, env.SessionID, env.AgentID, env.AgentType, env.CWD)
 	case "SubagentStop":
-		return handleSubagentStop(s, env.SessionID, env.AgentID, env.LastAssistantMessage)
+		return handleSubagentStop(w, env.SessionID, env.AgentID, env.LastAssistantMessage)
 	case "PreToolUse":
-		return handlePreToolUse(s, env.SessionID, env.ToolName, env.ToolInput, env.CWD)
+		return handlePreToolUse(w, env.SessionID, env.ToolName, env.ToolInput, env.CWD)
 	case "PostToolUse":
-		return handlePostToolUse(s, env.SessionID, env.ToolName, env.ToolInput, env.CWD)
+		return handlePostToolUse(w, env.SessionID, env.ToolName, env.ToolInput, env.CWD)
 	case "StopFailure":
-		return handleStopFailure(s, env.SessionID, env.StopFailureReason)
+		return handleStopFailure(w, env.SessionID, env.StopFailureReason)
 	case "TaskCreated":
-		return handleTaskCreated(s, env.SessionID, env.TaskID, env.TaskTitle, env.CWD)
+		return handleTaskCreated(w, env.SessionID, env.TaskID, env.TaskTitle, env.CWD)
 	case "TaskCompleted":
-		return handleTaskCompleted(s, env.SessionID, env.TaskID)
+		return handleTaskCompleted(w, env.SessionID, env.TaskID)
 	case "PostCompact":
-		return handlePostCompact(s, env.SessionID, env.CompactType)
+		return handlePostCompact(w, env.SessionID, env.CompactType)
 	case "PermissionDenied":
-		return handlePermissionDenied(s, env.SessionID, env.ToolName)
+		return handlePermissionDenied(w, env.SessionID, env.ToolName)
 	case "Stop":
-		// Stop fires between turns (assistant finishes, waits for user).
-		// It does NOT mean the session ended — ignore it.
 		return nil
 	case "SessionEnd":
-		return handleSessionEnd(s, env.SessionID)
+		return handleSessionEnd(w, env.SessionID)
 	default:
-		// Unknown hook type — ignore silently.
 		return nil
 	}
 }
 
 // createRunForSession creates a new run linked to the given session.
-// Called lazily on first real activity (prompt or agent), not on SessionStart.
-func createRunForSession(s *store.SQLiteStore, sessionID, cwd string) (string, error) {
+func createRunForSession(w *writer.EventWriter, sessionID, cwd string) (string, error) {
 	runID, err := instrumentation.NewRunID()
 	if err != nil {
 		return "", err
@@ -124,23 +118,20 @@ func createRunForSession(s *store.SQLiteStore, sessionID, cwd string) (string, e
 	if err != nil {
 		return "", err
 	}
-	if err := s.WriteEvent(ev); err != nil {
+	if err := w.WriteEvent(ev); err != nil {
 		return "", err
 	}
 	return runID, nil
 }
 
 // projectFromCWD extracts the project name from a working directory path.
-// "/Users/ernesto/projects/anvil" → "anvil"
 func projectFromCWD(cwd string) string {
 	if cwd == "" {
 		return ""
 	}
-	// Remove trailing slash
 	for len(cwd) > 1 && cwd[len(cwd)-1] == '/' {
 		cwd = cwd[:len(cwd)-1]
 	}
-	// Extract last segment
 	for i := len(cwd) - 1; i >= 0; i-- {
 		if cwd[i] == '/' {
 			return cwd[i+1:]
@@ -150,7 +141,6 @@ func projectFromCWD(cwd string) string {
 }
 
 // branchFromCWD returns the current git branch for the given working directory.
-// Returns "" if cwd is empty or git fails (not a repo, git not installed, etc.).
 func branchFromCWD(cwd string) string {
 	if cwd == "" {
 		return ""
@@ -162,8 +152,8 @@ func branchFromCWD(cwd string) string {
 	return strings.TrimSpace(string(out))
 }
 
-func handleUserPromptSubmit(s *store.SQLiteStore, sessionID, prompt, cwd string) error {
-	runID, err := resolveOrCreateRun(s, sessionID, cwd)
+func handleUserPromptSubmit(w *writer.EventWriter, sessionID, prompt, cwd string) error {
+	runID, err := resolveOrCreateRun(w, sessionID, cwd)
 	if err != nil {
 		return err
 	}
@@ -177,17 +167,15 @@ func handleUserPromptSubmit(s *store.SQLiteStore, sessionID, prompt, cwd string)
 	if err != nil {
 		return err
 	}
-	if err := s.WriteEvent(ev); err != nil {
+	if err := w.WriteEvent(ev); err != nil {
 		return err
 	}
 
-	// UpdateTaskDesc is idempotent — only sets task_desc if currently empty,
-	// so it naturally captures only the first prompt without needing to check sequence.
-	return s.UpdateTaskDesc(runID, prompt)
+	return w.UpdateTaskDesc(runID, prompt)
 }
 
-func handleSubagentStart(s *store.SQLiteStore, sessionID, agentID, agentType, cwd string) error {
-	runID, err := resolveOrCreateRun(s, sessionID, cwd)
+func handleSubagentStart(w *writer.EventWriter, sessionID, agentID, agentType, cwd string) error {
+	runID, err := resolveOrCreateRun(w, sessionID, cwd)
 	if err != nil {
 		return err
 	}
@@ -205,13 +193,11 @@ func handleSubagentStart(s *store.SQLiteStore, sessionID, agentID, agentType, cw
 	if err != nil {
 		return err
 	}
-	return s.WriteEvent(ev)
+	return w.WriteEvent(ev)
 }
 
-func handleSubagentStop(s *store.SQLiteStore, sessionID, agentID, lastMessage string) error {
-	// SubagentStop should never fire without a prior SubagentStart that
-	// already created the run, so CWD is unnecessary here.
-	runID, err := resolveOrCreateRun(s, sessionID, "")
+func handleSubagentStop(w *writer.EventWriter, sessionID, agentID, lastMessage string) error {
+	runID, err := resolveOrCreateRun(w, sessionID, "")
 	if err != nil {
 		return err
 	}
@@ -225,9 +211,8 @@ func handleSubagentStop(s *store.SQLiteStore, sessionID, agentID, lastMessage st
 		output = output[:maxOutputBytes]
 	}
 
-	// Calculate duration from agent start time.
 	var durationMs int64
-	if startedAt, ok := s.AgentStartedAt(runID, agentID); ok {
+	if startedAt, ok := w.AgentStartedAt(runID, agentID); ok {
 		if t, err := time.Parse("2006-01-02T15:04:05.999999999Z07:00", startedAt); err == nil {
 			durationMs = time.Since(t).Milliseconds()
 		}
@@ -244,16 +229,15 @@ func handleSubagentStop(s *store.SQLiteStore, sessionID, agentID, lastMessage st
 	if err != nil {
 		return err
 	}
-	return s.WriteEvent(ev)
+	return w.WriteEvent(ev)
 }
 
-func handlePostToolUse(s *store.SQLiteStore, sessionID, toolName string, toolInput json.RawMessage, cwd string) error {
-	// Only track Write and Edit tools.
+func handlePostToolUse(w *writer.EventWriter, sessionID, toolName string, toolInput json.RawMessage, cwd string) error {
 	if toolName != "Write" && toolName != "Edit" {
 		return nil
 	}
 
-	runID, err := resolveOrCreateRun(s, sessionID, cwd)
+	runID, err := resolveOrCreateRun(w, sessionID, cwd)
 	if err != nil {
 		return err
 	}
@@ -274,12 +258,10 @@ func handlePostToolUse(s *store.SQLiteStore, sessionID, toolName string, toolInp
 		operation = "modify"
 	}
 
-	// Associate file with the currently running agent (if any).
-	agentID := s.ActiveAgentID(runID)
+	agentID := w.ActiveAgentID(runID)
 
-	// Build diff from tool_input content.
 	var diff string
-	const maxDiffBytes = 50 * 1024 // 50 KB
+	const maxDiffBytes = 50 * 1024
 	if toolName == "Edit" && (ti.OldString != "" || ti.NewString != "") {
 		diff = fmt.Sprintf("--- old\n+++ new\n- %s\n+ %s", ti.OldString, ti.NewString)
 	} else if toolName == "Write" && ti.Content != "" {
@@ -300,11 +282,11 @@ func handlePostToolUse(s *store.SQLiteStore, sessionID, toolName string, toolInp
 	if err != nil {
 		return err
 	}
-	return s.WriteEvent(ev)
+	return w.WriteEvent(ev)
 }
 
-func handleSessionEnd(s *store.SQLiteStore, sessionID string) error {
-	runID, err := s.ResolveRunBySession(sessionID)
+func handleSessionEnd(w *writer.EventWriter, sessionID string) error {
+	runID, err := w.ResolveRunBySession(sessionID)
 	if err != nil {
 		return err
 	}
@@ -320,38 +302,34 @@ func handleSessionEnd(s *store.SQLiteStore, sessionID string) error {
 	if err != nil {
 		return err
 	}
-	if err := s.WriteEvent(ev); err != nil {
+	if err := w.WriteEvent(ev); err != nil {
 		return err
 	}
 
-	// Overwrite totals AFTER run.end (which sets them to 0).
-	return s.ComputeRunTotals(runID)
+	return w.ComputeRunTotals(runID)
 }
 
-// --- New hook handlers -------------------------------------------------------
-
-func handlePreToolUse(s *store.SQLiteStore, sessionID, toolName string, toolInput json.RawMessage, cwd string) error {
-	// Skip Write/Edit — already captured as file.touched via PostToolUse.
+func handlePreToolUse(w *writer.EventWriter, sessionID, toolName string, toolInput json.RawMessage, cwd string) error {
 	if toolName == "Write" || toolName == "Edit" {
 		return nil
 	}
 
-	runID, err := resolveOrCreateRun(s, sessionID, cwd)
+	runID, err := resolveOrCreateRun(w, sessionID, cwd)
 	if err != nil {
 		return err
 	}
 
-	agentID := s.ActiveAgentID(runID)
+	agentID := w.ActiveAgentID(runID)
 	payload := instrumentation.ToolUsePayload{AgentID: agentID, ToolName: toolName, ToolInput: toolInput}
 	ev, err := instrumentation.NewEvent(runID, instrumentation.EventToolUse, payload)
 	if err != nil {
 		return err
 	}
-	return s.WriteEvent(ev)
+	return w.WriteEvent(ev)
 }
 
-func handleStopFailure(s *store.SQLiteStore, sessionID, reason string) error {
-	runID, err := s.ResolveRunBySession(sessionID)
+func handleStopFailure(w *writer.EventWriter, sessionID, reason string) error {
+	runID, err := w.ResolveRunBySession(sessionID)
 	if err != nil {
 		return err
 	}
@@ -364,11 +342,11 @@ func handleStopFailure(s *store.SQLiteStore, sessionID, reason string) error {
 	if err != nil {
 		return err
 	}
-	return s.WriteEvent(ev)
+	return w.WriteEvent(ev)
 }
 
-func handleTaskCreated(s *store.SQLiteStore, sessionID, taskID, title, cwd string) error {
-	runID, err := resolveOrCreateRun(s, sessionID, cwd)
+func handleTaskCreated(w *writer.EventWriter, sessionID, taskID, title, cwd string) error {
+	runID, err := resolveOrCreateRun(w, sessionID, cwd)
 	if err != nil {
 		return err
 	}
@@ -378,11 +356,11 @@ func handleTaskCreated(s *store.SQLiteStore, sessionID, taskID, title, cwd strin
 	if err != nil {
 		return err
 	}
-	return s.WriteEvent(ev)
+	return w.WriteEvent(ev)
 }
 
-func handleTaskCompleted(s *store.SQLiteStore, sessionID, taskID string) error {
-	runID, err := s.ResolveRunBySession(sessionID)
+func handleTaskCompleted(w *writer.EventWriter, sessionID, taskID string) error {
+	runID, err := w.ResolveRunBySession(sessionID)
 	if err != nil {
 		return err
 	}
@@ -395,11 +373,11 @@ func handleTaskCompleted(s *store.SQLiteStore, sessionID, taskID string) error {
 	if err != nil {
 		return err
 	}
-	return s.WriteEvent(ev)
+	return w.WriteEvent(ev)
 }
 
-func handlePostCompact(s *store.SQLiteStore, sessionID, compactType string) error {
-	runID, err := s.ResolveRunBySession(sessionID)
+func handlePostCompact(w *writer.EventWriter, sessionID, compactType string) error {
+	runID, err := w.ResolveRunBySession(sessionID)
 	if err != nil {
 		return err
 	}
@@ -416,11 +394,11 @@ func handlePostCompact(s *store.SQLiteStore, sessionID, compactType string) erro
 	if err != nil {
 		return err
 	}
-	return s.WriteEvent(ev)
+	return w.WriteEvent(ev)
 }
 
-func handlePermissionDenied(s *store.SQLiteStore, sessionID, toolName string) error {
-	runID, err := s.ResolveRunBySession(sessionID)
+func handlePermissionDenied(w *writer.EventWriter, sessionID, toolName string) error {
+	runID, err := w.ResolveRunBySession(sessionID)
 	if err != nil {
 		return err
 	}
@@ -433,18 +411,18 @@ func handlePermissionDenied(s *store.SQLiteStore, sessionID, toolName string) er
 	if err != nil {
 		return err
 	}
-	return s.WriteEvent(ev)
+	return w.WriteEvent(ev)
 }
 
 // resolveOrCreateRun finds the run for a session_id, or creates a new run
 // if none exists (lazy creation — the run is only born on first real activity).
-func resolveOrCreateRun(s *store.SQLiteStore, sessionID, cwd string) (string, error) {
-	runID, err := s.ResolveRunBySession(sessionID)
+func resolveOrCreateRun(w *writer.EventWriter, sessionID, cwd string) (string, error) {
+	runID, err := w.ResolveRunBySession(sessionID)
 	if err != nil {
 		return "", err
 	}
 	if runID != "" {
 		return runID, nil
 	}
-	return createRunForSession(s, sessionID, cwd)
+	return createRunForSession(w, sessionID, cwd)
 }

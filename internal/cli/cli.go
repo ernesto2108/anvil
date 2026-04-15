@@ -36,7 +36,7 @@ func Run(args []string) {
 	// when run outside a project directory (no anvil.yaml in cwd).
 	switch cmd {
 	case "dashboard":
-		cmdDashboard(nil)
+		cmdDashboard(nil, cmdArgs)
 		return
 	case "emit":
 		cmdEmit(nil)
