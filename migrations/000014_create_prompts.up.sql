@@ -1,4 +1,3 @@
--- Tabla para almacenar los prompts de usuario de cada run
 CREATE TABLE IF NOT EXISTS prompts (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     run_id    TEXT    NOT NULL REFERENCES runs(id),

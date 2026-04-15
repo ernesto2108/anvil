@@ -1,0 +1,1 @@
+-- SQLite no soporta DROP COLUMN antes de 3.35.0; la columna queda (DEFAULT '' no afecta).

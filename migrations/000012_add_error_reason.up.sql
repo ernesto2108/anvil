@@ -1,0 +1,1 @@
+ALTER TABLE runs ADD COLUMN error_reason TEXT NOT NULL DEFAULT '';
