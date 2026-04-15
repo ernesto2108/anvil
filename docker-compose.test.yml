@@ -1,0 +1,7 @@
+services:
+  test-migrations:
+    build:
+      context: .
+      dockerfile: docker/test-migrations.dockerfile
+    volumes:
+      - ./migrations:/app/migrations

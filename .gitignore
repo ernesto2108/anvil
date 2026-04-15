@@ -1,5 +1,6 @@
 .anvil/
 .handoff/
+.workspace
 AGENTS.md
 
 # Go binary
