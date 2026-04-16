@@ -2,13 +2,20 @@ BINARY_NAME := anvil
 BUILD_DIR := .
 GO_CMD := go
 
+# INSTALL_DIR must match the path used by Claude Code hooks in
+# ~/.claude/settings.json (default: $HOME/bin/anvil emit). Installing anywhere
+# else means the hooks will run a stale binary even after a fresh build.
+INSTALL_DIR ?= $(HOME)/bin
+
 .PHONY: build install clean test vet
 
 build:
 	$(GO_CMD) build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/anvil/
 
 install:
-	$(GO_CMD) install ./cmd/anvil/
+	@mkdir -p $(INSTALL_DIR)
+	$(GO_CMD) build -o $(INSTALL_DIR)/$(BINARY_NAME) ./cmd/anvil/
+	@echo "Installed $(BINARY_NAME) → $(INSTALL_DIR)/$(BINARY_NAME)"
 
 clean:
 	rm -f $(BUILD_DIR)/anvil
