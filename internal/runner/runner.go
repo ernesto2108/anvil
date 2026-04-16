@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -11,19 +12,35 @@ import (
 	"github.com/ernesto2108/anvil/internal/orchestrator"
 )
 
+// TaskContext holds the enriched metadata gathered during preflight.
+type TaskContext struct {
+	Objective     string
+	Stack         string
+	Files         string
+	Complexity    string
+	MemoryContext string // pre-formatted digest summaries from previous runs
+}
+
 // ClaudeRunner executes agent nodes by spawning `claude --print` subprocesses.
+//
+// RunID is the parent Anvil run ID that owns the lifecycle of all spawned agents.
+// It is propagated to each subprocess via the ANVIL_PARENT_RUN_ID env var so
+// that Claude Code hooks (`anvil emit`) attach their telemetry to the same run
+// instead of creating sibling orphan runs in the dashboard.
 type ClaudeRunner struct {
-	WorkDir  string
-	Model    string
-	TaskDesc string // the high-level task description passed via --task flag
+	WorkDir string
+	Model   string
+	RunID   string
+	Task    TaskContext
 }
 
 // New creates a ClaudeRunner ready to execute pipeline nodes.
-func New(workDir, model, taskDesc string) *ClaudeRunner {
+func New(workDir, model, runID string, task TaskContext) *ClaudeRunner {
 	return &ClaudeRunner{
-		WorkDir:  workDir,
-		Model:    model,
-		TaskDesc: taskDesc,
+		WorkDir: workDir,
+		Model:   model,
+		RunID:   runID,
+		Task:    task,
 	}
 }
 
@@ -35,13 +52,24 @@ func (r *ClaudeRunner) RunAgent(ctx context.Context, node orchestrator.Node, ups
 
 	prompt := r.buildPrompt(node, upstream)
 
-	args := []string{"--print", "--bare", "-p", prompt}
+	// --permission-mode acceptEdits lets the agent write/edit files without
+	// the interactive permission prompt that would otherwise block a non-
+	// interactive `--print` session.
+	args := []string{"--print", "--agent", node.Role, "--permission-mode", "acceptEdits", "-p", prompt}
 	if r.Model != "" {
 		args = append(args, "--model", r.Model)
 	}
 
 	cmd := exec.CommandContext(ctx, "claude", args...)
 	cmd.Dir = r.WorkDir
+
+	// Propagate parent run identity to the subprocess. Claude Code hooks
+	// (configured globally) call `anvil emit`, which inherits this env and
+	// attaches events to the parent run instead of creating a new one.
+	cmd.Env = append(os.Environ(),
+		"ANVIL_PARENT_RUN_ID="+r.RunID,
+		"ANVIL_AGENT_ID="+node.ID,
+	)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -70,17 +98,23 @@ func (r *ClaudeRunner) RunAgent(ctx context.Context, node orchestrator.Node, ups
 	}, nil
 }
 
-// buildPrompt constructs the prompt for the agent based on its role and
-// outputs from upstream dependencies.
+// buildPrompt constructs a structured prompt for the agent.
 func (r *ClaudeRunner) buildPrompt(node orchestrator.Node, upstream map[string]orchestrator.AgentResult) string {
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "You are the %s agent.\n", node.Role)
-	fmt.Fprintf(&b, "Task: %s\n\n", r.TaskDesc)
+	fmt.Fprintf(&b, "Complexity: %s\n", r.Task.Complexity)
+	fmt.Fprintf(&b, "Stack: %s\n", r.Task.Stack)
+	fmt.Fprintf(&b, "Mode: normal\n")
+	fmt.Fprintf(&b, "Objective: %s\n", r.Task.Objective)
+	fmt.Fprintf(&b, "\nFiles to change:\n%s\n", r.Task.Files)
+
+	if r.Task.MemoryContext != "" {
+		fmt.Fprintf(&b, "\n## Relevant memories from previous runs\n\n%s\n", r.Task.MemoryContext)
+	}
 
 	// Inject outputs from completed dependencies.
 	if len(upstream) > 0 {
-		b.WriteString("## Context from previous agents\n\n")
+		b.WriteString("\n## Context from previous agents\n\n")
 		for _, depID := range node.DependsOn {
 			if res, ok := upstream[depID]; ok && res.Output != "" {
 				fmt.Fprintf(&b, "### Output from %s\n\n%s\n\n", depID, res.Output)

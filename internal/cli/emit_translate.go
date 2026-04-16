@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -10,6 +11,20 @@ import (
 	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 )
+
+// parentRunID returns the run ID exported by the orchestrator when the
+// current claude subprocess was launched as part of an `anvil run` pipeline.
+// An empty string means this hook is from a standalone Claude Code session.
+func parentRunID() string {
+	return os.Getenv("ANVIL_PARENT_RUN_ID")
+}
+
+// envAgentID returns the agent ID exported by the orchestrator for the
+// claude subprocess that produced the current hook event. Empty when the
+// hook is not part of an anvil-managed pipeline.
+func envAgentID() string {
+	return os.Getenv("ANVIL_AGENT_ID")
+}
 
 // hookEnvelope is the top-level JSON structure that Claude Code sends to hooks
 // via stdin. All fields are top-level (not nested).
@@ -171,6 +186,12 @@ func handleUserPromptSubmit(w *writer.EventWriter, sessionID, prompt, cwd string
 		return err
 	}
 
+	// When part of an anvil-orchestrated run, the parent already owns the
+	// task description (the user's real objective). The per-agent prompt
+	// would clobber it with internal scaffolding ("Complexity: Small …").
+	if parentRunID() != "" {
+		return nil
+	}
 	return w.UpdateTaskDesc(runID, prompt)
 }
 
@@ -258,7 +279,10 @@ func handlePostToolUse(w *writer.EventWriter, sessionID, toolName string, toolIn
 		operation = "modify"
 	}
 
-	agentID := w.ActiveAgentID(runID)
+	agentID := envAgentID()
+	if agentID == "" {
+		agentID = w.ActiveAgentID(runID)
+	}
 
 	var diff string
 	const maxDiffBytes = 50 * 1024
@@ -286,6 +310,14 @@ func handlePostToolUse(w *writer.EventWriter, sessionID, toolName string, toolIn
 }
 
 func handleSessionEnd(w *writer.EventWriter, sessionID string) error {
+	// When this hook fires from a claude subprocess launched by `anvil run`,
+	// the orchestrator owns the run lifecycle and emits its own run.end.
+	// Closing the run here would mark it finished while sibling agents are
+	// still in flight.
+	if parentRunID() != "" {
+		return nil
+	}
+
 	runID, err := w.ResolveRunBySession(sessionID)
 	if err != nil {
 		return err
@@ -319,7 +351,10 @@ func handlePreToolUse(w *writer.EventWriter, sessionID, toolName string, toolInp
 		return err
 	}
 
-	agentID := w.ActiveAgentID(runID)
+	agentID := envAgentID()
+	if agentID == "" {
+		agentID = w.ActiveAgentID(runID)
+	}
 	payload := instrumentation.ToolUsePayload{AgentID: agentID, ToolName: toolName, ToolInput: toolInput}
 	ev, err := instrumentation.NewEvent(runID, instrumentation.EventToolUse, payload)
 	if err != nil {
@@ -416,7 +451,15 @@ func handlePermissionDenied(w *writer.EventWriter, sessionID, toolName string) e
 
 // resolveOrCreateRun finds the run for a session_id, or creates a new run
 // if none exists (lazy creation — the run is only born on first real activity).
+//
+// When ANVIL_PARENT_RUN_ID is set the lookup is bypassed entirely: the hook
+// belongs to a claude subprocess that the anvil orchestrator already
+// registered, so events must attach to that run rather than spawning an
+// orphan sibling keyed by the subprocess's session_id.
 func resolveOrCreateRun(w *writer.EventWriter, sessionID, cwd string) (string, error) {
+	if rid := parentRunID(); rid != "" {
+		return rid, nil
+	}
 	runID, err := w.ResolveRunBySession(sessionID)
 	if err != nil {
 		return "", err
