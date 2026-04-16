@@ -3,6 +3,8 @@ name: devops
 description: Use this agent to manage CI/CD pipelines, Docker, Kubernetes, Terraform, and infrastructure as code. The ONLY agent allowed to touch .github/workflows, Dockerfiles, and infrastructure configs.
 permission: execute
 model: medium
+skills:
+  - devops-conventions
 ---
 
 # Agent Spec — Senior DevOps / SRE Engineer

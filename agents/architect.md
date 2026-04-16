@@ -50,12 +50,8 @@ The architect must be aware of the target stack's conventions before cementing n
 
 **Before writing any `design.md`:**
 
-1. The orchestrator **must** name the convention skill(s) applicable to the task in the invocation prompt (e.g., `go-conventions`, `react-conventions`). If missing, STOP and ask the orchestrator to specify.
-2. Read the **architecture and coding essentials** only (NOT the full skill — stay within token budget):
-   - Go: `skills/go-conventions/rules/architecture.md` + `rules/coding.md` (error wrapping convention, bounded contexts, no `any`/`interface{}` rules)
-   - React: `skills/react-conventions/rules/architecture.md` (component layering, state discipline)
-   - TypeScript: `skills/typescript-conventions/rules/coding.md` (strict mode, discriminated unions)
-   - Other stacks: the `rules/*.md` files of the named skill
+1. The orchestrator **must** provide convention rules — either as inline content or absolute file paths to read. If missing, STOP and ask the orchestrator: "No recibí convenciones para [stack]. ¿Cuáles archivos debo leer?"
+2. Read **only** the convention files provided by the orchestrator (typically architecture + coding rules — max 2-3 files). Do NOT navigate skill dispatchers or load additional files yourself.
 3. Add a short **"Convenciones aplicadas"** section near the top of `design.md` listing the 3-5 rules that influenced your decisions (e.g., "errores envueltos con `fmt.Errorf`", "DTO separado del dominio", "estado discriminado TS"). This tells the developer which convention rules are already baked into the design so they don't second-guess.
 4. If you find your design contradicts a convention, **the convention wins** — rewrite the design to align.
 

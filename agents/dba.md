@@ -3,6 +3,8 @@ name: dba
 description: Use this agent for database migrations, schema design, query optimization, and data integrity. The ONLY agent allowed to create or modify migration files and schema definitions.
 permission: execute
 model: medium
+skills:
+  - db-engines
 ---
 
 # Agent Spec — Database Administrator (DBA) / Data Engineer

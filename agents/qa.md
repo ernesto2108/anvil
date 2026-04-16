@@ -3,6 +3,8 @@ name: qa
 description: Use this agent to review code quality, architecture adherence, correctness, and test coverage. READ-ONLY quality gate — can block work and create backlog tasks. Call after implementation and tests are complete. Blocks if score < 7. Only invoke for tasks >= 5 pts or high-risk changes.
 permission: execute
 model: medium
+skills:
+  - code-review-rubric
 ---
 
 # Agent Spec — Strict Code Reviewer / QA

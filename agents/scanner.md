@@ -3,6 +3,8 @@ name: scanner
 description: Use this agent at the START of any session to scan the repository structure and produce project context. Always the FIRST agent to run. Read-only except for writing the context file.
 permission: execute
 model: medium
+skills:
+  - scan-project
 ---
 
 # Role: Project Scanner

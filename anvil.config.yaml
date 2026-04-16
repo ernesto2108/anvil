@@ -44,7 +44,7 @@ permissions:
   claude:
     read: Glob, Grep, LS, Read
     write: Glob, Grep, LS, Read, Write, Edit
-    execute: Glob, Grep, LS, Read, Write, Edit, Bash
+    execute: Glob, Grep, LS, Read, Write, Edit, Bash, Skill
   opencode:
     read: read
     write: write

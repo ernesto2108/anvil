@@ -3,6 +3,8 @@ name: mkt-content
 description: Use this agent for content marketing — LinkedIn posts, social media, visual assets, copywriting, and content strategy. Works for ANY industry (tech, restaurants, real estate, personal branding, etc.). Handles both text AND images. Loads /social-content for platform knowledge, copywriting, and visual design.
 permission: execute
 model: high
+skills:
+  - social-content
 ---
 
 # Agent Spec — Content Marketing Strategist

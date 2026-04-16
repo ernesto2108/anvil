@@ -45,9 +45,11 @@ Implementar endpoint de registro...
 1. ..."
 ```
 
-### 4. Skills bajo demanda
+### 4. Convention routing — orchestrator selecciona, agente solo lee
 
-Las skills de convenciones (go-conventions, react-conventions, flutter-conventions) son grandes. Solo se cargan cuando el agente las necesita, no estan embebidas en la definicion del agente.
+Las convention skills son grandes (go-conventions = 5,900 lineas). Los agentes NO navegan dispatchers ni deciden que cargar. El orchestrator lee el dispatcher, elige 2-4 archivos relevantes, y pasa rutas absolutas al agente. Para Small tasks, inyectar reglas inline (3-5 bullets).
+
+Ver `docs/convention-routing.md` para la guia completa con ejemplos de prompts.
 
 ### 5. Skip scanner si context.md es reciente
 
