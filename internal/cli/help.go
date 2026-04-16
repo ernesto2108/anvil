@@ -32,6 +32,9 @@ func cmdHelp(appName string) {
     --auto-approve, -y           Skip human gates
 
   OTHER COMMANDS:
+    digests              List run digests for current project
+    digests show <id>    Show full body of one digest (the memory injected)
+    export               Export digests to Markdown or JSON
     emit                 Ingest a Claude Code hook event (reads JSON from stdin)
     init                 First-time setup — show config and launch browser
     browse               Interactive TUI to manage agents/skills/commands

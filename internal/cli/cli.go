@@ -72,6 +72,10 @@ func Run(args []string) {
 		cmdSelfUpdate(cfg, git, cmdArgs)
 	case "doctor":
 		cmdDoctor(cfg, git)
+	case "export":
+		cmdExport(cfg, cmdArgs)
+	case "digests":
+		cmdDigests(cfg, cmdArgs)
 	case "help", "-h", "--help":
 		cmdHelp(appName)
 	default:
