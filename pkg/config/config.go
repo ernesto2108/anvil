@@ -37,6 +37,7 @@ type Manifest struct {
 	Files          map[string]FileEntry `yaml:"files"`
 	Ignore         []string             `yaml:"ignore"`
 	Registries     []Registry           `yaml:"registries"`
+	MCP            MCPSection           `yaml:"mcp,omitempty"`
 }
 
 type TierMap struct {

@@ -232,6 +232,31 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 		MemoryContext: memoryCtx,
 	})
 
+	// Inject per-agent MCP configs if declared in anvil.yaml mcp.servers.
+	if len(cfg.Manifest.MCP.Servers) > 0 {
+		defs := make(map[string]map[string]runner.MCPEntry)
+		for _, node := range nodes {
+			agentServers := cfg.BuildAgentMCPConfig(node.Role)
+			if len(agentServers) == 0 {
+				continue
+			}
+			entries := make(map[string]runner.MCPEntry, len(agentServers))
+			for name, def := range agentServers {
+				entries[name] = runner.MCPEntry{
+					Command: def.Command,
+					Args:    def.Args,
+					Env:     def.Env,
+				}
+			}
+			defs[node.Role] = entries
+		}
+		if mcpByRole, err := runner.BuildMCPByRole(defs); err != nil {
+			output.Warn("mcp config build failed (agents will run without MCP injection): %s", err)
+		} else {
+			agentRunner.MCPByRole = mcpByRole
+		}
+	}
+
 	var gate orchestrator.GateHandler
 	if flags.autoApprove {
 		gate = orchestrator.NewAutoApproveHandler(os.Stdout)
