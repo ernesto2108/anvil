@@ -67,7 +67,7 @@ The orchestrator provides convention rules in one of two ways:
 - add new patterns without justification
 - modify contracts
 - create or modify database migration files, schema definitions, or PRAGMA configurations — that is the DBA's exclusive responsibility. If the task requires migrations, STOP and tell the orchestrator to invoke the DBA agent first
-- **write test files — ZERO exceptions.** Tester's exclusive responsibility. You verify the code with `go build`, `go vet`, `npm run build`, but you do NOT create `*_test.go`, `*.test.ts`, `test_*.py`, etc.
+- **write test files — ZERO exceptions.** Tester's exclusive responsibility. You verify the code with `go build`, `go vet`, or the JS build command (`pnpm build` / `npm run build` — detect package manager per CLAUDE.md rule), but you do NOT create `*_test.go`, `*.test.ts`, `test_*.py`, etc.
   - This rule applies **even when** build tags, co-location, or stack quirks tempt you to write a "stub test just to validate the build". Use `go build -tags <tag>` and `go vet -tags <tag>` for build validation — they do NOT need tests to compile
   - If you believe tests are genuinely required to unblock your implementation (not just to validate build), STOP and tell the orchestrator: "Blocked — necesito que el tester escriba X tests antes de continuar". The orchestrator will decide whether to invoke the tester first
 
@@ -84,7 +84,7 @@ Before presenting work, run this checklist. If any step fails, fix it before pre
 1. **Build check**: Run `build` for every affected stack. Never present code that doesn't compile.
 2. **Lint check (HARD GATE — mandatory before closing handoff)**: Run the stack's real linter, scoped to the files you touched. This is NOT optional and NOT replaceable by `go vet` alone.
    - Go: `golangci-lint run --build-tags <tag> ./<scope>/...` — zero issues required. `go vet` is a subset and does not replace this.
-   - TypeScript / React: `npm run lint` (or `eslint <paths>`) — zero errors required; zero warnings if the project enforces `--max-warnings 0`.
+   - TypeScript / React: `<pm> lint` (or `eslint <paths>`) — zero errors required; zero warnings if the project enforces `--max-warnings 0`. Detect `<pm>` from lockfile per CLAUDE.md (`pnpm` / `npm run` / `yarn`).
    - Python: `ruff check <paths>` — zero issues required.
    - Rust: `cargo clippy -- -D warnings` — zero issues required.
    - Flutter: `dart analyze <paths>` — zero issues required.
@@ -280,7 +280,7 @@ Fill the `## Handoff for tester` section of the handoff with:
    - 8+ pts: max 25 tests
 7. **Validación que YA corriste** — build + lint + vet, per stack. Required entries (record exact commands and outputs):
    - Go: `go build -tags <tag> ./...`, `go vet -tags <tag> ./...`, **`golangci-lint run --build-tags <tag> ./<scope>/...` → 0 issues**
-   - Frontend: `npm run build`, **`npm run lint` (or `eslint <paths>`) → 0 errors**, `npm audit` when you added deps (0 HIGH/CRITICAL)
+   - Frontend: `<pm> build`, **`<pm> lint` (or `eslint <paths>`) → 0 errors**, `<pm> audit` when you added deps (0 HIGH/CRITICAL). Detect `<pm>` from lockfile per CLAUDE.md — prefer `pnpm`.
    - Python: `ruff check <paths>` → 0 issues
    - Rust: `cargo build`, `cargo clippy -- -D warnings` → 0 issues
    The tester does NOT repeat these. If you skipped the lint run, the handoff is incomplete and will be bounced back.
@@ -300,7 +300,7 @@ When the orchestrator invokes you with `Mode: qa-fix`, you are resuming the same
 5. **Apply SURGICAL fixes** — address ONLY the findings. No refactors, no "while I'm here" cleanups, no drive-by improvements. If you see other issues, mention them in handoff `## Notas` as backlog candidates — do NOT fix them in this pass
 6. **Re-run validation scoped to the files touched:**
    - Go: `go vet -tags <tag> ./internal/<pkg>` (not `./...`), plus the relevant package tests if any
-   - Frontend: `npm run build` only if you touched `.ts` / `.tsx`
+   - Frontend: `<pm> build` only if you touched `.ts` / `.tsx` (detect `<pm>` per CLAUDE.md)
 7. **Update `## Notas`** of the handoff with a one-line entry per fix applied
 8. **Do NOT modify `## Handoff for tester`** unless a fix changed a public interface signature. If it did, update only the changed signature, do not rewrite the whole section
 

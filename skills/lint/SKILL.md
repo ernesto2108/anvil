@@ -25,7 +25,7 @@ Detect stack by checking for marker files:
 | File | Stack | Linter | Formatter |
 |------|-------|--------|-----------|
 | `go.mod` | Go | `golangci-lint run ./...` | `gofmt` (built-in) |
-| `package.json` | React/Node | `npx eslint .` | `npx prettier --check .` |
+| `package.json` | React/Node | `<pm> exec eslint .` | `<pm> exec prettier --check .` |
 | `pubspec.yaml` | Flutter | `dart analyze` | `dart format --set-exit-if-changed .` |
 
 If multiple stacks detected, lint each separately.
@@ -48,19 +48,22 @@ Auto-fix: `golangci-lint run --fix ./...` — then report what couldn't be fixed
 
 ### React/Node
 
-```bash
-# Lint
-npx eslint . --ext .ts,.tsx,.js,.jsx
+**Package manager:** detect from lockfile per CLAUDE.md rule (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm, none → default pnpm). Use `pnpm exec` / `npx` / `yarn exec` to run binaries from `node_modules/.bin`.
 
-# Format check
-npx prettier --check "src/**/*.{ts,tsx,js,jsx}"
+```bash
+# pnpm (preferred)
+pnpm exec eslint . --ext .ts,.tsx,.js,.jsx
+pnpm exec prettier --check "src/**/*.{ts,tsx,js,jsx}"
 
 # Auto-fix
-npx eslint . --ext .ts,.tsx,.js,.jsx --fix
-npx prettier --write "src/**/*.{ts,tsx,js,jsx}"
+pnpm exec eslint . --ext .ts,.tsx,.js,.jsx --fix
+pnpm exec prettier --write "src/**/*.{ts,tsx,js,jsx}"
+
+# npm equivalent: swap `pnpm exec` → `npx`
+# yarn equivalent: swap `pnpm exec` → `yarn exec`
 ```
 
-Check `package.json` scripts for project-specific lint commands (e.g., `npm run lint`).
+Check `package.json` scripts first — if the project defines `lint` / `format` scripts, prefer `<pm> lint` (pnpm) / `npm run lint` / `yarn lint` over calling the binaries directly.
 
 Configuration files: `.eslintrc.*` or `eslint.config.*`, `.prettierrc`. Recommended: `eslint-config-react-app` or `@typescript-eslint`.
 

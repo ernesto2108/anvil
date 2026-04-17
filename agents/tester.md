@@ -88,7 +88,7 @@ If the handoff's `## Handoff for tester` section is empty, incomplete, or missin
 Before touching a single file, run the stack's test command scoped to the area the developer touched:
 
 - Go: `go test -tags <tag> ./<pkg-path>/...` (use the build tag from the handoff)
-- TypeScript/React: `npm test -- --run <scope>` or `vitest run <scope>`
+- TypeScript/React: `<pm> test -- --run <scope>` or `vitest run <scope>` (detect `<pm>` from lockfile per CLAUDE.md — `pnpm` / `npm` / `yarn`)
 - Flutter: `flutter test <dir>`
 - Python: `pytest <path> -q`
 - Rust: `cargo test --package <crate>`

@@ -87,7 +87,7 @@ Load the checklist matching the stack. Check EVERY item against the changed file
 | 5 | CORS misconfiguration | high | `Access-Control-Allow-Origin: *` in production |
 | 6 | Exposed API URLs | medium | Production API URLs hardcoded instead of environment variables |
 | 7 | Missing CSP | medium | No Content-Security-Policy headers configured |
-| 8 | Insecure dependencies | high | Known CVEs in `node_modules` — run `npm audit` |
+| 8 | Insecure dependencies | high | Known CVEs in deps — run `pnpm audit` / `npm audit` / `yarn audit` (detect from lockfile; do NOT read `node_modules/` directly — it's denied by `permissions.deny`) |
 
 ### Flutter / Dart
 | # | Pattern to Find | Risk | What to Look For |

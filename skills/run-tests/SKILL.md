@@ -12,12 +12,12 @@ Detect stack by checking for marker files in the project root:
 | File | Stack | Command |
 |------|-------|---------|
 | `go.mod` | Go | `go test ./... -race -cover -count=1` |
-| `package.json` | Node/React | `npx vitest run --coverage` or `npm test -- --coverage` |
+| `package.json` | Node/React | `<pm> exec vitest run --coverage` or `<pm> test -- --coverage` (detect `<pm>` per CLAUDE.md — prefer `pnpm`) |
 | `pubspec.yaml` | Flutter | `flutter test --coverage` |
 
 If multiple stacks detected, run tests for each stack separately.
 
-For Node/React: check `package.json` for test runner — prefer `vitest` if configured, fall back to `jest`, then `npm test`.
+For Node/React: check `package.json` for test runner — prefer `vitest` if configured, fall back to `jest`, then `<pm> test`. Detect the package manager from the lockfile per CLAUDE.md (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm) and use it consistently.
 
 ## Execution
 
@@ -42,21 +42,26 @@ go test -race -cover -count=1 ./internal/user/...
 ```
 
 ### React/Node
+
+Detect package manager from lockfile per CLAUDE.md. Examples below use `pnpm` (default); swap to `npm` / `yarn` as detected.
+
 ```bash
 # Vitest (preferred)
-npx vitest run --coverage
+pnpm exec vitest run --coverage        # npm: npx vitest run --coverage
+                                       # yarn: yarn exec vitest run --coverage
 
 # Jest fallback
-npx jest --coverage --passWithNoTests
+pnpm exec jest --coverage --passWithNoTests
 
-# Generic fallback
-npm test -- --coverage
+# Generic fallback (runs the "test" script from package.json)
+pnpm test -- --coverage                # npm: npm test -- --coverage
+                                       # yarn: yarn test --coverage
 
 # Specific file
-npx vitest run src/path/Component.test.tsx
+pnpm exec vitest run src/path/Component.test.tsx
 
 # Watch mode (if requested)
-npx vitest
+pnpm exec vitest
 ```
 
 Troubleshooting: act warnings — wrap state updates in `act()`. Async issues — use `waitFor()` instead of manual timeouts. Missing providers — wrap component in necessary context providers.
@@ -111,8 +116,8 @@ Suggest command to re-run only failed tests:
 # Go — run specific failing test
 go test -race -run TestFailingName ./internal/pkg/...
 
-# Vitest
-npx vitest run --reporter=verbose path/to/failing.test.ts
+# Vitest (swap `pnpm exec` for `npx` / `yarn exec` per lockfile)
+pnpm exec vitest run --reporter=verbose path/to/failing.test.ts
 
 # Flutter
 flutter test test/failing_test.dart
