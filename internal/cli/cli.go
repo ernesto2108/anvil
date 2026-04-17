@@ -32,6 +32,15 @@ func Run(args []string) {
 	case "emit":
 		cmdEmit(nil)
 		return
+	case "mcp-server":
+		repoDir := resolveRepoDir(appName)
+		cfg, err := config.Load(repoDir, appName)
+		if err != nil {
+			// Run with a minimal config — inventory tools still work from repoDir.
+			cfg = &config.App{Name: appName, RepoDir: repoDir}
+		}
+		cmdMCPServer(cfg)
+		return
 	}
 
 	repoDir := resolveRepoDir(appName)
