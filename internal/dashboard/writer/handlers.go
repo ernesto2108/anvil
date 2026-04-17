@@ -234,10 +234,18 @@ func handleToolUse(tx *sql.Tx, ev instrumentation.Event) error {
 	}
 
 	toolInput := string(p.ToolInput)
+	source := p.Source
+	if source == "" {
+		source = "native"
+	}
+	var mcpServer *string
+	if p.MCPServer != "" {
+		mcpServer = &p.MCPServer
+	}
 
-	const q = `INSERT INTO tool_uses (run_id, agent_id, tool_name, tool_input, timestamp) VALUES (?, ?, ?, ?, ?)`
+	const q = `INSERT INTO tool_uses (run_id, agent_id, tool_name, tool_input, timestamp, source, mcp_server) VALUES (?, ?, ?, ?, ?, ?, ?)`
 	if _, err := tx.Exec(q, ev.RunID, p.AgentID, p.ToolName, toolInput,
-		ev.Timestamp.Format(timestampFmt),
+		ev.Timestamp.Format(timestampFmt), source, mcpServer,
 	); err != nil {
 		return fmt.Errorf("dashboard/writer: insertar en tool_uses: %w", err)
 	}

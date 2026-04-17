@@ -355,12 +355,30 @@ func handlePreToolUse(w *writer.EventWriter, sessionID, toolName string, toolInp
 	if agentID == "" {
 		agentID = w.ActiveAgentID(runID)
 	}
-	payload := instrumentation.ToolUsePayload{AgentID: agentID, ToolName: toolName, ToolInput: toolInput}
+
+	source, mcpServer := classifyTool(toolName)
+	payload := instrumentation.ToolUsePayload{
+		AgentID:   agentID,
+		ToolName:  toolName,
+		ToolInput: toolInput,
+		Source:    source,
+		MCPServer: mcpServer,
+	}
 	ev, err := instrumentation.NewEvent(runID, instrumentation.EventToolUse, payload)
 	if err != nil {
 		return err
 	}
 	return w.WriteEvent(ev)
+}
+
+// classifyTool returns the source ("native" or "mcp") and the MCP server name
+// for a given tool name. MCP tools follow the pattern mcp__<server>__<method>.
+func classifyTool(toolName string) (source, mcpServer string) {
+	parts := strings.SplitN(toolName, "__", 3)
+	if len(parts) == 3 && parts[0] == "mcp" {
+		return "mcp", parts[1]
+	}
+	return "native", ""
 }
 
 func handleStopFailure(w *writer.EventWriter, sessionID, reason string) error {

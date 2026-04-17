@@ -138,6 +138,8 @@ type ToolUsePayload struct {
 	AgentID   string          `json:"agent_id"`
 	ToolName  string          `json:"tool_name"`
 	ToolInput json.RawMessage `json:"tool_input,omitempty"`
+	Source    string          `json:"source,omitempty"`    // "native" | "mcp"
+	MCPServer string          `json:"mcp_server,omitempty"` // e.g. "pencil", "gh-mcp"
 }
 
 type RunErrorPayload struct {
