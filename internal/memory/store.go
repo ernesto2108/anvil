@@ -10,22 +10,9 @@ import (
 
 // SaveDigest inserts a new digest into SQLite.
 func SaveDigest(ctx context.Context, db *sql.DB, d Digest) error {
-	decisions, err := json.Marshal(d.Decisions)
+	decisions, edgeCases, errors, embBlob, err := marshalDigest(d)
 	if err != nil {
-		return fmt.Errorf("memory: marshal decisions: %w", err)
-	}
-	edgeCases, err := json.Marshal(d.EdgeCases)
-	if err != nil {
-		return fmt.Errorf("memory: marshal edge_cases: %w", err)
-	}
-	errors, err := json.Marshal(d.Errors)
-	if err != nil {
-		return fmt.Errorf("memory: marshal errors: %w", err)
-	}
-
-	var embBlob []byte
-	if d.Embedding != nil {
-		embBlob = EncodeEmbedding(d.Embedding)
+		return err
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339Nano)
@@ -50,6 +37,71 @@ func SaveDigest(ctx context.Context, db *sql.DB, d Digest) error {
 		return fmt.Errorf("memory: insert digest: %w", err)
 	}
 	return nil
+}
+
+// UpsertDigest inserts a new digest or updates the existing one for the same
+// run_id. Used for incremental checkpoints — each agent completion rewrites
+// the run's digest with the latest cumulative summary, so if the run crashes
+// mid-flight the last checkpoint survives.
+//
+// On conflict, id and created_at are preserved (the row keeps its identity and
+// original insertion time). summary/decisions/edge_cases/errors/embedding/
+// model_used/updated_at are all replaced.
+func UpsertDigest(ctx context.Context, db *sql.DB, d Digest) error {
+	decisions, edgeCases, errors, embBlob, err := marshalDigest(d)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now().UTC()
+	if d.CreatedAt.IsZero() {
+		d.CreatedAt = now
+	}
+	d.UpdatedAt = now
+
+	const q = `INSERT INTO digests (id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(run_id) DO UPDATE SET
+			summary    = excluded.summary,
+			decisions  = excluded.decisions,
+			edge_cases = excluded.edge_cases,
+			errors     = excluded.errors,
+			embedding  = excluded.embedding,
+			model_used = excluded.model_used,
+			updated_at = excluded.updated_at`
+
+	_, err = db.ExecContext(ctx, q,
+		d.ID, d.RunID, d.Project, d.Summary,
+		string(decisions), string(edgeCases), string(errors),
+		embBlob, d.ModelUsed,
+		d.CreatedAt.Format(time.RFC3339Nano),
+		d.UpdatedAt.Format(time.RFC3339Nano),
+	)
+	if err != nil {
+		return fmt.Errorf("memory: upsert digest: %w", err)
+	}
+	return nil
+}
+
+// marshalDigest encodes the JSON-array fields and embedding blob used by both
+// SaveDigest and UpsertDigest.
+func marshalDigest(d Digest) (decisions, edgeCases, errors []byte, embBlob []byte, err error) {
+	decisions, err = json.Marshal(d.Decisions)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("memory: marshal decisions: %w", err)
+	}
+	edgeCases, err = json.Marshal(d.EdgeCases)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("memory: marshal edge_cases: %w", err)
+	}
+	errors, err = json.Marshal(d.Errors)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("memory: marshal errors: %w", err)
+	}
+	if d.Embedding != nil {
+		embBlob = EncodeEmbedding(d.Embedding)
+	}
+	return decisions, edgeCases, errors, embBlob, nil
 }
 
 // GetDigestByRunID returns the digest for the given run.

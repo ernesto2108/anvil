@@ -241,17 +241,44 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 
 	sink := &storeEventSink{w: s}
 
-	exec := orchestrator.New(agentRunner, gate, sink, flags.concurrency)
-
-	// 7. Handle Ctrl+C gracefully.
+	// 7. Handle Ctrl+C gracefully. Created BEFORE the checkpointer so the
+	// checkpointer can derive its in-flight context from the same signal
+	// source — a Ctrl+C cancels any checkpoint summarizer call immediately
+	// instead of blocking the shutdown for the per-checkpoint timeout.
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	// 6c. Wrap the sink with an incremental digest checkpointer. On each
+	// agent.end event, a cumulative digest is upserted so the run has a
+	// recovery point even if the conversation or process dies mid-pipeline.
+	// When no summarizer is available the wrapper is a pass-through.
+	probeCtx, probeCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	checkpointSummarizer, checkpointModel, checkpointOK := pickSummarizer(probeCtx)
+	probeCancel()
+	var agentSink orchestrator.EventSink = sink
+	var checkpointer *digestCheckpointer
+	if checkpointOK {
+		checkpointer = newDigestCheckpointer(ctx, sink, s.DB(), checkpointSummarizer, ollamaClient, checkpointModel, runID, project)
+		agentSink = checkpointer
+		output.Info("Checkpoints: enabled (%s)", checkpointModel)
+	} else {
+		output.Info("Checkpoints: disabled (no summarizer available)")
+	}
+
+	exec := orchestrator.New(agentRunner, gate, agentSink, flags.concurrency)
 
 	// 8. Execute.
 	output.Info("Starting run %s", output.Cyan(runID))
 	fmt.Println()
 
 	state := exec.Execute(ctx, dag, runID)
+
+	// 8b. Drain in-flight checkpoint work before the terminal digest runs.
+	// Without this, a late-arriving checkpoint could overwrite the terminal
+	// UPSERT with stale content.
+	if checkpointer != nil {
+		checkpointer.Wait()
+	}
 
 	// 10. Emit run.end event.
 	var completed, failed int
@@ -311,70 +338,77 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 	}
 }
 
-// generateDigest creates a summary digest after a successful run.
-// Uses Haiku if ANTHROPIC_API_KEY is set, otherwise falls back to Ollama (mistral).
-func generateDigest(ctx context.Context, db *sql.DB, embedder memory.Embedder, runID, project string, autoApprove bool) {
-	// Load agent outputs from the DB.
+// pickSummarizer selects the summarizer used for digest generation.
+// Haiku (remote) is preferred if ANTHROPIC_API_KEY is set; otherwise Ollama
+// (local) is used if healthy. Returns (nil, "", false) when neither is
+// available.
+func pickSummarizer(ctx context.Context) (memory.Summarizer, string, bool) {
+	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
+		client := haiku.NewClient(apiKey, "")
+		return client, client.Model(), true
+	}
+	s := ollama.NewSummarizer("", "")
+	if !ollama.NewClient("", "").Healthy(ctx) {
+		return nil, "", false
+	}
+	return s, s.Model(), true
+}
+
+// summarizeAndUpsert summarizes the current agent outputs for runID and
+// upserts the resulting digest, overwriting any previous checkpoint for the
+// same run. No user interaction. Returns (nil, nil) when there is nothing to
+// summarize (no agent outputs yet).
+//
+// Used by both the incremental checkpointer (after each agent.end) and the
+// terminal digest path (after run.end), so the cumulative digest of the last
+// checkpoint is always consistent with what the user approves at the end.
+func summarizeAndUpsert(
+	ctx context.Context,
+	db *sql.DB,
+	summarizer memory.Summarizer,
+	embedder memory.Embedder,
+	modelUsed, runID, project string,
+) (*memory.DigestDraft, error) {
 	agentOutputs, err := loadAgentOutputs(ctx, db, runID)
 	if err != nil {
-		output.Warn("load agent outputs: %s", err)
-		return
+		return nil, fmt.Errorf("load agent outputs: %w", err)
 	}
 	if len(agentOutputs) == 0 {
-		return
-	}
-
-	// Pick summarizer: Haiku (remote) or Ollama/Mistral (local).
-	var summarizer memory.Summarizer
-	var modelUsed string
-
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
-	if apiKey != "" {
-		haikuClient := haiku.NewClient(apiKey, "")
-		summarizer = haikuClient
-		modelUsed = haikuClient.Model()
-	} else {
-		ollamaSummarizer := ollama.NewSummarizer("", "")
-		if !ollama.NewClient("", "").Healthy(ctx) {
-			output.Warn("neither ANTHROPIC_API_KEY nor Ollama available, skipping digest generation")
-			return
-		}
-		summarizer = ollamaSummarizer
-		modelUsed = ollamaSummarizer.Model()
-		output.Info("Using local Ollama (%s) for digest summarization", modelUsed)
+		return nil, nil
 	}
 
 	draft, err := summarizer.Summarize(ctx, agentOutputs)
 	if err != nil {
-		output.Warn("summarize run: %s", err)
-		return
+		return nil, fmt.Errorf("summarize: %w", err)
 	}
 
-	// Approval gate.
-	if !autoApprove {
-		action := showDigestApproval(draft)
-		switch action {
-		case "no":
-			output.Info("Digest discarded")
-			return
-		case "edit":
-			draft.Summary = editDigestSummary(draft.Summary)
-		}
-	}
-
-	// Generate embedding.
 	var embedding []float32
 	if embedder != nil {
-		embedding, err = embedder.Embed(ctx, draft.Summary)
-		if err != nil {
-			output.Warn("embed digest: %s", err)
-			// Continue without embedding.
+		emb, embErr := embedder.Embed(ctx, draft.Summary)
+		if embErr != nil {
+			output.Warn("embed digest: %s", embErr)
+			// Continue without embedding — the digest is still searchable by project.
+		} else {
+			embedding = emb
 		}
 	}
 
-	// Save.
-	digestID, _ := newDigestID()
-	now := time.Now().UTC()
+	// Reuse existing digest id when upserting so row identity is preserved
+	// across checkpoints. If no row exists, mint a fresh id.
+	existing, err := memory.GetDigestByRunID(ctx, db, runID)
+	if err != nil {
+		return nil, fmt.Errorf("lookup existing digest: %w", err)
+	}
+	digestID := ""
+	var createdAt time.Time
+	if existing != nil {
+		digestID = existing.ID
+		createdAt = existing.CreatedAt
+	} else {
+		digestID, _ = newDigestID()
+		createdAt = time.Now().UTC()
+	}
+
 	d := memory.Digest{
 		ID:        digestID,
 		RunID:     runID,
@@ -385,15 +419,92 @@ func generateDigest(ctx context.Context, db *sql.DB, embedder memory.Embedder, r
 		Errors:    draft.Errors,
 		Embedding: embedding,
 		ModelUsed: modelUsed,
-		CreatedAt: now,
-		UpdatedAt: now,
+		CreatedAt: createdAt,
 	}
 
-	if err := memory.SaveDigest(ctx, db, d); err != nil {
-		output.Warn("save digest: %s", err)
+	if err := memory.UpsertDigest(ctx, db, d); err != nil {
+		return nil, fmt.Errorf("upsert digest: %w", err)
+	}
+	return &draft, nil
+}
+
+// generateDigest creates (or refines) the run-level digest after all agents
+// finish. Uses Haiku if ANTHROPIC_API_KEY is set, otherwise falls back to
+// Ollama (mistral). This runs AFTER the incremental checkpointer has already
+// persisted per-agent checkpoints, so if the user rejects at the approval
+// gate the last checkpoint still survives — work is never lost.
+func generateDigest(ctx context.Context, db *sql.DB, embedder memory.Embedder, runID, project string, autoApprove bool) {
+	summarizer, modelUsed, ok := pickSummarizer(ctx)
+	if !ok {
+		output.Warn("neither ANTHROPIC_API_KEY nor Ollama available, skipping terminal digest")
 		return
 	}
-	output.Info("Digest saved: %s", digestID)
+
+	// Summarize + upsert first so the on-disk checkpoint reflects the full run.
+	// If the user then edits or rejects, we either re-upsert (edit) or leave
+	// the current state as-is (reject) — the last checkpoint is preserved.
+	draft, err := summarizeAndUpsert(ctx, db, summarizer, embedder, modelUsed, runID, project)
+	if err != nil {
+		output.Warn("terminal digest: %s", err)
+		return
+	}
+	if draft == nil {
+		// No agent outputs — nothing to digest.
+		return
+	}
+
+	if autoApprove {
+		output.Info("Digest saved (terminal, %s)", modelUsed)
+		return
+	}
+
+	action := showDigestApproval(*draft)
+	switch action {
+	case "no":
+		output.Info("Terminal digest skipped (incremental checkpoints preserved)")
+		return
+	case "edit":
+		edited := editDigestSummary(draft.Summary)
+		if edited != draft.Summary {
+			draft.Summary = edited
+			// Re-upsert with edited summary. Re-embed the new text.
+			var embedding []float32
+			if embedder != nil {
+				if emb, embErr := embedder.Embed(ctx, draft.Summary); embErr == nil {
+					embedding = emb
+				} else {
+					output.Warn("embed edited digest: %s", embErr)
+				}
+			}
+			existing, _ := memory.GetDigestByRunID(ctx, db, runID)
+			digestID := ""
+			var createdAt time.Time
+			if existing != nil {
+				digestID = existing.ID
+				createdAt = existing.CreatedAt
+			} else {
+				digestID, _ = newDigestID()
+				createdAt = time.Now().UTC()
+			}
+			d := memory.Digest{
+				ID:        digestID,
+				RunID:     runID,
+				Project:   project,
+				Summary:   draft.Summary,
+				Decisions: draft.Decisions,
+				EdgeCases: draft.EdgeCases,
+				Errors:    draft.Errors,
+				Embedding: embedding,
+				ModelUsed: modelUsed,
+				CreatedAt: createdAt,
+			}
+			if err := memory.UpsertDigest(ctx, db, d); err != nil {
+				output.Warn("save edited digest: %s", err)
+				return
+			}
+		}
+	}
+	output.Info("Digest saved (terminal, %s)", modelUsed)
 }
 
 // loadAgentOutputs queries the agents table for outputs of a given run.
