@@ -73,7 +73,7 @@ Ask the user (in Spanish): "Recomiendo este pipeline: [lista]. ¿Apruebas o quie
 | `visual-improvement` | yes | skip | yes |
 | `functional-improvement` | skip | yes | skip |
 
-UI work + design file (.pen / Figma) → use `/design-to-code`, pass design.md. No file → developer.
+UI work + design file (.pen / Figma) → use `/design-to-code`, pass architecture-frontend.md + ui-spec.md. No file → developer.
 
 ---
 
@@ -177,6 +177,21 @@ After all agents finish: update `sprint-current.md` (Done row), `board.md` (Done
 - Content already in context → pass inline to agent. Content NOT in context → tell agent the file path.
 - Agent output feeds next agent → pass inline. Never read source code just to relay it (anti-pattern #5).
 - Each agent: MAX 1 document per invocation. Multiple docs → run agent twice.
+
+### Architecture views → Developer routing
+
+The architect produces `architecture.md` + domain-specific views. Pass ONLY the relevant views per developer stack:
+
+| Developer stack | Pass these architecture files |
+|---|---|
+| Go (backend) | `architecture.md` + `architecture-backend.md` + `architecture-db.md` (if exists) |
+| React / frontend | `architecture.md` + `architecture-frontend.md` |
+| Flutter / mobile | `architecture.md` + `architecture-frontend.md` (mobile section) |
+| DBA | `architecture.md` + `architecture-db.md` |
+| DevOps | `architecture.md` + `architecture-infra.md` |
+| Full-stack (single dev) | `architecture.md` + all generated views |
+
+The `architecture.md` (overview) ALWAYS goes to every developer — it has the decisions and cross-cutting context. Domain views are additive.
 
 ---
 

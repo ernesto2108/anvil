@@ -51,9 +51,11 @@ Read the skeleton file specified in the guide. Inject INLINE into the scanner pr
 
 ## Step 4 — Architect (2 agents in parallel)
 
-Launch TWO architect agents following the guide:
-- **4a — Overview:** inject context-summary.md INLINE
-- **4b — Detail:** inject template + context-detail.md INLINE
+Launch TWO architect agents with `mode: documentation` following the guide:
+- **4a — Overview:** inject context-summary.md INLINE → produces `overview.md`
+- **4b — Detail:** inject template + context-detail.md INLINE → produces `endpoints/*.md`
+
+Note: documentation mode uses `overview.md` / `endpoints/*.md` naming (not the task-mode `architecture*.md` views). This is intentional — documentation mode captures existing architecture, not new design decisions.
 
 - Model: **sonnet**
 - **Target: 0 Read calls** for detail agent (everything inline)
