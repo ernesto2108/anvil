@@ -3,14 +3,43 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/ernesto2108/anvil/internal/dashboard/imports"
 	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 )
+
+// analyzerOnce guards singleton creation for the import Analyzer.
+var (
+	analyzerOnce sync.Once
+	analyzer     *imports.Analyzer
+)
+
+// getAnalyzer returns the package-level Analyzer, creating it once with cwd as root.
+func getAnalyzer(cwd string) *imports.Analyzer {
+	analyzerOnce.Do(func() {
+		analyzer = imports.New(cwd)
+	})
+	return analyzer
+}
+
+// analyzableExts is the set of file extensions supported by the import analyzer.
+var analyzableExts = map[string]bool{
+	".go":  true,
+	".ts":  true,
+	".tsx": true,
+	".js":  true,
+	".jsx": true,
+	".rs":  true,
+	".py":  true,
+}
 
 // parentRunID returns the run ID exported by the orchestrator when the
 // current claude subprocess was launched as part of an `anvil run` pipeline.
@@ -84,7 +113,7 @@ func translateHook(raw []byte, w *writer.EventWriter) error {
 
 	switch env.HookEventName {
 	case "SessionStart":
-		return nil
+		return handleSessionStart(w, env.SessionID, env.CWD)
 	case "UserPromptSubmit":
 		return handleUserPromptSubmit(w, env.SessionID, env.Prompt, env.CWD)
 	case "SubagentStart":
@@ -106,12 +135,41 @@ func translateHook(raw []byte, w *writer.EventWriter) error {
 	case "PermissionDenied":
 		return handlePermissionDenied(w, env.SessionID, env.ToolName)
 	case "Stop":
-		return nil
+		return handleStop(w, env.SessionID, env.LastAssistantMessage)
 	case "SessionEnd":
 		return handleSessionEnd(w, env.SessionID)
 	default:
 		return nil
 	}
+}
+
+// handleSessionStart creates a new run and registers a synthetic "direct"
+// agent so that standalone Claude Code sessions appear in the dashboard with
+// agents_count > 0, just like anvil-orchestrated pipeline runs.
+//
+// This only fires for top-level sessions (no ANVIL_PARENT_RUN_ID). Subprocesses
+// launched by `anvil run` already have their run/agent lifecycle managed by the
+// orchestrator.
+func handleSessionStart(w *writer.EventWriter, sessionID, cwd string) error {
+	if parentRunID() != "" {
+		return nil
+	}
+
+	runID, err := createRunForSession(w, sessionID, cwd)
+	if err != nil {
+		return err
+	}
+
+	agentID := fmt.Sprintf("direct-%s", sessionID[:8])
+	payload := instrumentation.AgentStartPayload{
+		AgentID:   agentID,
+		AgentRole: "direct",
+	}
+	ev, err := instrumentation.NewEvent(runID, instrumentation.EventAgentStart, payload)
+	if err != nil {
+		return err
+	}
+	return w.WriteEvent(ev)
 }
 
 // createRunForSession creates a new run linked to the given session.
@@ -306,7 +364,67 @@ func handlePostToolUse(w *writer.EventWriter, sessionID, toolName string, toolIn
 	if err != nil {
 		return err
 	}
-	return w.WriteEvent(ev)
+	if err := w.WriteEvent(ev); err != nil {
+		return err
+	}
+
+	// Best-effort: detect import edges and persist them.
+	// Errors are logged and never propagate to the caller.
+	analyzeFileEdges(w, runID, ti.FilePath, cwd)
+	return nil
+}
+
+// analyzeFileEdges runs the import analyzer on filePath and persists any edges
+// found. It is always best-effort: all errors are logged, never returned.
+func analyzeFileEdges(w *writer.EventWriter, runID, filePath, cwd string) {
+	if !analyzableExts[strings.ToLower(filepath.Ext(filePath))] {
+		return
+	}
+	if cwd == "" {
+		return
+	}
+
+	an := getAnalyzer(cwd)
+
+	touchedPaths, err := w.TouchedPathsForRun(runID)
+	if err != nil {
+		log.Printf("anvil/emit: TouchedPathsForRun: %v", err)
+		return
+	}
+
+	edges, err := an.Analyze(filePath, touchedPaths)
+	if err != nil {
+		log.Printf("anvil/emit: Analyze(%s): %v", filePath, err)
+		return
+	}
+
+	if len(edges) == 0 {
+		return
+	}
+
+	if err := w.WriteFileEdges(runID, edges); err != nil {
+		log.Printf("anvil/emit: WriteFileEdges: %v", err)
+	}
+}
+
+// handleStop fires at the end of each Claude turn. For direct sessions it
+// appends the assistant's response to the "direct" agent output so the
+// dashboard shows what Claude actually said/did across all turns.
+//
+// Skipped for anvil-orchestrated subprocesses — the orchestrator captures
+// output via SubagentStop.
+func handleStop(w *writer.EventWriter, sessionID, lastMessage string) error {
+	if parentRunID() != "" || lastMessage == "" {
+		return nil
+	}
+
+	runID, err := w.ResolveRunBySession(sessionID)
+	if err != nil || runID == "" {
+		return err
+	}
+
+	agentID := fmt.Sprintf("direct-%s", sessionID[:8])
+	return w.AppendAgentOutput(runID, agentID, lastMessage)
 }
 
 func handleSessionEnd(w *writer.EventWriter, sessionID string) error {
@@ -324,6 +442,23 @@ func handleSessionEnd(w *writer.EventWriter, sessionID string) error {
 	}
 	if runID == "" {
 		return nil
+	}
+
+	// Close the synthetic "direct" agent opened by handleSessionStart.
+	agentID := fmt.Sprintf("direct-%s", sessionID[:8])
+	var durationMs int64
+	if startedAt, ok := w.AgentStartedAt(runID, agentID); ok {
+		if t, err := time.Parse("2006-01-02T15:04:05.999999999Z07:00", startedAt); err == nil {
+			durationMs = time.Since(t).Milliseconds()
+		}
+	}
+	agentEnd := instrumentation.AgentEndPayload{
+		AgentID:    agentID,
+		Status:     "success",
+		DurationMs: durationMs,
+	}
+	if ev, err := instrumentation.NewEvent(runID, instrumentation.EventAgentEnd, agentEnd); err == nil {
+		_ = w.WriteEvent(ev)
 	}
 
 	payload := instrumentation.RunEndPayload{

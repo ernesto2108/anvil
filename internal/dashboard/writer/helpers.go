@@ -164,6 +164,24 @@ func (w *EventWriter) AgentStartedAt(runID, agentID string) (string, bool) {
 	return startedAt, true
 }
 
+// AppendAgentOutput appends text to the output column of an agent row,
+// separating turns with a blank line. Used by the Stop hook to accumulate
+// Claude's responses across multiple turns in a direct session.
+func (w *EventWriter) AppendAgentOutput(runID, agentID, text string) error {
+	const q = `
+		UPDATE agents
+		SET output = CASE
+			WHEN output IS NULL OR output = '' THEN ?
+			ELSE output || char(10) || char(10) || '---' || char(10) || char(10) || ?
+		END
+		WHERE run_id = ? AND agent_id = ?`
+	_, err := w.db.Exec(q, text, text, runID, agentID)
+	if err != nil {
+		return fmt.Errorf("dashboard/writer: append agent output: %w", err)
+	}
+	return nil
+}
+
 // ActiveAgentID returns the agent_id of the most recently started agent
 // with status "running" for the given run. Returns "" if none found.
 func (w *EventWriter) ActiveAgentID(runID string) string {
