@@ -98,16 +98,13 @@ func recoverDirtyState(m *migrate.Migrate) error {
 		return nil
 	}
 
-	// Force rollback to previous clean version.
-	targetVersion := int(version) - 1
-	log.Printf("storage: dirty state detectado en version %d, forzando rollback a version %d", version, targetVersion)
+	// Mark the dirty version as clean so m.Up() can proceed to the next migration.
+	// We do NOT roll back to version-1 because SQLite does not support DROP COLUMN,
+	// so re-running the failed migration would fail with "duplicate column name".
+	log.Printf("storage: dirty state detectado en version %d, marcando como limpia", version)
 
-	if targetVersion < 0 {
-		targetVersion = -1 // special value: no version applied
-	}
-
-	if err := m.Force(targetVersion); err != nil {
-		return fmt.Errorf("forzar rollback a version %d: %w", targetVersion, err)
+	if err := m.Force(int(version)); err != nil {
+		return fmt.Errorf("limpiar dirty state en version %d: %w", version, err)
 	}
 
 	log.Printf("storage: dirty state resuelto, continuando con migraciones")
