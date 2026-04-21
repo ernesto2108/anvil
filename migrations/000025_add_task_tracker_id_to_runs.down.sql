@@ -1,0 +1,3 @@
+-- NOTE: SQLite does not support ALTER TABLE DROP COLUMN.
+-- The task_tracker_id column added to runs cannot be removed.
+-- That column will remain on the runs table after a rollback.

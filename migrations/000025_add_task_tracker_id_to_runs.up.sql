@@ -1,0 +1,1 @@
+ALTER TABLE runs ADD COLUMN task_tracker_id TEXT NOT NULL DEFAULT '';

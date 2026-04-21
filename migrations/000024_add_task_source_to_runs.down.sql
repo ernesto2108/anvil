@@ -1,0 +1,3 @@
+-- NOTE: SQLite does not support ALTER TABLE DROP COLUMN.
+-- The task_source and task_url columns added to runs cannot be removed.
+-- Those columns will remain on the runs table after a rollback.
