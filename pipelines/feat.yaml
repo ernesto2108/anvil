@@ -1,12 +1,18 @@
-# Standard feature — architect + dev + tester + qa
+# Standard feature — architect (SPEC) + dev + tester + qa
 nodes:
   - id: arch
     role: architect
     timeout: 5m
+    outputs: [architecture.md, spec.md, adrs/]
+  - id: spec-approval
+    role: gate
+    depends_on: [arch]
+    description: User approves SPEC before developer starts
   - id: dev
     role: developer
-    depends_on: [arch]
+    depends_on: [spec-approval]
     timeout: 10m
+    inputs: [spec.md]
   - id: test
     role: tester
     depends_on: [dev]

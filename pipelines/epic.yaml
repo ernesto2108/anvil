@@ -1,26 +1,34 @@
-# Full pipeline — pm + designer + architect + dba + dev + tester + qa + security
+# Full pipeline — pm + designer (DTD) + architect (ADRs + SPEC) + dba + dev + tester + qa + security
 nodes:
   - id: pm
     role: pm
     timeout: 5m
+    outputs: [prd.md]
   - id: designer
     role: designer
     depends_on: [pm]
     gate: true
     timeout: 5m
+    outputs: [dtd.md]
   - id: arch
     role: architect
     depends_on: [designer]
     gate: true
     timeout: 5m
+    outputs: [architecture.md, spec.md, adrs/]
+  - id: spec-approval
+    role: gate
+    depends_on: [arch]
+    description: User approves SPEC before developer starts
   - id: dba
     role: dba
     depends_on: [arch]
     timeout: 5m
   - id: dev
     role: developer
-    depends_on: [arch, dba]
+    depends_on: [spec-approval, dba]
     timeout: 10m
+    inputs: [spec.md]
   - id: test
     role: tester
     depends_on: [dev]

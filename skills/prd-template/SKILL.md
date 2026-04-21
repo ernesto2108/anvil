@@ -82,6 +82,13 @@ Que problema existe, para quien, y por que ahora. Incluir datos de soporte (tick
 2. Sistema responde con mensaje de error claro
 3. Usuario puede reintentar
 
+## Scope
+- **Type:** new | visual-improvement | functional-improvement | both
+- **Platform:** web | mobile | both
+- **Milestone:** <milestone name> (e.g., MVP, v1.0, v2.0, Sprint Q2)
+- **Existing assets:** [list of files, components, screens that already exist]
+- **Design status:** none | exists-no-changes | exists-needs-update | new-needed
+
 ## Alcance
 
 ### Plataforma

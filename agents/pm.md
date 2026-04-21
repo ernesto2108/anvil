@@ -82,11 +82,22 @@ Record the answers in the PRD under a **Scope** section:
 ## Scope
 - **Type:** new | visual-improvement | functional-improvement | both
 - **Platform:** web | mobile | both
+- **Milestone:** <milestone name> (e.g., MVP, v1.0, v2.0, Sprint Q2)
 - **Existing assets:** [list of files, components, screens that already exist]
 - **Design status:** none | exists-no-changes | exists-needs-update | new-needed
 ```
 
 This section is what the orchestrator reads to decide which agents to skip.
+
+#### Milestone discovery (MANDATORY)
+
+Before writing the PRD, determine which milestone this work belongs to:
+
+1. **"¿A qué milestone pertenece esto?"** — e.g., MVP, v1.0, v2.0, Sprint Q2
+2. If the user doesn't have milestones defined yet, ask: "¿Quieres definir milestones para el proyecto? (ej: MVP, v1, v2)"
+3. Record in the Scope section and propagate to every task created from this PRD
+
+The milestone flows down: **PRD → Tasks → Backlog**. Every task inherits its PRD's milestone.
 
 ### Step 2 — Break into tasks + update backlog (MANDATORY, same invocation)
 
@@ -96,9 +107,10 @@ After PRD is written, break into tasks AND add them to the sprint. Both happen i
 2. Break PRD into tasks (one per component/concern: backend, frontend, DB, tests, security)
 3. **Read `<docs>/02-backlog/sprint-current.md`** to understand the current format and existing tasks
 4. **Match the existing format exactly** — use the same table structure, columns, and conventions already in the file. Do NOT impose a different format
-5. Add new tasks to the **Backlog** table section
+5. Add new tasks to the **Backlog** table section. Each task inherits the PRD's milestone
 6. If the PRD is a group of related tasks, add a section header row: `| | **── <Feature Name> (<TASK-ID>, <date>) ──** | | | | | |`
-7. Present the task breakdown to the user for approval
+7. **Include `milestone` in task frontmatter** (task.md files) — enables grouping and filtering in the dashboard
+8. Present the task breakdown to the user for approval
 
 **No PRD is complete without tasks in the backlog.** Both the PRD file AND the backlog update happen in this step.
 

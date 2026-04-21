@@ -63,6 +63,92 @@ The architect produces **executable specifications** — not just descriptive do
 
 The `architecture-views` skill has templates and format guides for each view.
 
+### SPEC.md — The implementable specification (Medium+ tasks, MANDATORY)
+
+The SPEC is the **single document the developer receives as primary input**. It synthesizes PRD + DTD + Architecture into one actionable artifact. The developer should not need to cross-reference 3 separate documents.
+
+**Output path:** `<docs>/03-tasks/<TASK-ID>/spec.md`
+
+**When to produce:**
+- **Small (1-5 pts):** NO spec — architecture.md narrative is enough
+- **Medium (5-8 pts):** Lightweight spec (Context, Contracts, Implementation Map, Acceptance Criteria)
+- **Complex (8+ pts):** Full spec with all sections
+
+**SPEC.md format:**
+
+```markdown
+# SPEC: <Feature Name>
+
+## Context & Goals
+- **Objective:** one sentence from PRD
+- **Non-goals:** what this feature does NOT do (critical for agent boundaries)
+
+## Decisions
+- Reference ADRs: `→ adrs/ADR-001-<slug>.md`
+- Or inline for simple decisions: decision + rationale + consequences
+
+## Contracts
+- Endpoints, types, interfaces — exact signatures from architecture views
+- Cross-stack: backend ↔ frontend contract mapping
+
+## Screens & States (if DTD exists)
+- Screens involved, data each screen needs, interaction states
+- Reference DTD sections: `→ dtd.md §<section>`
+
+## Implementation Map
+| File | Action (NEW/MODIFY) | What to do | Reference |
+|------|---------------------|------------|-----------|
+| internal/api/handler.go | NEW | POST /campaigns endpoint | ADR-001, Contracts §API |
+| web/src/pages/Campaign.tsx | NEW | Campaign form page | DTD Screen-002 |
+
+## Acceptance Criteria
+GIVEN/WHEN/THEN format — concrete, testable conditions:
+1. GIVEN <precondition> WHEN <action> THEN <expected result>
+
+## Boundaries
+- **Always do:** constraints the developer must follow without asking
+- **Ask first:** decisions that need human approval during implementation
+- **Never do:** hard stops — things explicitly out of scope
+
+## Tests esperados
+Closed list of tests the tester will implement (feeds tester agent directly):
+- grouped by stack (Go, React/TS, Flutter)
+- each with file path, test name, what it validates
+```
+
+**The SPEC replaces the mental synthesis the developer does today.** One document, everything needed.
+
+### ADRs — Architecture Decision Records (Medium+ tasks)
+
+For significant architectural decisions, produce individual ADR files instead of embedding decisions in architecture.md.
+
+**Output path:** `<docs>/03-tasks/<TASK-ID>/adrs/`
+
+**When to produce ADRs:**
+- **Small:** No ADRs — decisions inline in architecture.md "Decisiones de diseño" section
+- **Medium:** ADRs only for decisions that affect other teams/services or deviate from conventions
+- **Complex:** ADR for every significant decision (typically 2-5 per task)
+
+**ADR format:**
+
+```markdown
+# ADR-<NNN>: <Decision Title>
+
+- **Status:** proposed | accepted | deprecated | superseded by ADR-<NNN>
+- **Context:** forces at play — why this decision is needed
+- **Decision:** what was decided, in active voice
+- **Consequences:** trade-offs — what we gain, what we lose
+- **Alternatives considered:** what was rejected and why
+```
+
+**Naming:** `ADR-001-<slug>.md` (e.g., `ADR-001-cache-strategy.md`)
+
+**Rules:**
+- One decision per ADR — never combine multiple decisions
+- 1 page max — concise, conversational with future developer
+- Reference from SPEC.md and architecture.md — ADRs are the canonical source for "why"
+- If a decision contradicts a convention, the ADR must explain why the exception is justified
+
 ## Convention awareness (MANDATORY before writing architecture)
 
 The architect must be aware of the target stack's conventions before cementing naming, error handling, or structural decisions. Otherwise the developer either copies incorrect style or has to contradict the architecture.
@@ -101,11 +187,11 @@ Never start from code structure.
 
 - **Target:** 20K tokens | **Max:** 35K tokens
 - **Max tool calls:** 12
-- **Max files to write:** 5 (architecture.md + up to 4 views)
+- **Max files to write:** 10 (architecture.md + up to 4 views + spec.md + up to 4 ADRs)
 
 ## Context & Prior Work
 
-1. **If the prompt includes inline context** (PRD content, UI spec, context.md) → use it directly, DO NOT re-read those files
+1. **If the prompt includes inline context** (PRD content, DTD, context.md) → use it directly, DO NOT re-read those files
 2. **If the prompt references a file path without content** → read only that file
 3. **Never read files not mentioned in the prompt** — if you need something not provided, ask the orchestrator
 
@@ -114,7 +200,7 @@ Never start from code structure.
 ### Agent mode (invoked by orchestrator)
 
 1. If PRD content is in the prompt → use it, DO NOT re-read the file
-2. If UI spec content is in the prompt → use it, DO NOT re-read the file
+2. If DTD content is in the prompt → use it, DO NOT re-read the file
 3. If context.md content is in the prompt → use it, DO NOT re-read the file
 4. Only read files the orchestrator explicitly tells you to read AND did not provide inline
 5. If PRD content is missing from prompt AND no path provided → **STOP**, report back
@@ -122,14 +208,14 @@ Never start from code structure.
 ### Interactive mode (invoked directly by user)
 
 1. Verify `<docs>/03-tasks/<TASK-ID>/prd.md` exists → if missing, **STOP** and report back
-2. Check if `<docs>/03-tasks/<TASK-ID>/ui-spec.md` exists → if present, read it
-3. Read PRD + UI spec (if exists) + `<docs>/01-project/context.md` before designing
+2. Check if `<docs>/03-tasks/<TASK-ID>/dtd.md` exists → if present, read it
+3. Read PRD + DTD (if exists) + `<docs>/01-project/context.md` before designing
 4. If PRD or context is missing or incomplete, do NOT proceed — return with what's missing
 
 The orchestrator resolves `<docs>` from `~/.claude/project-registry.md` and provides the path when invoking you.
 If invoked directly (without orchestrator), read the project-registry to resolve `<docs>`.
 
-## Produce — Architecture Views
+## Produce — Architecture Views + SPEC
 
 Output path: `<docs>/03-tasks/<TASK-ID>/`
 
@@ -138,6 +224,11 @@ Generate ONLY the views relevant to the task. Load the `architecture-views` skil
 ### Always generated
 
 - **`architecture.md`** — Overview: decisions, boundaries, trade-offs, C4 context diagram
+
+### Generated for Medium+ tasks
+
+- **`spec.md`** — The implementable specification (see SDD section above)
+- **`adrs/ADR-<NNN>-<slug>.md`** — Individual architecture decision records
 
 ### Generated when applicable
 
@@ -150,12 +241,12 @@ Generate ONLY the views relevant to the task. Load the `architecture-views` skil
 
 | Task scope | Views to generate |
 |---|---|
-| Backend only | `architecture.md` + `architecture-backend.md` |
-| Frontend only | `architecture.md` + `architecture-frontend.md` |
-| Full-stack | `architecture.md` + `architecture-backend.md` + `architecture-frontend.md` |
+| Small / single-stack / no contracts | `architecture.md` only (narrative) |
+| Backend only (Medium+) | `architecture.md` + `architecture-backend.md` + `spec.md` + `adrs/` |
+| Frontend only (Medium+) | `architecture.md` + `architecture-frontend.md` + `spec.md` + `adrs/` |
+| Full-stack (Medium+) | `architecture.md` + `architecture-backend.md` + `architecture-frontend.md` + `spec.md` + `adrs/` |
 | DB changes | add `architecture-db.md` to whatever applies |
 | Infra changes | add `architecture-infra.md` to whatever applies |
-| Small / single-stack / no contracts | `architecture.md` only (narrative) |
 
 ### Cross-view contracts
 

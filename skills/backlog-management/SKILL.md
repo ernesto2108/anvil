@@ -9,6 +9,39 @@ description: Task creation, backlog management, and sprint board format. Defines
 
 After a PRD is written, the PM MUST break it into tasks before any agent starts working. No PRD without tasks. No tasks without a PRD reference.
 
+## Work hierarchy
+
+```
+PROJECT (the repo/product — e.g., Anvil, Dashboard)
+  └── MILESTONE (deliverable milestone — e.g., MVP, v1.0, v2.0)
+       └── US (User Stories / Features — each PRD is a US)
+            └── TASKS (technical tasks — backend, frontend, DB, tests)
+                 └── SUB TASKS (steps within a task — tracked in handoff, not backlog)
+```
+
+- **PROJECT** — implicit from the repo. Not tracked in backlog
+- **MILESTONE** — groups of related features with a shared delivery goal. Tracked as a field in PRD Scope and task frontmatter
+- **US** — each PRD represents a User Story or Feature. The PRD is the US
+- **TASKS** — the decomposition of a US into technical work items. These are the rows in sprint-current.md
+- **SUB TASKS** — implementation steps within a task. Tracked in `.handoff/` files, not in the backlog
+
+### Milestone management
+
+Milestones are defined in the PRD's `## Scope` section (`Milestone` field) and propagated to every task.
+
+**In sprint-current.md:** group tasks by milestone using section headers:
+```
+| | **── 🎯 MVP ──** | | | | | |
+| PROJ-FEAT-001 | Create auth flow | P0 | feat | developer | 5 | my-service |
+| PROJ-FEAT-002 | Auth UI | P0 | feat | developer | 5 | my-web |
+| | **── 🎯 v1.0 ──** | | | | | |
+| PROJ-FEAT-010 | Add analytics | P1 | feat | developer | 3 | my-service |
+```
+
+**In task frontmatter:** include `milestone: <name>` so Dataview can group/filter by milestone.
+
+**Dashboard query:** `dashboard.md` can use `GROUP BY milestone` to show progress per milestone.
+
 ## Task ID format
 
 `<PROJECT>-<AREA>-<NNN>`

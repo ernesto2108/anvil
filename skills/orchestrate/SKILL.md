@@ -73,7 +73,7 @@ Ask the user (in Spanish): "Recomiendo este pipeline: [lista]. ¿Apruebas o quie
 | `visual-improvement` | yes | skip | yes |
 | `functional-improvement` | skip | yes | skip |
 
-UI work + design file (.pen / Figma) → use `/design-to-code`, pass architecture-frontend.md + ui-spec.md. No file → developer.
+UI work + design file (.pen / Figma) → use `/design-to-code`, pass architecture-frontend.md + dtd.md. No file → developer.
 
 ---
 
@@ -130,8 +130,9 @@ These boundaries apply when running agents. In direct mode (user's choice), the 
 ## Gates (hard stops — in addition to Rule #1 human gates)
 
 - **PM gate:** user approves PRD before architect starts
-- **Design execution gate:** after designer produces ui-spec.md → PAUSE for user to execute in Pencil/Figma
+- **Design execution gate:** after designer produces dtd.md → PAUSE for user to execute in Pencil/Figma
 - **Architect gate:** veto → STOP, re-discuss with user
+- **SPEC approval gate (Medium+ tasks):** after architect produces `spec.md` → show SPEC to user (Context, Non-goals, Implementation Map, Acceptance Criteria, Boundaries). User approves explicitly before developer starts. No SPEC approval → no developer invocation
 - **QA gate:** score < 7 → STOP, fix before continuing
 - **Security gate:** CVE critical/high → STOP, fix before continuing
 - **PM backlog gate:** after PRD → verify tasks in sprint-current.md
@@ -178,20 +179,28 @@ After all agents finish: update `sprint-current.md` (Done row), `board.md` (Done
 - Agent output feeds next agent → pass inline. Never read source code just to relay it (anti-pattern #5).
 - Each agent: MAX 1 document per invocation. Multiple docs → run agent twice.
 
-### Architecture views → Developer routing
+### SPEC + Architecture views → Developer routing
 
-The architect produces `architecture.md` + domain-specific views. Pass ONLY the relevant views per developer stack:
+For **Medium+ tasks**, the SPEC is the developer's primary input. Architecture views are supplementary reference.
 
-| Developer stack | Pass these architecture files |
+| Developer stack | Pass to developer |
 |---|---|
-| Go (backend) | `architecture.md` + `architecture-backend.md` + `architecture-db.md` (if exists) |
-| React / frontend | `architecture.md` + `architecture-frontend.md` |
-| Flutter / mobile | `architecture.md` + `architecture-frontend.md` (mobile section) |
+| Go (backend) | **`spec.md`** (primary) + `architecture-backend.md` + `architecture-db.md` (ref) |
+| React / frontend | **`spec.md`** (primary) + `architecture-frontend.md` (ref) |
+| Flutter / mobile | **`spec.md`** (primary) + `architecture-frontend.md` mobile section (ref) |
 | DBA | `architecture.md` + `architecture-db.md` |
 | DevOps | `architecture.md` + `architecture-infra.md` |
-| Full-stack (single dev) | `architecture.md` + all generated views |
+| Full-stack (single dev) | **`spec.md`** (primary) + all generated views (ref) |
 
-The `architecture.md` (overview) ALWAYS goes to every developer — it has the decisions and cross-cutting context. Domain views are additive.
+For **Small tasks** (no SPEC): pass `architecture.md` + relevant views as before.
+
+### SPEC → QA routing
+
+For Medium+ tasks, pass `spec.md` to the QA agent alongside changed files and test results. QA validates code against SPEC acceptance criteria.
+
+### SPEC → Tester routing
+
+For Medium+ tasks, pass `spec.md` as secondary input alongside the handoff. The tester uses acceptance criteria to understand test intent but follows the handoff's closed test list.
 
 ---
 

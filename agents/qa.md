@@ -59,11 +59,33 @@ The orchestrator decides based on:
 
 The orchestrator provides one of:
 - **Inline context** (medium): changed files, test results, what to review
-- **Doc references** (large): paths to PRD, design, changed files list
+- **Doc references** (large): paths to PRD, DTD, changed files list
+
+**For Medium+ tasks, the orchestrator SHOULD also provide:**
+- **SPEC path or inline** — the `spec.md` the developer implemented against. This is the primary reference for compliance review
 
 ## How to review
 
 Load the `/code-review-rubric` skill. It defines evaluation criteria, scoring scale, report format, and backlog task format. Follow it exactly.
+
+### SPEC compliance review (Medium+ tasks — MANDATORY)
+
+When a `spec.md` is provided (inline or by path), add a **SPEC compliance** section to the QA report:
+
+1. **Acceptance Criteria audit** — check each GIVEN/WHEN/THEN criterion from the SPEC against the implementation:
+   - ✅ Implemented and covered by tests
+   - ⚠️ Implemented but not tested
+   - ❌ Not implemented
+2. **Non-goals audit** — verify the developer did NOT implement anything listed in the SPEC's Non-goals section. If they did, flag it as scope creep (BLOCKER)
+3. **Contracts audit** — verify implemented interfaces/types match the SPEC's Contracts section exactly (names, params, return types). Mismatches are BLOCKERs
+4. **Boundaries audit** — verify "Never do" items from the SPEC were respected
+
+**Scoring impact:**
+- Any ❌ in Acceptance Criteria → score capped at 6 (auto-block)
+- Any Non-goals violation → BLOCKER regardless of score
+- Contract mismatch → BLOCKER regardless of score
+
+If no SPEC was provided (Small tasks), skip this section — review code quality only.
 
 ## Rules
 
@@ -72,6 +94,7 @@ Load the `/code-review-rubric` skill. It defines evaluation criteria, scoring sc
 - Block unsafe code
 - Create actionable tasks (not vague comments)
 - No architecture redesigns (that is architect responsibility)
+- **Validate against SPEC first, then code quality** — a well-written function that doesn't match the spec is a bug
 
 ## Behavior
 

@@ -157,7 +157,20 @@ The orchestrator indicates the complexity level when invoking you. Adapt your be
 
 The orchestrator provides one of:
 - **Inline context** (small tasks): changed file contents, test cases to cover, existing test patterns
-- **Doc references** (medium/large): paths to PRD, design, changed files list
+- **Doc references** (medium/large): paths to PRD, DTD, changed files list
+
+**For Medium+ tasks, the orchestrator SHOULD also provide:**
+- **SPEC path or inline** — the `spec.md` with Acceptance Criteria (GIVEN/WHEN/THEN) and `§Tests esperados`. Use these to inform integration-level tests alongside the handoff's closed test list
+
+### SPEC as secondary input (Medium+ tasks)
+
+The handoff remains your **primary** input (it has exact signatures, edge cases, patterns). The SPEC is a **secondary** reference for:
+
+- **Acceptance Criteria** → GIVEN/WHEN/THEN conditions translate to integration/behavioral tests. If a criterion isn't covered by the handoff's test list, flag it to the orchestrator — don't add tests silently
+- **Non-goals** → things you should NOT test (they shouldn't exist in the code)
+- **Contracts** → verify the shapes the developer implemented match what the SPEC defined (the baseline compile in STEP 2 catches most of this)
+
+**The handoff's `Tests requeridos` list is still the closed list.** The SPEC informs your understanding of *why* each test matters, but doesn't expand the scope.
 
 ## Convention Rules
 

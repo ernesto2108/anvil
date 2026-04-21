@@ -130,7 +130,7 @@ The orchestrator specifies the execution mode when invoking you. Default is `nor
 
 ### maquetation
 - Backend API does NOT exist yet — do not call it
-- Build UI from `ui-spec.md` with **mock data only** (contracts from `design.md`)
+- Build UI from `dtd.md` with **mock data only** (contracts from `spec.md` or `dtd.md`)
 - Mocks in co-located files (`mocks/`, `__mocks__/`, or inline)
 - Focus: layout, components, navigation, state management
 - Tag every mock with `// TODO(integration): replace with real API`
@@ -158,14 +158,32 @@ The orchestrator MUST provide these fields. If any required field is missing, ST
 | Stack(s) | REQUIRED | REQUIRED | REQUIRED |
 | Convention skill | optional (inline rules) | REQUIRED | REQUIRED |
 | What to do (objective) | REQUIRED | REQUIRED | REQUIRED |
-| Files to change | REQUIRED (listed) | REQUIRED (listed or in PRD) | REQUIRED (in design §8) |
-| PRD path or inline | optional | recommended | REQUIRED |
-| Design path or inline | N/A | optional | REQUIRED |
+| Files to change | REQUIRED (listed) | REQUIRED (in SPEC §Implementation Map) | REQUIRED (in SPEC §Implementation Map) |
+| **SPEC path or inline** | N/A | **REQUIRED** | **REQUIRED** |
+| PRD path or inline | optional | optional (SPEC is primary) | optional (SPEC is primary) |
+| DTD path or inline | N/A | optional (reference) | optional (reference) |
 | Context.md | optional (inline) | recommended | REQUIRED |
 | Mode | default: normal | default: normal | REQUIRED |
 | TASK-ID | optional | REQUIRED | REQUIRED |
 | Existing handoff | N/A | check `.handoff/` | check `.handoff/` |
 | `<docs>` path | optional | REQUIRED | REQUIRED |
+
+### SPEC as primary input (Medium+ tasks)
+
+For Medium+ tasks, the **SPEC.md** is your primary input. It synthesizes PRD + DTD + Architecture into one implementable document. You should NOT need to cross-reference 3 separate docs.
+
+**How to use the SPEC:**
+- `§Context & Goals` → understand what you're building and why
+- `§Non-goals` → what NOT to implement (critical — respect boundaries)
+- `§Contracts` → exact interfaces, types, endpoints to implement
+- `§Implementation Map` → file-by-file breakdown of what to do
+- `§Acceptance Criteria` → GIVEN/WHEN/THEN conditions your code must satisfy
+- `§Boundaries` → "Always do" / "Ask first" / "Never do" rules
+- `§Tests esperados` → closed test list (feeds your handoff for tester)
+
+**If something is not in the SPEC, don't implement it.** If you discover a gap during implementation (missing contract, unclear behavior), STOP and ask the orchestrator — don't guess.
+
+PRD and DTD remain available as **reference** for deeper context, but the SPEC is the source of truth for what to build.
 
 **Cross-stack tasks** additionally require:
 - Which stack goes first (dependency order)
