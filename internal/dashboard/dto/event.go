@@ -4,4 +4,5 @@ package dto
 type ActivityEventDTO struct {
 	Timestamp string `json:"timestamp"`
 	AgentID   string `json:"agentId"`
+	Path      string `json:"path"`
 }

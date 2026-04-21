@@ -4,4 +4,5 @@ package entity
 type ActivityEvent struct {
 	Timestamp string
 	AgentID   string // "" = main session (Claude direct)
+	Path      string
 }

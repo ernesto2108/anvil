@@ -66,7 +66,9 @@ func (r *Reader) ListFilesByAgent(ctx context.Context, runID, agentID string) ([
 // ListActivityEvents returns file.touched events with timestamps and agent attribution.
 func (r *Reader) ListActivityEvents(ctx context.Context, runID string) ([]entity.ActivityEvent, error) {
 	const q = `
-		SELECT timestamp, COALESCE(json_extract(payload, '$.agent_id'), '')
+		SELECT timestamp,
+		       COALESCE(json_extract(payload, '$.agent_id'), ''),
+		       COALESCE(json_extract(payload, '$.path'), '')
 		FROM events
 		WHERE run_id = ? AND event_type = 'file.touched'
 		ORDER BY timestamp ASC`
@@ -80,7 +82,7 @@ func (r *Reader) ListActivityEvents(ctx context.Context, runID string) ([]entity
 	var results []entity.ActivityEvent
 	for rows.Next() {
 		var ev entity.ActivityEvent
-		if err := rows.Scan(&ev.Timestamp, &ev.AgentID); err != nil {
+		if err := rows.Scan(&ev.Timestamp, &ev.AgentID, &ev.Path); err != nil {
 			return nil, fmt.Errorf("query: escanear activity event: %w", err)
 		}
 		results = append(results, ev)
