@@ -14,3 +14,4 @@ frontend/dist/
 build/bin/
 anvil-full
 orch-demo
+anvil_test

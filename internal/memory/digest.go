@@ -16,6 +16,7 @@ type Digest struct {
 	Errors    []string
 	Embedding []float32 // nil when not generated
 	ModelUsed string
+	Source    string // 'auto' (digestCheckpointer) or 'manual' (dashboard)
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

@@ -23,13 +23,18 @@ func SaveDigest(ctx context.Context, db *sql.DB, d Digest) error {
 		d.UpdatedAt = d.CreatedAt
 	}
 
-	const q = `INSERT INTO digests (id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	source := d.Source
+	if source == "" {
+		source = "auto"
+	}
+
+	const q = `INSERT INTO digests (id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, source, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	_, err = db.ExecContext(ctx, q,
 		d.ID, d.RunID, d.Project, d.Summary,
 		string(decisions), string(edgeCases), string(errors),
-		embBlob, d.ModelUsed,
+		embBlob, d.ModelUsed, source,
 		d.CreatedAt.Format(time.RFC3339Nano),
 		d.UpdatedAt.Format(time.RFC3339Nano),
 	)
@@ -59,8 +64,13 @@ func UpsertDigest(ctx context.Context, db *sql.DB, d Digest) error {
 	}
 	d.UpdatedAt = now
 
-	const q = `INSERT INTO digests (id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	source := d.Source
+	if source == "" {
+		source = "auto"
+	}
+
+	const q = `INSERT INTO digests (id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, source, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(run_id) DO UPDATE SET
 			summary    = excluded.summary,
 			decisions  = excluded.decisions,
@@ -68,12 +78,13 @@ func UpsertDigest(ctx context.Context, db *sql.DB, d Digest) error {
 			errors     = excluded.errors,
 			embedding  = excluded.embedding,
 			model_used = excluded.model_used,
+			source     = excluded.source,
 			updated_at = excluded.updated_at`
 
 	_, err = db.ExecContext(ctx, q,
 		d.ID, d.RunID, d.Project, d.Summary,
 		string(decisions), string(edgeCases), string(errors),
-		embBlob, d.ModelUsed,
+		embBlob, d.ModelUsed, source,
 		d.CreatedAt.Format(time.RFC3339Nano),
 		d.UpdatedAt.Format(time.RFC3339Nano),
 	)
@@ -107,7 +118,7 @@ func marshalDigest(d Digest) (decisions, edgeCases, errors []byte, embBlob []byt
 // GetDigestByRunID returns the digest for the given run.
 // Returns (nil, nil) if not found.
 func GetDigestByRunID(ctx context.Context, db *sql.DB, runID string) (*Digest, error) {
-	const q = `SELECT id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, created_at, updated_at
+	const q = `SELECT id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, source, created_at, updated_at
 		FROM digests WHERE run_id = ? LIMIT 1`
 
 	row := db.QueryRowContext(ctx, q, runID)
@@ -123,7 +134,7 @@ func GetDigestByRunID(ctx context.Context, db *sql.DB, runID string) (*Digest, e
 
 // ListDigestsByProject returns all digests for the given project, ordered by created_at DESC.
 func ListDigestsByProject(ctx context.Context, db *sql.DB, project string) ([]Digest, error) {
-	const q = `SELECT id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, created_at, updated_at
+	const q = `SELECT id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, source, created_at, updated_at
 		FROM digests WHERE project = ? ORDER BY created_at DESC`
 
 	rows, err := db.QueryContext(ctx, q, project)
@@ -161,20 +172,21 @@ func DeleteDigest(ctx context.Context, db *sql.DB, id string) error {
 // scanDigest scans a single digest row from either *sql.Row or *sql.Rows.
 func scanDigest(scanner interface{ Scan(dest ...any) error }) (Digest, error) {
 	var (
-		id         string
-		runID      string
-		project    string
-		summary    string
-		decisions  string
-		edgeCases  string
-		errors     string
-		embBlob    []byte
-		modelUsed  string
-		createdAt  string
-		updatedAt  string
+		id        string
+		runID     string
+		project   string
+		summary   string
+		decisions string
+		edgeCases string
+		errors    string
+		embBlob   []byte
+		modelUsed string
+		source    string
+		createdAt string
+		updatedAt string
 	)
 
-	if err := scanner.Scan(&id, &runID, &project, &summary, &decisions, &edgeCases, &errors, &embBlob, &modelUsed, &createdAt, &updatedAt); err != nil {
+	if err := scanner.Scan(&id, &runID, &project, &summary, &decisions, &edgeCases, &errors, &embBlob, &modelUsed, &source, &createdAt, &updatedAt); err != nil {
 		return Digest{}, err
 	}
 
@@ -184,6 +196,7 @@ func scanDigest(scanner interface{ Scan(dest ...any) error }) (Digest, error) {
 		Project:   project,
 		Summary:   summary,
 		ModelUsed: modelUsed,
+		Source:    source,
 	}
 
 	_ = json.Unmarshal([]byte(decisions), &d.Decisions)

@@ -85,6 +85,9 @@ func Run(args []string) {
 		cmdExport(cfg, cmdArgs)
 	case "digests":
 		cmdDigests(cfg, cmdArgs)
+	case "migrate":
+		flags, _ := parseRunFlags(cmdArgs)
+		cmdMigrate(flags.forceMigrate)
 	case "help", "-h", "--help":
 		cmdHelp(appName)
 	default:

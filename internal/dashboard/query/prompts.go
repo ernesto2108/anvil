@@ -9,7 +9,7 @@ import (
 
 // ListPromptsByRun returns all prompts for a run ordered by sequence ASC.
 func (r *Reader) ListPromptsByRun(ctx context.Context, runID string) ([]entity.Prompt, error) {
-	const q = `SELECT sequence, prompt, timestamp FROM prompts WHERE run_id = ? ORDER BY sequence ASC`
+	const q = `SELECT sequence, prompt, timestamp, output FROM prompts WHERE run_id = ? ORDER BY sequence ASC`
 
 	rows, err := r.db.QueryContext(ctx, q, runID)
 	if err != nil {
@@ -20,7 +20,7 @@ func (r *Reader) ListPromptsByRun(ctx context.Context, runID string) ([]entity.P
 	var results []entity.Prompt
 	for rows.Next() {
 		var p entity.Prompt
-		if err := rows.Scan(&p.Sequence, &p.Prompt, &p.Timestamp); err != nil {
+		if err := rows.Scan(&p.Sequence, &p.Prompt, &p.Timestamp, &p.Output); err != nil {
 			return nil, fmt.Errorf("query: escanear fila de prompts: %w", err)
 		}
 		results = append(results, p)

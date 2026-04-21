@@ -424,7 +424,10 @@ func handleStop(w *writer.EventWriter, sessionID, lastMessage string) error {
 	}
 
 	agentID := fmt.Sprintf("direct-%s", sessionID[:8])
-	return w.AppendAgentOutput(runID, agentID, lastMessage)
+	if err := w.AppendAgentOutput(runID, agentID, lastMessage); err != nil {
+		return err
+	}
+	return w.UpdatePromptOutput(runID, lastMessage)
 }
 
 func handleSessionEnd(w *writer.EventWriter, sessionID string) error {

@@ -32,6 +32,7 @@ func cmdHelp(appName string) {
     --auto-approve, -y           Skip human gates
 
   OTHER COMMANDS:
+    migrate              Apply pending DB migrations and show schema version
     digests              List run digests for current project
     digests show <id>    Show full body of one digest (the memory injected)
     export               Export digests to Markdown or JSON

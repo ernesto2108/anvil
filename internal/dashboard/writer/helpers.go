@@ -164,6 +164,17 @@ func (w *EventWriter) AgentStartedAt(runID, agentID string) (string, bool) {
 	return startedAt, true
 }
 
+// UpdatePromptOutput writes the assistant response to the output column of the
+// last prompt row for the given run (identified by MAX(sequence)).
+func (w *EventWriter) UpdatePromptOutput(runID, output string) error {
+	const q = `UPDATE prompts SET output = ? WHERE run_id = ? AND sequence = (SELECT MAX(sequence) FROM prompts WHERE run_id = ?)`
+	_, err := w.db.Exec(q, output, runID, runID)
+	if err != nil {
+		return fmt.Errorf("dashboard/writer: actualizar output del prompt: %w", err)
+	}
+	return nil
+}
+
 // AppendAgentOutput appends text to the output column of an agent row,
 // separating turns with a blank line. Used by the Stop hook to accumulate
 // Claude's responses across multiple turns in a direct session.
