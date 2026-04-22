@@ -24,3 +24,12 @@ type RunSummary struct {
 	Branch        string
 	ErrorReason   string
 }
+
+// RunProjectSummary represents a run together with its associated projects.
+type RunProjectSummary struct {
+	RunID        string
+	TaskDesc     string
+	Projects     []string
+	ProjectCount int
+	StartedAt    time.Time
+}

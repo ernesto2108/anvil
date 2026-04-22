@@ -408,3 +408,120 @@ func TestRotate_PrunesOldRuns(t *testing.T) {
 		t.Errorf("runs after rotation: got %d, want <= 3", count)
 	}
 }
+
+// helpers for run_projects tests
+
+func mustStartRun(t *testing.T, w *writer.EventWriter, runID string) {
+	t.Helper()
+	if err := w.WriteEvent(mustEvent(t, runID, instrumentation.EventRunStart, instrumentation.RunStartPayload{
+		TaskID: "task-" + runID,
+	})); err != nil {
+		t.Fatalf("WriteEvent RunStart(%s): %v", runID, err)
+	}
+}
+
+func mustTouchFile(t *testing.T, w *writer.EventWriter, runID, path string) {
+	t.Helper()
+	if err := w.WriteEvent(mustEvent(t, runID, instrumentation.EventFileTouched, instrumentation.FileTouchedPayload{
+		AgentID: "agent-x", Path: path, Operation: "modify",
+	})); err != nil {
+		t.Fatalf("WriteEvent FileTouched(%s): %v", path, err)
+	}
+}
+
+func endRun(t *testing.T, w *writer.EventWriter, runID string) error {
+	t.Helper()
+	return w.WriteEvent(mustEvent(t, runID, instrumentation.EventRunEnd, instrumentation.RunEndPayload{
+		Status: "success", DurationMs: 1000,
+	}))
+}
+
+func countRunProjects(t *testing.T, db *sql.DB, runID string) int {
+	t.Helper()
+	var n int
+	db.QueryRow("SELECT COUNT(*) FROM run_projects WHERE run_id = ?", runID).Scan(&n)
+	return n
+}
+
+func TestHandleRunEnd_NoFiles_NoRunProjects(t *testing.T) {
+	w, db := newTestWriter(t)
+	mustStartRun(t, w, "rp-001")
+	if err := endRun(t, w, "rp-001"); err != nil {
+		t.Fatalf("WriteEvent RunEnd: %v", err)
+	}
+	if n := countRunProjects(t, db, "rp-001"); n != 0 {
+		t.Errorf("run_projects: got %d, want 0", n)
+	}
+}
+
+func TestHandleRunEnd_SingleFile_InsertsProject(t *testing.T) {
+	w, db := newTestWriter(t)
+	mustStartRun(t, w, "rp-002")
+	mustTouchFile(t, w, "rp-002", "/Users/x/projects/myapp/main.go")
+	if err := endRun(t, w, "rp-002"); err != nil {
+		t.Fatalf("WriteEvent RunEnd: %v", err)
+	}
+	if n := countRunProjects(t, db, "rp-002"); n != 1 {
+		t.Errorf("run_projects: got %d, want 1", n)
+	}
+	var project string
+	db.QueryRow("SELECT project FROM run_projects WHERE run_id = ?", "rp-002").Scan(&project)
+	if project != "myapp" {
+		t.Errorf("project: got %q, want %q", project, "myapp")
+	}
+}
+
+func TestHandleRunEnd_MultipleFilesSameProject_Deduplicates(t *testing.T) {
+	w, db := newTestWriter(t)
+	mustStartRun(t, w, "rp-003")
+	mustTouchFile(t, w, "rp-003", "/Users/x/projects/myapp/main.go")
+	mustTouchFile(t, w, "rp-003", "/Users/x/projects/myapp/service.go")
+	mustTouchFile(t, w, "rp-003", "/Users/x/projects/myapp/handler.go")
+	if err := endRun(t, w, "rp-003"); err != nil {
+		t.Fatalf("WriteEvent RunEnd: %v", err)
+	}
+	if n := countRunProjects(t, db, "rp-003"); n != 1 {
+		t.Errorf("run_projects: got %d, want 1 (deduplication)", n)
+	}
+}
+
+func TestHandleRunEnd_MultipleProjects_InsertsAll(t *testing.T) {
+	w, db := newTestWriter(t)
+	mustStartRun(t, w, "rp-004")
+	mustTouchFile(t, w, "rp-004", "/Users/x/projects/alpha/main.go")
+	mustTouchFile(t, w, "rp-004", "/Users/x/projects/beta/service.go")
+	if err := endRun(t, w, "rp-004"); err != nil {
+		t.Fatalf("WriteEvent RunEnd: %v", err)
+	}
+	if n := countRunProjects(t, db, "rp-004"); n != 2 {
+		t.Errorf("run_projects: got %d, want 2", n)
+	}
+}
+
+func TestHandleRunEnd_PathWithNoExtractableProject_Skipped(t *testing.T) {
+	w, db := newTestWriter(t)
+	mustStartRun(t, w, "rp-005")
+	// Short path with no extractable project segment (fewer than 5 parts, no marker dir)
+	mustTouchFile(t, w, "rp-005", "/tmp/x.go")
+	if err := endRun(t, w, "rp-005"); err != nil {
+		t.Fatalf("WriteEvent RunEnd: %v", err)
+	}
+	if n := countRunProjects(t, db, "rp-005"); n != 0 {
+		t.Errorf("run_projects: got %d, want 0 (unskippable path)", n)
+	}
+}
+
+func TestHandleRunEnd_Idempotent_InsertOrIgnore(t *testing.T) {
+	w, db := newTestWriter(t)
+	mustStartRun(t, w, "rp-006")
+	mustTouchFile(t, w, "rp-006", "/Users/x/projects/myapp/main.go")
+	// End once
+	if err := endRun(t, w, "rp-006"); err != nil {
+		t.Fatalf("first RunEnd: %v", err)
+	}
+	// End again (INSERT OR IGNORE should not duplicate)
+	_ = endRun(t, w, "rp-006") // may return error due to status constraint; we don't care about the error
+	if n := countRunProjects(t, db, "rp-006"); n != 1 {
+		t.Errorf("run_projects after double end: got %d, want 1", n)
+	}
+}

@@ -75,7 +75,49 @@ func handleRunEnd(tx *sql.Tx, ev instrumentation.Event) error {
 	if err != nil {
 		return fmt.Errorf("dashboard/writer: actualizar runs (run.end): %w", err)
 	}
-	return expectRowsAffected(res, "runs", ev.RunID)
+	if err := expectRowsAffected(res, "runs", ev.RunID); err != nil {
+		return err
+	}
+
+	return insertRunProjects(tx, ev.RunID)
+}
+
+// insertRunProjects queries DISTINCT file paths for the run and inserts a row
+// per unique project into run_projects. No-op when no file paths are found.
+func insertRunProjects(tx *sql.Tx, runID string) error {
+	rows, err := tx.Query(
+		`SELECT DISTINCT path FROM files WHERE run_id = ? AND path LIKE '/%'`,
+		runID,
+	)
+	if err != nil {
+		return fmt.Errorf("dashboard/writer: consultar files para run_projects: %w", err)
+	}
+	defer rows.Close() //nolint:errcheck
+
+	seen := make(map[string]struct{})
+	for rows.Next() {
+		var path string
+		if err := rows.Scan(&path); err != nil {
+			return fmt.Errorf("dashboard/writer: escanear path para run_projects: %w", err)
+		}
+		project := extractProjectFromPath(path)
+		if project == "" {
+			continue
+		}
+		seen[project] = struct{}{}
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("dashboard/writer: iterar files para run_projects: %w", err)
+	}
+	rows.Close() //nolint:errcheck
+
+	const insertProject = `INSERT OR IGNORE INTO run_projects (run_id, project) VALUES (?, ?)`
+	for project := range seen {
+		if _, err := tx.Exec(insertProject, runID, project); err != nil {
+			return fmt.Errorf("dashboard/writer: insertar en run_projects: %w", err)
+		}
+	}
+	return nil
 }
 
 func handleAgentStart(tx *sql.Tx, ev instrumentation.Event) error {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ernesto2108/anvil/internal/dashboard/entity"
@@ -159,6 +160,89 @@ func (r *Reader) ListProjects(ctx context.Context) ([]string, error) {
 		results = append(results, p)
 	}
 	return results, rows.Err()
+}
+
+// ListProjectsByRun returns the list of projects associated with a run, ordered ASC.
+// Returns an empty (non-nil) slice when no projects are found.
+func (r *Reader) ListProjectsByRun(ctx context.Context, runID string) ([]string, error) {
+	rows, err := r.db.QueryContext(ctx,
+		`SELECT project FROM run_projects WHERE run_id = ? ORDER BY project ASC`,
+		runID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("query: listar proyectos por run %q: %w", runID, err)
+	}
+	defer rows.Close()
+
+	results := []string{}
+	for rows.Next() {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			return nil, fmt.Errorf("query: escanear proyecto de run_projects: %w", err)
+		}
+		results = append(results, p)
+	}
+	return results, rows.Err()
+}
+
+// ListMultiProjectRuns returns runs that touched 2 or more distinct projects,
+// ordered by started_at DESC. Each result includes the run metadata and
+// the list of projects. Returns an empty (non-nil) slice when none are found.
+func (r *Reader) ListMultiProjectRuns(ctx context.Context, limit, offset int) ([]entity.RunProjectSummary, error) {
+	if limit <= 0 {
+		limit = defaultListLimit
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	const q = `
+		SELECT rp.run_id, r.task_desc, GROUP_CONCAT(rp.project ORDER BY rp.project), COUNT(rp.project), r.started_at
+		FROM run_projects rp
+		JOIN runs r ON r.id = rp.run_id
+		GROUP BY rp.run_id
+		HAVING COUNT(rp.project) >= 2
+		ORDER BY r.started_at DESC
+		LIMIT ? OFFSET ?`
+
+	rows, err := r.db.QueryContext(ctx, q, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("query: listar multi-project runs: %w", err)
+	}
+	defer rows.Close()
+
+	results := []entity.RunProjectSummary{}
+	for rows.Next() {
+		var (
+			runID        string
+			taskDesc     sql.NullString
+			projectsRaw  string
+			projectCount int
+			startedAtRaw string
+		)
+		if err := rows.Scan(&runID, &taskDesc, &projectsRaw, &projectCount, &startedAtRaw); err != nil {
+			return nil, fmt.Errorf("query: escanear multi-project run: %w", err)
+		}
+		startedAt, err := time.Parse(time.RFC3339Nano, startedAtRaw)
+		if err != nil {
+			return nil, fmt.Errorf("query: parsear started_at %q en multi-project run: %w", startedAtRaw, err)
+		}
+		var projects []string
+		if projectsRaw != "" {
+			projects = strings.Split(projectsRaw, ",")
+		}
+		results = append(results, entity.RunProjectSummary{
+			RunID:        runID,
+			TaskDesc:     taskDesc.String,
+			Projects:     projects,
+			ProjectCount: projectCount,
+			StartedAt:    startedAt,
+		})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("query: iterar multi-project runs: %w", err)
+	}
+	return results, nil
 }
 
 // --- scan helpers ---

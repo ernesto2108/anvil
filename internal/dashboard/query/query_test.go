@@ -583,3 +583,248 @@ func TestListChildRuns(t *testing.T) {
 		t.Errorf("children: got %d, want 2", len(children))
 	}
 }
+
+// helpers for run_projects query tests
+
+func insertRunProject(t *testing.T, w *writer.EventWriter, runID string, paths []string) {
+	t.Helper()
+	// Seed files then trigger RunEnd to populate run_projects via insertRunProjects
+	for _, p := range paths {
+		ev, _ := instrumentation.NewEvent(runID, instrumentation.EventFileTouched, instrumentation.FileTouchedPayload{
+			AgentID: "agent-seed", Path: p, Operation: "modify",
+		})
+		w.WriteEvent(ev)
+	}
+	ev, _ := instrumentation.NewEvent(runID, instrumentation.EventRunEnd, instrumentation.RunEndPayload{
+		Status: "success", DurationMs: 500,
+	})
+	w.WriteEvent(ev)
+}
+
+func TestListProjectsByRun_NoProjects_ReturnsEmptySlice(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	r := query.NewReader(db)
+	w := writer.New(db, 0)
+	ctx := context.Background()
+
+	seedRun(t, w, "qrp-001", false)
+	// End with no files
+	ev, _ := instrumentation.NewEvent("qrp-001", instrumentation.EventRunEnd, instrumentation.RunEndPayload{Status: "success"})
+	w.WriteEvent(ev)
+
+	projects, err := r.ListProjectsByRun(ctx, "qrp-001")
+	if err != nil {
+		t.Fatalf("ListProjectsByRun: %v", err)
+	}
+	if projects == nil {
+		t.Error("expected non-nil empty slice, got nil")
+	}
+	if len(projects) != 0 {
+		t.Errorf("projects: got %d, want 0", len(projects))
+	}
+}
+
+func TestListProjectsByRun_WithProjects_ReturnsOrderedASC(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	r := query.NewReader(db)
+	w := writer.New(db, 0)
+	ctx := context.Background()
+
+	seedRun(t, w, "qrp-002", false)
+	// Insert files for projects in reverse alphabetical order
+	insertRunProject(t, w, "qrp-002", []string{
+		"/Users/x/projects/zebra/main.go",
+		"/Users/x/projects/alpha/main.go",
+		"/Users/x/projects/mango/main.go",
+	})
+
+	projects, err := r.ListProjectsByRun(ctx, "qrp-002")
+	if err != nil {
+		t.Fatalf("ListProjectsByRun: %v", err)
+	}
+	if len(projects) != 3 {
+		t.Fatalf("projects: got %d, want 3", len(projects))
+	}
+	want := []string{"alpha", "mango", "zebra"}
+	for i, p := range projects {
+		if p != want[i] {
+			t.Errorf("projects[%d]: got %q, want %q", i, p, want[i])
+		}
+	}
+}
+
+func TestListProjectsByRun_UnknownRunID_ReturnsEmpty(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	r := query.NewReader(db)
+	ctx := context.Background()
+
+	projects, err := r.ListProjectsByRun(ctx, "does-not-exist")
+	if err != nil {
+		t.Fatalf("ListProjectsByRun: %v", err)
+	}
+	if projects == nil {
+		t.Error("expected non-nil empty slice, got nil")
+	}
+	if len(projects) != 0 {
+		t.Errorf("projects: got %d, want 0", len(projects))
+	}
+}
+
+func TestListMultiProjectRuns_NoMultiProject_ReturnsEmpty(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	r := query.NewReader(db)
+	w := writer.New(db, 0)
+	ctx := context.Background()
+
+	seedRun(t, w, "mp-001", false)
+	insertRunProject(t, w, "mp-001", []string{"/Users/x/projects/solo/main.go"})
+
+	result, err := r.ListMultiProjectRuns(ctx, 10, 0)
+	if err != nil {
+		t.Fatalf("ListMultiProjectRuns: %v", err)
+	}
+	if result == nil {
+		t.Error("expected non-nil empty slice, got nil")
+	}
+	if len(result) != 0 {
+		t.Errorf("result: got %d, want 0", len(result))
+	}
+}
+
+func TestListMultiProjectRuns_RunWith2Projects_Included(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	r := query.NewReader(db)
+	w := writer.New(db, 0)
+	ctx := context.Background()
+
+	seedRun(t, w, "mp-002", false)
+	insertRunProject(t, w, "mp-002", []string{
+		"/Users/x/projects/alpha/main.go",
+		"/Users/x/projects/beta/service.go",
+	})
+
+	result, err := r.ListMultiProjectRuns(ctx, 10, 0)
+	if err != nil {
+		t.Fatalf("ListMultiProjectRuns: %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("result: got %d, want 1", len(result))
+	}
+	if result[0].RunID != "mp-002" {
+		t.Errorf("RunID: got %q, want %q", result[0].RunID, "mp-002")
+	}
+	if result[0].ProjectCount != 2 {
+		t.Errorf("ProjectCount: got %d, want 2", result[0].ProjectCount)
+	}
+}
+
+func TestListMultiProjectRuns_RunWith1Project_Excluded(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	r := query.NewReader(db)
+	w := writer.New(db, 0)
+	ctx := context.Background()
+
+	seedRun(t, w, "mp-003", false)
+	insertRunProject(t, w, "mp-003", []string{"/Users/x/projects/only/main.go"})
+
+	result, err := r.ListMultiProjectRuns(ctx, 10, 0)
+	if err != nil {
+		t.Fatalf("ListMultiProjectRuns: %v", err)
+	}
+	if len(result) != 0 {
+		t.Errorf("result: got %d, want 0 (single-project run excluded)", len(result))
+	}
+}
+
+func TestListMultiProjectRuns_OrderedByStartedAtDESC(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	r := query.NewReader(db)
+	w := writer.New(db, 0)
+	ctx := context.Background()
+
+	// Seed two multi-project runs — insertion order determines started_at
+	seedRun(t, w, "mp-ord-a", false)
+	insertRunProject(t, w, "mp-ord-a", []string{
+		"/Users/x/projects/a1/main.go",
+		"/Users/x/projects/a2/main.go",
+	})
+	seedRun(t, w, "mp-ord-b", false)
+	insertRunProject(t, w, "mp-ord-b", []string{
+		"/Users/x/projects/b1/main.go",
+		"/Users/x/projects/b2/main.go",
+	})
+
+	result, err := r.ListMultiProjectRuns(ctx, 10, 0)
+	if err != nil {
+		t.Fatalf("ListMultiProjectRuns: %v", err)
+	}
+	if len(result) < 2 {
+		t.Fatalf("result: got %d, want >= 2", len(result))
+	}
+	// Most recently started run (mp-ord-b) should appear first
+	if result[0].RunID != "mp-ord-b" {
+		t.Errorf("first result: got %q, want mp-ord-b (DESC order)", result[0].RunID)
+	}
+}
+
+func TestListMultiProjectRuns_Pagination_LimitOffset(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	r := query.NewReader(db)
+	w := writer.New(db, 0)
+	ctx := context.Background()
+
+	seedRun(t, w, "mp-pag-a", false)
+	insertRunProject(t, w, "mp-pag-a", []string{
+		"/Users/x/projects/pa1/main.go",
+		"/Users/x/projects/pa2/main.go",
+	})
+	seedRun(t, w, "mp-pag-b", false)
+	insertRunProject(t, w, "mp-pag-b", []string{
+		"/Users/x/projects/pb1/main.go",
+		"/Users/x/projects/pb2/main.go",
+	})
+
+	// With DESC order: first page = mp-pag-b, second page = mp-pag-a
+	result, err := r.ListMultiProjectRuns(ctx, 1, 1)
+	if err != nil {
+		t.Fatalf("ListMultiProjectRuns(limit=1,offset=1): %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("result: got %d, want 1", len(result))
+	}
+	if result[0].RunID != "mp-pag-a" {
+		t.Errorf("offset=1 result: got %q, want mp-pag-a", result[0].RunID)
+	}
+}
+
+func TestListMultiProjectRuns_ProjectsListMatchesRunProjects(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	r := query.NewReader(db)
+	w := writer.New(db, 0)
+	ctx := context.Background()
+
+	seedRun(t, w, "mp-proj", false)
+	insertRunProject(t, w, "mp-proj", []string{
+		"/Users/x/projects/gamma/main.go",
+		"/Users/x/projects/delta/service.go",
+	})
+
+	result, err := r.ListMultiProjectRuns(ctx, 10, 0)
+	if err != nil {
+		t.Fatalf("ListMultiProjectRuns: %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("result: got %d, want 1", len(result))
+	}
+	projects := result[0].Projects
+	if len(projects) != 2 {
+		t.Fatalf("Projects slice: got %d, want 2", len(projects))
+	}
+	// Projects should match what was inserted (delta, gamma in ASC order)
+	wantProjects := map[string]bool{"delta": true, "gamma": true}
+	for _, p := range projects {
+		if !wantProjects[p] {
+			t.Errorf("unexpected project in slice: %q", p)
+		}
+	}
+}
