@@ -22,6 +22,46 @@ Pencil does NOT have native Collections or Modes. Simulate them:
 
 Never skip to step 3 without completing 1 and 2.
 
+## Iteration Workflow (Change Requests)
+
+When modifying an existing design (NOT creating from scratch), follow this workflow instead of the Order of Operations above. **Never delete and recreate what already exists.**
+
+### Step 0 — Understand what exists
+
+1. `get_editor_state()` → identify the open `.pen` file and current state
+2. `batch_get({ patterns: ["*"] })` → get the full node tree (or targeted patterns for large files)
+3. `get_variables()` → understand current design tokens
+4. Identify the specific nodes affected by the change request
+
+### Step 1 — Classify the change
+
+| Change type | Action | Example |
+|---|---|---|
+| **Token change** (color, font, spacing) | `set_variables()` with updated values only | "Make primary color darker" → update `color-primary` variable |
+| **Content change** (text, images, icons) | `U(nodeId, { content: "new text" })` on each instance | "Change heading to X" → update text nodes |
+| **Component structure change** | Modify the **component mother** — all instances update | "Add an icon to the card component" → edit the reusable component |
+| **Instance customization** | `U(instanceId+"/childId", {...})` or `descendants` | "This specific card needs different text" |
+| **Layout change** (reorder, resize, add/remove sections) | `U()` for repositioning, `I()` only for genuinely new elements, `D()` only for elements explicitly removed | "Move sidebar to the right" → update x/y/layout props |
+| **New screen/section** | Only THIS uses the creation workflow (Steps 1-4 above) | "Add a settings page" → new screen, reusing existing components |
+
+### Step 2 — Execute surgically
+
+1. **Change only what changed** — if the user says "make the header bigger", update the header's font-size variable or node. Do NOT rebuild the screen
+2. **Prefer variable changes** — if a visual property comes from a `$variable`, update the variable via `set_variables()`. All nodes using it update automatically
+3. **Prefer component mother edits** — if the change applies to all instances of a component, edit the mother. Do NOT update each instance separately
+4. **Use `U()` not `R()`** — `Update` preserves the node and changes properties. `Replace` creates a new node. Only use `R()` when the node type itself must change (e.g., swapping a text for an icon)
+5. **Never `D()` + `I()` what you can `U()`** — deleting and reinserting is rebuilding, not iterating
+
+### Step 3 — Verify
+
+1. `get_screenshot()` of the affected section/screen
+2. If the change touched a component mother, also screenshot screens that use instances of it
+3. If the change touched a variable, spot-check screens in both modes (light/dark)
+
+### Key principle
+
+**The fastest, safest change touches the fewest nodes.** A variable change touches zero nodes (they update automatically). A component mother change touches one node. Instance-level updates touch N nodes. Rebuilding touches everything. Always pick the highest-leverage approach.
+
 ## Step 1: Create Variables
 
 Use `set_variables` to define everything at once. Use prefixed names to simulate collections.
@@ -281,33 +321,37 @@ Use `ref` to instantiate components. Override properties via the root or `descen
 
 ### Example: Using a component instance
 
-**CRITICAL: Use `descendants` on the `ref`, NOT `U()` after inserting.**
-Using `U(instance+"/childId")` modifies the COMPONENT MOTHER, corrupting all instances.
+There are two correct ways to customize instances. Both are safe:
 
+**Option A — `descendants` at insert time** (preferred for new instances):
 ```javascript
-// CORRECT — customize via descendants at insert time
 header1=I(mainContent,{type:"ref",ref:"sectionHeaderId",descendants:{"titleTextId":{content:"EXPERIENCE"}}})
-
-// CORRECT — input with label + placeholder overrides
 emailInput=I(formFrame,{type:"ref",ref:"inputFieldId",descendants:{"labelId":{content:"Email"},"placeholderId":{content:"you@company.com"}}})
-
-// CORRECT — button with text override and size change
 submitBtn=I(formFrame,{type:"ref",ref:"btnPrimaryId",width:"fill_container",descendants:{"btnTextId":{content:"Submit"}}})
 ```
 
+**Option B — `U(instanceId+"/childId")` after insertion** (preferred for updates to existing instances):
 ```javascript
-// WRONG — this modifies the component mother, not the instance!
-header1=I(mainContent,{type:"ref",ref:"sectionHeaderId"})
-U(header1+"/titleTextId",{content:"EXPERIENCE"})  // ← CORRUPTS THE COMPONENT
+// SAFE — modifies only this instance, not the mother
+U("YkHfO/MNS4B",{content:"New text"})    // updates text in instance YkHfO only
+U("YkHfO/MNS4B",{fill:"$color-danger"})  // changes color in instance YkHfO only
 ```
+
+```javascript
+// WRONG — bare childId WITHOUT instance prefix modifies the MOTHER component!
+U("MNS4B",{content:"EXPERIENCE"})  // ← CORRUPTS ALL INSTANCES
+U(header1+"/titleTextId",{content:"EXPERIENCE"})  // ← Also wrong if header1 resolves to a binding, not a stable ID. Use the actual instance ID from batch_get
+```
+
+**The rule:** always include the instance ID as prefix. `U("instanceId/childId")` = safe instance override. `U("childId")` alone = modifies the mother.
 
 ### Key Rules for Instances
 
-- Customize content: use `descendants` in the `ref` insert call, OR `U(instance+"/childId")` after insertion
+- Customize content at creation: use `descendants` in the `ref` insert call
+- Customize content later: use `U(instanceId+"/childId", {props})` — this is SAFE and is the primary mechanism for iterating on existing designs
 - Resize: override `width` or `height` directly on the `ref` node
 - Hide a child: `descendants:{"childId":{enabled:false}}`
-- Replace a child: `R(instance+"/childId", {type:"text",...})` (only for structural replacement)
-- `U(instance+"/childId")` is SAFE — it only modifies the instance's override, not the mother component. Example: `U("YkHfO/MNS4B",{content:"New text"})` changes text in instance `YkHfO` only
+- Replace a child: `R(instanceId+"/childId", {type:"text",...})` (only for structural replacement)
 - `U("childId")` WITHOUT instance prefix modifies the mother component — NEVER do this to customize an instance
 - NEVER recreate a component manually — always use `ref`
 
@@ -479,3 +523,84 @@ Never leave an icon undocumented. The Library is the developer's reference for w
 | `U("childId")` to customize instance | Use `U(instance+"/childId")` — without prefix you modify the mother |
 | Adding all info at once (tags, links, metadata) | Start minimal, verify, then add layers. Secondary info at low opacity (0.4-0.6) |
 | Inventing content for designs | Use real data from CV, LinkedIn, or user-provided docs |
+| Deleting + reinserting to update | Use `U()` for property changes — only `D()+I()` when node type must change |
+
+## Slots (Component Flexibility)
+
+Slots are designated areas within a component where elements can be dropped in. They create flexible, customizable regions.
+
+### Creating a slot
+
+1. Create an empty frame inside a reusable component
+2. Mark it as a slot: `"slot": [suggestedComponentIds]`
+
+```javascript
+// Table component with a slot for rows
+table=I(lib,{type:"frame",name:"Table",reusable:true,layout:"vertical",width:"fill_container"})
+tableHeader=I(table,{type:"frame",layout:"horizontal",width:"fill_container",padding:[12,16],fill:"$color-surface-subtle"})
+// ... header cells
+tableBody=I(table,{type:"frame",layout:"vertical",width:"fill_container",slot:["tableRowComponentId"]})
+```
+
+### Using slots
+
+When instantiating a component with slots, insert children directly into the slot frame:
+
+```javascript
+myTable=I(screen,{type:"ref",ref:"tableId",width:"fill_container"})
+// Insert rows into the slot
+row1=I(myTable+"/tableBodyId",{type:"ref",ref:"tableRowComponentId"})
+row2=I(myTable+"/tableBodyId",{type:"ref",ref:"tableRowComponentId"})
+```
+
+**Suggested components** — mark which components are recommended for a slot. This helps both human designers and the AI agent know what to insert.
+
+## Design Libraries (.lib.pen)
+
+For projects with multiple `.pen` files, extract shared components into a library file:
+
+1. Create a `.pen` file with shared components
+2. Convert it to a library (becomes `.lib.pen` — **irreversible**)
+3. Import the library in other `.pen` files via `imports`
+
+Changes to library components propagate to all files that import them. Use for cross-file design systems.
+
+**When to use:** multiple `.pen` files sharing the same components. For single-file projects, a Component Library frame inside the document is sufficient.
+
+## Script Nodes (Code on Canvas)
+
+Script nodes render JavaScript output directly on the canvas. Useful for data-driven or repetitive layouts.
+
+### When to use
+
+- Repeating a pattern N times (grid of cards, data rows)
+- Charts or data visualization
+- Parameterized layouts that need interactive tweaking
+
+### How they work
+
+```javascript
+// chart.js — referenced by a script node
+/**
+ * @schema 2.11
+ * @input rows: number(min=1, max=20) = 5
+ * @input fill: color = #10B981
+ */
+return Array.from({length: pencil.input.rows}, (_, i) => ({
+  type: "rectangle",
+  width: pencil.width,
+  height: 20,
+  fill: pencil.input.fill,
+  y: i * 24
+}))
+```
+
+**Constraints:** max 1000 nodes, 2s timeout, no async, no DOM/network access, deterministic `Math.random()`.
+
+**Convert to layers:** once the output looks right, convert to static editable layers for further customization.
+
+### When NOT to use
+
+- Simple layouts that batch_design handles in <10 ops
+- One-off screens with no repetition
+- When the designer needs to customize each item individually (use component instances instead)
