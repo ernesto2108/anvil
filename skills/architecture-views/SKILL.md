@@ -22,8 +22,22 @@ Every view balances both. Narrative sections explain "why"; spec sections define
 |---|---|
 | Small (2 pts), single-stack, no contracts | `architecture.md` only — narrative with diagrams |
 | Medium (5 pts), single-stack with DB or API | `architecture.md` + relevant domain view |
-| Medium+ with cross-stack contracts | `architecture.md` + all applicable views with executable specs |
+| Medium+ with cross-stack contracts | **Separate files per concern** (see File naming below) + executable specs |
 | Large (8+ pts), multi-service | All applicable views, full SDD specs, contract bridge |
+
+## File naming — Medium+ tasks (MANDATORY)
+
+Each concern gets its own file. A single `architecture.md` is NOT valid for Medium+ cross-stack tasks.
+
+| File | When to create |
+|---|---|
+| `architecture-backend.md` | Any backend changes (Go, Rust, Python, etc.) |
+| `architecture-db.md` | Any DB/schema changes |
+| `architecture-frontend.md` | Any frontend/mobile changes (React, Flutter, etc.) |
+| `architecture-infra.md` | Any infra/CI changes |
+| `architecture.md` | Small tasks only OR as an overview supplement for Large tasks |
+
+The orchestrator verifies these files exist before invoking the Developer. Missing files → architect is re-invoked.
 
 ## Guides — load per view
 
@@ -36,6 +50,9 @@ Each guide contains the template + format rules for one view. Load ONLY the guid
 | Frontend | `guides/frontend.md` | Frontend work |
 | Database | `guides/database.md` | DB changes |
 | Infrastructure | `guides/infrastructure.md` | Infra changes |
+| **SPEC** | `guides/spec.md` | **Always — generated LAST, after all architecture views** |
+
+**Generation order (mandatory):** overview → domain views (backend/db/frontend/infra) → spec.md. The spec references architecture files — it cannot be written before them.
 
 ## Cross-view contract consistency
 

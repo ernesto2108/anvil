@@ -28,6 +28,47 @@ The user may at any point:
 
 ---
 
+## STOP checkpoints — emit these blocks and WAIT (no exceptions)
+
+These replace inner reasoning. The orchestrator MUST output the block, then stop. No "el contexto es claro", no "sigo adelante" on the user's behalf.
+
+**After PM → before Architect**
+```
+✅ PM terminó — [TASK-ID]
+• [bullet 1 del PRD]
+• [bullet 2 del PRD]
+PRD: <docs>/03-tasks/<TASK-ID>/prd.md
+
+¿Paso al Architect? (sí / ajusta / hasta aquí)
+```
+
+**After Architect → before Developer (Medium+ tasks)**
+```
+✅ Architect terminó — [TASK-ID]
+• [decisión clave 1]  • [decisión clave 2]
+
+📄 SPEC para aprobación:
+[pegar secciones: Objetivo, Non-goals, Acceptance Criteria, Boundaries de spec.md]
+
+¿Apruebas y paso al Developer? (sí / ajusta / hasta aquí)
+```
+Architecture check (bounced back if missing): `architecture-backend.md` + `architecture-db.md` + `architecture-frontend.md` — un solo `architecture.md` NO es válido para Medium+.
+
+**After Developer → before Tester (Medium+ tasks)**
+```
+✅ Developer terminó — [TASK-ID]
+Verificando handoff:
+[✅/❌] .handoff/<TASK-ID>.md existe
+[✅/❌] Build pasa (go build / npm run build)
+[✅/❌] Lint 0 issues en archivos tocados
+[✅/❌] Sección "Handoff for tester" completa
+
+¿Paso al Tester? (sí / revisa / hasta aquí)
+```
+Any ❌ → re-invoke Developer with the specific gap before asking the user.
+
+---
+
 ## Step -1 — In-flight snapshot (before triage)
 
 Run `git status --short`. If non-empty, capture the list as **"Archivos ya modificados en esta sesión"** and pass it inline in every developer invocation. Skip only when `git status` is empty.
@@ -127,28 +168,13 @@ These boundaries apply when running agents. In direct mode (user's choice), the 
 
 ---
 
-## Gates (hard stops — in addition to Rule #1 human gates)
+## Additional gates (not covered by STOP checkpoints above)
 
-- **PM gate:** user approves PRD before architect starts
 - **Design execution gate:** after designer produces dtd.md → PAUSE for user to execute in Pencil/Figma
-- **Architect gate:** veto → STOP, re-discuss with user
-- **SPEC approval gate (Medium+ tasks):** after architect produces `spec.md` → show SPEC to user (Context, Non-goals, Implementation Map, Acceptance Criteria, Boundaries). User approves explicitly before developer starts. No SPEC approval → no developer invocation
 - **QA gate:** score < 7 → STOP, fix before continuing
 - **Security gate:** CVE critical/high → STOP, fix before continuing
 - **PM backlog gate:** after PRD → verify tasks in sprint-current.md
 - **Cross-repo sync gate:** backend DTO/endpoint/auth changes → developer lists affected frontend files
-
----
-
-## Post-developer verification (MANDATORY for Medium+ tasks)
-
-Before launching tester, verify ALL. Any fail → re-invoke developer, do NOT proceed.
-
-1. `.handoff/<TASK-ID>.md` exists
-2. Claimed files exist (`Glob`)
-3. Build passes (`go build -tags <tag>` / `npm run build`)
-4. **Lint HARD GATE** — handoff lists `golangci-lint` / `npm run lint` / `ruff` / `cargo clippy` with **0 issues** on the touched scope. If missing, bounce back — developer owns the lint run, orchestrator does NOT silently accept
-5. `## Handoff for tester` section complete (signatures + edge cases + validation log — see `plan-approval.md`)
 
 ---
 
@@ -157,50 +183,27 @@ Before launching tester, verify ALL. Any fail → re-invoke developer, do NOT pr
 - Resolve `<docs>` from `~/.claude/project-registry.md` before any agent; pass docs path + TASK-ID to every agent
 - Specify convention skill for Developer; specify stack for Tester
 - **One writer at a time.** Max tasks per run: 2 (preferred: 1). Scope change → re-run PM.
-
----
-
-## Language
-
-All docs in Spanish. Titles, headers, Mermaid labels → Spanish. Code, YAML keys, file names, paths → English.
-Questions to user → always in Spanish.
-
----
-
-## Post-completion (MANDATORY)
-
-After all agents finish: update `sprint-current.md` (Done row), `board.md` (Done column), task frontmatter (`status: done`).
-
----
+- All docs in Spanish. Code, keys, paths → English. Questions to user → Spanish.
+- After all agents finish: update `sprint-current.md` (Done row), `board.md` (Done column), task frontmatter (`status: done`).
 
 ## Context passing
 
-- Content already in context → pass inline to agent. Content NOT in context → tell agent the file path.
-- Agent output feeds next agent → pass inline. Never read source code just to relay it (anti-pattern #5).
+- Content already in context → pass inline. Content NOT in context → tell agent the path.
+- Agent output feeds next agent → pass inline. Never read source code to relay it (anti-pattern #5).
 - Each agent: MAX 1 document per invocation. Multiple docs → run agent twice.
 
-### SPEC + Architecture views → Developer routing
+### Developer routing (Medium+ tasks — SPEC is primary input)
 
-For **Medium+ tasks**, the SPEC is the developer's primary input. Architecture views are supplementary reference.
-
-| Developer stack | Pass to developer |
+| Stack | Pass |
 |---|---|
-| Go (backend) | **`spec.md`** (primary) + `architecture-backend.md` + `architecture-db.md` (ref) |
-| React / frontend | **`spec.md`** (primary) + `architecture-frontend.md` (ref) |
-| Flutter / mobile | **`spec.md`** (primary) + `architecture-frontend.md` mobile section (ref) |
-| DBA | `architecture.md` + `architecture-db.md` |
-| DevOps | `architecture.md` + `architecture-infra.md` |
-| Full-stack (single dev) | **`spec.md`** (primary) + all generated views (ref) |
+| Go | `spec.md` (primary) + `architecture-backend.md` + `architecture-db.md` (ref) |
+| React | `spec.md` (primary) + `architecture-frontend.md` (ref) |
+| Flutter | `spec.md` (primary) + `architecture-frontend.md` mobile section (ref) |
+| DBA | `architecture-db.md` |
+| Full-stack | `spec.md` (primary) + all generated views (ref) |
 
-For **Small tasks** (no SPEC): pass `architecture.md` + relevant views as before.
-
-### SPEC → QA routing
-
-For Medium+ tasks, pass `spec.md` to the QA agent alongside changed files and test results. QA validates code against SPEC acceptance criteria.
-
-### SPEC → Tester routing
-
-For Medium+ tasks, pass `spec.md` as secondary input alongside the handoff. The tester uses acceptance criteria to understand test intent but follows the handoff's closed test list.
+Small tasks (no SPEC): pass `architecture.md` + relevant views.
+QA/Tester (Medium+): pass `spec.md` alongside handoff/changed files.
 
 ---
 

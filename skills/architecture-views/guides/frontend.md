@@ -9,6 +9,17 @@ Inspired by: rcherny Front-End Architecture Checklist + component-driven design.
 ```markdown
 # Arquitectura Frontend — <TASK-ID>
 
+## Patrones de integración usados
+
+<!-- Mark which apply. Include only those sections below. -->
+- [ ] REST / HTTP (fetch, axios, Tauri invoke)
+- [ ] WebSockets / SSE (tiempo real)
+- [ ] Eventos recibidos del backend (event bus, broadcast)
+- [ ] Polling
+- [ ] Estado local únicamente (sin backend)
+
+---
+
 ## Jerarquía de componentes
 
 ```mermaid
@@ -19,30 +30,24 @@ graph TD
   ComponentA --> SubComponent1
 ```
 
-## Contratos de estado
+## Contratos de tipos
 
-<!-- TypeScript interfaces — executable spec. Must match backend OpenAPI schemas. -->
+<!-- TypeScript interfaces. Must match backend contracts exactly — same field names, same types. -->
 
 ```typescript
-// Derived from backend OpenAPI schemas
-interface <RequestDTO> {
-  field1: string;
-  field2: number;
-}
-
+// Derived from backend REST/command contracts
 interface <ResponseDTO> {
   id: string;
   // ...
 }
 
-// Component props contracts
+// Component props
 interface <ComponentName>Props {
   data: <ResponseDTO>;
   onAction: (id: string) => void;
-  // ...
 }
 
-// Store/state contract
+// Store / state shape
 interface <Feature>State {
   items: <ResponseDTO>[];
   loading: boolean;
@@ -50,31 +55,59 @@ interface <Feature>State {
 }
 ```
 
+## Capa de integración
+
+<!-- How frontend consumes each backend pattern -->
+
+### REST / Tauri invoke
+- **Cliente:** fetch / axios / invoke — cuál y por qué
+- **Manejo de errores:** qué hace el UI ante 4xx / 5xx / timeout
+- **Cache / revalidation:** strategy (stale-while-revalidate, no-cache, etc.)
+
+### WebSockets / SSE — incluir si aplica
+- **Endpoint / topic:** ...
+- **Reconexión:** estrategia (backoff, límite de intentos)
+- **Estado de conexión:** cómo lo expone el UI (indicador, fallback)
+- **Mensajes esperados:** schema de cada mensaje recibido
+
+### Polling — incluir si aplica
+- **Intervalo:** ...
+- **Condición de stop:** ...
+- **Qué activa un re-fetch:** ...
+
+---
+
+## Máquina de estados de la entidad principal — incluir si aplica
+
+```mermaid
+stateDiagram-v2
+  [*] --> Idle
+  Idle --> Loading : fetch()
+  Loading --> Success : data received
+  Loading --> Error : request failed
+  Error --> Loading : retry
+  Success --> [*]
+```
+
 ## Rutas y navegación
 
 | Ruta | Componente | Guard | Lazy |
 |---|---|---|---|
 
-## Capa de integración API
-
-<!-- How frontend consumes backend contracts -->
-- **Cliente:** ...
-- **Manejo de errores:** ...
-- **Cache / revalidation:** ...
-
 ## Flujo de datos
 
 ```mermaid
-stateDiagram-v2
+sequenceDiagram
   ...
 ```
 ```
 
 ## Rules
 
-- TypeScript interfaces MUST match backend OpenAPI schemas — same field names, same types
-- Component tree diagram shows composition, not implementation details
+- TypeScript interfaces MUST match backend contracts — same field names, same types, same optional/required
+- Include ONLY sections that apply — omit empty sections entirely
+- WebSocket/SSE section is mandatory if backend emits real-time events — do not describe as "polling" if it's push
+- State machine diagram required for any entity with more than 2 UI states (loading/error/success/empty/stale)
 - Props contracts define the component's public API — what it receives and emits
-- State contracts define the store shape — loading/error/data pattern
 - Route table includes guards (auth, permissions) and lazy loading strategy
-- If backend view exists, frontend interfaces are DERIVED from the OpenAPI spec — not independently defined
+- If backend view exists, frontend interfaces are DERIVED from those contracts — not independently defined

@@ -9,15 +9,24 @@ Inspired by: Stripe spec-driven design + bflorat Application View.
 ```markdown
 # Arquitectura Backend — <TASK-ID>
 
-## Contratos API (OpenAPI)
+## Patrones de comunicación usados
 
-<!-- Executable spec — YAML fragment. Agents and tools consume this directly. -->
+<!-- List which patterns this feature uses. Include ONLY sections below that apply. -->
+- [ ] REST API
+- [ ] Eventos async (Kafka / RabbitMQ / SQS)
+- [ ] gRPC
+- [ ] WebSockets / SSE
+- [ ] Webhooks
+- [ ] Tauri commands (desktop IPC)
+
+---
+
+## Contratos REST (OpenAPI) — incluir si aplica
+
+<!-- Executable spec — YAML fragment. -->
 
 ```yaml
 openapi: "3.1.0"
-info:
-  title: <feature name>
-  version: "1.0.0"
 paths:
   /api/v1/<resource>:
     post:
@@ -37,40 +46,83 @@ paths:
                 $ref: "#/components/schemas/<ResponseDTO>"
         "400":
           $ref: "#/components/responses/ValidationError"
-        "500":
-          $ref: "#/components/responses/InternalError"
-
 components:
   schemas:
     <RequestDTO>:
       type: object
-      required: [field1, field2]
+      required: [field1]
       properties:
         field1:
           type: string
-        field2:
-          type: integer
-    <ResponseDTO>:
-      type: object
-      properties:
-        id:
-          type: string
-        ...
-  responses:
-    ValidationError:
-      description: Validation failed
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-    InternalError:
-      description: Internal server error
 ```
 
-## Taxonomía de errores
+---
 
-| Código | HTTP | Descripción | Cuándo ocurre |
-|---|---|---|---|
+## Contratos de eventos / mensajes (AsyncAPI) — incluir si aplica
+
+<!-- Use AsyncAPI format for Kafka topics, RabbitMQ exchanges, SQS queues, etc. -->
+
+```yaml
+asyncapi: "2.6.0"
+channels:
+  <topic-or-queue-name>:
+    publish:        # producer side
+      message:
+        $ref: "#/components/messages/<EventName>"
+    subscribe:      # consumer side
+      message:
+        $ref: "#/components/messages/<EventName>"
+components:
+  messages:
+    <EventName>:
+      payload:
+        type: object
+        required: [eventId, occurredAt]
+        properties:
+          eventId:
+            type: string
+            description: Idempotency key
+          occurredAt:
+            type: string
+            format: date-time
+          # ... domain fields
+```
+
+**Garantías de entrega:** at-most-once / at-least-once / exactly-once  
+**Orden:** global / por partition key / sin garantía  
+**Idempotencia:** cómo el consumidor detecta duplicados (eventId, dedup window)  
+**Dead letter:** qué pasa si el consumer falla N veces  
+
+---
+
+## Contratos gRPC — incluir si aplica
+
+```proto
+service <ServiceName> {
+  rpc <MethodName> (<RequestMsg>) returns (<ResponseMsg>);
+  rpc <StreamMethod> (<RequestMsg>) returns (stream <ResponseMsg>);
+}
+
+message <RequestMsg> {
+  string field1 = 1;
+  int32 field2 = 2;
+}
+```
+
+---
+
+## Contratos Tauri commands (desktop IPC) — incluir si aplica
+
+```yaml
+commands:
+  <command_name>:
+    params:
+      field1: Type
+    returns: Vec<DtoType>
+    notes: "..."
+```
+
+---
 
 ## Casos de uso
 
@@ -86,19 +138,25 @@ sequenceDiagram
   ...
 ```
 
+## Taxonomía de errores
+
+| Código / tipo | Retryable | Descripción | Cuándo ocurre |
+|---|---|---|---|
+
 ## Estrategia de persistencia
 
 - **Concurrencia:** ...
-- **Caché:** ...
-- **Reintentos / idempotencia:** ...
-- **Manejo de fallos:** ...
+- **Idempotencia:** clave de idempotencia, ventana de deduplicación
+- **Reintentos / backoff:** política, límite de intentos
+- **Manejo de fallos:** qué pasa si el downstream no responde
 ```
 
 ## Rules
 
-- OpenAPI spec is the source of truth for API contracts — not prose
-- Use `$ref` for shared schemas — don't inline duplicate definitions
-- Error taxonomy must map every error code to an HTTP status
-- Sequence diagrams show the happy path + primary error path
-- Persistence strategy describes behavior, not implementation (no SQL, no driver details)
-- If the frontend also exists, the OpenAPI schemas here are the canonical definition — frontend derives from these
+- Use ONLY the sections that apply — omit empty sections entirely
+- OpenAPI is source of truth for REST contracts; AsyncAPI for events — not prose
+- Every event schema needs an `eventId` (idempotency key) and `occurredAt`
+- Delivery guarantees, ordering, and DLQ strategy are mandatory for any async section
+- Error taxonomy must classify errors as retryable vs fatal — not just HTTP codes
+- Sequence diagrams show happy path + primary failure path
+- If frontend exists, REST/command schemas here are canonical — frontend derives from these
