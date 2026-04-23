@@ -116,6 +116,38 @@ func (s *Server) buildRegistry() map[string]tool {
 		),
 		s.getRecentChanges)
 
+	// ── Orchestration ─────────────────────────────────────────────────────────
+
+	add("start_orchestration",
+		"Create a conversational orchestration run. Returns a run_id to use with save_step and load_orchestration.",
+		schema(
+			prop("objective", "string", "Task objective for this orchestration"),
+			prop("stack", "string", "Stack (go, react, python, typescript, rust, flutter)"),
+			prop("complexity", "string", "Complexity level (small, medium, complex)"),
+			optProp("pipeline", "string", "Pipeline preset name (e.g. feat, bug). If provided, pipeline nodes are snapshotted for tracking."),
+		),
+		s.startOrchestration)
+
+	add("save_step",
+		"Persist an agent step within a conversational orchestration run. Each step is saved with full output (no truncation).",
+		schema(
+			prop("run_id", "string", "Run ID from start_orchestration"),
+			prop("role", "string", "Agent role (e.g. architect, developer, tester, qa)"),
+			prop("status", "string", "Step status (success, failed, skipped)"),
+			prop("output", "string", "Full agent output text"),
+			optProp("files_touched", "array", "List of file paths touched by this step"),
+			optProp("duration_ms", "number", "Step duration in milliseconds"),
+		),
+		s.saveStep)
+
+	add("load_orchestration",
+		"Load a conversational orchestration run with all its steps and pending roles. Use run_id='last' for the most recent conversational run.",
+		schema(
+			prop("run_id", "string", "Run ID or 'last' for most recent conversational run"),
+			optProp("project", "string", "Project filter when using 'last' (defaults to cwd)"),
+		),
+		s.loadOrchestration)
+
 	return reg
 }
 
