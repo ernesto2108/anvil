@@ -148,6 +148,35 @@ func (s *Server) buildRegistry() map[string]tool {
 		),
 		s.loadOrchestration)
 
+	// ── Utilities ─────────────────────────────────────────────────────────────
+
+	add("switch_provider",
+		"Switch the active AI provider (e.g. anthropic, openai, google) and redeploy agents with the new model tier mappings.",
+		schema(
+			prop("provider", "string", "Provider name to activate (e.g. anthropic, openai, google)"),
+		),
+		s.switchProvider)
+
+	add("get_diff",
+		"Show a diff --stat summary between the last deployed SHA and HEAD. Useful to see what changed since deploy.",
+		schema(
+			optProp("base", "string", "Base SHA or ref to diff from (defaults to last deployed SHA)"),
+			optProp("stat_only", "boolean", "Reserved for future use — currently always returns stat output"),
+		),
+		s.getDiff)
+
+	add("deploy_agents",
+		"Deploy Anvil agents, skills, and commands to all enabled targets (Claude Code, OpenCode, Gemini, Codex).",
+		schema(
+			optProp("target", "string", "What to deploy: all (default), agents, or skills"),
+		),
+		s.deployAgents)
+
+	add("run_doctor",
+		"Run all Anvil health checks: deployed SHA, working tree, config files, provider tiers, target directories, and broken symlinks.",
+		schema(),
+		s.runDoctor)
+
 	return reg
 }
 
