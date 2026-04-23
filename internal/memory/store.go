@@ -223,12 +223,24 @@ func scanDigest(scanner interface{ Scan(dest ...any) error }) (Digest, error) {
 		}
 	}
 
-	if t, err := time.Parse(time.RFC3339Nano, createdAt); err == nil {
-		d.CreatedAt = t
-	}
-	if t, err := time.Parse(time.RFC3339Nano, updatedAt); err == nil {
-		d.UpdatedAt = t
-	}
+	d.CreatedAt = parseFlexTime(createdAt)
+	d.UpdatedAt = parseFlexTime(updatedAt)
 
 	return d, nil
+}
+
+// parseFlexTime parses a datetime string stored by either Go (RFC3339Nano,
+// e.g. "2026-04-22T01:57:47Z") or SQLite's datetime() function
+// (e.g. "2026-04-22 01:57:47"). Returns zero time if both formats fail.
+func parseFlexTime(s string) time.Time {
+	for _, layout := range []string{
+		time.RFC3339Nano,
+		time.RFC3339,
+		"2006-01-02 15:04:05",
+	} {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t.UTC()
+		}
+	}
+	return time.Time{}
 }
