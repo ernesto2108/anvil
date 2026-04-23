@@ -102,6 +102,7 @@ CREATE TABLE digests (
     errors      TEXT NOT NULL DEFAULT '[]',
     embedding   BLOB,
     model_used  TEXT NOT NULL DEFAULT 'fake',
+    source      TEXT NOT NULL DEFAULT 'auto',
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL,
     UNIQUE(run_id)
