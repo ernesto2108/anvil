@@ -285,9 +285,9 @@ func handleToolUse(tx *sql.Tx, ev instrumentation.Event) error {
 		mcpServer = &p.MCPServer
 	}
 
-	const q = `INSERT INTO tool_uses (run_id, agent_id, tool_name, tool_input, timestamp, source, mcp_server) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	const q = `INSERT INTO tool_uses (run_id, agent_id, tool_name, tool_input, timestamp, source, mcp_server, input_size_bytes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 	if _, err := tx.Exec(q, ev.RunID, p.AgentID, p.ToolName, toolInput,
-		ev.Timestamp.Format(timestampFmt), source, mcpServer,
+		ev.Timestamp.Format(timestampFmt), source, mcpServer, p.InputSizeBytes,
 	); err != nil {
 		return fmt.Errorf("dashboard/writer: insertar en tool_uses: %w", err)
 	}
@@ -339,6 +339,25 @@ func handleTaskCompleted(tx *sql.Tx, ev instrumentation.Event) error {
 	)
 	if err != nil {
 		return fmt.Errorf("dashboard/writer: actualizar tasks (task.completed): %w", err)
+	}
+	return nil
+}
+
+// UpdateToolUseDuration sets duration_ms on the most recent tool_uses row that
+// matches run_id + tool_name + agent_id and has duration_ms IS NULL.
+// Best-effort: if no matching row is found the call is a no-op (no error).
+func (w *EventWriter) UpdateToolUseDuration(runID, toolName, agentID string, durationMs int64) error {
+	const q = `
+		UPDATE tool_uses SET duration_ms = ?
+		WHERE rowid = (
+			SELECT rowid FROM tool_uses
+			WHERE run_id = ? AND tool_name = ? AND agent_id = ? AND duration_ms IS NULL
+			ORDER BY timestamp DESC
+			LIMIT 1
+		)`
+	_, err := w.db.Exec(q, durationMs, runID, toolName, agentID)
+	if err != nil {
+		return fmt.Errorf("dashboard/writer: actualizar duration_ms en tool_uses: %w", err)
 	}
 	return nil
 }

@@ -312,6 +312,22 @@ func handleSubagentStop(w *writer.EventWriter, sessionID, agentID, lastMessage s
 }
 
 func handlePostToolUse(w *writer.EventWriter, sessionID, toolName string, toolInput json.RawMessage, cwd string) error {
+	// MCP tool path: calculate and persist duration_ms (best-effort).
+	if source, _ := classifyTool(toolName); source == "mcp" {
+		runID, err := resolveOrCreateRun(w, sessionID, cwd)
+		if err != nil {
+			return err
+		}
+		agentID := envAgentID()
+		if agentID == "" {
+			agentID = w.ActiveAgentID(runID)
+		}
+		durationMs := w.ToolUseDurationMs(runID, toolName, agentID)
+		// Best-effort: ignore error from UpdateToolUseDuration.
+		_ = w.UpdateToolUseDuration(runID, toolName, agentID, durationMs)
+		return nil
+	}
+
 	if toolName != "Write" && toolName != "Edit" {
 		return nil
 	}
@@ -496,11 +512,12 @@ func handlePreToolUse(w *writer.EventWriter, sessionID, toolName string, toolInp
 
 	source, mcpServer := classifyTool(toolName)
 	payload := instrumentation.ToolUsePayload{
-		AgentID:   agentID,
-		ToolName:  toolName,
-		ToolInput: toolInput,
-		Source:    source,
-		MCPServer: mcpServer,
+		AgentID:        agentID,
+		ToolName:       toolName,
+		ToolInput:      toolInput,
+		Source:         source,
+		MCPServer:      mcpServer,
+		InputSizeBytes: len(toolInput),
 	}
 	ev, err := instrumentation.NewEvent(runID, instrumentation.EventToolUse, payload)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // expectRowsAffected returns an error when an UPDATE affects zero rows.
@@ -191,6 +192,28 @@ func (w *EventWriter) AppendAgentOutput(runID, agentID, text string) error {
 		return fmt.Errorf("dashboard/writer: append agent output: %w", err)
 	}
 	return nil
+}
+
+// ToolUseDurationMs returns the elapsed milliseconds since the most recent
+// tool_uses row with the given run_id + tool_name + agent_id that has
+// duration_ms IS NULL. Returns 0 if no matching row is found or timestamp
+// cannot be parsed.
+func (w *EventWriter) ToolUseDurationMs(runID, toolName, agentID string) int64 {
+	var ts string
+	err := w.db.QueryRow(
+		`SELECT timestamp FROM tool_uses
+		 WHERE run_id = ? AND tool_name = ? AND agent_id = ? AND duration_ms IS NULL
+		 ORDER BY timestamp DESC LIMIT 1`,
+		runID, toolName, agentID,
+	).Scan(&ts)
+	if err != nil {
+		return 0
+	}
+	t, err := time.Parse("2006-01-02T15:04:05.999999999Z07:00", ts)
+	if err != nil {
+		return 0
+	}
+	return time.Since(t).Milliseconds()
 }
 
 // ActiveAgentID returns the agent_id of the most recently started agent
