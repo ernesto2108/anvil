@@ -64,7 +64,27 @@ If the handoff is well-written you should need **zero** production-code reads.
 
 ## Context & Prior Work — MANDATORY execution order
 
-**Your execution is a strict 4-step protocol. Do NOT skip or reorder steps.**
+**Your execution is a strict 5-step protocol. Do NOT skip or reorder steps.**
+
+### STEP 0 — Load stack testing conventions (ALWAYS — before reading the handoff)
+
+Identify the stack(s) from the orchestrator prompt or handoff filename. For each stack involved, read its testing convention file:
+
+| Stack | Convention file |
+|---|---|
+| Go | `skills/go-conventions/testing-guide.md` (dispatcher → load only relevant sub-files) |
+| React / TypeScript | `skills/react-conventions/testing-guide.md` |
+| Flutter / Dart | `skills/flutter-conventions/testing-guide.md` |
+| Python | `skills/python-conventions/testing-guide.md` |
+| Rust | `skills/rust-conventions/testing-guide.md` |
+| Astro | `skills/astro-conventions/testing-guide.md` |
+
+**Rules:**
+- Read the file for EVERY stack present in the task — no exceptions
+- For Go: the guide is a dispatcher; load the sub-files it routes to for your specific scope (always load `structure-tables.md` and `helpers-mocking.md` at minimum)
+- If a convention file does not exist for a stack → proceed with the Universal Rules below and note the missing file in your final report
+- Convention files do NOT count against the production-code read cap (3-read hard cap applies only to `.go`/`.ts`/`.py`/`.rs`/`.dart` production files)
+- This step is NOT optional even for Small tasks — the orchestrator may omit inline conventions to save tokens, trusting you to load them here
 
 ### STEP 1 — Read the handoff FIRST (the only mandatory read)
 
@@ -139,9 +159,9 @@ The orchestrator indicates the complexity level when invoking you. Adapt your be
 
 ### Small (1-5 pts)
 - **No PRD/design required** — use the context in the prompt
-- **No convention files required** — the orchestrator may inject key rules inline
+- **Testing convention file IS required** — load it in STEP 0 (it's small, ~3KB)
 - The orchestrator provides: changed files content, what to test, patterns to follow
-- Go straight to writing tests
+- After STEP 0, go straight to writing tests
 
 ### Medium (5-8 pts)
 - Read PRD if provided inline or at the path given — DO NOT search for it yourself
@@ -174,19 +194,18 @@ The handoff remains your **primary** input (it has exact signatures, edge cases,
 
 ## Convention Rules
 
-The orchestrator provides convention rules in one of two ways:
+You ALWAYS load testing conventions yourself in STEP 0 — you do not wait for the orchestrator to inject them.
 
-1. **Inline in the prompt** — specific rules or file contents pasted directly. Read and apply them.
-2. **Absolute file paths** — specific files to read (e.g., `/absolute/path/skills/go-conventions/guides/testing/structure-tables.md`). Read ONLY those files.
-
-**Do NOT** load convention skill dispatchers or navigate routing tables yourself — that is the orchestrator's job. If you need conventions not provided, ask the orchestrator.
+The orchestrator MAY additionally provide:
+1. **Inline rules** — specific overrides or project-specific additions. Apply them on top of the convention file.
+2. **Extra file paths** — additional convention files beyond the standard testing guide (e.g., a project-specific pattern file).
 
 **Convention file budget:**
 | Task size | Max convention files |
 |-----------|---------------------|
-| Small (1-5 pts) | 0-2 (or inline) |
-| Medium (5-8 pts) | 2-3 |
-| Large (8-13 pts) | 3-5 |
+| Small (1-5 pts) | 1-2 (testing-guide + 1 sub-file for Go) |
+| Medium (5-8 pts) | 2-4 |
+| Large (8-13 pts) | 4-6 |
 
 ## Universal Rules
 
