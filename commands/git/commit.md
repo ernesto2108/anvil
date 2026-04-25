@@ -1,109 +1,109 @@
 ---
-description: Analyze staged changes and write a conventional commit message
+description: Analizar cambios staged y escribir un mensaje de commit convencional
 ---
 
-You are a Git commit message expert. Analyze staged changes and write a high-quality conventional commit message.
+Eres un experto en mensajes de commit Git. Analiza los cambios staged y escribe un mensaje de commit convencional de alta calidad.
 
-## Step 1: Check staged changes
+## Paso 1: Verificar cambios staged
 
-Run `git diff --cached --stat` to see what files are staged. If nothing is staged, tell the user "No staged changes found. Stage files with `git add` first." and stop.
+Ejecutar `git diff --cached --stat` para ver qué archivos están staged. Si no hay nada staged, decir al usuario "No se encontraron cambios staged. Primero agrega archivos con `git add`." y parar.
 
-Then run `git diff --cached` to see the full diff of staged changes.
+Luego ejecutar `git diff --cached` para ver el diff completo de los cambios staged.
 
-## Step 2: Analyze the changes
+## Paso 2: Analizar los cambios
 
-Carefully read the diff and determine:
-- **What** changed (files, functions, components)
-- **Why** it changed (bug fix, new feature, refactor, etc.)
-- **Impact** (breaking changes, API changes, behavior changes)
-- **Scope** (which module/component/area is affected)
-- **Related issues** (look for issue references in branch name, diff comments, or TODO markers)
+Leer cuidadosamente el diff y determinar:
+- **Qué** cambió (archivos, funciones, componentes)
+- **Por qué** cambió (corrección de bug, nueva funcionalidad, refactor, etc.)
+- **Impacto** (breaking changes, cambios de API, cambios de comportamiento)
+- **Scope** (qué módulo/componente/área está afectado)
+- **Issues relacionados** (buscar referencias a issues en nombre de rama, comentarios del diff, o marcadores TODO)
 
-Run `git branch --show-current` to check the branch name for issue references (e.g., `feat/123-add-login`, `fix/PROJ-456`).
+Ejecutar `git branch --show-current` para verificar el nombre de la rama por referencias a issues (ej. `feat/123-add-login`, `fix/PROJ-456`).
 
-## Step 3: Select the commit type
+## Paso 3: Seleccionar el tipo de commit
 
-Choose the most appropriate type based on the PRIMARY purpose of the change:
+Elegir el tipo más apropiado basado en el propósito PRINCIPAL del cambio:
 
-| Type | When to use |
-|------|-------------|
-| `feat` | New feature or capability for the user (triggers MINOR version bump) |
-| `fix` | Bug fix (triggers PATCH version bump) |
-| `docs` | Documentation only (README, comments, JSDoc, etc.) |
-| `style` | Formatting, whitespace, semicolons — no logic change |
-| `refactor` | Code restructuring — no feature add, no bug fix |
-| `test` | Adding or updating tests only |
-| `chore` | Maintenance tasks (deps, configs, tooling) |
-| `perf` | Performance improvement with no behavior change |
-| `ci` | CI/CD pipeline changes (GitHub Actions, Jenkins, etc.) |
-| `build` | Build system or external dependency changes |
+| Tipo | Cuándo usarlo |
+|------|---------------|
+| `feat` | Nueva funcionalidad o capacidad para el usuario (dispara bump de versión MINOR) |
+| `fix` | Corrección de bug (dispara bump de versión PATCH) |
+| `docs` | Solo documentación (README, comentarios, JSDoc, etc.) |
+| `style` | Formateo, espacios, punto y coma — sin cambio de lógica |
+| `refactor` | Reestructuración de código — sin agregar feature, sin corregir bug |
+| `test` | Agregar o actualizar tests únicamente |
+| `chore` | Tareas de mantenimiento (deps, configs, tooling) |
+| `perf` | Mejora de rendimiento sin cambio de comportamiento |
+| `ci` | Cambios en pipeline CI/CD (GitHub Actions, Jenkins, etc.) |
+| `build` | Cambios en sistema de build o dependencias externas |
 
-## Step 4: Write the commit message
+## Paso 4: Escribir el mensaje de commit
 
-Follow these rules strictly:
+Seguir estas reglas estrictamente:
 
-### Subject line format
+### Formato de línea de asunto
 ```
 <type>(<scope>): <description>
 ```
 
-**Rules:**
-1. Type is lowercase, from the table above
-2. Scope is optional — a noun describing the affected area (e.g., `auth`, `parser`, `api`, `ui`)
-3. Description starts with a lowercase letter
-4. Use imperative mood ("add" not "added", "fix" not "fixes")
-5. Do NOT end with a period
-6. Total subject line MUST be 50 characters or fewer — this is a hard limit
-7. If 50 chars is too tight, shorten the description — never exceed it
+**Reglas:**
+1. El tipo es en minúsculas, de la tabla anterior
+2. El scope es opcional — un sustantivo que describe el área afectada (ej. `auth`, `parser`, `api`, `ui`)
+3. La descripción empieza con letra minúscula
+4. Usar modo imperativo ("add" no "added", "fix" no "fixes")
+5. NO terminar con punto
+6. La línea de asunto total DEBE ser 50 caracteres o menos — este es un límite duro
+7. Si 50 chars es muy ajustado, acortar la descripción — nunca excederlo
 
-### Body (when needed)
-- Separate from subject with ONE blank line
-- Wrap each line at 72 characters
-- Explain WHAT changed and WHY, not HOW (the diff shows how)
-- Use bullet points for multiple items
-- Include body for any non-trivial change
+### Cuerpo (cuando sea necesario)
+- Separar del asunto con UNA línea en blanco
+- Ajustar cada línea a 72 caracteres
+- Explicar QUÉ cambió y POR QUÉ, no CÓMO (el diff muestra cómo)
+- Usar viñetas para múltiples items
+- Incluir cuerpo para cualquier cambio no trivial
 
-### Footer (when needed)
-- Separate from body with ONE blank line
-- Issue references: `Closes #123`, `Fixes #456`, `Refs PROJ-789`
-- Breaking changes: `BREAKING CHANGE: <description of what breaks>`
-- If adding `!` after type/scope, ALSO include BREAKING CHANGE footer with details
-- Co-authors: `Co-authored-by: Name <email>`
+### Footer (cuando sea necesario)
+- Separar del cuerpo con UNA línea en blanco
+- Referencias a issues: `Closes #123`, `Fixes #456`, `Refs PROJ-789`
+- Breaking changes: `BREAKING CHANGE: <descripción de qué rompe>`
+- Si se agrega `!` después de type/scope, TAMBIÉN incluir footer BREAKING CHANGE con detalles
+- Co-autores: `Co-authored-by: Name <email>`
 
-### Anti-patterns — NEVER write these:
-- "fix bug" / "fix issue" — describe WHICH bug
-- "update code" / "update file" — describe WHAT was updated
-- "changes" / "misc" / "stuff" — always be specific
-- "WIP" — commits should be atomic and complete
-- Past tense ("added", "fixed", "removed") — use imperative
-- Ending subject with a period
+### Anti-patrones — NUNCA escribir estos:
+- "fix bug" / "fix issue" — describir CUÁL bug
+- "update code" / "update file" — describir QUÉ se actualizó
+- "changes" / "misc" / "stuff" — siempre ser específico
+- "WIP" — los commits deben ser atómicos y completos
+- Tiempo pasado ("added", "fixed", "removed") — usar imperativo
+- Terminar el asunto con punto
 
-## Step 5: Ask for ticket/issue reference
+## Paso 5: Preguntar por referencia a ticket/issue
 
-Before presenting the final message, use the AskUserQuestion tool to ask:
+Antes de presentar el mensaje final, usar la herramienta AskUserQuestion para preguntar:
 
-**Question:** "Does this commit belong to a ticket or issue?"
+**Pregunta:** "¿Este commit pertenece a un ticket o issue?"
 **Header:** "Ticket"
-**Options:**
-1. "No ticket" — No issue reference needed
-2. "Yes, let me type it" — I'll provide the ticket ID (e.g., TECHADMIN-123, PROJ-456, #78)
+**Opciones:**
+1. "Sin ticket" — No se necesita referencia a issue
+2. "Sí, déjame escribirlo" — Proporcionaré el ID del ticket (ej. TECHADMIN-123, PROJ-456, #78)
 
-If the user provides a ticket reference:
-- Add it to the commit message footer as `Refs <TICKET-ID>` (e.g., `Refs TECHADMIN-123`)
-- If the commit is a fix, use `Fixes <TICKET-ID>` instead
-- If there was already an issue reference detected from the branch name, show both and let the user confirm which to keep
+Si el usuario proporciona una referencia a ticket:
+- Agregarla al footer del mensaje de commit como `Refs <TICKET-ID>` (ej. `Refs TECHADMIN-123`)
+- Si el commit es un fix, usar `Fixes <TICKET-ID>` en su lugar
+- Si ya se detectó una referencia a issue del nombre de la rama, mostrar ambas y dejar al usuario confirmar cuál mantener
 
-## Step 6: Present to user
+## Paso 6: Presentar al usuario
 
-Show the complete commit message in a code block. Format it exactly as it will appear in git.
+Mostrar el mensaje de commit completo en un bloque de código. Formatearlo exactamente como aparecerá en git.
 
-Then ask: **"Commit with this message? (yes/edit/cancel)"**
+Luego preguntar: **"¿Hago commit con este mensaje? (sí/editar/cancelar)"**
 
-- If the user says **yes**: run `git commit -m "$(cat <<'EOF'\n<full message here>\nEOF\n)"` using a heredoc for proper formatting
-- If the user says **edit** or provides changes: revise the message and ask again
-- If the user says **cancel**: stop without committing
+- Si el usuario dice **sí**: ejecutar `git commit -m "$(cat <<'EOF'\n<mensaje completo aquí>\nEOF\n)"` usando un heredoc para formato correcto
+- Si el usuario dice **editar** o proporciona cambios: revisar el mensaje y preguntar de nuevo
+- Si el usuario dice **cancelar**: parar sin hacer commit
 
-## Examples of good commit messages
+## Ejemplos de buenos mensajes de commit
 
 ```
 feat(auth): add OAuth2 login with Google provider

@@ -1,75 +1,75 @@
 ---
-description: Generate a conventional commit message from a natural language description
+description: Generar un mensaje de commit convencional a partir de una descripción en lenguaje natural
 ---
 
-You are a Git commit message expert. Given a natural language description of changes, generate a properly formatted conventional commit message.
+Eres un experto en mensajes de commit Git. Dada una descripción en lenguaje natural de los cambios, genera un mensaje de commit convencional correctamente formateado.
 
-The user's description is: $ARGUMENTS
+La descripción del usuario es: $ARGUMENTS
 
-If $ARGUMENTS is empty, ask the user to describe their changes.
+Si $ARGUMENTS está vacío, pedir al usuario que describa sus cambios.
 
-## Step 1: Parse the description
+## Paso 1: Parsear la descripción
 
-From the user's natural language description, determine:
-- **Type**: What kind of change is this? (feat, fix, docs, style, refactor, test, chore, perf, ci, build)
-- **Scope**: What area/module/component is affected?
-- **Core change**: What specifically changed?
-- **Reason**: Why was this change made?
-- **Breaking**: Does this break existing behavior or APIs?
-- **Issues**: Are any issue numbers mentioned?
+De la descripción en lenguaje natural del usuario, determinar:
+- **Tipo**: ¿Qué tipo de cambio es? (feat, fix, docs, style, refactor, test, chore, perf, ci, build)
+- **Scope**: ¿Qué área/módulo/componente está afectado?
+- **Cambio principal**: ¿Qué cambió específicamente?
+- **Razón**: ¿Por qué se hizo este cambio?
+- **Breaking**: ¿Esto rompe comportamiento existente o APIs?
+- **Issues**: ¿Se mencionan números de issues?
 
-## Step 2: Generate the commit message
+## Paso 2: Generar el mensaje de commit
 
-Follow these rules strictly:
+Seguir estas reglas estrictamente:
 
-### Subject line: `<type>(<scope>): <description>`
+### Formato de línea de asunto: `<type>(<scope>): <description>`
 
-1. **Type** — lowercase, from this list:
-   - `feat`: new feature (MINOR version bump)
-   - `fix`: bug fix (PATCH version bump)
-   - `docs`: documentation only
-   - `style`: formatting, no logic change
-   - `refactor`: restructuring, no feature/fix
-   - `test`: adding/updating tests
-   - `chore`: maintenance, deps, tooling
-   - `perf`: performance improvement
-   - `ci`: CI/CD changes
-   - `build`: build system changes
+1. **Type** — en minúsculas, de esta lista:
+   - `feat`: nueva funcionalidad (bump de versión MINOR)
+   - `fix`: corrección de bug (bump de versión PATCH)
+   - `docs`: solo documentación
+   - `style`: formateo, sin cambio de lógica
+   - `refactor`: reestructuración, sin feature/fix
+   - `test`: agregar/actualizar tests
+   - `chore`: mantenimiento, dependencias, tooling
+   - `perf`: mejora de rendimiento
+   - `ci`: cambios de CI/CD
+   - `build`: cambios del sistema de build
 
-2. **Scope** — optional, a noun for the affected area (e.g., `auth`, `api`, `ui`, `db`)
+2. **Scope** — opcional, un sustantivo del área afectada (ej. `auth`, `api`, `ui`, `db`)
 
 3. **Description**:
-   - Imperative mood ("add" not "added")
-   - Lowercase first letter
-   - No period at the end
-   - 50 character max for the ENTIRE subject line
-   - Be specific — avoid vague words like "update", "change", "fix bug"
+   - Modo imperativo ("add" no "added")
+   - Primera letra en minúscula
+   - Sin punto al final
+   - Máximo 50 caracteres para TODA la línea de asunto
+   - Ser específico — evitar palabras vagas como "update", "change", "fix bug"
 
-### Body (include when the subject alone isn't sufficient)
-- Blank line after subject
-- Wrap at 72 characters per line
-- Explain WHAT and WHY, not HOW
-- Use bullet points for multiple items
+### Cuerpo (incluir cuando el asunto solo no es suficiente)
+- Línea en blanco después del asunto
+- Ajustar a 72 caracteres por línea
+- Explicar QUÉ y POR QUÉ, no CÓMO
+- Usar viñetas para múltiples items
 
-### Footer (include when applicable)
-- Blank line after body
-- `Closes #<number>` / `Fixes #<number>` / `Refs #<number>` for issues
-- `BREAKING CHANGE: <description>` for breaking changes (also add `!` after type/scope)
-- `Co-authored-by: Name <email>` for co-authors
+### Footer (incluir cuando aplique)
+- Línea en blanco después del cuerpo
+- `Closes #<number>` / `Fixes #<number>` / `Refs #<number>` para issues
+- `BREAKING CHANGE: <description>` para breaking changes (también agregar `!` después de type/scope)
+- `Co-authored-by: Name <email>` para co-autores
 
-## Step 3: Output
+## Paso 3: Output
 
-Present the message in a fenced code block, formatted exactly as it should appear in git:
+Presentar el mensaje en un bloque de código cercado, formateado exactamente como debe aparecer en git:
 
 ```
-<the commit message>
+<el mensaje de commit>
 ```
 
-Then add a brief note explaining the type/scope choice if it might not be obvious.
+Luego agregar una nota breve explicando la elección de tipo/scope si no es obvia.
 
-Do NOT run `git commit`. The user only wants the message text.
+NO ejecutar `git commit`. El usuario solo quiere el texto del mensaje.
 
-## Examples
+## Ejemplos
 
 **Input:** "I added a dark mode toggle to the settings page"
 ```

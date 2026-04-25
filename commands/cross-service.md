@@ -1,34 +1,34 @@
 ---
 name: cross-service
-description: Orchestrate a feature/change across multiple microservice repos using the full agent pipeline
+description: Orquestar un feature/cambio a través de múltiples repos de microservicios usando el pipeline completo de agentes
 allowed-tools: Agent, Read, Glob, Grep, Bash, Edit, Write
 ---
 
-# Cross-Service Development — Multi-Repo Pipeline
+# Desarrollo Cross-Service — Pipeline Multi-Repo
 
-Load the `cross-service-dev` skill and follow its workflow.
+Cargar la skill `cross-service-dev` y seguir su workflow.
 
-## Context to gather first:
+## Contexto a recopilar primero:
 
-1. Read `<vault>/04-architecture/service-map.yaml` from the project vault
-2. If it doesn't exist, ask the user to create one (reference the template in the service-map skill)
+1. Leer `<vault>/04-architecture/service-map.yaml` del vault del proyecto
+2. Si no existe, pedir al usuario que cree uno (referenciar el template en la skill service-map)
 
-## What the user said: $ARGUMENTS
+## Lo que dijo el usuario: $ARGUMENTS
 
-If no arguments provided, ask the user (in Spanish):
+Si no se proporcionaron argumentos, preguntar al usuario:
 - ¿Qué cambio necesitás? (nuevo endpoint, modificar existente, eliminar, deprecar)
 - ¿Qué servicios están involucrados?
 - ¿Alguna restricción? (backwards compatibility, shared DB, deadline)
 
-## Then follow the cross-service-dev skill phases:
+## Luego seguir las fases de la skill cross-service-dev:
 
-1. **PM** — pm agent: classify operation, discovery, write prd.md
-2. **Architect** — 1 agent, consolidated design.md
-3. **Developer** — N agents (1 per service, parallel when possible)
-4. **DBA** — 0-1 agent (only if migration needed)
-5. **Tester** — N agents (1 per service, parallel)
-6. **QA** — 1 agent (combined diff from all services)
-7. **Document** — changelog, diagram, update service-map.yaml
-8. **Reporter** — final summary
+1. **PM** — agente pm: clasificar operación, discovery, escribir prd.md
+2. **Architect** — 1 agente, design.md consolidado
+3. **Developer** — N agentes (1 por servicio, en paralelo cuando sea posible)
+4. **DBA** — 0-1 agente (solo si se necesita migración)
+5. **Tester** — N agentes (1 por servicio, en paralelo)
+6. **QA** — 1 agente (diff combinado de todos los servicios)
+7. **Documentar** — changelog, diagrama, actualizar service-map.yaml
+8. **Reporter** — resumen final
 
-Gates apply: architect veto → STOP, QA < 7 → STOP.
+Los gates aplican: veto del architect → STOP, QA < 7 → STOP.

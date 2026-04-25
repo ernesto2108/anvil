@@ -1,98 +1,98 @@
 ---
-description: Git commit message writing and review following Conventional Commits spec
+description: Escritura y revisión de mensajes de commit Git siguiendo la spec de Conventional Commits
 ---
 
-# Git Commit Skills
+# Skills de Git Commit
 
-Slash commands for writing and reviewing Git commit messages following industry best practices.
+Comandos slash para escribir y revisar mensajes de commit Git siguiendo las mejores prácticas de la industria.
 
-## Commands
+## Comandos
 
 ### `/git:commit`
-Analyzes staged changes (`git diff --cached`) and writes a conventional commit message. Asks for confirmation before committing.
+Analiza los cambios staged (`git diff --cached`) y escribe un mensaje de commit convencional. Pide confirmación antes de hacer el commit.
 
-**Usage:**
+**Uso:**
 ```
 /git:commit
 ```
 
-**What it does:**
-1. Reads staged diff and branch name
-2. Determines the appropriate commit type and scope
-3. Writes a compliant commit message
-4. Asks for confirmation before committing
+**Qué hace:**
+1. Lee el diff staged y el nombre de la rama
+2. Determina el tipo y scope apropiado del commit
+3. Escribe un mensaje de commit conforme a la spec
+4. Pide confirmación antes de hacer el commit
 
 ### `/git:commit-review`
-Reviews the last N commits (default 5) and scores each against the Conventional Commits spec.
+Revisa los últimos N commits (por defecto 5) y puntúa cada uno contra la spec de Conventional Commits.
 
-**Usage:**
+**Uso:**
 ```
-/git:commit-review        # reviews last 5 commits
-/git:commit-review 10     # reviews last 10 commits
+/git:commit-review        # revisa los últimos 5 commits
+/git:commit-review 10     # revisa los últimos 10 commits
 ```
 
-**What it does:**
-1. Reads recent commit messages
-2. Scores each on 12 criteria (structure, content, best practices)
-3. Reports issues and suggests rewrites for failing commits
-4. Provides a summary with common issues
+**Qué hace:**
+1. Lee los mensajes de commits recientes
+2. Puntúa cada uno en 12 criterios (estructura, contenido, mejores prácticas)
+3. Reporta problemas y sugiere reescrituras para commits que fallan
+4. Proporciona un resumen con problemas comunes
 
-**Score scale:**
-- 90-100: Excellent
-- 70-89: Acceptable
-- 50-69: Needs improvement
-- 0-49: Poor quality
+**Escala de puntuación:**
+- 90-100: Excelente
+- 70-89: Aceptable
+- 50-69: Necesita mejora
+- 0-49: Calidad pobre
 
 ### `/git:message`
-Generates a commit message from a natural language description without committing.
+Genera un mensaje de commit a partir de una descripción en lenguaje natural sin hacer el commit.
 
-**Usage:**
+**Uso:**
 ```
 /git:message added login with Google OAuth
 /git:message fixed crash on empty input in parser
 /git:message renamed endpoints to follow REST conventions, breaks clients
 ```
 
-**What it does:**
-1. Parses natural language into type, scope, and description
-2. Generates a properly formatted conventional commit message
-3. Outputs the message — does NOT commit
+**Qué hace:**
+1. Parsea el lenguaje natural en tipo, scope y descripción
+2. Genera un mensaje de commit convencional correctamente formateado
+3. Muestra el mensaje — NO hace el commit
 
-## Standards enforced
+## Estándares aplicados
 
-Based on:
+Basado en:
 - [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
 - [How to Write a Git Commit Message](https://cbea.ms/git-commit/) (Chris Beams)
 - [Angular Commit Convention](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit)
 - [Semantic Release](https://semantic-release.gitbook.io/semantic-release/)
 
-### Commit types
+### Tipos de commit
 
-| Type | Purpose | SemVer impact |
-|------|---------|---------------|
-| `feat` | New feature | MINOR |
-| `fix` | Bug fix | PATCH |
-| `docs` | Documentation | — |
-| `style` | Formatting | — |
-| `refactor` | Restructuring | — |
+| Tipo | Propósito | Impacto SemVer |
+|------|-----------|----------------|
+| `feat` | Nueva funcionalidad | MINOR |
+| `fix` | Corrección de bug | PATCH |
+| `docs` | Documentación | — |
+| `style` | Formateo | — |
+| `refactor` | Reestructuración | — |
 | `test` | Tests | — |
-| `chore` | Maintenance | — |
-| `perf` | Performance | — |
+| `chore` | Mantenimiento | — |
+| `perf` | Rendimiento | — |
 | `ci` | CI/CD | — |
-| `build` | Build system | — |
+| `build` | Sistema de build | — |
 
-### Rules
+### Reglas
 
-1. Subject line max 50 characters
-2. Imperative mood ("add" not "added")
-3. No period at end of subject
-4. Blank line between subject and body
-5. Body wraps at 72 characters
-6. Body explains WHAT and WHY, not HOW
-7. Breaking changes use `!` suffix AND `BREAKING CHANGE:` footer
-8. Issue references in footer (`Closes #123`)
-9. No vague messages ("fix bug", "update", "WIP")
+1. Línea de asunto máx 50 caracteres
+2. Modo imperativo ("add" no "added")
+3. Sin punto al final del asunto
+4. Línea en blanco entre asunto y cuerpo
+5. Cuerpo se ajusta a 72 caracteres
+6. El cuerpo explica QUÉ y POR QUÉ, no CÓMO
+7. Breaking changes usan sufijo `!` Y footer `BREAKING CHANGE:`
+8. Referencias a issues en el footer (`Closes #123`)
+9. Sin mensajes vagos ("fix bug", "update", "WIP")
 
-## Scope
+## Alcance
 
-These commands focus exclusively on commit **message quality**. Code review is handled by CodeRabbit.
+Estos comandos se enfocan exclusivamente en la calidad del **mensaje** de commit. La revisión de código la maneja CodeRabbit.
