@@ -157,7 +157,7 @@ En modo directo, el orquestador lee/escribe libremente. En modo agente:
 - **Ejecución de diseño:** después de designer → dtd.md → PAUSE para que el usuario ejecute en Pencil/Figma
 - **QA:** score < 7 → STOP, arreglar antes de continuar
 - **Security:** CVE critical/high → STOP, arreglar antes de continuar
-- **Backlog PM:** después de PRD → verificar tareas en sprint-current.md
+- **Backlog arquitecto:** después de ARD → verificar tareas en sprint-current.md (o Linear)
 - **Sync cross-repo:** cambios en DTO/endpoint/auth backend → developer lista archivos frontend/mobile afectados
 
 ---
@@ -165,7 +165,7 @@ En modo directo, el orquestador lee/escribe libremente. En modo agente:
 ## Reglas de orquestación
 
 - Resolver `<docs>` desde `~/.claude/project-registry.md` antes de cualquier agente
-- **Un escritor a la vez.** Máx tareas por run: 2 (preferido: 1). Cambio de scope → re-ejecutar PM.
+- **Un escritor a la vez.** Máx tareas por run: 2 (preferido: 1). Cambio de scope → re-ejecutar PM + arquitecto.
 - Todos los docs en español. Código, keys, paths → inglés. Preguntas al usuario → español.
 - Al terminar todos los agentes: cerrar tareas según el sistema de docs (Obsidian: sprint-current.md + board.md + frontmatter; Linear: mover issue a Done; `.workspace/`: sprint-current.md).
 

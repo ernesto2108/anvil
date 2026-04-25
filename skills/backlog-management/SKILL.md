@@ -1,13 +1,13 @@
 ---
 name: backlog-management
-description: Creación de tareas, gestión del backlog y formato del tablero de sprint. Define cómo descomponer PRDs en tickets, asignar agentes y hacer seguimiento del progreso. Usado por el agente PM después de escribir un PRD.
+description: Creación de tareas, gestión del backlog y formato del tablero de sprint. Define cómo descomponer PRDs en tickets, asignar agentes y hacer seguimiento del progreso. Usado por el agente arquitecto después de escribir el ARD.
 ---
 
 # Gestión del Backlog
 
 ## Cuándo usar
 
-Después de escribir un PRD, el PM DEBE descomponerlo en tareas antes de que cualquier agente comience a trabajar. Sin PRD no hay tareas. Sin tareas no hay referencia a un PRD.
+Después de escribir el ARD, el arquitecto DEBE descomponer en tareas antes de que cualquier agente comience a trabajar. Sin PRD no hay ARD. Sin ARD no hay tareas.
 
 ## Jerarquía de trabajo
 
@@ -249,7 +249,8 @@ Formato ligero sin plugins de Obsidian.
 
 ```
 PM crea PRD
-  → PM descompone en tareas (este skill)
+  → Arquitecto crea ARD + milestone
+  → Arquitecto descompone en tareas (este skill)
   → Tareas van a la columna Backlog
   → Orquestador toma tarea, asigna a agente
   → Agente comienza → tarea se mueve a In Progress

@@ -23,9 +23,9 @@ Antes de invocar cualquier agente, el orquestador DEBE verificar que el sistema 
 - Copiar la estructura desde `vault-template/` en el repo Anvil
 - Si el vault existe pero le faltan archivos clave:
   - `01-project/context.md` falta → correr scanner o crear desde `vault-template/01-project/context.md`
-  - `02-backlog/sprint-current.md` falta → PM lo creará desde `vault-template/02-backlog/sprint-current.md`
-  - `02-backlog/board.md` falta → PM lo creará desde `vault-template/02-backlog/board.md`
-  - `02-backlog/dashboard.md` falta → PM lo creará desde `vault-template/02-backlog/dashboard.md`
+  - `02-backlog/sprint-current.md` falta → arquitecto lo creará desde `vault-template/02-backlog/sprint-current.md`
+  - `02-backlog/board.md` falta → arquitecto lo creará desde `vault-template/02-backlog/board.md`
+  - `02-backlog/dashboard.md` falta → arquitecto lo creará desde `vault-template/02-backlog/dashboard.md`
 
 ### Configuración Linear + Outline
 - Sin vault local — los docs viven en Outline, las tareas en Linear
