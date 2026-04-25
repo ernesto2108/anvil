@@ -27,6 +27,56 @@ type pipelineFile struct {
 	Nodes []pipelineNode `yaml:"nodes"`
 }
 
+// completeOrchestration closes or pauses an active conversational run.
+// Accepts status "success", "failed", or "paused".
+func (s *Server) completeOrchestration(_ context.Context, args map[string]any) (string, error) {
+	if s.db == nil {
+		return "", fmt.Errorf("database not available")
+	}
+
+	runID := strArg(args, "run_id", "")
+	if runID == "" {
+		return "", fmt.Errorf("run_id is required")
+	}
+	status := strArg(args, "status", "")
+	if status != "success" && status != "failed" && status != "paused" {
+		return `{"error": "status must be one of: success, failed, paused"}`, nil
+	}
+
+	var currentStatus string
+	err := s.db.QueryRowContext(context.Background(),
+		`SELECT status FROM runs WHERE id = ?`, runID).Scan(&currentStatus)
+	if err == sql.ErrNoRows {
+		return fmt.Sprintf(`{"error": "run %s not found"}`, runID), nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("query run: %w", err)
+	}
+	if currentStatus == "success" || currentStatus == "failed" {
+		return fmt.Sprintf(`{"error": "run %s is already completed (status: %s)"}`, runID, currentStatus), nil
+	}
+
+	var endedAt sql.NullString
+	if status == "success" || status == "failed" {
+		endedAt = sql.NullString{String: time.Now().UTC().Format(time.RFC3339), Valid: true}
+	}
+
+	_, err = s.db.ExecContext(context.Background(),
+		`UPDATE runs SET status = ?, ended_at = ? WHERE id = ?`,
+		status, endedAt, runID)
+	if err != nil {
+		return "", fmt.Errorf("update run: %w", err)
+	}
+
+	result := map[string]any{
+		"run_id":   runID,
+		"status":   status,
+		"ended_at": endedAt.String,
+	}
+	out, _ := json.MarshalIndent(result, "", "  ")
+	return string(out), nil
+}
+
 // startOrchestration creates a new conversational orchestration run and
 // persists it to the runs table with task_source='conversational'.
 func (s *Server) startOrchestration(_ context.Context, args map[string]any) (string, error) {
@@ -141,6 +191,13 @@ func (s *Server) saveStep(_ context.Context, args map[string]any) (string, error
 	}
 
 	durationMs := intArg(args, "duration_ms", 0)
+	gateDecision := strArg(args, "gate_decision", "")
+	resumeFlag := boolArg(args, "resume", false)
+
+	// Validate gate_decision before touching DB.
+	if gateDecision != "" && gateDecision != "approved" && gateDecision != "rejected" && gateDecision != "skipped" {
+		return `{"error": "gate_decision must be one of: approved, rejected, skipped"}`, nil
+	}
 
 	// Parse files_touched (optional array of strings).
 	var filesTouched []string
@@ -167,8 +224,19 @@ func (s *Server) saveStep(_ context.Context, args map[string]any) (string, error
 	if err != nil {
 		return "", fmt.Errorf("query run: %w", err)
 	}
-	if runStatus != "running" {
-		return fmt.Sprintf(`{"error": "run %s is not running (status: %s)"}`, runID, runStatus), nil
+	if runStatus == "success" || runStatus == "failed" || runStatus == "done" {
+		return fmt.Sprintf(`{"error": "run %s is already completed (status: %s)"}`, runID, runStatus), nil
+	}
+	if runStatus == "paused" {
+		if !resumeFlag {
+			return fmt.Sprintf(`{"error": "run %s is not running (status: %s)"}`, runID, runStatus), nil
+		}
+		// Resume: reactivate run before inserting step.
+		_, err = s.db.ExecContext(context.Background(),
+			`UPDATE runs SET status = 'running' WHERE id = ?`, runID)
+		if err != nil {
+			return "", fmt.Errorf("resume run: %w", err)
+		}
 	}
 
 	// Calculate next sequence number.
@@ -182,11 +250,16 @@ func (s *Server) saveStep(_ context.Context, args map[string]any) (string, error
 
 	filesTouchedJSON, _ := json.Marshal(filesTouched)
 
+	var gateDecisionSQL sql.NullString
+	if gateDecision != "" {
+		gateDecisionSQL = sql.NullString{String: gateDecision, Valid: true}
+	}
+
 	_, err = s.db.ExecContext(context.Background(),
-		`INSERT INTO agents (run_id, agent_id, agent_role, status, output, sequence, files_touched_list, duration_ms, started_at, ended_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO agents (run_id, agent_id, agent_role, status, output, sequence, files_touched_list, duration_ms, started_at, ended_at, gate_decision)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		runID, agentID, role, status, output, sequence,
-		string(filesTouchedJSON), durationMs, now, now,
+		string(filesTouchedJSON), durationMs, now, now, gateDecisionSQL,
 	)
 	if err != nil {
 		return "", fmt.Errorf("insert agent: %w", err)
@@ -258,7 +331,7 @@ func (s *Server) loadOrchestration(_ context.Context, args map[string]any) (stri
 
 	// Load agents ordered by sequence.
 	rows, err := s.db.QueryContext(context.Background(),
-		`SELECT agent_id, agent_role, status, output, files_touched_list, duration_ms, sequence
+		`SELECT agent_id, agent_role, status, output, files_touched_list, duration_ms, sequence, gate_decision
 		 FROM agents WHERE run_id = ? ORDER BY sequence`, runID)
 	if err != nil {
 		return "", fmt.Errorf("query agents: %w", err)
@@ -273,6 +346,7 @@ func (s *Server) loadOrchestration(_ context.Context, args map[string]any) (stri
 		FilesTouched []string `json:"files_touched"`
 		DurationMs   int64    `json:"duration_ms"`
 		NodeIndex    int      `json:"node_index"`
+		GateDecision string   `json:"gate_decision"`
 	}
 
 	var steps []stepResult
@@ -284,8 +358,9 @@ func (s *Server) loadOrchestration(_ context.Context, args map[string]any) (stri
 			output, ftList             sql.NullString
 			durMs                      sql.NullInt64
 			seq                        int
+			gateDecisionNS             sql.NullString
 		)
-		if err := rows.Scan(&agentID, &role, &agentStatus, &output, &ftList, &durMs, &seq); err != nil {
+		if err := rows.Scan(&agentID, &role, &agentStatus, &output, &ftList, &durMs, &seq, &gateDecisionNS); err != nil {
 			continue
 		}
 
@@ -305,6 +380,7 @@ func (s *Server) loadOrchestration(_ context.Context, args map[string]any) (stri
 			FilesTouched: files,
 			DurationMs:   durMs.Int64,
 			NodeIndex:    seq,
+			GateDecision: gateDecisionNS.String,
 		})
 
 		if agentStatus == "success" {

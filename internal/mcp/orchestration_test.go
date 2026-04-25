@@ -58,7 +58,8 @@ func setupTestDB(t *testing.T) *sql.DB {
 		ended_at TEXT DEFAULT '',
 		duration_ms INTEGER DEFAULT 0,
 		sequence INTEGER DEFAULT 0,
-		files_touched_list TEXT NOT NULL DEFAULT '[]'
+		files_touched_list TEXT NOT NULL DEFAULT '[]',
+		gate_decision TEXT
 	)`)
 	if err != nil {
 		t.Fatalf("create agents table: %v", err)
@@ -481,5 +482,417 @@ func TestLoadOrchestration_NotFound(t *testing.T) {
 
 	if _, ok := result["error"]; !ok {
 		t.Errorf("expected error key in response, got: %s", out)
+	}
+}
+
+// insertRunWithStatus inserts a run with the given id and status into the DB.
+func insertRunWithStatus(t *testing.T, db *sql.DB, runID, status string) {
+	t.Helper()
+	_, err := db.Exec(`INSERT INTO runs (id, task_desc, status, task_source, pipeline, stack, complexity, project, started_at)
+		VALUES (?, 'test run', ?, 'conversational', '', 'Go', 'small', 'anvil', '2024-01-01T00:00:00Z')`,
+		runID, status)
+	if err != nil {
+		t.Fatalf("insertRunWithStatus: %v", err)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// completeOrchestration tests
+// ---------------------------------------------------------------------------
+
+func TestCompleteOrchestration_Success(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	insertRunWithStatus(t, db, "r_close_001", "running")
+
+	args := map[string]any{
+		"run_id": "r_close_001",
+		"status": "success",
+	}
+
+	out, err := srv.completeOrchestration(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+	if _, ok := result["error"]; ok {
+		t.Fatalf("unexpected error in response: %s", out)
+	}
+	if result["status"] != "success" {
+		t.Errorf("status = %v, want 'success'", result["status"])
+	}
+
+	// Verify DB row.
+	var dbStatus, endedAt string
+	if err := db.QueryRow(`SELECT status, ended_at FROM runs WHERE id = 'r_close_001'`).Scan(&dbStatus, &endedAt); err != nil {
+		t.Fatalf("query run: %v", err)
+	}
+	if dbStatus != "success" {
+		t.Errorf("db status = %q, want 'success'", dbStatus)
+	}
+	if endedAt == "" {
+		t.Error("ended_at should be set when status is success")
+	}
+}
+
+func TestCompleteOrchestration_Paused(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	insertRunWithStatus(t, db, "r_pause_001", "running")
+
+	args := map[string]any{
+		"run_id": "r_pause_001",
+		"status": "paused",
+	}
+
+	out, err := srv.completeOrchestration(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+	if _, ok := result["error"]; ok {
+		t.Fatalf("unexpected error in response: %s", out)
+	}
+	if result["status"] != "paused" {
+		t.Errorf("status = %v, want 'paused'", result["status"])
+	}
+
+	// Verify DB: status=paused, ended_at NULL/empty.
+	var dbStatus string
+	var endedAt sql.NullString
+	if err := db.QueryRow(`SELECT status, ended_at FROM runs WHERE id = 'r_pause_001'`).Scan(&dbStatus, &endedAt); err != nil {
+		t.Fatalf("query run: %v", err)
+	}
+	if dbStatus != "paused" {
+		t.Errorf("db status = %q, want 'paused'", dbStatus)
+	}
+	if endedAt.Valid && endedAt.String != "" {
+		t.Errorf("ended_at should be empty for paused run, got %q", endedAt.String)
+	}
+}
+
+func TestCompleteOrchestration_AlreadyClosed(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	insertRunWithStatus(t, db, "r_already_001", "success")
+
+	args := map[string]any{
+		"run_id": "r_already_001",
+		"status": "success",
+	}
+
+	out, err := srv.completeOrchestration(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+	if _, ok := result["error"]; !ok {
+		t.Errorf("expected error key in response for already-closed run, got: %s", out)
+	}
+}
+
+func TestCompleteOrchestration_NotFound(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	args := map[string]any{
+		"run_id": "r_nonexistent_999",
+		"status": "success",
+	}
+
+	out, err := srv.completeOrchestration(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+	if _, ok := result["error"]; !ok {
+		t.Errorf("expected error key in response for not-found run, got: %s", out)
+	}
+}
+
+func TestCompleteOrchestration_InvalidStatus(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	insertRunWithStatus(t, db, "r_inv_001", "running")
+
+	args := map[string]any{
+		"run_id": "r_inv_001",
+		"status": "aborted",
+	}
+
+	out, err := srv.completeOrchestration(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+	if _, ok := result["error"]; !ok {
+		t.Errorf("expected error key in response for invalid status, got: %s", out)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// saveStep — gate_decision and resume tests
+// ---------------------------------------------------------------------------
+
+func TestSaveStep_WithGateDecision(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	insertRunWithStatus(t, db, "r_gate_001", "running")
+
+	args := map[string]any{
+		"run_id":        "r_gate_001",
+		"role":          "orchestrator",
+		"status":        "success",
+		"output":        "gate evaluation done",
+		"gate_decision": "approved",
+	}
+
+	out, err := srv.saveStep(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+	if _, ok := result["error"]; ok {
+		t.Fatalf("unexpected error in response: %s", out)
+	}
+
+	// Verify gate_decision stored in DB.
+	var gateDecision string
+	if err := db.QueryRow(`SELECT gate_decision FROM agents WHERE run_id = 'r_gate_001'`).Scan(&gateDecision); err != nil {
+		t.Fatalf("query agent gate_decision: %v", err)
+	}
+	if gateDecision != "approved" {
+		t.Errorf("gate_decision = %q, want 'approved'", gateDecision)
+	}
+}
+
+func TestSaveStep_InvalidGateDecision(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	insertRunWithStatus(t, db, "r_badgate_001", "running")
+
+	args := map[string]any{
+		"run_id":        "r_badgate_001",
+		"role":          "orchestrator",
+		"status":        "success",
+		"output":        "gate output",
+		"gate_decision": "maybe",
+	}
+
+	out, err := srv.saveStep(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+	if _, ok := result["error"]; !ok {
+		t.Errorf("expected error key in response for invalid gate_decision, got: %s", out)
+	}
+
+	// Verify no row was inserted.
+	var count int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM agents WHERE run_id = 'r_badgate_001'`).Scan(&count); err != nil {
+		t.Fatalf("count agents: %v", err)
+	}
+	if count != 0 {
+		t.Errorf("expected 0 rows inserted for invalid gate_decision, got %d", count)
+	}
+}
+
+func TestSaveStep_ResumeFromPaused(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	insertRunWithStatus(t, db, "r_resume_001", "paused")
+
+	args := map[string]any{
+		"run_id": "r_resume_001",
+		"role":   "developer",
+		"status": "success",
+		"output": "resumed output",
+		"resume": true,
+	}
+
+	out, err := srv.saveStep(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+	if _, ok := result["error"]; ok {
+		t.Fatalf("unexpected error in response: %s", out)
+	}
+
+	// Verify run status changed to running.
+	var runStatus string
+	if err := db.QueryRow(`SELECT status FROM runs WHERE id = 'r_resume_001'`).Scan(&runStatus); err != nil {
+		t.Fatalf("query run status: %v", err)
+	}
+	if runStatus != "running" {
+		t.Errorf("run status = %q, want 'running' after resume", runStatus)
+	}
+
+	// Verify step was inserted.
+	var count int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM agents WHERE run_id = 'r_resume_001'`).Scan(&count); err != nil {
+		t.Fatalf("count agents: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("expected 1 agent row, got %d", count)
+	}
+}
+
+func TestSaveStep_ResumeFromClosed(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	insertRunWithStatus(t, db, "r_resumeclosed_001", "success")
+
+	args := map[string]any{
+		"run_id": "r_resumeclosed_001",
+		"role":   "developer",
+		"status": "success",
+		"output": "output for closed run",
+		"resume": true,
+	}
+
+	out, err := srv.saveStep(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+	if _, ok := result["error"]; !ok {
+		t.Errorf("expected error key in response for resume-from-closed, got: %s", out)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// loadOrchestration — gate_decision tests
+// ---------------------------------------------------------------------------
+
+func TestLoadOrchestration_GateDecision(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	_, err := db.Exec(`INSERT INTO runs (id, task_desc, status, task_source, pipeline, stack, complexity, project, started_at)
+		VALUES ('r_lgd_001', 'gate load test', 'running', 'conversational', '', 'Go', 'small', 'anvil', '2024-01-01T00:00:00Z')`)
+	if err != nil {
+		t.Fatalf("insert run: %v", err)
+	}
+
+	_, err = db.Exec(`INSERT INTO agents (run_id, agent_id, agent_role, status, output, sequence, files_touched_list, gate_decision)
+		VALUES ('r_lgd_001', 'a_gate_1', 'orchestrator', 'success', 'gate output', 1, '[]', 'approved')`)
+	if err != nil {
+		t.Fatalf("insert agent: %v", err)
+	}
+
+	args := map[string]any{
+		"run_id":  "r_lgd_001",
+		"project": "anvil",
+	}
+
+	out, err := srv.loadOrchestration(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+
+	steps, ok := result["steps"].([]any)
+	if !ok || len(steps) != 1 {
+		t.Fatalf("expected 1 step, got %v", result["steps"])
+	}
+	step := steps[0].(map[string]any)
+	if step["gate_decision"] != "approved" {
+		t.Errorf("gate_decision = %v, want 'approved'", step["gate_decision"])
+	}
+}
+
+func TestLoadOrchestration_NullGateDecision(t *testing.T) {
+	db := setupTestDB(t)
+	srv, _ := newTestServer(t, db)
+
+	_, err := db.Exec(`INSERT INTO runs (id, task_desc, status, task_source, pipeline, stack, complexity, project, started_at)
+		VALUES ('r_nullgd_001', 'null gate test', 'running', 'conversational', '', 'Go', 'small', 'anvil', '2024-01-01T00:00:00Z')`)
+	if err != nil {
+		t.Fatalf("insert run: %v", err)
+	}
+
+	_, err = db.Exec(`INSERT INTO agents (run_id, agent_id, agent_role, status, output, sequence, files_touched_list, gate_decision)
+		VALUES ('r_nullgd_001', 'a_dev_1', 'developer', 'success', 'dev output', 1, '[]', NULL)`)
+	if err != nil {
+		t.Fatalf("insert agent: %v", err)
+	}
+
+	args := map[string]any{
+		"run_id":  "r_nullgd_001",
+		"project": "anvil",
+	}
+
+	out, err := srv.loadOrchestration(context.Background(), args)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatalf("unmarshal output: %v", err)
+	}
+
+	steps, ok := result["steps"].([]any)
+	if !ok || len(steps) != 1 {
+		t.Fatalf("expected 1 step, got %v", result["steps"])
+	}
+	step := steps[0].(map[string]any)
+	// gate_decision must be present in the response (as empty string when NULL in DB).
+	gd, ok := step["gate_decision"]
+	if !ok {
+		t.Error("gate_decision field missing from step response")
+	}
+	if gd != "" {
+		t.Errorf("gate_decision = %v, want empty string for NULL db value", gd)
 	}
 }

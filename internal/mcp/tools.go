@@ -118,6 +118,14 @@ func (s *Server) buildRegistry() map[string]tool {
 
 	// ── Orchestration ─────────────────────────────────────────────────────────
 
+	add("complete_orchestration",
+		"Close or pause a conversational orchestration run. Sets terminal status and ended_at timestamp.",
+		schema(
+			prop("run_id", "string", "Run ID to complete"),
+			prop("status", "string", "Terminal status: success, failed, or paused"),
+		),
+		s.completeOrchestration)
+
 	add("start_orchestration",
 		"Create a conversational orchestration run. Returns a run_id to use with save_step and load_orchestration.",
 		schema(
@@ -137,6 +145,8 @@ func (s *Server) buildRegistry() map[string]tool {
 			prop("output", "string", "Full agent output text"),
 			optProp("files_touched", "array", "List of file paths touched by this step"),
 			optProp("duration_ms", "number", "Step duration in milliseconds"),
+			optProp("gate_decision", "string", "Gate decision for this step: approved, rejected, or skipped"),
+			optProp("resume", "boolean", "If true and run is paused, reactivates it to running before saving"),
 		),
 		s.saveStep)
 
@@ -243,6 +253,16 @@ func intArg(args map[string]any, key string, defVal int) int {
 			if n > 0 {
 				return n
 			}
+		}
+	}
+	return defVal
+}
+
+// boolArg extracts a boolean argument (JSON booleans decode as bool), returning defVal if absent.
+func boolArg(args map[string]any, key string, defVal bool) bool {
+	if v, ok := args[key]; ok {
+		if b, ok := v.(bool); ok {
+			return b
 		}
 	}
 	return defVal

@@ -253,6 +253,185 @@ anvil unpin skills/go-conventions         # Follow HEAD again
 anvil uninstall                  # Remove from all targets
 ```
 
+## MCP Server
+
+Anvil exposes an MCP server so Claude Code (or any MCP-compatible client) can query runs, memories, backlog, and orchestration state directly in conversation — no manual file reading required.
+
+### Setup
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "anvil": {
+      "command": "anvil",
+      "args": ["mcp-server"],
+      "env": {
+        "ANVIL_VAULT_PATH": "/path/to/your-knowledge-base"
+      }
+    }
+  }
+}
+```
+
+> `ANVIL_VAULT_PATH` is optional. Without it, vault tools (`get_backlog`, `get_task`) are disabled but all other tools work.
+
+### Real conversation examples
+
+These are copy-paste prompts for a fresh Claude Code chat. Each example shows what you type and what Claude does.
+
+---
+
+#### 1. See what's in my project
+
+```
+What's the current state of my project? Check recent runs, backlog, and any relevant memories.
+```
+
+Claude will call `get_project_info`, `list_runs`, `get_backlog`, and `search_memories` to give you a full status summary without you opening any files.
+
+---
+
+#### 2. Get coding conventions before working
+
+```
+I'm about to write a new Go handler. Load the Go conventions so you follow the project's patterns.
+```
+
+Claude calls `get_conventions` with `stack="go"` and applies the rules to everything it writes in that session.
+
+---
+
+#### 3. Start a tracked orchestration run
+
+```
+Start tracking a new orchestration. Objective: add a /metrics endpoint to the API. Stack: Go. Complexity: medium.
+```
+
+Claude calls `start_orchestration` and returns a `run_id`. Every agent step gets saved with `save_step` automatically if you're using the `/orchestrate` skill. In a manual conversation, Claude will tell you the `run_id` to use in follow-up messages.
+
+---
+
+#### 4. Save what an agent produced
+
+After the developer agent finishes, in the same or a new chat:
+
+```
+Save the developer step for run r_20260424_143000_a1b2. Status: success. It touched internal/api/metrics.go and internal/api/router.go. Duration was about 4 minutes.
+```
+
+Claude calls `save_step` with the right arguments and confirms the step was recorded.
+
+---
+
+#### 5. Save a gate decision
+
+```
+Save a gate step for run r_20260424_143000_a1b2. The user approved the architect spec. Role: gate, status: success, gate_decision: approved.
+```
+
+Claude calls `save_step` with `gate_decision="approved"`. If the pipeline is resumed later, it will know this gate was already resolved.
+
+---
+
+#### 6. Pause mid-session and resume later
+
+**Session 1 — before closing:**
+```
+Pause the current orchestration run r_20260424_143000_a1b2 so I can resume it tomorrow.
+```
+
+Claude calls `complete_orchestration` with `status="paused"`.
+
+**Session 2 — next day:**
+```
+Check if I have any interrupted pipelines and show me what's pending.
+```
+
+Claude calls `load_orchestration(run_id="last")` and shows you the `pending_roles` and the output of completed steps. If you confirm, it resumes from where it left off — the first `save_step` includes `resume=true` to reactivate the run.
+
+---
+
+#### 7. Look up what a specific agent produced
+
+```
+Show me the full output of the architect agent from my last run.
+```
+
+Claude calls `get_agent_output` with `run_id="last"` and `agent_role="architect"` and shows you the complete output text — no need to dig through files.
+
+---
+
+#### 8. Search past decisions before starting work
+
+```
+Before I implement the auth middleware, search memories for anything related to session tokens or JWT decisions in past runs.
+```
+
+Claude calls `search_memories` with a semantic query and surfaces relevant digests from past pipeline runs — decisions, edge cases, patterns already established.
+
+---
+
+#### 9. Close a completed run
+
+```
+Mark run r_20260424_143000_a1b2 as successfully completed.
+```
+
+Claude calls `complete_orchestration` with `status="success"`, records `ended_at`, and the run is no longer eligible for resume.
+
+---
+
+#### 10. Full health check
+
+```
+Run a full health check on my Anvil setup and tell me if anything is broken.
+```
+
+Claude calls `run_doctor` and reports on: deployed SHA vs HEAD, config files, provider tiers, target directories, and broken symlinks.
+
+---
+
+### Checkpointing & Resume
+
+Runs can be paused and resumed across sessions:
+
+| Scenario | What to say |
+|----------|-------------|
+| Pipeline finished | "Mark run `r_xxx` as successfully completed" |
+| Pipeline failed | "Close run `r_xxx` as failed" |
+| Closing mid-session | "Pause run `r_xxx` so I can resume tomorrow" |
+| Resuming tomorrow | "Check if I have any interrupted pipelines" |
+| Manual resume | "Resume run `r_xxx` — save the tester step with resume=true" |
+
+The `/orchestrate` skill handles this automatically at session start (Step -2). In a manual conversation, call `load_orchestration(run_id="last")` yourself to inspect state before starting a new run.
+
+### Available tools
+
+| Tool | What it does |
+|------|-------------|
+| `list_runs` | Recent pipeline runs |
+| `get_run_status` | Full status + agents for a run |
+| `get_agent_output` | Full output of a specific agent |
+| `start_orchestration` | Create a conversational run |
+| `save_step` | Persist an agent step (supports `gate_decision`, `resume`) |
+| `load_orchestration` | Load run + pending roles for resume |
+| `complete_orchestration` | Close or pause a run |
+| `search_memories` | Semantic search over past run digests |
+| `get_conventions` | Load coding conventions for a stack |
+| `get_backlog` | Current sprint backlog (requires vault) |
+| `get_task` | PRD + architecture docs for a task (requires vault) |
+| `list_agents` | All available Anvil agents |
+| `list_skills` | All available Anvil skills |
+| `list_pipelines` | Available pipeline presets |
+| `get_project_info` | Project name, stack, provider, last run |
+| `get_recent_changes` | Recent commits + runs |
+| `run_doctor` | Health check on deployment |
+| `deploy_agents` | Deploy agents/skills to targets |
+| `switch_provider` | Change active AI provider |
+| `get_diff` | Changes since last deploy |
+
 ## Configuration
 
 ### `anvil.yaml` — Deployment manifest
