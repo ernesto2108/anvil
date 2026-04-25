@@ -1,18 +1,18 @@
 ---
 name: test-api
-description: Test and validate API endpoints for contract compliance. Use when user says "test the API", "check endpoint", "validate response", "API contract", "curl this endpoint", or verifying HTTP status codes and response schemas.
+description: Probar y validar endpoints de API para cumplimiento de contratos. Úsalo cuando el usuario diga "probar la API", "verificar endpoint", "validar respuesta", "contrato de API", "curl este endpoint", o al verificar códigos de estado HTTP y esquemas de respuesta.
 ---
 
-Test and validate external or internal API endpoints to ensure they conform to expected contracts.
+Prueba y valida endpoints de API externos o internos para asegurar que se ajusten a los contratos esperados.
 
-Capabilities:
-- Use `curl` for basic requests
-- Validate JSON structure and field types
-- Check HTTP status codes and headers
-- Test different auth scenarios (valid/invalid token)
+Capacidades:
+- Usar `curl` para solicitudes básicas
+- Validar estructura JSON y tipos de campos
+- Verificar códigos de estado HTTP y headers
+- Probar diferentes escenarios de autenticación (token válido/inválido)
 
-Rules:
-- NEVER send sensitive production data (keys/PII) in plain text
-- Use placeholders for API keys
-- Prefer non-destructive methods (GET/HEAD) unless necessary
-- For POST/PUT/PATCH, use a development/mock environment
+Reglas:
+- NUNCA enviar datos sensibles de producción (keys/PII) en texto plano
+- Usar placeholders para las API keys
+- Preferir métodos no destructivos (GET/HEAD) a menos que sea necesario
+- Para POST/PUT/PATCH, usar un entorno de desarrollo/mock

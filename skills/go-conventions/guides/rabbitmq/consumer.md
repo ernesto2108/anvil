@@ -1,18 +1,18 @@
-# RabbitMQ Consumer Patterns
+# Patrones de Consumer RabbitMQ
 
-## Basic Consumer with QoS
+## Consumer Básico con QoS
 
 ```go
 func (c *Consumer) Consume(queue string, handler func(context.Context, []byte) error) error {
-    // limit unacknowledged messages per consumer
+    // limita los mensajes no reconocidos por consumer
     if err := c.ch.Qos(10, 0, false); err != nil {
         return fmt.Errorf("set QoS: %w", err)
     }
 
     msgs, err := c.ch.Consume(
         queue,
-        "",    // consumer tag (auto-generated)
-        false, // auto-ack = false (manual ack)
+        "",    // consumer tag (auto-generado)
+        false, // auto-ack = false (ack manual)
         false, // exclusive
         false, // no-local
         false, // no-wait
@@ -27,7 +27,7 @@ func (c *Consumer) Consume(queue string, handler func(context.Context, []byte) e
 
         if err := handler(ctx, msg.Body); err != nil {
             slog.Error("processing failed", "queue", queue, "error", err)
-            msg.Nack(false, false) // requeue=false → goes to DLQ via DLX
+            msg.Nack(false, false) // requeue=false → va al DLQ vía DLX
             continue
         }
 
@@ -38,17 +38,17 @@ func (c *Consumer) Consume(queue string, handler func(context.Context, []byte) e
 }
 ```
 
-## Exchange-Bound Consumer
+## Consumer Vinculado a Exchange
 
 ```go
 func (c *Consumer) ConsumeFromExchange(exchange, routingKey string, handler func(context.Context, []byte) error) error {
-    // declare exchange
+    // declara el exchange
     err := c.ch.ExchangeDeclare(exchange, "topic", true, false, false, false, nil)
     if err != nil {
         return fmt.Errorf("declare exchange: %w", err)
     }
 
-    // derive queue name from exchange + routing key
+    // deriva el nombre de la cola del exchange + routing key
     queueName := fmt.Sprintf("%s-%s-queue", exchange, routingKey)
 
     q, err := c.ch.QueueDeclare(queueName, true, false, false, false, nil)
@@ -84,10 +84,10 @@ func (c *Consumer) ConsumeFromExchange(exchange, routingKey string, handler func
 }
 ```
 
-## Consumer Rules
+## Reglas del Consumer
 
-- **Never auto-ack** — always `autoAck: false`, manually `Ack` after successful processing
-- **Set QoS/prefetch** — controls backpressure. Start with `prefetch=10`, tune based on processing time
-- **`Nack(false, false)`** — `multiple=false, requeue=false` sends to DLX (dead letter exchange)
-- **`Nack(false, true)`** — `requeue=true` puts back in queue (use for transient failures with caution — can loop)
-- **Handle channel closure** — `range msgs` exits when channel closes, detect and reconnect
+- **Nunca auto-ack** — siempre `autoAck: false`, `Ack` manual después del procesamiento exitoso
+- **Configura QoS/prefetch** — controla el backpressure. Comienza con `prefetch=10`, ajusta según el tiempo de procesamiento
+- **`Nack(false, false)`** — `multiple=false, requeue=false` envía al DLX (dead letter exchange)
+- **`Nack(false, true)`** — `requeue=true` devuelve el mensaje a la cola (úsalo para fallas transitorias con precaución — puede generar bucles)
+- **Maneja el cierre del channel** — `range msgs` termina cuando el channel se cierra, detecta y reconecta

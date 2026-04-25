@@ -1,17 +1,17 @@
-# Timeout and Cancellation with Context
+# Timeout y Cancelación con Context
 
-**When:** Every external call (HTTP, DB, gRPC, file I/O) in production code.
+**Cuándo:** Toda llamada externa (HTTP, DB, gRPC, file I/O) en código de producción.
 
-**Real scenario:** HTTP handler that calls 3 microservices, must respond within 5 seconds total.
+**Escenario real:** Handler HTTP que llama 3 microservicios, debe responder en máximo 5 segundos en total.
 
 ```go
 func handleOrder(w http.ResponseWriter, r *http.Request) {
-    // Inherit request context (canceled when client disconnects)
+    // Hereda el contexto de la request (cancelado cuando el cliente se desconecta)
     ctx := r.Context()
 
-    // Add overall timeout for this handler
+    // Agrega timeout global para este handler
     ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-    defer cancel() // Always defer cancel
+    defer cancel() // Siempre defer cancel
 
     g, ctx := errgroup.WithContext(ctx)
 
@@ -46,22 +46,22 @@ func handleOrder(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Use user, inv, pricing to build response...
+    // Usa user, inv, pricing para construir la respuesta...
     json.NewEncoder(w).Encode(map[string]any{
         "user": user.Name, "available": inv.Qty, "price": pricing.Amount,
     })
 }
 ```
 
-## Context rules (from [Go blog: Context](https://go.dev/blog/context)):
-- Pass context as the first parameter to every function on the call path
-- Never store context in a struct
-- Use `context.Background()` only in `main()`, `init()`, and top-level test setup
-- Always `defer cancel()` after `WithTimeout` / `WithCancel` / `WithDeadline`
-- Use unexported key types for context values to prevent collisions
+## Reglas de Context (del [blog de Go: Context](https://go.dev/blog/context)):
+- Pasa el context como primer parámetro a toda función en el call path
+- Nunca almacenes un context en un struct
+- Usa `context.Background()` solo en `main()`, `init()`, y configuración de tests de alto nivel
+- Siempre `defer cancel()` después de `WithTimeout` / `WithCancel` / `WithDeadline`
+- Usa tipos de clave no exportados para valores de context para evitar colisiones
 
 ```go
-// Type-safe context values
+// Valores de context con type-safety
 type ctxKey int
 const requestIDKey ctxKey = 0
 
@@ -75,4 +75,4 @@ func RequestID(ctx context.Context) string {
 }
 ```
 
-**Common mistake:** Calling cancel on a context you received as a parameter. Only the creator of a derived context should call its cancel function. Sub-operations should return errors, not cancel parent contexts.
+**Error común:** Llamar cancel en un context recibido como parámetro. Solo el creador de un context derivado debe llamar su función cancel. Las sub-operaciones deben retornar errores, no cancelar contextos padre.

@@ -1,8 +1,8 @@
-# Pub/Sub (Event Broadcasting)
+# Pub/Sub (Difusión de Eventos)
 
-**When:** Multiple consumers need to receive the same event (config reload, price updates, notification fanout).
+**Cuándo:** Múltiples consumidores necesitan recibir el mismo evento (recarga de config, actualizaciones de precio, fanout de notificaciones).
 
-**Real scenario:** Broadcasting config changes to all active HTTP handlers.
+**Escenario real:** Difundir cambios de configuración a todos los handlers HTTP activos.
 
 ```go
 package main
@@ -26,7 +26,7 @@ func NewBroker[T any]() *Broker[T] {
     }
 }
 
-// Subscribe returns a channel and an unsubscribe function
+// Subscribe retorna un channel y una función para cancelar la suscripción
 func (b *Broker[T]) Subscribe(bufSize int) (<-chan T, func()) {
     b.mu.Lock()
     defer b.mu.Unlock()
@@ -45,7 +45,7 @@ func (b *Broker[T]) Subscribe(bufSize int) (<-chan T, func()) {
     return ch, unsubscribe
 }
 
-// Publish sends event to all subscribers (non-blocking)
+// Publish envía el evento a todos los suscriptores (no bloqueante)
 func (b *Broker[T]) Publish(event T) {
     b.mu.RLock()
     defer b.mu.RUnlock()
@@ -54,7 +54,7 @@ func (b *Broker[T]) Publish(event T) {
         select {
         case ch <- event:
         default:
-            // Subscriber is slow -- drop event (or log warning)
+            // El suscriptor es lento -- se descarta el evento (o se registra un warning)
         }
     }
 }
@@ -62,15 +62,15 @@ func (b *Broker[T]) Publish(event T) {
 func main() {
     broker := NewBroker[string]()
 
-    // Subscriber 1
+    // Suscriptor 1
     ch1, unsub1 := broker.Subscribe(10)
     defer unsub1()
 
-    // Subscriber 2
+    // Suscriptor 2
     ch2, unsub2 := broker.Subscribe(10)
     defer unsub2()
 
-    // Consumer goroutines
+    // Goroutines consumidoras
     ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
     defer cancel()
 
@@ -96,7 +96,7 @@ func main() {
     consume("sub1", ch1)
     consume("sub2", ch2)
 
-    // Publish events
+    // Publica eventos
     broker.Publish("config updated")
     broker.Publish("price changed")
 
@@ -106,4 +106,4 @@ func main() {
 }
 ```
 
-**Common mistake:** Blocking on publish when a subscriber's channel is full. This can freeze the publisher and all other subscribers. Always use `select` with `default` for non-blocking send, or use buffered channels with appropriate capacity.
+**Error común:** Bloquearse en publish cuando el channel de un suscriptor está lleno. Esto puede congelar al publisher y a todos los demás suscriptores. Usa siempre `select` con `default` para envíos no bloqueantes, o usa channels con buffer de capacidad apropiada.

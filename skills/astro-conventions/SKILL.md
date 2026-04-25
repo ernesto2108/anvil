@@ -1,124 +1,124 @@
 ---
 name: astro-conventions
-description: Astro framework conventions and coding standards for static and content-driven sites. Use when writing Astro components, reviewing Astro code, or user mentions "Astro patterns", "islands architecture", "content collections", "static site", ".astro files", "astro components", "client directives", or working with .astro files.
+description: Convenciones del framework Astro y estándares de código para sitios estáticos y orientados a contenido. Usar al escribir componentes Astro, revisar código Astro, o cuando el usuario mencione "Astro patterns", "islands architecture", "content collections", "static site", ".astro files", "astro components", "client directives", o al trabajar con archivos .astro.
 ---
 
-# Astro Conventions
+# Convenciones de Astro
 
-> **IMPORTANT:** Dispatcher only. Load reference files on demand. See routing table below.
+> **IMPORTANTE:** Solo dispatcher. Cargar archivos de referencia bajo demanda. Ver tabla de enrutamiento abajo.
 
-## Philosophy
+## Filosofía
 
-- **Content-first, JS-last** — pages render as static HTML with zero JS by default. Add JS only where genuine interactivity is needed
-- **Islands over SPAs** — interactive components are isolated islands that hydrate independently. The page is a document with embedded widgets, not an app
-- **Static until proven otherwise** — start with SSG. Only add SSR for pages that truly need request-time data
-- **Ship what you use** — no framework runtime, no unused CSS, no speculative JS. Every byte earns its place
+- **Content-first, JS-last** — las páginas se renderizan como HTML estático con cero JS por defecto. Agregar JS solo donde se necesita interactividad genuina
+- **Islands sobre SPAs** — los componentes interactivos son islas aisladas que hidratan de forma independiente. La página es un documento con widgets embebidos, no una app
+- **Estático hasta que se demuestre lo contrario** — comenzar con SSG. Solo agregar SSR para páginas que realmente necesiten datos en tiempo de solicitud
+- **Enviar solo lo que se usa** — sin runtime de framework, sin CSS sin usar, sin JS especulativo. Cada byte debe ganarse su lugar
 
 ## Stack
 
-- Astro 5+ with TypeScript (strict mode)
-- Tailwind CSS v4 via `@tailwindcss/vite` plugin
-- Content Collections with Zod schemas
-- Vitest + Playwright for testing
-- Deploy: Vercel, Netlify, or Cloudflare Pages
+- Astro 5+ con TypeScript (strict mode)
+- Tailwind CSS v4 via plugin `@tailwindcss/vite`
+- Content Collections con schemas Zod
+- Vitest + Playwright para pruebas
+- Deploy: Vercel, Netlify, o Cloudflare Pages
 
-## When to Use Astro (vs Next.js)
+## Cuándo usar Astro (vs Next.js)
 
-| Use Astro | Use Next.js |
+| Usar Astro | Usar Next.js |
 |---|---|
-| Blogs, docs, portfolios, marketing | Full SPAs, heavy client routing |
-| Content-driven, minimal interactivity | Real-time dashboards, complex auth |
-| SEO and performance non-negotiable | React Server Components needed |
-| Static hosting, low cost at scale | Server-heavy with streaming SSR |
+| Blogs, docs, portafolios, marketing | SPAs completas, routing pesado del lado cliente |
+| Orientado a contenido, interactividad mínima | Dashboards en tiempo real, auth compleja |
+| SEO y rendimiento no negociables | Se necesitan React Server Components |
+| Hosting estático, bajo costo a escala | Server-heavy con streaming SSR |
 
-## Project Structure
+## Estructura del proyecto
 
 ```
 src/
 ├── components/
-│   ├── common/           # Shared: Button, Card, Badge
-│   ├── features/         # Domain: BlogCard, ProjectGrid
-│   └── islands/          # Interactive with client:* directives
+│   ├── common/           # Compartidos: Button, Card, Badge
+│   ├── features/         # De dominio: BlogCard, ProjectGrid
+│   └── islands/          # Interactivos con directivas client:*
 ├── content/
-│   ├── blog/             # Markdown/MDX collection
+│   ├── blog/             # Colección Markdown/MDX
 │   ├── projects/         # Content collection
-│   └── config.ts         # Zod schemas
+│   └── config.ts         # Schemas Zod
 ├── layouts/              # BaseLayout.astro, BlogLayout.astro
-├── pages/                # File-based routing (only reserved dir)
+├── pages/                # Routing basado en archivos (único directorio reservado)
 ├── styles/               # global.css (@import "tailwindcss")
-├── lib/                  # Utilities, helpers
-└── env.d.ts              # Global type extensions
-public/                   # Static assets (favicon, robots.txt)
+├── lib/                  # Utilidades, helpers
+└── env.d.ts              # Extensiones de tipos globales
+public/                   # Assets estáticos (favicon, robots.txt)
 ```
 
-**Rules:**
-- Interactive components with `client:*` → `src/components/islands/` (makes JS boundaries explicit)
-- Content with Zod schemas → `src/content/` (never raw unvalidated markdown)
+**Reglas:**
+- Componentes interactivos con `client:*` → `src/components/islands/` (hace explícitos los límites de JS)
+- Contenido con schemas Zod → `src/content/` (nunca markdown crudo sin validar)
 - Path aliases: `@components/*`, `@layouts/*`, `@lib/*`
-- `public/` is for static assets ONLY — never CSS/JS (those go in `src/`)
+- `public/` es SOLO para assets estáticos — nunca CSS/JS (esos van en `src/`)
 
-## Red Flags (always stop work)
+## Señales de alerta (detener el trabajo siempre)
 
-- `client:load` on below-fold content → use `client:visible`
-- Entire layout wrapped in React/Vue → extract granular islands
-- Large array mapped to spawn islands → render statically, hydrate one controller
-- Raw `<img>` for local assets → use `<Image />` from `astro:assets`
-- Content without Zod schema → define schema in `config.ts`
-- Fetching own API via HTTP at build → import function directly
-- Using Astro for full SPA → wrong tool, use Next.js
+- `client:load` en contenido debajo del fold → usar `client:visible`
+- Layout completo envuelto en React/Vue → extraer islas granulares
+- Array grande mapeado para generar islas → renderizar estáticamente, hidratar un controlador
+- `<img>` crudo para assets locales → usar `<Image />` de `astro:assets`
+- Contenido sin schema Zod → definir schema en `config.ts`
+- Fetching a la propia API vía HTTP en build → importar la función directamente
+- Usar Astro para una SPA completa → herramienta incorrecta, usar Next.js
 
-## Pre-Implementation Checklist
+## Lista de verificación pre-implementación
 
-- [ ] Astro is the right choice (content-driven, not SPA)
+- [ ] Astro es la elección correcta (orientado a contenido, no SPA)
 - [ ] TypeScript strict mode (`extends: "astro/tsconfigs/strict"`)
-- [ ] Content Collections with Zod schemas defined
+- [ ] Content Collections con schemas Zod definidos
 - [ ] Tailwind v4 via `@tailwindcss/vite`
-- [ ] Base layout with `<ViewTransitions />`
-- [ ] Interactive components isolated in `islands/`
-- [ ] All images use `<Image />` from `astro:assets`
-- [ ] Path aliases in tsconfig
+- [ ] Layout base con `<ViewTransitions />`
+- [ ] Componentes interactivos aislados en `islands/`
+- [ ] Todas las imágenes usan `<Image />` de `astro:assets`
+- [ ] Path aliases en tsconfig
 
-## New Pattern Validation
+## Validación de nuevos patrones
 
-When introducing a pattern that doesn't exist yet in the project (icon system, script organization, CSS architecture, state management, i18n approach):
+Al introducir un patrón que aún no existe en el proyecto (sistema de iconos, organización de scripts, arquitectura CSS, gestión de estado, enfoque i18n):
 
-1. **Check if the project already has a convention** — read existing code first
-2. **If no convention exists**, search the framework's official docs and community best practices before implementing. Don't assume — verify
-3. **If a convention exists**, follow it. Don't introduce a competing pattern
+1. **Verificar si el proyecto ya tiene una convención** — leer el código existente primero
+2. **Si no existe convención**, buscar en la documentación oficial del framework y las mejores prácticas de la comunidad antes de implementar. No asumir — verificar
+3. **Si existe una convención**, seguirla. No introducir un patrón competidor
 
-This does NOT mean search the web for every change. Only for **new architectural patterns** that will be used project-wide.
+Esto NO significa buscar en la web para cada cambio. Solo para **nuevos patrones arquitectónicos** que se usarán en todo el proyecto.
 
-## Anti-Pattern Detection
+## Detección de anti-patrones
 
-| Anti-Pattern | Severity | Fix |
+| Anti-Patrón | Severidad | Corrección |
 |---|---|---|
-| `client:load` on non-critical widget | warning | Use `client:idle` or `client:visible` |
-| Layout wrapped in framework component | error | Extract granular islands |
-| Array mapped to spawn islands | error | Static list + one hydrated controller |
-| Raw `<img>` for local asset | warning | `<Image />` from `astro:assets` |
-| Content without Zod schema | error | Define in `content/config.ts` |
-| HTTP fetch to own API at build | error | Import function directly |
-| `public/` used for CSS/JS | error | Move to `src/` |
-| No `Props` interface in .astro file | warning | Add `interface Props` |
-| Using Astro for full SPA | error | Wrong tool — use Next.js |
-| Interactive component not in `islands/` | warning | Move to `src/components/islands/` |
+| `client:load` en widget no crítico | warning | Usar `client:idle` o `client:visible` |
+| Layout envuelto en componente de framework | error | Extraer islas granulares |
+| Array mapeado para generar islas | error | Lista estática + un controlador hidratado |
+| `<img>` crudo para asset local | warning | `<Image />` de `astro:assets` |
+| Contenido sin schema Zod | error | Definir en `content/config.ts` |
+| HTTP fetch a propia API en build | error | Importar función directamente |
+| `public/` usado para CSS/JS | error | Mover a `src/` |
+| Sin interfaz `Props` en archivo .astro | warning | Agregar `interface Props` |
+| Usar Astro para SPA completa | error | Herramienta incorrecta — usar Next.js |
+| Componente interactivo no en `islands/` | warning | Mover a `src/components/islands/` |
 
-## Reference Files
+## Archivos de referencia
 
-Load ONLY when needed:
+Cargar SOLO cuando sea necesario:
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| .astro component model, Props, slots, template expressions | `reference/components.md` |
-| client:* directives, hydration strategy, server islands | `reference/islands.md` |
-| Content Collections, Zod schemas, loaders, MDX | `reference/content-collections.md` |
-| Scoped CSS, Tailwind v4, define:vars, preprocessors | `reference/styling.md` |
-| TypeScript, images, View Transitions, SSR, middleware, testing | `reference/patterns.md` |
-| Pods architecture, mappers, defensive fetching, API consumption | `reference/api-patterns.md` |
+| Modelo de componente .astro, Props, slots, expresiones de template | `reference/components.md` |
+| Directivas client:*, estrategia de hidratación, server islands | `reference/islands.md` |
+| Content Collections, schemas Zod, loaders, MDX | `reference/content-collections.md` |
+| CSS con scope, Tailwind v4, define:vars, preprocesadores | `reference/styling.md` |
+| TypeScript, imágenes, View Transitions, SSR, middleware, testing | `reference/patterns.md` |
+| Arquitectura Pods, mappers, fetching defensivo, consumo de API | `reference/api-patterns.md` |
 
-## Post-Implementation Gate
+## Gate post-implementación
 
-After ANY change to `.astro` files:
-1. Run `astro check` for type errors
-2. Run `astro build` to verify generation succeeds
-3. Invoke `/lint` skill
+Después de CUALQUIER cambio a archivos `.astro`:
+1. Ejecutar `astro check` para errores de tipos
+2. Ejecutar `astro build` para verificar que la generación tenga éxito
+3. Invocar el skill `/lint`

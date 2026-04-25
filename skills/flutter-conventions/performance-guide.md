@@ -1,10 +1,10 @@
-# Flutter Performance Guide
+# Guía de Rendimiento Flutter
 
-## Performance Checklist (Priority Order)
+## Checklist de Rendimiento (Orden de Prioridad)
 
-From Alibaba (100M+ users), ByteDance (700+ devs), BMW (300 devs).
+De Alibaba (100M+ usuarios), ByteDance (700+ devs), BMW (300 devs).
 
-### 1. `const` Widgets — Up to 30% Rendering Improvement
+### 1. Widgets `const` — Hasta 30% de Mejora en Renderizado
 
 ```dart
 // bad: recreated every build
@@ -14,12 +14,12 @@ child: Text('Hello')
 child: const Text('Hello')
 ```
 
-**Rules:**
-- Mark every stateless widget constructor as `const`
-- Use `const` for any widget with no dynamic data
-- Dart analyzer warns on missing `const` — fix all warnings
+**Reglas:**
+- Marcar cada constructor de widget stateless como `const`
+- Usar `const` para cualquier widget sin datos dinámicos
+- El analizador de Dart advierte sobre `const` faltante — corregir todos los warnings
 
-### 2. `ListView.builder` — 50%+ Memory Reduction
+### 2. `ListView.builder` — Reducción de Memoria 50%+
 
 ```dart
 // bad: builds all items at once (OOM for large lists)
@@ -34,9 +34,9 @@ ListView.builder(
 )
 ```
 
-Also use `ListView.separated` for lists with dividers.
+También usar `ListView.separated` para listas con separadores.
 
-### 3. `RepaintBoundary` — Isolate Expensive Repaints
+### 3. `RepaintBoundary` — Aislar Repintados Costosos
 
 ```dart
 // wrap around animations or frequently-updating UI
@@ -45,9 +45,9 @@ RepaintBoundary(
 )
 ```
 
-Use when: animations, timers, progress indicators, or any widget that updates independently of its parent.
+Usar cuando: animaciones, timers, indicadores de progreso, o cualquier widget que se actualice independientemente de su padre.
 
-### 4. Keep `build()` Pure
+### 4. Mantener `build()` Puro
 
 ```dart
 // bad: API call in build
@@ -77,7 +77,7 @@ Widget build(BuildContext context) {
 }
 ```
 
-### 5. Granular Rebuilds
+### 5. Reconstrucciones Granulares
 
 ```dart
 // bad: entire tree rebuilds when one value changes
@@ -110,7 +110,7 @@ Column(
 )
 ```
 
-### 6. Extract Widgets, Don't Use Helper Methods
+### 6. Extraer Widgets, No Usar Métodos Helper
 
 ```dart
 // bad: helper method — no rebuild isolation
@@ -150,7 +150,7 @@ class _Body extends StatelessWidget {
 }
 ```
 
-### 7. Image Optimization (Alibaba: -300ms on Low-End Android)
+### 7. Optimización de Imágenes (Alibaba: -300ms en Android Gama Baja)
 
 ```dart
 // cache images
@@ -171,21 +171,21 @@ Image.network(
 
 ---
 
-## Alibaba Patterns (100M+ Users)
+## Patrones de Alibaba (100M+ Usuarios)
 
-- **Data prefetching**: Start loading data before navigating to the next screen
-- **Template preloading**: Pre-build widget templates for common screens
-- **Adapter pattern for ListView**: Custom adapter instead of component model. FPS improvement: 40 → 53 on Android
-- **Native image rendering**: Direct TextureID rendering, bypassing PixelBuffer copy
+- **Prefetch de datos**: Iniciar la carga de datos antes de navegar a la siguiente pantalla
+- **Precarga de plantillas**: Pre-construir plantillas de widgets para pantallas comunes
+- **Patrón Adapter para ListView**: Adapter personalizado en vez del modelo de componentes. Mejora de FPS: 40 → 53 en Android
+- **Renderizado nativo de imágenes**: Renderizado directo con TextureID, evitando la copia de PixelBuffer
 
 ---
 
-## ByteDance Patterns (700+ Devs)
+## Patrones de ByteDance (700+ Devs)
 
-- **Strip unused native libraries**: Removed unused parts of Skia, BoringSSL, ICU, libwebp from Flutter engine
-- **iOS data section compression**: Reduced app package size
-- **Custom rendering pipeline**: Optimized for their specific use cases
-- **Result: ~33% productivity increase** over native development
+- **Eliminar librerías nativas no usadas**: Se eliminaron partes no utilizadas de Skia, BoringSSL, ICU, libwebp del motor Flutter
+- **Compresión de sección de datos en iOS**: Reducción del tamaño del paquete de la app
+- **Pipeline de renderizado personalizado**: Optimizado para sus casos de uso específicos
+- **Resultado: ~33% de aumento de productividad** sobre el desarrollo nativo
 
 ---
 
@@ -197,11 +197,11 @@ Image.network(
 flutter run --profile  # profile mode (release performance + debugging)
 ```
 
-Use DevTools to:
-- **Widget rebuild tracker**: Find unnecessary rebuilds
-- **Timeline view**: Identify jank (frames >16ms)
-- **Memory tab**: Detect leaks and excessive allocations
-- **CPU profiler**: Find hot functions
+Usar DevTools para:
+- **Widget rebuild tracker**: Encontrar reconstrucciones innecesarias
+- **Timeline view**: Identificar jank (frames >16ms)
+- **Memory tab**: Detectar fugas y alocaciones excesivas
+- **CPU profiler**: Encontrar funciones con alto costo
 
 ### Performance Overlay
 
@@ -211,35 +211,35 @@ MaterialApp(
 )
 ```
 
-### Rules
+### Reglas
 
-- **Profile before optimizing** — don't guess
-- Profile in **release mode** — debug mode is 10-100x slower
-- Target **60fps** (16ms per frame) or **120fps** (8ms) on high-refresh displays
-
----
-
-## Common Bottlenecks
-
-| Bottleneck | Symptom | Fix |
-|---|---|---|
-| Rebuilding entire tree | Janky UI | `BlocSelector`, `Consumer`, `Selector` |
-| Large list rendering | OOM, slow scroll | `ListView.builder`, pagination |
-| Oversized images | Slow loading, memory | CDN resize, `CachedNetworkImage` |
-| Heavy computation in build | Dropped frames | Move to isolate or BLoC |
-| Animation without RepaintBoundary | Repainting unrelated widgets | Wrap with `RepaintBoundary` |
-| Widget helper methods | No rebuild isolation | Extract to separate widget classes |
-| `MediaQuery.of` in nested widgets | Excessive rebuilds | Pass values down or use `LayoutBuilder` |
-| Missing `const` constructors | Unnecessary object creation | Add `const` everywhere possible |
+- **Medir antes de optimizar** — no adivinar
+- Medir en **modo release** — el modo debug es 10-100x más lento
+- Objetivo: **60fps** (16ms por frame) o **120fps** (8ms) en pantallas de alta frecuencia
 
 ---
 
-## Anti-Patterns
+## Cuellos de Botella Comunes
 
-| Anti-Pattern | Why It's Bad | Fix |
+| Cuello de botella | Síntoma | Corrección |
 |---|---|---|
-| `Widget _buildX()` helper methods | No rebuild boundary, rebuilds with parent | Extract to separate `StatelessWidget` class |
-| `setState` in build-adjacent code | Triggers full widget rebuild | Use `BlocSelector`/`Consumer` for granular updates |
-| Loading full-resolution images | Memory pressure, slow render | Resize server-side, use CDN params |
-| No pagination for lists | Loading thousands of items | Paginate with `ListView.builder` + load more |
-| Profiling in debug mode | 10-100x slower than release | Always profile in `--profile` or `--release` |
+| Reconstruir todo el árbol | UI con jank | `BlocSelector`, `Consumer`, `Selector` |
+| Renderizado de listas grandes | OOM, scroll lento | `ListView.builder`, paginación |
+| Imágenes sobredimensionadas | Carga lenta, memoria | Redimensionar en CDN, `CachedNetworkImage` |
+| Cómputo pesado en build | Frames perdidos | Mover a isolate o BLoC |
+| Animación sin RepaintBoundary | Repintado de widgets no relacionados | Envolver con `RepaintBoundary` |
+| Métodos helper de widget | Sin aislamiento de reconstrucción | Extraer a clases widget separadas |
+| `MediaQuery.of` en widgets anidados | Reconstrucciones excesivas | Pasar valores hacia abajo o usar `LayoutBuilder` |
+| Constructores `const` faltantes | Creación innecesaria de objetos | Agregar `const` donde sea posible |
+
+---
+
+## Anti-Patrones
+
+| Anti-patrón | Por qué es malo | Corrección |
+|---|---|---|
+| Métodos helper `Widget _buildX()` | Sin barrera de reconstrucción, se reconstruye con el padre | Extraer a clase `StatelessWidget` separada |
+| `setState` en código adyacente al build | Dispara reconstrucción completa del widget | Usar `BlocSelector`/`Consumer` para actualizaciones granulares |
+| Cargar imágenes en resolución completa | Presión de memoria, renderizado lento | Redimensionar en servidor, usar parámetros de CDN |
+| Sin paginación para listas | Cargar miles de items | Paginar con `ListView.builder` + cargar más |
+| Medir en modo debug | 10-100x más lento que en release | Siempre medir en `--profile` o `--release` |

@@ -1,124 +1,124 @@
 ---
 name: react-conventions
-description: React/TypeScript frontend conventions and coding standards. Use when writing React components, reviewing frontend code, or user mentions "React patterns", "component structure", "hooks best practices", "accessibility", "state management", or working with .tsx/.jsx files.
+description: Convenciones y estándares de código frontend React/TypeScript. Usar al escribir componentes React, revisar código frontend, o cuando el usuario mencione "React patterns", "component structure", "hooks best practices", "accessibility", "state management", o al trabajar con archivos .tsx/.jsx.
 ---
 
 # React Conventions
 
-## Philosophy
+## Filosofía
 
-- **UI is a function of state** — components render predictably from props and state, nothing else
-- **Composition over configuration** — build complex UIs from simple, focused pieces
-- **Accessibility is not optional** — if it's not keyboard-navigable and screen-readable, it's not done
-- **Server-first** — default to Server Components; use Client Components only when needed
+- **La UI es una función del estado** — los componentes renderizan de forma predecible a partir de props y estado, nada más
+- **Composición sobre configuración** — construir UIs complejas a partir de piezas simples y enfocadas
+- **La accesibilidad no es opcional** — si no es navegable por teclado y legible por lector de pantalla, no está terminado
+- **Server-first** — usar Server Components por defecto; usar Client Components solo cuando sea necesario
 
 ## Stack
 
-- React 19+ with TypeScript (strict mode)
-- Next.js App Router preferred for new projects
-- Vitest + React Testing Library for testing
+- React 19+ con TypeScript (modo strict)
+- Next.js App Router preferido para nuevos proyectos
+- Vitest + React Testing Library para testing
 
-## Coding Rules
+## Reglas de Código
 
-- Functional components only — no class components
-- Composition over inheritance — pass children, don't extend
-- Small, reusable components — one responsibility per component
-- Accessibility first (ARIA attributes, semantic HTML, keyboard navigation)
-- Predictable state (avoid derived state, single source of truth)
-- No business logic in UI components — extract to custom hooks
-- No form logic (types, validation, state) in components — extract to `useXxxForm` hook
-- Before creating a helper/util, grep for it — if it exists in another feature, extract to `shared/utils/`
-- One error channel per action — toast for API errors, inline for field validation. Never both
-- Named exports preferred over default exports (except pages/layouts in Next.js)
+- Solo componentes funcionales — sin componentes de clase
+- Composición sobre herencia — pasar children, no extender
+- Componentes pequeños y reutilizables — una responsabilidad por componente
+- Accesibilidad primero (atributos ARIA, HTML semántico, navegación por teclado)
+- Estado predecible (evitar estado derivado, fuente única de verdad)
+- Sin lógica de negocio en componentes UI — extraer a custom hooks
+- Sin lógica de formulario (tipos, validación, estado) en componentes — extraer al hook `useXxxForm`
+- Antes de crear un helper/util, hacer grep — si existe en otra feature, extraer a `shared/utils/`
+- Un canal de error por acción — toast para errores de API, inline para validación de campos. Nunca ambos
+- Exports nombrados preferidos sobre exports por defecto (excepto pages/layouts en Next.js)
 
-## TypeScript Rules
+## Reglas de TypeScript
 
-- `strict: true` with `strictNullChecks`, `noImplicitAny`, `noUncheckedIndexedAccess`
-- **`unknown` over `any`** — always. Use type guards for narrowing
-- **Discriminated unions** for mutually exclusive states (loading/error/success)
-- **Exhaustive checking** with `never` in switch statements
-- **Zod** for runtime validation with inferred types (`z.infer<typeof schema>`)
-- Props defined as `interface`, not `type`
-- `as const` for tuple returns from hooks
+- `strict: true` con `strictNullChecks`, `noImplicitAny`, `noUncheckedIndexedAccess`
+- **`unknown` sobre `any`** — siempre. Usar type guards para narrowing
+- **Discriminated unions** para estados mutuamente excluyentes (loading/error/success)
+- **Verificación exhaustiva** con `never` en sentencias switch
+- **Zod** para validación en runtime con tipos inferidos (`z.infer<typeof schema>`)
+- Props definidas como `interface`, no `type`
+- `as const` para retornos de tupla desde hooks
 
-## Architecture Rules
+## Reglas de Arquitectura
 
-1. **Feature-based folder structure** — `src/features/{name}/{api,components,hooks,stores,types}`
-2. **Unidirectional imports** — `shared → features → app`. Never import across features
-3. **The hook IS the container** — custom hooks encapsulate all logic, components are pure UI
-4. **Centralized API client** — never fetch directly in components
-5. **Error boundaries at route level** — use `react-error-boundary`
-6. **Lazy loading / code splitting** for routes (`React.lazy` + `<Suspense>`)
-7. **Server Components by default** (Next.js) — `'use client'` only for state/events/browser APIs
+1. **Estructura de carpetas basada en features** — `src/features/{name}/{api,components,hooks,stores,types}`
+2. **Imports unidireccionales** — `shared → features → app`. Nunca importar entre features
+3. **El hook ES el container** — los custom hooks encapsulan toda la lógica, los componentes son UI pura
+4. **Cliente API centralizado** — nunca hacer fetch directamente en componentes
+5. **Error boundaries a nivel de ruta** — usar `react-error-boundary`
+6. **Lazy loading / code splitting** para rutas (`React.lazy` + `<Suspense>`)
+7. **Server Components por defecto** (Next.js) — `'use client'` solo para estado/eventos/browser APIs
 
-## State Management Rules
+## Reglas de Gestión de Estado
 
-| State Type | Tool |
+| Tipo de Estado | Herramienta |
 |---|---|
-| Server/remote data | **TanStack Query** (or SWR) |
-| URL state | **nuqs** |
-| Client shared state | **Zustand** |
-| Form state | **React Hook Form + Zod** |
-| Low-velocity global (theme, auth) | **React Context** |
+| Datos server/remotos | **TanStack Query** (o SWR) |
+| Estado de URL | **nuqs** |
+| Estado compartido del cliente | **Zustand** |
+| Estado de formulario | **React Hook Form + Zod** |
+| Global de baja velocidad (tema, auth) | **React Context** |
 
-Escalation: Context → Zustand → Redux. See `state-management-guide.md` for full patterns.
+Escalado: Context → Zustand → Redux. Ver `state-management-guide.md` para patrones completos.
 
-## Naming Conventions (Airbnb Standard)
+## Convenciones de Nomenclatura (Estándar Airbnb)
 
-- **Files**: PascalCase for components (`ReservationCard.tsx`), camelCase for hooks/utils
-- **One component per file** (multiple stateless components allowed)
-- **Props**: camelCase names. Omit boolean `true` values (`<Foo hidden />`)
-- **Key prop**: always use stable IDs, never array indexes
+- **Archivos**: PascalCase para componentes (`ReservationCard.tsx`), camelCase para hooks/utils
+- **Un componente por archivo** (se permiten múltiples componentes sin estado)
+- **Props**: nombres camelCase. Omitir valores booleanos `true` (`<Foo hidden />`)
+- **Prop key**: siempre usar IDs estables, nunca índices de array
 
-## Icon Rules
+## Reglas de Iconos
 
-- **Use `lucide-react`** — never inline SVG icons in components. Lucide provides tree-shakable, typed, configurable icon components
-- **Import individually** — `import { User, Moon } from 'lucide-react'` (tree-shaking only bundles imported icons)
-- **Size via prop** — `<User size={18} />` not `className="w-[18px] h-[18px]"`
-- **Color via `currentColor`** — icons inherit parent text color. Use Tailwind `text-*` on the parent, not `color` prop
-- **Never import all** — `import * as icons from 'lucide-react'` kills tree-shaking
-- **Type for props** — use `LucideIcon` type when accepting icon components as props: `icon: LucideIcon`
-- **Custom icons** — if lucide doesn't have what you need, create a component in `shared/components/icons/` following the same `size` + `currentColor` pattern
+- **Usar `lucide-react`** — nunca inline SVG icons en componentes. Lucide proporciona componentes de iconos tree-shakable, tipados y configurables
+- **Importar individualmente** — `import { User, Moon } from 'lucide-react'` (el tree-shaking solo incluye los iconos importados)
+- **Tamaño vía prop** — `<User size={18} />` no `className="w-[18px] h-[18px]"`
+- **Color vía `currentColor`** — los iconos heredan el color del texto del padre. Usar Tailwind `text-*` en el padre, no la prop `color`
+- **Nunca importar todo** — `import * as icons from 'lucide-react'` destruye el tree-shaking
+- **Tipo para props** — usar el tipo `LucideIcon` al aceptar componentes de iconos como props: `icon: LucideIcon`
+- **Iconos personalizados** — si lucide no tiene lo que se necesita, crear un componente en `shared/components/icons/` siguiendo el mismo patrón `size` + `currentColor`
 
 ```tsx
-// GOOD — tree-shakable, typed, configurable
+// BIEN — tree-shakable, tipado, configurable
 import { User, Settings, LogOut } from 'lucide-react'
 <User size={18} />
 
-// BAD — inline SVG, not configurable, duplicated
+// MAL — inline SVG, no configurable, duplicado
 function UserIcon() {
   return <svg width="18" height="18" ...>...</svg>
 }
 ```
 
-## Tailwind v4 Rules
+## Reglas de Tailwind v4
 
-Tailwind CSS v4 changed how CSS custom properties are referenced in utility classes.
+Tailwind CSS v4 cambió cómo se referencian las CSS custom properties en las clases utilitarias.
 
-- **CSS variables use parentheses, not brackets:**
-  - CORRECT (v4): `bg-(--bg-surface)`, `text-(--text-primary)`, `border-(--border-default)`
-  - WRONG (v3): `bg-[var(--bg-surface)]`, `text-[var(--text-primary)]`
-- **Prefer standard Tailwind classes** over arbitrary values when an equivalent exists:
-  - `size-4` not `w-[16px] h-[16px]`
-  - `translate-x-4` not `translate-x-[16px]`
-  - `gap-3` not `gap-[12px]`
-  - `h-5` not `h-[20px]`
-- **Arbitrary values are acceptable** for design-specific measurements that don't have Tailwind equivalents: `max-w-[400px]`, `w-[560px]`, `text-[42px]`
+- **Las variables CSS usan paréntesis, no corchetes:**
+  - CORRECTO (v4): `bg-(--bg-surface)`, `text-(--text-primary)`, `border-(--border-default)`
+  - INCORRECTO (v3): `bg-[var(--bg-surface)]`, `text-[var(--text-primary)]`
+- **Preferir clases estándar de Tailwind** sobre valores arbitrarios cuando existe un equivalente:
+  - `size-4` no `w-[16px] h-[16px]`
+  - `translate-x-4` no `translate-x-[16px]`
+  - `gap-3` no `gap-[12px]`
+  - `h-5` no `h-[20px]`
+- **Los valores arbitrarios son aceptables** para medidas específicas del diseño que no tienen equivalente en Tailwind: `max-w-[400px]`, `w-[560px]`, `text-[42px]`
 
-## Input Validation Patterns
+## Patrones de Validación de Input
 
-Browsers do NOT enforce input restrictions for `type="tel"` or `type="number"` consistently. Always filter in `onChange`.
+Los navegadores NO aplican restricciones de input para `type="tel"` o `type="number"` de forma consistente. Siempre filtrar en `onChange`.
 
-| Input type | `inputMode` | Filter in onChange | Validation |
+| Tipo de input | `inputMode` | Filtrar en onChange | Validación |
 |-----------|-------------|-------------------|------------|
-| Phone | `tel` | Strip chars not in `[0-9+\-\s()]` | 10-15 digits |
-| Email | `email` | None (validate on blur) | RFC 5322 regex |
-| Code/OTP | `numeric` | Only digits, auto-advance focus | Exact length match |
-| Currency | `decimal` | Strip chars not in `[0-9.]` | Positive number, max 2 decimals |
-| Password | — | None | Min length + complexity rules |
+| Teléfono | `tel` | Strip chars not in `[0-9+\-\s()]` | 10-15 dígitos |
+| Email | `email` | Ninguno (validar en blur) | Regex RFC 5322 |
+| Código/OTP | `numeric` | Solo dígitos, auto-avanzar foco | Coincidencia de longitud exacta |
+| Moneda | `decimal` | Strip chars not in `[0-9.]` | Número positivo, máx 2 decimales |
+| Contraseña | — | Ninguno | Longitud mínima + reglas de complejidad |
 
 ```tsx
-// Phone input with filtering
+// Input de teléfono con filtrado
 function handlePhoneChange(value: string) {
   const filtered = value.replace(/[^0-9+\-\s()]/g, '')
   setPhone(filtered)
@@ -126,36 +126,36 @@ function handlePhoneChange(value: string) {
 <Input type="tel" inputMode="tel" value={phone} onChange={e => handlePhoneChange(e.target.value)} />
 ```
 
-## Pre-Implementation Checklist
+## Checklist Pre-Implementación
 
-- [ ] Similar component/hook doesn't already exist
-- [ ] Component has a single responsibility
-- [ ] State categorized correctly (server vs client vs URL vs form)
-- [ ] No business logic in the component body
-- [ ] Accessible: semantic HTML, ARIA labels, keyboard handlers
-- [ ] TypeScript types are explicit (no `any`)
-- [ ] Server vs Client Component decision is intentional
+- [ ] No existe ya un componente/hook similar
+- [ ] El componente tiene una sola responsabilidad
+- [ ] El estado está categorizado correctamente (server vs client vs URL vs form)
+- [ ] Sin lógica de negocio en el cuerpo del componente
+- [ ] Accesible: HTML semántico, etiquetas ARIA, manejadores de teclado
+- [ ] Los tipos TypeScript son explícitos (sin `any`)
+- [ ] La decisión Server vs Client Component es intencional
 
-## Anti-Pattern Detection
+## Detección de Anti-Patrones
 
-See `anti-patterns.md` for the full detection reference with severity levels.
+Ver `anti-patterns.md` para la referencia completa de detección con niveles de severidad.
 
-**Passive detection:** When reviewing React code, automatically scan for `error` and `warning` patterns. Report as `[file:line] [severity] [category] anti-pattern-name`.
+**Detección pasiva:** Al revisar código React, escanear automáticamente en busca de patrones `error` y `warning`. Reportar como `[file:line] [severity] [category] anti-pattern-name`.
 
-**Active detection:** When user asks to "improve", "refactor", "optimize" — also report `suggestion` level and propose fixes.
+**Detección activa:** Cuando el usuario pide "mejorar", "refactorizar", "optimizar" — también reportar nivel `suggestion` y proponer correcciones.
 
-Red flags that should always stop work:
-- `useEffect` with missing/wrong deps → stale-closure (error)
-- `setInterval`/`setTimeout` without cleanup → memory-leak (error)
-- `addEventListener` without removal → event-leak (error)
-- Direct DOM mutation → dom-bypass (error)
-- Circular imports → circular-deps (error)
+Red flags que siempre deben detener el trabajo:
+- `useEffect` con dependencias faltantes/incorrectas → stale-closure (error)
+- `setInterval`/`setTimeout` sin cleanup → memory-leak (error)
+- `addEventListener` sin remoción → event-leak (error)
+- Mutación directa del DOM → dom-bypass (error)
+- Imports circulares → circular-deps (error)
 
-## Support Files
+## Archivos de Soporte
 
-- `patterns-guide.md` — React patterns (custom hooks, compound components, facade hooks, state machine, control props, adapter, strategy, observer, decorator, factory)
-- `state-management-guide.md` — State management (TanStack Query, Zustand, Context, React Hook Form + Zod, Redux)
-- `testing-guide.md` — Testing strategy (Vitest + RTL, MSW, Playwright, axe-core)
-- `performance-guide.md` — Performance (React Compiler, code splitting, memoization rules, Netflix/Spotify patterns)
-- `accessibility-guide.md` — Accessibility (WCAG 2.2 AA, semantic HTML, ARIA, keyboard, focus management, testing)
-- `anti-patterns.md` — Anti-pattern detection table with severity levels and fix mapping
+- `patterns-guide.md` — Patrones React (custom hooks, compound components, facade hooks, state machine, control props, adapter, strategy, observer, decorator, factory)
+- `state-management-guide.md` — Gestión de estado (TanStack Query, Zustand, Context, React Hook Form + Zod, Redux)
+- `testing-guide.md` — Estrategia de testing (Vitest + RTL, MSW, Playwright, axe-core)
+- `performance-guide.md` — Rendimiento (React Compiler, code splitting, reglas de memoización, patrones Netflix/Spotify)
+- `accessibility-guide.md` — Accesibilidad (WCAG 2.2 AA, HTML semántico, ARIA, teclado, gestión de foco, testing)
+- `anti-patterns.md` — Tabla de detección de anti-patrones con niveles de severidad y mapeo de correcciones

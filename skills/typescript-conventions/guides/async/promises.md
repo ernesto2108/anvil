@@ -1,24 +1,24 @@
-# Async & Promises Guide
+# Guía de Async y Promises
 
-## AbortController for Cancellation
+## AbortController para Cancelación
 
-Every network request, long computation, or streaming operation must accept an `AbortSignal`. Never fire-and-forget without a cancellation path.
+Toda solicitud de red, cómputo prolongado u operación de streaming debe aceptar un `AbortSignal`. Nunca lanzar operaciones sin una ruta de cancelación.
 
 ```typescript
-// WRONG: no cancellation — request runs forever
+// INCORRECTO: sin cancelación — la solicitud se ejecuta indefinidamente
 async function fetchUser(id: string): Promise<User> {
   const res = await fetch(`/api/users/${id}`);
   return res.json();
 }
 
-// RIGHT: accept signal, pass to fetch
+// CORRECTO: aceptar signal, pasarlo a fetch
 async function fetchUser(id: string, signal?: AbortSignal): Promise<User> {
   const res = await fetch(`/api/users/${id}`, { signal });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<User>;
 }
 
-// Caller creates and manages the controller
+// El caller crea y gestiona el controller
 const controller = new AbortController();
 const timeoutId = setTimeout(() => controller.abort(), 5_000);
 
@@ -26,7 +26,7 @@ try {
   const user = await fetchUser(id, controller.signal);
 } catch (e) {
   if (e instanceof DOMException && e.name === "AbortError") {
-    // Request was cancelled — handle gracefully
+    // La solicitud fue cancelada — manejar con gracia
   }
   throw e;
 } finally {
@@ -34,16 +34,16 @@ try {
 }
 ```
 
-### Timeout helper with AbortSignal
+### Helper de timeout con AbortSignal
 
 ```typescript
-// AbortSignal.timeout() — available in Node 17.3+ and modern browsers
+// AbortSignal.timeout() — disponible en Node 17.3+ y navegadores modernos
 async function fetchWithTimeout(url: string, ms: number): Promise<Response> {
   const signal = AbortSignal.timeout(ms);
   return fetch(url, { signal });
 }
 
-// Combine multiple signals (e.g., component unmount + timeout)
+// Combinar múltiples signals (e.g., desmontaje de componente + timeout)
 function combineSignals(...signals: AbortSignal[]): AbortSignal {
   const controller = new AbortController();
   for (const signal of signals) {
@@ -61,31 +61,31 @@ function combineSignals(...signals: AbortSignal[]): AbortSignal {
 
 ## `Promise.allSettled` vs `Promise.all`
 
-Use `Promise.all` only when all operations MUST succeed together. Use `Promise.allSettled` when partial success is acceptable.
+Usar `Promise.all` solo cuando todas las operaciones DEBEN tener éxito en conjunto. Usar `Promise.allSettled` cuando el éxito parcial es aceptable.
 
 ```typescript
-// WRONG: Promise.all fails fast — one rejection cancels everything
+// INCORRECTO: Promise.all falla rápido — un rechazo cancela todo
 const [users, orders, products] = await Promise.all([
-  fetchUsers(),    // if this throws...
-  fetchOrders(),   // ...this result is lost even if it succeeded
+  fetchUsers(),    // si esto lanza...
+  fetchOrders(),   // ...este resultado se pierde aunque haya tenido éxito
   fetchProducts(),
 ]);
 
-// RIGHT for independent operations: Promise.allSettled
+// CORRECTO para operaciones independientes: Promise.allSettled
 const results = await Promise.allSettled([fetchUsers(), fetchOrders(), fetchProducts()]);
 
 const users    = results[0].status === "fulfilled" ? results[0].value : [];
 const orders   = results[1].status === "fulfilled" ? results[1].value : [];
 const products = results[2].status === "fulfilled" ? results[2].value : [];
 
-// Log partial failures
+// Registrar fallos parciales
 results.forEach((r, i) => {
   if (r.status === "rejected") {
     console.error(`Operation ${i} failed:`, r.reason);
   }
 });
 
-// Helper for typed allSettled
+// Helper para allSettled tipado
 async function settleAll<T extends readonly unknown[]>(
   promises: { [K in keyof T]: Promise<T[K]> }
 ): Promise<{ [K in keyof T]: T[K] | null }> {
@@ -94,12 +94,12 @@ async function settleAll<T extends readonly unknown[]>(
 }
 ```
 
-## Async Iterators
+## Iteradores Asíncronos
 
-Use `for await...of` over async generators for streaming data (paginated APIs, file streams, event sources).
+Usar `for await...of` sobre generadores asíncronos para datos en streaming (APIs paginadas, streams de archivos, event sources).
 
 ```typescript
-// Async generator — yields one page at a time
+// Generador asíncrono — produce una página a la vez
 async function* paginateUsers(
   pageSize: number,
   signal?: AbortSignal
@@ -117,12 +117,12 @@ async function* paginateUsers(
   }
 }
 
-// Caller — process users without loading all into memory
+// Caller — procesar usuarios sin cargar todo en memoria
 for await (const page of paginateUsers(100, signal)) {
   await processPage(page);
 }
 
-// Pipeline: transform async iterables
+// Pipeline: transformar iterables asíncronos
 async function* map<T, U>(
   source: AsyncIterable<T>,
   fn: (item: T) => Promise<U>
@@ -133,42 +133,42 @@ async function* map<T, U>(
 }
 ```
 
-## Error Handling in Async Code
+## Manejo de Errores en Código Asíncrono
 
 ```typescript
-// WRONG: unhandled rejection — silently swallowed
+// INCORRECTO: rechazo no manejado — silenciosamente ignorado
 async function syncData() {
-  fetchUsers().then(saveUsers); // no .catch()
+  fetchUsers().then(saveUsers); // sin .catch()
 }
 
-// WRONG: catching unknown as any
+// INCORRECTO: capturar unknown como any
 try {
   await fetchUsers();
-} catch (e: any) { // any strips type safety
-  console.error(e.message); // crashes if e is not an Error
+} catch (e: any) { // any elimina la seguridad de tipos
+  console.error(e.message); // falla si e no es un Error
 }
 
-// RIGHT: catch unknown, narrow before use
+// CORRECTO: capturar unknown, estrechar antes de usar
 async function fetchSafely<T>(fn: () => Promise<T>): Promise<T | null> {
   try {
     return await fn();
   } catch (e: unknown) {
     if (e instanceof DOMException && e.name === "AbortError") {
-      return null; // expected cancellation
+      return null; // cancelación esperada
     }
     if (e instanceof TypeError) {
       console.error("Network error:", e.message);
       return null;
     }
-    throw e; // re-throw unexpected errors
+    throw e; // re-lanzar errores inesperados
   }
 }
 
-// RIGHT: always attach rejection handlers
+// CORRECTO: siempre adjuntar handlers de rechazo
 const userPromise = fetchUsers();
-userPromise.catch(console.error); // even if you don't use the result yet
+userPromise.catch(console.error); // incluso si aún no usas el resultado
 
-// Using Promise.race for timeout
+// Usar Promise.race para timeout
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms)
@@ -177,18 +177,18 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 }
 ```
 
-## Concurrent Execution Patterns
+## Patrones de Ejecución Concurrente
 
 ```typescript
-// Sequential — when order or dependencies matter
+// Secuencial — cuando el orden o las dependencias importan
 for (const user of users) {
-  await processUser(user); // each waits for the previous
+  await processUser(user); // cada uno espera al anterior
 }
 
-// Concurrent (unbounded) — use only for small, known-size arrays
+// Concurrente (sin límite) — usar solo para arrays pequeños de tamaño conocido
 await Promise.all(users.map(processUser));
 
-// Concurrent with concurrency limit — for large arrays or rate-limited APIs
+// Concurrente con límite de concurrencia — para arrays grandes o APIs con rate limit
 async function* chunks<T>(arr: T[], size: number): AsyncGenerator<T[]> {
   for (let i = 0; i < arr.length; i += size) {
     yield arr.slice(i, i + size);

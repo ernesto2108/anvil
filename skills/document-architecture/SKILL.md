@@ -1,85 +1,85 @@
 ---
 name: document-architecture
-description: Document the architecture of a frontend or backend service. Auto-detects project type and runs the appropriate pipeline. Use when user says "documenta arquitectura", "document service", "documenta frontend", "document architecture", or when orchestrate routes here.
+description: Documentar la arquitectura de un servicio frontend o backend. Auto-detecta el tipo de proyecto y ejecuta el pipeline correspondiente. Usar cuando el usuario diga "documenta arquitectura", "document service", "documenta frontend", "document architecture", o cuando orchestrate enruta aquí.
 disable-model-invocation: true
 ---
 
 # Document Architecture
 
-Unified entry point for documenting any project. Detects type, loads the matching guide, and runs the pipeline.
+Punto de entrada unificado para documentar cualquier proyecto. Detecta el tipo, carga la guía correspondiente y ejecuta el pipeline.
 
-## Step 0 — Input & Detection
+## Paso 0 — Input y Detección
 
-If invoked without arguments, ask the user (in Spanish):
-1. **Que proyecto?** — nombre del repo
-2. **Que tarea del backlog?** — ID. Si no hay, preguntar si crear una.
+Si se invoca sin argumentos, pregunta al usuario (en español):
+1. **¿Que proyecto?** — nombre del repo
+2. **¿Que tarea del backlog?** — ID. Si no hay, preguntar si crear una.
 
-Resolve `<docs>` from `~/.claude/project-registry.md`.
-Resolve `<repo>` from `~/projects/<project-name>`.
+Resuelve `<docs>` desde `~/.claude/project-registry.md`.
+Resuelve `<repo>` desde `~/projects/<project-name>`.
 
-### Auto-detect
+### Auto-detección
 
-Run `ls <repo>/` and determine:
+Ejecuta `ls <repo>/` y determina:
 
-| Root contains | Type |
+| El root contiene | Tipo |
 |---|---|
-| `package.json` + `src/` with `.tsx`/`.jsx` | **frontend** |
-| `go.mod` + `internal/` (NO `domain/`) | **service** (MVC) |
+| `package.json` + `src/` con `.tsx`/`.jsx` | **frontend** |
+| `go.mod` + `internal/` (SIN `domain/`) | **service** (MVC) |
 | `go.mod` + `domain/` + `usecase/` | **service** (Clean) |
-| `go.mod` + `internal/` with `business/` | **service** (Hex) |
-| Ambiguous | Ask: "Frontend o backend?" |
+| `go.mod` + `internal/` con `business/` | **service** (Hex) |
+| Ambiguo | Preguntar: "¿Frontend o backend?" |
 
-**Load the matching guide** from `guides/frontend-pipeline.md` or `guides/service-pipeline.md`.
+**Carga la guía correspondiente** desde `guides/frontend-pipeline.md` o `guides/service-pipeline.md`.
 
-## Step 1 — Verify output pattern
+## Paso 1 — Verificar patrón de output
 
-Check `<docs>/04-architecture/` for the expected file structure. The guide specifies which files to generate.
+Verifica `<docs>/04-architecture/` para la estructura de archivos esperada. La guía especifica qué archivos generar.
 
-## Step 2 — Decide security
+## Paso 2 — Decidir seguridad
 
-Ask yourself (NOT the user): does this project handle auth, payments, PII, or sensitive data?
-- **Yes** → include security in pipeline
-- **No** → skip security
+Pregúntate a ti mismo (NO al usuario): ¿este proyecto maneja auth, pagos, PII o datos sensibles?
+- **Sí** → incluir seguridad en el pipeline
+- **No** → omitir seguridad
 
-## Step 3 — Scanner (deep, skeleton-aware)
+## Paso 3 — Scanner (profundo, con conciencia de skeleton)
 
-Read the skeleton file specified in the guide. Inject INLINE into the scanner prompt. Launch `scanner` agent with `mode: deep` following the guide's scanner instructions.
+Lee el archivo skeleton especificado en la guía. Inyéctalo INLINE en el prompt del scanner. Lanza el agente `scanner` con `mode: deep` siguiendo las instrucciones del scanner de la guía.
 
-- Model: **sonnet**
-- **Target: <25 tool calls**
-- After completion: **Read the context files** with Read tool.
+- Modelo: **sonnet**
+- **Objetivo: <25 tool calls**
+- Después de completar: **Lee los archivos de contexto** con la herramienta Read.
 
-## Step 4 — Architect (2 agents in parallel)
+## Paso 4 — Architect (2 agentes en paralelo)
 
-Launch TWO architect agents with `mode: documentation` following the guide:
-- **4a — Overview:** inject context-summary.md INLINE → produces `overview.md`
-- **4b — Detail:** inject template + context-detail.md INLINE → produces `endpoints/*.md`
+Lanza DOS agentes architect con `mode: documentation` siguiendo la guía:
+- **4a — Overview:** inyecta context-summary.md INLINE → produce `overview.md`
+- **4b — Detail:** inyecta template + context-detail.md INLINE → produce `endpoints/*.md`
 
-Note: documentation mode uses `overview.md` / `endpoints/*.md` naming (not the task-mode `architecture*.md` views). This is intentional — documentation mode captures existing architecture, not new design decisions.
+Nota: el modo documentation usa nombres `overview.md` / `endpoints/*.md` (no las vistas `architecture*.md` del modo de tarea). Esto es intencional — el modo documentation captura la arquitectura existente, no nuevas decisiones de diseño.
 
-- Model: **sonnet**
-- **Target: 0 Read calls** for detail agent (everything inline)
+- Modelo: **sonnet**
+- **Objetivo: 0 llamadas Read** para el agente detail (todo inline)
 
-**Wait for both to finish before Step 5.** Read overview.md for security summary.
+**Espera a que ambos terminen antes del Paso 5.** Lee overview.md para el resumen de seguridad.
 
-## Step 5 — Security [conditional]
+## Paso 5 — Seguridad [condicional]
 
-Skip if Step 2 said no. Read `known-systemic-issues.md`, inject INLINE with context-risks.md + overview summary. Launch `security` agent following the guide's security instructions.
+Omitir si el Paso 2 dijo que no. Lee `known-systemic-issues.md`, inyéctalo INLINE con context-risks.md + resumen de overview. Lanza el agente `security` siguiendo las instrucciones de seguridad de la guía.
 
-- Model: **sonnet**
-- **Target: <10 tool calls**
+- Modelo: **sonnet**
+- **Objetivo: <10 tool calls**
 
-## Step 6 — Close task
+## Paso 6 — Cerrar tarea
 
-1. Update task status to `done`
-2. Update board.md
-3. Remove backlog duplicate if exists
-4. Update sprint metrics
+1. Actualiza el estado de la tarea a `done`
+2. Actualiza board.md
+3. Elimina duplicado del backlog si existe
+4. Actualiza métricas del sprint
 
-## Rules
+## Reglas
 
-- **All output in Spanish** — titles, descriptions, Mermaid labels. Code/paths in English.
-- **Context injection MANDATORY** — each agent gets ONLY its segment INLINE.
-- **Model: sonnet** for all agents.
-- **Mermaid: NEVER use `|` inside labels or messages.** Use `/` instead.
-- **Token budget: <50 tool calls total.**
+- **Todo el output en español** — títulos, descripciones, labels de Mermaid. Código/rutas en inglés.
+- **Inyección de contexto OBLIGATORIA** — cada agente recibe SOLO su segmento INLINE.
+- **Modelo: sonnet** para todos los agentes.
+- **Mermaid: NUNCA usar `|` dentro de labels o mensajes.** Usar `/` en su lugar.
+- **Presupuesto de tokens: <50 tool calls en total.**

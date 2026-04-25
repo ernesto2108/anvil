@@ -1,4 +1,4 @@
-# Go Patterns
+# Patrones de Go
 
 ## Functional Options
 
@@ -18,7 +18,7 @@ func NewServer(opts ...Option) *Server {
 }
 ```
 
-## Constructor Functions
+## Funciones Constructor
 
 ```go
 func NewUserService(repo UserRepository, logger *slog.Logger) *UserService {

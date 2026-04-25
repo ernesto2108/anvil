@@ -1,29 +1,29 @@
-# React Testing Guide
+# Guía de Testing en React
 
-## Testing Strategy
+## Estrategia de Testing
 
-| Layer | Tool | Scope | Speed |
+| Capa | Herramienta | Alcance | Velocidad |
 |---|---|---|---|
-| Unit/Component | **Vitest + React Testing Library** | Components, hooks, utilities | Fast |
-| API mocking | **MSW** (Mock Service Worker) | Intercept fetch in unit and E2E | - |
-| E2E | **Playwright** | 3-5 critical user flows | Slow |
-| Accessibility | **axe-core + eslint-plugin-jsx-a11y** | Automated a11y in tests and CI | Fast |
+| Unit/Componente | **Vitest + React Testing Library** | Componentes, hooks, utilidades | Rápida |
+| Mock de API | **MSW** (Mock Service Worker) | Interceptar fetch en unit y E2E | - |
+| E2E | **Playwright** | 3-5 flujos críticos de usuario | Lenta |
+| Accesibilidad | **axe-core + eslint-plugin-jsx-a11y** | a11y automatizado en tests y CI | Rápida |
 
-**CI pipeline**: fast tests (Vitest/RTL/MSW) run first; slow tests (Playwright) only if fast pass.
+**Pipeline CI**: los tests rápidos (Vitest/RTL/MSW) se ejecutan primero; los tests lentos (Playwright) solo si los rápidos pasan.
 
 ---
 
-## Component Testing with Vitest + RTL
+## Testing de Componentes con Vitest + RTL
 
-### Philosophy
+### Filosofía
 
-**Test user behavior, not implementation details.**
+**Testear comportamiento del usuario, no detalles de implementación.**
 
-- Query by role, label, text — not by test ID or class name
-- Fire user events, not internal state changes
-- Assert what the user sees, not internal state
+- Consultar por rol, label, texto — no por test ID o nombre de clase
+- Disparar eventos de usuario, no cambios de estado internos
+- Afirmar lo que el usuario ve, no el estado interno
 
-### Basic Component Test
+### Test de Componente Básico
 
 ```tsx
 import { render, screen } from '@testing-library/react'
@@ -55,15 +55,15 @@ describe('LoginForm', () => {
 })
 ```
 
-### Query Priority (RTL)
+### Prioridad de Queries (RTL)
 
-1. `getByRole` — accessible roles (button, heading, textbox)
-2. `getByLabelText` — form elements by label
-3. `getByPlaceholderText` — form elements
-4. `getByText` — non-interactive elements
-5. `getByTestId` — **last resort** only
+1. `getByRole` — roles accesibles (button, heading, textbox)
+2. `getByLabelText` — elementos de formulario por label
+3. `getByPlaceholderText` — elementos de formulario
+4. `getByText` — elementos no interactivos
+5. `getByTestId` — **último recurso** solamente
 
-### Testing Async Operations
+### Testing de Operaciones Async
 
 ```tsx
 it('loads and displays users', async () => {
@@ -75,7 +75,7 @@ it('loads and displays users', async () => {
 })
 ```
 
-### Testing Custom Hooks
+### Testing de Custom Hooks
 
 ```tsx
 import { renderHook, act } from '@testing-library/react'
@@ -95,9 +95,9 @@ describe('useCounter', () => {
 
 ---
 
-## API Mocking with MSW
+## Mock de API con MSW
 
-Mock Service Worker intercepts at the network level — works in tests AND development.
+Mock Service Worker intercepta a nivel de red — funciona en tests Y en desarrollo.
 
 ### Setup
 
@@ -136,7 +136,7 @@ afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 ```
 
-### Override Handlers per Test
+### Sobreescribir Handlers por Test
 
 ```tsx
 import { http, HttpResponse } from 'msw'
@@ -156,9 +156,9 @@ it('shows error when API fails', async () => {
 
 ---
 
-## E2E Testing with Playwright
+## Testing E2E con Playwright
 
-3-5 critical user flows. Don't duplicate what unit tests already cover.
+3-5 flujos críticos de usuario. No duplicar lo que los tests unitarios ya cubren.
 
 ### Setup
 
@@ -190,18 +190,18 @@ test.describe('Login flow', () => {
 })
 ```
 
-### Rules
+### Reglas
 
-- Test critical user journeys only (login, checkout, sign-up)
-- Use `getByRole`/`getByLabel` — same query philosophy as RTL
-- Run in CI after unit tests pass
-- Use Playwright's UI Mode for debugging
+- Testear solo journeys críticos de usuario (login, checkout, sign-up)
+- Usar `getByRole`/`getByLabel` — misma filosofía de queries que RTL
+- Ejecutar en CI después de que los tests unitarios pasen
+- Usar el modo UI de Playwright para depuración
 
 ---
 
-## Accessibility Testing
+## Testing de Accesibilidad
 
-### In Tests (axe-core)
+### En Tests (axe-core)
 
 ```tsx
 import { axe, toHaveNoViolations } from 'jest-axe'
@@ -215,7 +215,7 @@ it('has no accessibility violations', async () => {
 })
 ```
 
-### In CI (eslint-plugin-jsx-a11y)
+### En CI (eslint-plugin-jsx-a11y)
 
 ```json
 {
@@ -223,17 +223,17 @@ it('has no accessibility violations', async () => {
 }
 ```
 
-### What to Test
+### Qué Testear
 
-- All interactive elements are keyboard-accessible
-- Images have meaningful `alt` text
-- Form inputs have associated labels
-- Color contrast meets WCAG AA (4.5:1 for text)
-- Focus management after navigation/modals
+- Todos los elementos interactivos son accesibles con teclado
+- Las imágenes tienen texto `alt` significativo
+- Los inputs de formulario tienen labels asociados
+- El contraste de color cumple WCAG AA (4.5:1 para texto)
+- Gestión del foco después de navegación/modales
 
 ---
 
-## Test File Organization
+## Organización de Archivos de Test
 
 ```
 src/
@@ -252,7 +252,7 @@ src/
     factories.ts               # test data factories
 ```
 
-### Custom Render with Providers
+### Render Personalizado con Providers
 
 ```tsx
 // testing/test-utils.tsx
@@ -280,13 +280,13 @@ export { customRender as render }
 
 ---
 
-## Anti-Patterns
+## Anti-Patrones
 
-| Anti-Pattern | Fix |
+| Anti-Patrón | Corrección |
 |---|---|
-| Testing implementation details (`useState` value) | Test what the user sees |
-| Querying by CSS class or test ID first | Use `getByRole`, `getByLabelText` |
-| Mocking fetch/axios directly | Use MSW for network-level mocking |
-| No async handling (missing `findBy`/`waitFor`) | Use `findBy` for async content |
-| Testing library internals (TanStack Query cache) | Test the component that consumes it |
-| Snapshot tests as primary testing strategy | Use for visual regression only, not logic |
+| Testear detalles de implementación (valor de `useState`) | Testear lo que el usuario ve |
+| Consultar por clase CSS o test ID primero | Usar `getByRole`, `getByLabelText` |
+| Mockear fetch/axios directamente | Usar MSW para mocking a nivel de red |
+| Sin manejo async (falta `findBy`/`waitFor`) | Usar `findBy` para contenido async |
+| Testear internos de librerías (caché de TanStack Query) | Testear el componente que lo consume |
+| Tests de snapshot como estrategia principal | Usar solo para regresión visual, no para lógica |

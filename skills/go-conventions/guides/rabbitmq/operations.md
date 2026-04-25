@@ -1,30 +1,30 @@
-# RabbitMQ Operations
+# Operaciones RabbitMQ
 
 ## Backpressure
 
 ### QoS Prefetch
 
-The primary backpressure mechanism in RabbitMQ:
+El mecanismo principal de backpressure en RabbitMQ:
 
 ```go
-// limit unacknowledged messages per consumer
+// limita los mensajes no reconocidos por consumer
 ch.Qos(
-    10,    // prefetch count — max unacked messages
-    0,     // prefetch size (0 = no limit)
-    false, // per-consumer (not per-channel)
+    10,    // prefetch count — máximo de mensajes sin ack
+    0,     // prefetch size (0 = sin límite)
+    false, // por consumer (no por channel)
 )
 ```
 
-| Processing Time | Recommended Prefetch |
+| Tiempo de Procesamiento | Prefetch Recomendado |
 |----------------|---------------------|
 | < 10ms | 50-100 |
 | 10-100ms | 10-30 |
 | 100ms-1s | 5-10 |
 | > 1s | 1-5 |
 
-### Single Active Consumer (Ordering)
+### Single Active Consumer (Ordenamiento)
 
-When you need ordering guarantees with multiple consumer instances:
+Cuando necesitas garantías de ordenamiento con múltiples instancias de consumer:
 
 ```go
 args := amqp.Table{
@@ -33,7 +33,7 @@ args := amqp.Table{
 q, _ := ch.QueueDeclare("ordered-queue", true, false, false, false, args)
 ```
 
-Only one consumer receives messages at a time. If it fails, RabbitMQ fails over to the next consumer.
+Solo un consumer recibe mensajes a la vez. Si falla, RabbitMQ hace failover al siguiente consumer.
 
 ---
 
@@ -60,7 +60,7 @@ func (c *Consumer) Start(queue string, handler func(amqp.Delivery) error) error 
             select {
             case msg, ok := <-msgs:
                 if !ok {
-                    return // channel closed
+                    return // channel cerrado
                 }
                 if err := handler(msg); err != nil {
                     slog.Error("handler error", "error", err)
@@ -91,12 +91,12 @@ func (c *Consumer) Shutdown() {
 
     close(c.done)
 
-    // cancel consumer on channel (stops deliveries)
+    // cancela el consumer en el channel (detiene las entregas)
     if err := c.channel.Cancel("", false); err != nil {
         slog.Error("channel cancel error", "error", err)
     }
 
-    // wait for in-flight messages to finish
+    // espera a que terminen los mensajes en vuelo
     c.wg.Wait()
 
     if err := c.channel.Close(); err != nil {
@@ -109,7 +109,7 @@ func (c *Consumer) Shutdown() {
     slog.Info("shutdown complete")
 }
 
-// usage in main
+// uso en main
 func main() {
     consumer, err := NewConsumer(config)
     if err != nil {
@@ -144,7 +144,7 @@ func (c *Client) CheckHealth(ctx context.Context) (string, error) {
 
 ---
 
-## Message Processing with Retry and Ack
+## Procesamiento de Mensajes con Reintento y Ack
 
 ```go
 const maxRetries = 3
@@ -175,7 +175,7 @@ func (c *Consumer) processMessage(ctx context.Context, msg amqp.Delivery, handle
         }
     }
 
-    // all retries exhausted — nack to DLX
+    // todos los reintentos agotados — nack al DLX
     slog.Error("all retries exhausted, routing to DLQ",
         "queue", msg.RoutingKey,
         "error", err,
@@ -186,32 +186,32 @@ func (c *Consumer) processMessage(ctx context.Context, msg amqp.Delivery, handle
 
 ---
 
-## Anti-Patterns
+## Anti-Patrones
 
-| Anti-Pattern | Why It's Bad | Fix |
+| Anti-Patrón | Por Qué Es Malo | Solución |
 |-------------|-------------|-----|
-| Auto-ack enabled | Message lost if processing fails | `autoAck: false`, manual `Ack` |
-| No QoS/prefetch set | Consumer gets flooded, OOM | Set `Qos(10, 0, false)` |
-| Creating channel per message | Performance bottleneck, broker pressure | Reuse channels |
-| No reconnection logic | Consumer dies silently on network blip | `NotifyClose` + reconnect loop |
-| `Nack(false, true)` without retry limit | Infinite requeue loop | Use DLX or track retry count via `x-death` |
-| Sharing connection for producer + consumer | Blocked by slow consumer | Separate connections |
-| Non-durable queues in production | Messages lost on broker restart | `durable: true` + `Persistent` delivery |
-| No publisher confirms | Silent message loss | `ch.Confirm(false)` + wait for confirmation |
-| Ignoring `x-death` header | No visibility into retry count | Parse `x-death` for retry decisions |
-| No DLQ configured | Failed messages disappear or loop | Always set `x-dead-letter-exchange` |
+| Auto-ack habilitado | Mensaje perdido si el procesamiento falla | `autoAck: false`, `Ack` manual |
+| Sin QoS/prefetch configurado | El consumer se satura, OOM | Configura `Qos(10, 0, false)` |
+| Crear channel por mensaje | Cuello de botella de rendimiento, presión en el broker | Reutiliza channels |
+| Sin lógica de reconexión | El consumer muere silenciosamente ante un blip de red | `NotifyClose` + loop de reconexión |
+| `Nack(false, true)` sin límite de reintentos | Bucle infinito de requeue | Usa DLX o rastrea el conteo de reintentos vía `x-death` |
+| Compartir conexión para producer + consumer | Bloqueado por consumer lento | Conexiones separadas |
+| Colas no durables en producción | Mensajes perdidos al reiniciar el broker | `durable: true` + entrega `Persistent` |
+| Sin publisher confirms | Pérdida silenciosa de mensajes | `ch.Confirm(false)` + esperar confirmación |
+| Ignorar el header `x-death` | Sin visibilidad del conteo de reintentos | Parsea `x-death` para decisiones de reintento |
+| Sin DLQ configurado | Los mensajes fallidos desaparecen o se repiten en bucle | Siempre configura `x-dead-letter-exchange` |
 
 ---
 
-## Decision Matrix: RabbitMQ vs Other Options
+## Matriz de Decisión: RabbitMQ vs Otras Opciones
 
-| Concern | RabbitMQ |
+| Preocupación | RabbitMQ |
 |---------|----------|
-| **DLQ** | Native (DLX + DLQ) — best-in-class |
-| **Ordering** | Per-queue with single consumer (`x-single-active-consumer`) |
-| **Exactly-once** | Publisher confirms + consumer dedup |
+| **DLQ** | Nativo (DLX + DLQ) — el mejor de su clase |
+| **Ordenamiento** | Por cola con consumer único (`x-single-active-consumer`) |
+| **Exactly-once** | Publisher confirms + deduplicación en el consumer |
 | **Backpressure** | QoS prefetch |
-| **Retry** | TTL queues with DLX chain (native) |
-| **Schema** | Application-layer |
-| **Scale** | Horizontal via queue sharding |
-| **Best for** | Task queues, routing, request-reply, complex topology |
+| **Reintento** | Colas TTL con cadena DLX (nativo) |
+| **Schema** | A nivel de aplicación |
+| **Escala** | Horizontal vía queue sharding |
+| **Mejor para** | Task queues, enrutamiento, request-reply, topología compleja |

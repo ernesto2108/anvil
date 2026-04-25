@@ -1,68 +1,68 @@
 ---
 name: typescript-conventions
-description: TypeScript 5.x conventions and coding standards. Use when writing TypeScript code, reviewing TS patterns, or user mentions "typescript conventions", "strict mode", "discriminated unions", "Zod validation", "Vitest", "type safety", "TS best practices", or working with .ts/.tsx files.
+description: Convenciones y estándares de código para TypeScript 5.x. Úsalo al escribir código TypeScript, revisar patrones TS, o cuando el usuario mencione "typescript conventions", "strict mode", "discriminated unions", "Zod validation", "Vitest", "type safety", "TS best practices", o al trabajar con archivos .ts/.tsx.
 ---
 
 # TypeScript Conventions
 
-> **IMPORTANT:** This file is a lightweight dispatcher. Do NOT load all referenced files at once. Read the routing table below, identify which files are relevant to the current task, and load ONLY those using the Read tool. Each file is ~2-5KB. Loading unnecessary files wastes context tokens.
+> **IMPORTANTE:** Este archivo es un dispatcher ligero. NO cargar todos los archivos referenciados a la vez. Leer la tabla de enrutamiento abajo, identificar qué archivos son relevantes para la tarea actual, y cargar SOLO esos usando la herramienta Read. Cada archivo tiene ~2-5KB. Cargar archivos innecesarios desperdicia tokens de contexto.
 
-## Stack & Philosophy
+## Stack y Filosofía
 
-- **Strict mode always** — `"strict": true` plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`
-- **Discriminated unions over enums** — unions are composable, serializable, and exhaustively checkable
-- **Zod at boundaries** — runtime validation at API ingress, environment config, and external data
-- **Vitest for testing** — native ESM, `expectTypeOf` for type-level tests, zero-config with Vite
-- **ESM first** — `"type": "module"` in `package.json`, no CommonJS unless forced by tooling
-- **No barrel exports** — direct imports only; barrel `index.ts` files break tree-shaking and slow builds
+- **Strict mode siempre** — `"strict": true` más `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`
+- **Discriminated unions sobre enums** — los unions son componibles, serializables y verificables exhaustivamente
+- **Zod en las fronteras** — validación en tiempo de ejecución en el ingreso de API, configuración de entorno, y datos externos
+- **Vitest para pruebas** — ESM nativo, `expectTypeOf` para pruebas a nivel de tipos, configuración cero con Vite
+- **ESM primero** — `"type": "module"` en `package.json`, sin CommonJS a menos que lo fuerce el tooling
+- **Sin barrel exports** — solo imports directos; los archivos `index.ts` barrel rompen el tree-shaking y ralentizan los builds
 
-## Red Flags (always stop work)
+## Señales de Alerta (siempre detener el trabajo)
 
-- `any` type without explicit suppression comment → error
-- `// @ts-ignore` without a reason → error (use `@ts-expect-error` with comment)
-- `enum` keyword → warning (use `as const` union instead)
-- Non-null assertion `!` on user/API data → warning
-- `namespace` usage → error (ESM supersedes it)
-- `innerHTML =` without sanitization → error (XSS vector)
-- `var` declaration → error
+- Tipo `any` sin comentario de supresión explícito → error
+- `// @ts-ignore` sin razón → error (usar `@ts-expect-error` con comentario)
+- Palabra clave `enum` → warning (usar unión `as const` en su lugar)
+- Aserción non-null `!` en datos de usuario/API → warning
+- Uso de `namespace` → error (ESM lo reemplaza)
+- `innerHTML =` sin sanitización → error (vector XSS)
+- Declaración `var` → error
 
-## Anti-Pattern Detection
+## Detección de Anti-Patrones
 
-**Passive detection:** When reviewing TypeScript code, load `detection/anti-patterns.md` and scan for `error` and `warning` patterns. Report as `[file:line] [severity] [category] anti-pattern-name`.
+**Detección pasiva:** Al revisar código TypeScript, cargar `detection/anti-patterns.md` y escanear para patrones `error` y `warning`. Reportar como `[file:line] [severity] [category] anti-pattern-name`.
 
-**Active detection:** When user asks to "improve", "refactor", "optimize", or "clean" — also report `suggestion` level patterns and propose fixes referencing the relevant rule or guide.
+**Detección activa:** Cuando el usuario pide "improve", "refactor", "optimize", o "clean" — también reportar patrones de nivel `suggestion` y proponer correcciones referenciando la regla o guía relevante.
 
-## What to Load
+## Qué Cargar
 
-Load **only** the files relevant to the current task:
+Cargar **solo** los archivos relevantes para la tarea actual:
 
-### Rules (quick reference, ~2-3KB each)
+### Reglas (referencia rápida, ~2-3KB cada uno)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| Strict mode, type operators, error handling, branded types | `rules/coding.md` |
-| ESM, barrel exports, Zod boundaries, DI, tsconfig | `rules/architecture.md` |
+| Strict mode, operadores de tipos, manejo de errores, branded types | `rules/coding.md` |
+| ESM, barrel exports, fronteras Zod, DI, tsconfig | `rules/architecture.md` |
 
-### Guides (detailed patterns with code, ~3-5KB each)
+### Guías (patrones detallados con código, ~3-5KB cada uno)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
 | Discriminated unions, branded types, mapped/conditional types | `guides/patterns/types.md` |
-| Vitest setup, `expectTypeOf`, mocking, async tests | `guides/testing/vitest.md` |
+| Configuración de Vitest, `expectTypeOf`, mocking, pruebas async | `guides/testing/vitest.md` |
 | AbortController, Promise.allSettled, async iterators, timeouts | `guides/async/promises.md` |
-| React function components, props typing, hooks, RSC, Zod+RHF | `guides/react/components.md` |
-| XSS, input sanitization, CSRF, CSP | `guides/security.md` |
-| ESLint v8 flat config, critical rules, typescript-eslint | `guides/eslint.md` |
+| Componentes funcionales React, tipado de props, hooks, RSC, Zod+RHF | `guides/react/components.md` |
+| XSS, sanitización de inputs, CSRF, CSP | `guides/security.md` |
+| Configuración flat ESLint v8, reglas críticas, typescript-eslint | `guides/eslint.md` |
 | Node.js ESM, verbatimModuleSyntax, subpath exports | `guides/node-esm.md` |
 
-### Detection & Checklists
+### Detección y Checklists
 
-| When... | Load |
+| Cuándo... | Cargar |
 |---|---|
-| Code review | `detection/anti-patterns.md` |
-| Before writing TypeScript code | `checklists/pre.md` |
-| After writing TypeScript code | `checklists/post.md` |
+| Revisión de código | `detection/anti-patterns.md` |
+| Antes de escribir código TypeScript | `checklists/pre.md` |
+| Después de escribir código TypeScript | `checklists/post.md` |
 
-## Post-Implementation Gate
+## Puerta Post-Implementación
 
-After ANY code change to `.ts` or `.tsx` files, invoke the `/lint` skill before considering the task done.
+Después de CUALQUIER cambio de código en archivos `.ts` o `.tsx`, invocar la skill `/lint` antes de considerar la tarea como completada.

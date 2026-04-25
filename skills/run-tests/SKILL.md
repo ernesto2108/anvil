@@ -1,25 +1,25 @@
 ---
 name: run-tests
-description: Run project tests with race detector and coverage. Auto-detects stack (Go, React, Flutter). Use when user says "run tests", "test this", "check coverage", "run vitest", "go test", "flutter test", or after implementing code that needs verification.
+description: Ejecutar tests del proyecto con detector de race conditions y cobertura. Auto-detecta el stack (Go, React, Flutter). Usar cuando el usuario diga "run tests", "test this", "check coverage", "run vitest", "go test", "flutter test", o después de implementar código que necesita verificación.
 ---
 
 # Run Tests
 
-## Auto-Detection
+## Auto-Detección
 
-Detect stack by checking for marker files in the project root:
+Detectar el stack verificando los archivos marcadores en la raíz del proyecto:
 
-| File | Stack | Command |
+| Archivo | Stack | Comando |
 |------|-------|---------|
 | `go.mod` | Go | `go test ./... -race -cover -count=1` |
-| `package.json` | Node/React | `<pm> exec vitest run --coverage` or `<pm> test -- --coverage` (detect `<pm>` per CLAUDE.md — prefer `pnpm`) |
+| `package.json` | Node/React | `<pm> exec vitest run --coverage` o `<pm> test -- --coverage` (detectar `<pm>` según CLAUDE.md — preferir `pnpm`) |
 | `pubspec.yaml` | Flutter | `flutter test --coverage` |
 
-If multiple stacks detected, run tests for each stack separately.
+Si se detectan múltiples stacks, ejecutar los tests de cada stack por separado.
 
-For Node/React: check `package.json` for test runner — prefer `vitest` if configured, fall back to `jest`, then `<pm> test`. Detect the package manager from the lockfile per CLAUDE.md (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm) and use it consistently.
+Para Node/React: verificar `package.json` para el test runner — preferir `vitest` si está configurado, caer a `jest`, luego `<pm> test`. Detectar el package manager desde el lockfile según CLAUDE.md (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm) y usarlo de forma consistente.
 
-## Execution
+## Ejecución
 
 ### Go
 ```bash
@@ -27,79 +27,79 @@ go test ./... -race -cover -count=1
 ```
 
 Flags:
-- `-race`: detect race conditions (always on)
-- `-cover`: show coverage per package
-- `-count=1`: disable test caching (ensures fresh run)
+- `-race`: detectar race conditions (siempre activado)
+- `-cover`: mostrar cobertura por paquete
+- `-count=1`: deshabilitar cache de tests (garantiza ejecución fresca)
 
-For integration tests (if requested):
+Para tests de integración (si se solicita):
 ```bash
 go test ./... -race -cover -count=1 -tags integration
 ```
 
-For a specific package:
+Para un paquete específico:
 ```bash
 go test -race -cover -count=1 ./internal/user/...
 ```
 
 ### React/Node
 
-Detect package manager from lockfile per CLAUDE.md. Examples below use `pnpm` (default); swap to `npm` / `yarn` as detected.
+Detectar el package manager desde el lockfile según CLAUDE.md. Los ejemplos a continuación usan `pnpm` (por defecto); cambiar a `npm` / `yarn` según lo detectado.
 
 ```bash
-# Vitest (preferred)
+# Vitest (preferido)
 pnpm exec vitest run --coverage        # npm: npx vitest run --coverage
                                        # yarn: yarn exec vitest run --coverage
 
-# Jest fallback
+# Fallback Jest
 pnpm exec jest --coverage --passWithNoTests
 
-# Generic fallback (runs the "test" script from package.json)
+# Fallback genérico (ejecuta el script "test" de package.json)
 pnpm test -- --coverage                # npm: npm test -- --coverage
                                        # yarn: yarn test --coverage
 
-# Specific file
+# Archivo específico
 pnpm exec vitest run src/path/Component.test.tsx
 
-# Watch mode (if requested)
+# Modo watch (si se solicita)
 pnpm exec vitest
 ```
 
-Troubleshooting: act warnings — wrap state updates in `act()`. Async issues — use `waitFor()` instead of manual timeouts. Missing providers — wrap component in necessary context providers.
+Solución de problemas: warnings de act — envolver actualizaciones de estado en `act()`. Problemas async — usar `waitFor()` en lugar de timeouts manuales. Providers faltantes — envolver el componente en los context providers necesarios.
 
 ### Flutter
 ```bash
-# Unit + widget tests
+# Tests unitarios + de widgets
 flutter test --coverage
 
-# Specific file
+# Archivo específico
 flutter test test/path/to_test.dart
 
-# Integration tests
+# Tests de integración
 flutter test integration_test/
 
-# With expanded reporter
+# Con reporter expandido
 flutter test --reporter expanded
 ```
 
-Troubleshooting: golden failures — `flutter test --update-goldens`. Flaky tests — check for missing `pumpAndSettle()` or unresolved futures. View coverage: `genhtml coverage/lcov.info -o coverage/html`.
+Solución de problemas: fallos de golden — `flutter test --update-goldens`. Tests inestables — verificar `pumpAndSettle()` faltante o futures sin resolver. Ver cobertura: `genhtml coverage/lcov.info -o coverage/html`.
 
-## Analyze Results
+## Analizar Resultados
 
-### Categorize failures
+### Categorizar fallos
 
-When tests fail, categorize each failure:
+Cuando los tests fallan, categorizar cada fallo:
 
-| Category | Signal | Action |
+| Categoría | Señal | Acción |
 |----------|--------|--------|
-| **Compilation error** | `cannot find`, `undefined`, `syntax error` | Fix code first |
-| **Assertion failure** | `expected X got Y`, `assert`, `require` | Check logic or update test |
-| **Timeout** | `context deadline exceeded`, `test timed out` | Check for deadlocks, increase timeout |
-| **Race condition** | `DATA RACE`, `concurrent map` | Add synchronization |
-| **Flaky** | Passes on retry | Investigate timing dependencies |
+| **Error de compilación** | `cannot find`, `undefined`, `syntax error` | Corregir código primero |
+| **Fallo de aserción** | `expected X got Y`, `assert`, `require` | Verificar lógica o actualizar test |
+| **Timeout** | `context deadline exceeded`, `test timed out` | Verificar deadlocks, aumentar timeout |
+| **Race condition** | `DATA RACE`, `concurrent map` | Agregar sincronización |
+| **Inestable** | Pasa al reintentar | Investigar dependencias de timing |
 
-### Coverage check
+### Verificación de cobertura
 
-Report coverage percentage. Flag if below 80% on business logic packages:
+Reportar el porcentaje de cobertura. Señalar si está por debajo del 80% en paquetes de lógica de negocio:
 
 ```
 Coverage: 73.2% — BELOW THRESHOLD (80%)
@@ -108,24 +108,24 @@ Low coverage:
   - internal/notification: 61.0%
 ```
 
-### Re-run failures
+### Re-ejecutar fallos
 
-Suggest command to re-run only failed tests:
+Sugerir comando para re-ejecutar solo los tests fallidos:
 
 ```bash
-# Go — run specific failing test
+# Go — ejecutar test específico que falló
 go test -race -run TestFailingName ./internal/pkg/...
 
-# Vitest (swap `pnpm exec` for `npx` / `yarn exec` per lockfile)
+# Vitest (cambiar `pnpm exec` por `npx` / `yarn exec` según lockfile)
 pnpm exec vitest run --reporter=verbose path/to/failing.test.ts
 
 # Flutter
 flutter test test/failing_test.dart
 ```
 
-## Output Format
+## Formato de Salida
 
-Summarize results in a table:
+Resumir resultados en una tabla:
 
 ```
 | Metric    | Result |
@@ -138,16 +138,16 @@ Summarize results in a table:
 | Races     | 0      |
 ```
 
-## Workflow
+## Flujo de Trabajo
 
-1. **Detect stack** — check for marker files
-2. **Check for project-specific commands** — read `package.json` scripts or `Makefile` for custom test commands
-3. **Run tests** — execute the appropriate command for the detected stack
-4. **Categorize failures** — use the failure table above
-5. **If compilation errors** — stop, fix code first, then re-run
-6. **If assertion failures** — report with context, ask user: "Should I fix the code or update the test?"
-7. **If coverage < 80%** — flag low-coverage packages, ask user if coverage improvement is needed
-8. **Report results** — output the summary table
+1. **Detectar stack** — verificar archivos marcadores
+2. **Verificar comandos específicos del proyecto** — leer scripts de `package.json` o `Makefile` para comandos de test personalizados
+3. **Ejecutar tests** — ejecutar el comando apropiado para el stack detectado
+4. **Categorizar fallos** — usar la tabla de fallos de arriba
+5. **Si hay errores de compilación** — detenerse, corregir código primero, luego re-ejecutar
+6. **Si hay fallos de aserción** — reportar con contexto, preguntar al usuario: "Should I fix the code or update the test?"
+7. **Si cobertura < 80%** — señalar paquetes con baja cobertura, preguntar al usuario si se necesita mejorar la cobertura
+8. **Reportar resultados** — mostrar la tabla de resumen
 
-If all pass: report table only.
-If failures: report table + categorized failure details + re-run commands.
+Si todos pasan: reportar solo la tabla.
+Si hay fallos: reportar tabla + detalles de fallos categorizados + comandos para re-ejecutar.

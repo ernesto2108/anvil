@@ -1,26 +1,26 @@
-# Database Patterns
+# Patrones de Base de Datos
 
-These patterns reflect the real DB access layer used across projects:
+Estos patrones reflejan la capa de acceso a DB real usada en los proyectos:
 
-- **Query functions in `queries/` package** — each query is a function returning `(string, []any, error)`. Complex queries use `strings.Builder` with parameterized `$N` placeholders
-- **Persistence DTOs** — structs with `sql.Null*` for ALL fields (`NullString`, `NullInt64`, `NullFloat64`, `NullTime`), separate from domain entities. Live in `dto/` or `persistence/` package
-- **Mappers** — `ToBusiness()` method on single DTO, `NewToBusiness()` batch function for slices. Extract `.String`, `.Int64`, `.Time` etc. from `sql.Null*` fields
-- **Repository struct** — holds `client` (custom DB interface) + `timeout time.Duration`. Every method calls `context.WithTimeout(ctx, r.timeout)` with deferred cancel
-- **DB interface** — custom `PostgresSql` interface wrapping `*sql.DB` with own `Rows` interface for testability. Never depend on `*sql.DB` directly in repositories
-- **Error translation** — `PostgresError(err)` translates `pq.Error` codes to domain errors (duplicate key → conflict, foreign key → not found, etc.)
-- **Transactions** — `BeginTx` + deferred rollback + explicit commit at the end. Rollback is no-op after commit
-- **Two DTO layers** — HTTP/input DTOs (json tags, binding tags) vs persistence/output DTOs (sql.Null* fields). Never mix them
+- **Funciones de query en el paquete `queries/`** — cada query es una función que retorna `(string, []any, error)`. Las queries complejas usan `strings.Builder` con placeholders `$N` parametrizados
+- **DTOs de persistencia** — structs con `sql.Null*` para TODOS los campos (`NullString`, `NullInt64`, `NullFloat64`, `NullTime`), separados de las entidades de dominio. Viven en el paquete `dto/` o `persistence/`
+- **Mappers** — método `ToBusiness()` en un DTO individual, función por lotes `NewToBusiness()` para slices. Extraer `.String`, `.Int64`, `.Time`, etc. de los campos `sql.Null*`
+- **Struct del repositorio** — tiene `client` (interfaz DB personalizada) + `timeout time.Duration`. Cada método llama `context.WithTimeout(ctx, r.timeout)` con cancel diferido
+- **Interfaz DB** — interfaz personalizada `PostgresSql` que envuelve `*sql.DB` con su propia interfaz `Rows` para testabilidad. Nunca depender de `*sql.DB` directamente en los repositorios
+- **Traducción de errores** — `PostgresError(err)` traduce códigos `pq.Error` a errores de dominio (duplicate key → conflict, foreign key → not found, etc.)
+- **Transacciones** — `BeginTx` + rollback diferido + commit explícito al final. El rollback es no-op después del commit
+- **Dos capas de DTO** — DTOs HTTP/input (json tags, binding tags) vs DTOs de persistencia/output (campos sql.Null*). Nunca mezclarlos
 
-Repository method flow: `WithTimeout → query() → execute → scan into DTO → map to domain`
+Flujo del método de repositorio: `WithTimeout → query() → execute → scan into DTO → map to domain`
 
-See `examples/good-patterns.md` for complete code examples.
+Ver `examples/good-patterns.md` para ejemplos de código completos.
 
-## Migrations — `golang-migrate`
+## Migraciones — `golang-migrate`
 
-Use `github.com/golang-migrate/migrate/v4` for all database migrations. Never write ad-hoc `CREATE TABLE` or schema DDL in application code.
+Usar `github.com/golang-migrate/migrate/v4` para todas las migraciones de base de datos. Nunca escribir `CREATE TABLE` ad-hoc o DDL de schema en el código de la aplicación.
 
-- **Embed migrations** with `//go:embed migrations/*.sql` so they ship inside the binary
-- **File naming:** `<number>_<action>_<target>.up.sql` / `.down.sql` (e.g., `000001_create_users.up.sql`)
-- **One change per pair** — a single up/down pair does one logical thing
-- **DBA agent owns migration files** — the developer does NOT create or modify `.up.sql`/`.down.sql` files. If your task needs schema changes, tell the orchestrator to invoke the DBA first
-- **Engine-specific rules** — see `/db-engines` for PRAGMAs, driver setup, and migration quirks per engine
+- **Embeber migraciones** con `//go:embed migrations/*.sql` para que se incluyan dentro del binario
+- **Naming de archivos:** `<number>_<action>_<target>.up.sql` / `.down.sql` (ej., `000001_create_users.up.sql`)
+- **Un cambio por par** — un par up/down hace una sola cosa lógica
+- **El agente DBA es dueño de los archivos de migración** — el desarrollador NO crea ni modifica archivos `.up.sql`/`.down.sql`. Si tu tarea necesita cambios de schema, decirle al orchestrator que invoque al DBA primero
+- **Reglas específicas del motor** — ver `/db-engines` para PRAGMAs, configuración de drivers, y peculiaridades de migración por motor

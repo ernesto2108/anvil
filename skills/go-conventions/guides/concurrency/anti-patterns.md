@@ -1,6 +1,6 @@
-# Concurrency Anti-Patterns and Corrections
+# Anti-Patrones de Concurrencia y Correcciones
 
-## Anti-Pattern 1: Goroutine Leak (No Way to Stop)
+## Anti-Patrón 1: Goroutine Leak (Sin Forma de Detenerla)
 
 ```go
 // BAD: goroutine runs forever, no cancellation mechanism
@@ -38,9 +38,9 @@ func startPoller(ctx context.Context, url string) {
 }
 ```
 
-**Detection:** Monitor goroutine count with `runtime.NumGoroutine()` or expose via pprof. If it grows over time, you have a leak.
+**Detección:** Monitorear el conteo de goroutines con `runtime.NumGoroutine()` o exponer vía pprof. Si crece con el tiempo, hay una fuga.
 
-## Anti-Pattern 2: Race Condition (Shared State Without Sync)
+## Anti-Patrón 2: Race Condition (Estado Compartido Sin Sincronización)
 
 ```go
 // BAD: concurrent writes to map -- will panic or corrupt
@@ -70,9 +70,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-**Detection:** Always run tests with `-race`: `go test -race ./...`. Run your service with `-race` in staging. The race detector finds races at runtime with ~2-10x overhead.
+**Detección:** Siempre ejecutar tests con `-race`: `go test -race ./...`. Ejecutar el servicio con `-race` en staging. El race detector encuentra carreras en tiempo de ejecución con ~2-10x de overhead.
 
-## Anti-Pattern 3: Channel Deadlock (Unbuffered Misuse)
+## Anti-Patrón 3: Channel Deadlock (Mal Uso de Canal sin Buffer)
 
 ```go
 // BAD: deadlock -- unbuffered channel, nobody reading
@@ -97,9 +97,9 @@ func main() {
 }
 ```
 
-**Rule:** Never send on an unbuffered channel in the same goroutine that reads from it. Unbuffered channels require a concurrent reader.
+**Regla:** Nunca enviar en un canal sin buffer en la misma goroutine que lee de él. Los canales sin buffer requieren un reader concurrente.
 
-## Anti-Pattern 4: Over-Synchronization (Mutex + Channel Together)
+## Anti-Patrón 4: Sobre-Sincronización (Mutex + Channel Juntos)
 
 ```go
 // BAD: using both mutex AND channel to protect the same data
@@ -154,7 +154,7 @@ func NewCounter() *Counter {
 }
 ```
 
-## Anti-Pattern 5: Forgetting to Drain Channels
+## Anti-Patrón 5: Olvidar Drenar Canales
 
 ```go
 // BAD: producer goroutine leaks because nobody reads remaining values
@@ -197,7 +197,7 @@ func search(ctx context.Context, query string) (string, error) {
 }
 ```
 
-## Anti-Pattern 6: Context Not Propagated
+## Anti-Patrón 6: Contexto No Propagado
 
 ```go
 // BAD: creates new background context, ignoring caller's timeout/cancellation
@@ -226,26 +226,26 @@ func GetUser(ctx context.Context, id int) (*User, error) {
 }
 ```
 
-**Rule:** If a function accepts `context.Context`, pass it to every downstream call that supports it. This includes `http.NewRequestWithContext`, `db.QueryContext`, `grpc` calls, etc. Using `http.Get` or `db.Query` (without context) inside a context-aware function defeats the purpose.
+**Regla:** Si una función acepta `context.Context`, pasarlo a cada llamada downstream que lo soporte. Esto incluye `http.NewRequestWithContext`, `db.QueryContext`, llamadas `grpc`, etc. Usar `http.Get` o `db.Query` (sin contexto) dentro de una función con contexto anula el propósito.
 
-## Production Checklist
+## Checklist de Producción
 
-Before shipping concurrent Go code:
+Antes de publicar código Go concurrente:
 
-- [ ] Every goroutine has a way to stop (context, done channel, or channel close)
-- [ ] Every channel send uses `select` with `ctx.Done()` (or is guaranteed to be consumed)
-- [ ] Every channel is closed by exactly one sender when done
-- [ ] `context.Context` is propagated to all external calls (HTTP, DB, gRPC)
-- [ ] `defer cancel()` follows every `WithTimeout` / `WithCancel`
-- [ ] Shared maps are protected by `sync.RWMutex` or use `sync.Map`
-- [ ] Worker pools bound concurrency to a reasonable limit
-- [ ] `go test -race ./...` passes
-- [ ] Goroutine count is monitored in production (pprof or metrics)
-- [ ] Panics in goroutines are recovered (or use `errgroup` which propagates errors)
-- [ ] Tickers are stopped with `defer ticker.Stop()`
-- [ ] Graceful shutdown handles SIGTERM with timeout
+- [ ] Cada goroutine tiene una forma de detenerse (contexto, done channel, o cierre de canal)
+- [ ] Cada envío a canal usa `select` con `ctx.Done()` (o está garantizado de ser consumido)
+- [ ] Cada canal es cerrado por exactamente un sender cuando termina
+- [ ] `context.Context` se propaga a todas las llamadas externas (HTTP, DB, gRPC)
+- [ ] `defer cancel()` sigue cada `WithTimeout` / `WithCancel`
+- [ ] Los mapas compartidos están protegidos por `sync.RWMutex` o usan `sync.Map`
+- [ ] Los worker pools limitan la concurrencia a un número razonable
+- [ ] `go test -race ./...` pasa
+- [ ] El conteo de goroutines se monitorea en producción (pprof o métricas)
+- [ ] Los pánicos en goroutines están recuperados (o usar `errgroup` que propaga errores)
+- [ ] Los Tickers se detienen con `defer ticker.Stop()`
+- [ ] El shutdown graceful maneja SIGTERM con timeout
 
-## Sources
+## Fuentes
 
 - [Go Concurrency Patterns: Pipelines and Cancellation](https://go.dev/blog/pipelines)
 - [Go Concurrency Patterns: Context](https://go.dev/blog/context)

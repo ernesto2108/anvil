@@ -1,6 +1,6 @@
-# Tokio Async Patterns
+# Patrones Async de Tokio
 
-## Runtime Setup
+## Configuración del Runtime
 
 ```rust
 // RIGHT — application entry point
@@ -20,7 +20,7 @@ fn main() -> anyhow::Result<()> {
 }
 ```
 
-## Blocking Work
+## Trabajo Bloqueante
 
 ```rust
 // WRONG — blocking IO in async context
@@ -39,7 +39,7 @@ let hash = tokio::task::spawn_blocking(move || {
 }).await?;
 ```
 
-## JoinSet (Structured Concurrency)
+## JoinSet (Concurrencia Estructurada)
 
 ```rust
 use tokio::task::JoinSet;
@@ -58,7 +58,7 @@ while let Some(result) = set.join_next().await {
 }
 ```
 
-## Bounded Concurrency
+## Concurrencia Acotada
 
 ```rust
 use tokio::sync::Semaphore;
@@ -77,7 +77,7 @@ for url in urls {
 }
 ```
 
-## Channels
+## Canales
 
 ```rust
 // mpsc — multiple producers, single consumer
@@ -94,7 +94,7 @@ let mut rx = tx.subscribe();
 let (tx, rx) = tokio::sync::watch::channel(initial_config);
 ```
 
-## Native Async Traits (1.75+)
+## Async Traits Nativo (1.75+)
 
 ```rust
 // RIGHT — no #[async_trait] needed

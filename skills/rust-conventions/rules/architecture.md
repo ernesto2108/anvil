@@ -1,6 +1,6 @@
-# Architecture Rules
+# Reglas de Arquitectura
 
-## Workspace Layout
+## Layout del Workspace
 
 ```
 my-project/
@@ -14,7 +14,7 @@ my-project/
   benches/                 # workspace-level benchmarks
 ```
 
-## Workspace Cargo.toml
+## Cargo.toml del Workspace
 
 ```toml
 [workspace]
@@ -42,7 +42,7 @@ pedantic = { level = "warn", priority = -1 }
 unwrap_used = "deny"
 ```
 
-## Member Crate Inherits Workspace
+## Crate Miembro Hereda del Workspace
 
 ```toml
 [package]
@@ -60,15 +60,15 @@ workspace = true
 
 ## lib.rs vs main.rs
 
-1. **`main.rs` is thin** — only wiring, parse args, call `lib::run()`
-2. **`lib.rs` has all logic** — testable without running the binary
-3. **Separate bin and lib crates** in workspace for anything non-trivial
+1. **`main.rs` es delgado** — solo cableado, parsear args, llamar `lib::run()`
+2. **`lib.rs` tiene toda la lógica** — testeable sin ejecutar el binario
+3. **Separar crates bin y lib** en el workspace para cualquier cosa no trivial
 
 ## Feature Flags
 
-4. **`default = []`** — minimal by default, opt-in to features
-5. **`std` feature** for no_std support — `#![cfg_attr(not(feature = "std"), no_std)]`
-6. **Feature-gated deps** — `[dependencies] postgres = { version = "0.19", optional = true }`
+4. **`default = []`** — mínimo por defecto, opt-in a features
+5. **Feature `std`** para soporte no_std — `#![cfg_attr(not(feature = "std"), no_std)]`
+6. **Deps con feature gate** — `[dependencies] postgres = { version = "0.19", optional = true }`
 
 ```toml
 [features]
@@ -78,9 +78,9 @@ rustls = ["reqwest/rustls-tls"]
 std = ["serde/std", "hex/std"]
 ```
 
-## Dependency Hygiene
+## Higiene de Dependencias
 
-7. **Workspace deps** — centralize versions in `[workspace.dependencies]`
-8. **Exact pins for crypto** — `ring = "=0.17.8"`
-9. **No wildcard deps** — deny via `cargo-deny`
-10. **Commit Cargo.lock for binaries** — don't commit for libraries
+7. **Deps del workspace** — centralizar versiones en `[workspace.dependencies]`
+8. **Pins exactos para crypto** — `ring = "=0.17.8"`
+9. **Sin deps wildcard** — denegar via `cargo-deny`
+10. **Commitear Cargo.lock para binarios** — no commitear para librerías

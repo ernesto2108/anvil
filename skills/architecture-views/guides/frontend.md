@@ -1,8 +1,8 @@
 # Template: architecture-frontend.md
 
-Inspired by: rcherny Front-End Architecture Checklist + component-driven design.
+Inspirado en: rcherny Front-End Architecture Checklist + diseño component-driven.
 
-**Generate when:** frontend work is involved.
+**Generar cuando:** hay trabajo de frontend involucrado.
 
 ## Template
 
@@ -11,7 +11,7 @@ Inspired by: rcherny Front-End Architecture Checklist + component-driven design.
 
 ## Patrones de integración usados
 
-<!-- Mark which apply. Include only those sections below. -->
+<!-- Marcar cuáles aplican. Incluir solo esas secciones abajo. -->
 - [ ] REST / HTTP (fetch, axios, Tauri invoke)
 - [ ] WebSockets / SSE (tiempo real)
 - [ ] Eventos recibidos del backend (event bus, broadcast)
@@ -32,22 +32,22 @@ graph TD
 
 ## Contratos de tipos
 
-<!-- TypeScript interfaces. Must match backend contracts exactly — same field names, same types. -->
+<!-- Interfaces TypeScript. Deben coincidir con contratos backend exactamente — mismos nombres de campo, mismos tipos. -->
 
 ```typescript
-// Derived from backend REST/command contracts
+// Derivado de contratos REST/command del backend
 interface <ResponseDTO> {
   id: string;
   // ...
 }
 
-// Component props
+// Props del componente
 interface <ComponentName>Props {
   data: <ResponseDTO>;
   onAction: (id: string) => void;
 }
 
-// Store / state shape
+// Forma del store / estado
 interface <Feature>State {
   items: <ResponseDTO>[];
   loading: boolean;
@@ -57,12 +57,12 @@ interface <Feature>State {
 
 ## Capa de integración
 
-<!-- How frontend consumes each backend pattern -->
+<!-- Cómo el frontend consume cada patrón del backend -->
 
 ### REST / Tauri invoke
 - **Cliente:** fetch / axios / invoke — cuál y por qué
 - **Manejo de errores:** qué hace el UI ante 4xx / 5xx / timeout
-- **Cache / revalidation:** strategy (stale-while-revalidate, no-cache, etc.)
+- **Cache / revalidation:** estrategia (stale-while-revalidate, no-cache, etc.)
 
 ### WebSockets / SSE — incluir si aplica
 - **Endpoint / topic:** ...
@@ -83,8 +83,8 @@ interface <Feature>State {
 stateDiagram-v2
   [*] --> Idle
   Idle --> Loading : fetch()
-  Loading --> Success : data received
-  Loading --> Error : request failed
+  Loading --> Success : datos recibidos
+  Loading --> Error : request falló
   Error --> Loading : retry
   Success --> [*]
 ```
@@ -102,12 +102,12 @@ sequenceDiagram
 ```
 ```
 
-## Rules
+## Reglas
 
-- TypeScript interfaces MUST match backend contracts — same field names, same types, same optional/required
-- Include ONLY sections that apply — omit empty sections entirely
-- WebSocket/SSE section is mandatory if backend emits real-time events — do not describe as "polling" if it's push
-- State machine diagram required for any entity with more than 2 UI states (loading/error/success/empty/stale)
-- Props contracts define the component's public API — what it receives and emits
-- Route table includes guards (auth, permissions) and lazy loading strategy
-- If backend view exists, frontend interfaces are DERIVED from those contracts — not independently defined
+- Las interfaces TypeScript DEBEN coincidir con contratos backend — mismos nombres de campo, mismos tipos, mismo optional/required
+- Incluir SOLO secciones que apliquen — omitir secciones vacías completamente
+- La sección WebSocket/SSE es obligatoria si el backend emite eventos en tiempo real — no describir como "polling" si es push
+- Diagrama de máquina de estados requerido para entidades con más de 2 estados de UI (loading/error/success/empty/stale)
+- Los contratos de props definen la API pública del componente — qué recibe y emite
+- La tabla de rutas incluye guards (auth, permisos) y estrategia de lazy loading
+- Si existe vista backend, las interfaces frontend se DERIVAN de esos contratos — no se definen independientemente

@@ -1,36 +1,36 @@
-# Flutter State Management Guide
+# Guía de Gestión de Estado Flutter
 
-## Decision Matrix
+## Matriz de Decisión
 
-| Solution | Best For | Trade-off |
+| Solución | Mejor para | Trade-off |
 |----------|----------|-----------|
-| **BLoC** | Enterprise, regulated industries, strict audit trails | More boilerplate, steeper curve |
-| **Riverpod 3.0** | Most projects, fast iteration, compile-time safety | Less opinionated structure |
-| **Provider** | Simple apps, small teams | Limited scalability |
-| **GetX** | Rapid prototyping only | Poor testability, avoid in production |
+| **BLoC** | Enterprise, industrias reguladas, auditorías estrictas | Más boilerplate, curva más pronunciada |
+| **Riverpod 3.0** | La mayoría de proyectos, iteración rápida, seguridad en tiempo de compilación | Estructura menos opinada |
+| **Provider** | Apps simples, equipos pequeños | Escalabilidad limitada |
+| **GetX** | Solo prototipado rápido | Poca testabilidad, evitar en producción |
 
-### Escalation Path
+### Ruta de Escalado
 
 ```
 setState (local) → Provider (simple shared) → Riverpod (most cases) → BLoC (enterprise/regulated)
 ```
 
-### When to Use What
+### Cuándo Usar Qué
 
-| Scope | Simple | Medium | Complex |
+| Alcance | Simple | Medio | Complejo |
 |---|---|---|---|
-| Single Widget | `setState` | `setState` | Cubit |
-| Feature (few widgets) | `ValueNotifier` | Cubit | BLoC |
+| Widget único | `setState` | `setState` | Cubit |
+| Feature (pocos widgets) | `ValueNotifier` | Cubit | BLoC |
 | Cross-feature | Provider | Riverpod | BLoC |
-| Global (app-wide) | Riverpod | Riverpod | BLoC |
+| Global (toda la app) | Riverpod | Riverpod | BLoC |
 
 ---
 
-## BLoC Pattern (Nubank — 90M+ users)
+## Patrón BLoC (Nubank — 90M+ usuarios)
 
-Event-driven architecture with strict separation. Chosen by Nubank for predictability, testability, and audit trails in financial applications.
+Arquitectura orientada a eventos con separación estricta. Elegido por Nubank por su predictibilidad, testabilidad y trazas de auditoría en aplicaciones financieras.
 
-### Events
+### Eventos
 
 ```dart
 sealed class AuthEvent {}
@@ -46,7 +46,7 @@ class LogoutRequested extends AuthEvent {}
 class TokenRefreshRequested extends AuthEvent {}
 ```
 
-### States
+### Estados
 
 ```dart
 sealed class AuthState {}
@@ -106,9 +106,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 }
 ```
 
-### Cubit (Simplified BLoC)
+### Cubit (BLoC Simplificado)
 
-For simple state transitions without events:
+Para transiciones de estado simples sin eventos:
 
 ```dart
 class CounterCubit extends Cubit<int> {
@@ -120,7 +120,7 @@ class CounterCubit extends Cubit<int> {
 }
 ```
 
-### Widget Integration
+### Integración con Widgets
 
 ```dart
 // provide
@@ -157,21 +157,21 @@ BlocListener<AuthBloc, AuthState>(
 )
 ```
 
-### BLoC Rules
+### Reglas de BLoC
 
-- Events are sealed classes — one class per user action
-- States are sealed classes — exhaustive switching in UI
-- BLoC handles ONLY business logic — no UI code, no navigation
-- Use `BlocListener` for side effects (navigation, toasts), `BlocBuilder` for UI
-- One BLoC per feature. Share data via repositories, not BLoC-to-BLoC
+- Los eventos son clases sealed — una clase por acción del usuario
+- Los estados son clases sealed — switching exhaustivo en la UI
+- El BLoC maneja SOLO lógica de negocio — sin código UI, sin navegación
+- Usar `BlocListener` para efectos secundarios (navegación, toasts), `BlocBuilder` para UI
+- Un BLoC por feature. Compartir datos vía repositorios, no de BLoC a BLoC
 
 ---
 
-## Riverpod Pattern
+## Patrón Riverpod
 
-Compile-time safe, no BuildContext dependency, auto-disposal.
+Seguro en tiempo de compilación, sin dependencia de BuildContext, auto-disposal.
 
-### Basic Provider
+### Provider Básico
 
 ```dart
 @riverpod
@@ -198,7 +198,7 @@ class ProductList extends ConsumerWidget {
 }
 ```
 
-### Notifier (Stateful)
+### Notifier (Con Estado)
 
 ```dart
 @riverpod
@@ -218,7 +218,7 @@ class CartNotifier extends _$CartNotifier {
 }
 ```
 
-### Family (Parameterized)
+### Family (Parametrizado)
 
 ```dart
 @riverpod
@@ -231,17 +231,17 @@ Future<Product> product(Ref ref, String id) async {
 final product = ref.watch(productProvider(productId));
 ```
 
-### Riverpod Rules
+### Reglas de Riverpod
 
-- Use `ref.watch` in `build()` for reactive updates
-- Use `ref.read` in callbacks/event handlers (non-reactive)
-- Use `ref.listen` for side effects
-- `autoDispose` is the default — providers clean up when no longer watched
-- Prefer `@riverpod` annotation over manual provider creation
+- Usar `ref.watch` en `build()` para actualizaciones reactivas
+- Usar `ref.read` en callbacks/event handlers (no reactivo)
+- Usar `ref.listen` para efectos secundarios
+- `autoDispose` es el valor por defecto — los providers se limpian cuando dejan de observarse
+- Preferir la anotación `@riverpod` sobre la creación manual de providers
 
 ---
 
-## Provider (Simple Cases Only)
+## Provider (Solo Casos Simples)
 
 ```dart
 class ThemeNotifier extends ChangeNotifier {
@@ -266,18 +266,18 @@ Consumer<ThemeNotifier>(
 )
 ```
 
-### When Provider is Enough
+### Cuándo Provider es Suficiente
 
-- Theme switching
-- Locale selection
-- Simple feature flags
-- Any single-value global state that changes infrequently
+- Cambio de tema
+- Selección de idioma
+- Feature flags simples
+- Cualquier estado global de valor único que cambia con poca frecuencia
 
 ---
 
-## Local State
+## Estado Local
 
-### `setState` (Single Widget Only)
+### `setState` (Solo un Widget)
 
 ```dart
 class _CounterState extends State<Counter> {
@@ -293,7 +293,7 @@ class _CounterState extends State<Counter> {
 }
 ```
 
-### `ValueNotifier` (Lightweight Shared)
+### `ValueNotifier` (Compartido Ligero)
 
 ```dart
 class CartBadge extends StatelessWidget {
@@ -313,8 +313,8 @@ class CartBadge extends StatelessWidget {
 }
 ```
 
-### Rules
+### Reglas
 
-- `setState` only for state that no other widget needs
-- If 2+ widgets need the same state → upgrade to Cubit, Riverpod, or Provider
-- Never pass `setState` callbacks up the tree — that's prop drilling
+- `setState` solo para estado que ningún otro widget necesita
+- Si 2+ widgets necesitan el mismo estado → actualizar a Cubit, Riverpod o Provider
+- Nunca pasar callbacks `setState` hacia arriba en el árbol — eso es prop drilling

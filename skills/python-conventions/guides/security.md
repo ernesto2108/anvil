@@ -1,6 +1,6 @@
-# Security Guide
+# Guía de Seguridad
 
-## Input Validation (Pydantic)
+## Validación de Input (Pydantic)
 
 ```python
 from pydantic import BaseModel, Field, field_validator, ConfigDict
@@ -17,7 +17,7 @@ class SearchRequest(BaseModel):
         return v.strip()
 ```
 
-## SQL Injection Prevention
+## Prevención de Inyección SQL
 
 ```python
 # WRONG — f-string in SQL
@@ -28,7 +28,7 @@ sql = "SELECT * FROM items WHERE name = $1"
 await pool.fetch(sql, query)
 ```
 
-## Secrets Management
+## Gestión de Secretos
 
 ```python
 from pydantic_settings import BaseSettings
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 settings = Settings()  # fails fast if missing
 ```
 
-## Command Injection
+## Inyección de Comandos
 
 ```python
 # WRONG
@@ -56,7 +56,7 @@ import subprocess
 subprocess.run(["convert", filename], check=True)  # list args, no shell
 ```
 
-## Pickle / Deserialization
+## Pickle / Deserialización
 
 ```python
 # WRONG — pickle loads arbitrary code
@@ -68,7 +68,7 @@ data = json.loads(untrusted_bytes)
 model = MyModel.model_validate_json(untrusted_bytes)
 ```
 
-## Dependency Scanning
+## Análisis de Dependencias
 
 ```bash
 # In CI pipeline

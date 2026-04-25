@@ -1,4 +1,4 @@
-# Testing HTTP Handlers (Gin)
+# Testing de HTTP Handlers (Gin)
 
 ```go
 func Test_Handler_CreateUser(t *testing.T) {
@@ -57,7 +57,7 @@ func Test_Handler_CreateUser(t *testing.T) {
 }
 ```
 
-For query parameters:
+Para query parameters:
 
 ```go
 r, _ := http.NewRequest(http.MethodGet, "/users", nil)
@@ -67,4 +67,4 @@ q.Set("page", "1")
 r.URL.RawQuery = q.Encode()
 ```
 
-> For stdlib `http.Handler` (no Gin), call the handler directly: `h.CreateUser(w, r)`
+> Para `http.Handler` de stdlib (sin Gin), llamar el handler directamente: `h.CreateUser(w, r)`

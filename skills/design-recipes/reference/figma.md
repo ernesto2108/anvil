@@ -1,28 +1,28 @@
-# Figma Implementation — Design Recipes
+# Figma — Implementación de Design Recipes
 
-Tool-specific syntax for building recipe patterns in Figma via MCP.
+Sintaxis específica de herramienta para construir patrones de recetas en Figma via MCP.
 
-> This file will be populated when Figma MCP recipes are tested in practice.
-> The abstract patterns from SKILL.md apply — adapt to Figma's `use_figma` Plugin API.
+> Este archivo se llenará cuando las recetas de Figma MCP sean probadas en la práctica.
+> Los patrones abstractos de SKILL.md aplican — adáptalos a la Plugin API `use_figma` de Figma.
 
-## General Approach
+## Enfoque General
 
-1. Use `search_design_system` to find existing components and variables
-2. Use `use_figma` (always load `/figma-use` skill first) for write operations
-3. Build with Auto Layout equivalents of the flex patterns
-4. Use component instances with property overrides
+1. Usa `search_design_system` para encontrar componentes y variables existentes
+2. Usa `use_figma` (siempre carga el skill `/figma-use` primero) para operaciones de escritura
+3. Construye con equivalentes de Auto Layout de los patrones flex
+4. Usa instancias de componentes con overrides de propiedades
 
-## Key Differences from Pencil
+## Diferencias Clave con Pencil
 
-| Concept | Pencil | Figma |
+| Concepto | Pencil | Figma |
 |---------|--------|-------|
 | Variables | `set_variables` | Variables via Plugin API |
-| Components | `reusable: true` | Component sets |
-| Instances | `type: "ref"` | Instance insertion |
+| Componentes | `reusable: true` | Component sets |
+| Instancias | `type: "ref"` | Instance insertion |
 | Overrides | `descendants` | Property overrides |
-| Themes | `theme: {"mode": "dark"}` | Variable modes |
-| Batch ops | `batch_design` (25 max) | `use_figma` JS execution |
+| Temas | `theme: {"mode": "dark"}` | Variable modes |
+| Operaciones batch | `batch_design` (máx 25) | `use_figma` JS execution |
 
-## Recipes
+## Recetas
 
-Recipes follow the same abstract structure from SKILL.md. Figma-specific implementations will be documented as they are tested and validated.
+Las recetas siguen la misma estructura abstracta de SKILL.md. Las implementaciones específicas de Figma se documentarán a medida que sean probadas y validadas.

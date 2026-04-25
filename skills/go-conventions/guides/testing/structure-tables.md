@@ -1,10 +1,10 @@
-# Test File Structure & Table-Driven Tests
+# Estructura de Archivos de Test y Tests con Tabla
 
-## Test File Structure
+## Estructura de Archivos de Test
 
-Two common styles depending on project conventions:
+Dos estilos comunes dependiendo de las convenciones del proyecto:
 
-### stdlib-only (no external test dependencies)
+### solo stdlib (sin dependencias externas de test)
 
 ```go
 package user_test  // use external test package for black-box testing
@@ -32,7 +32,7 @@ func Test_User_Activate(t *testing.T) { ... }
 func Test_User_ChangeEmail(t *testing.T) { ... }
 ```
 
-### testify (projects that use stretchr/testify)
+### testify (proyectos que usan stretchr/testify)
 
 ```go
 package user_test
@@ -58,16 +58,16 @@ func Test_New(t *testing.T) { ... }
 func Test_User_Activate(t *testing.T) { ... }
 ```
 
-- Use `_test` package suffix for black-box tests (tests the public API)
-- Use same package for white-box tests only when testing unexported logic
-- Name tests: `Test_FunctionName` or `Test_Type_Method` (underscore after Test)
-- Choose one assertion style per project and be consistent
+- Usar sufijo `_test` en el paquete para tests de caja negra (testean la API pública)
+- Usar el mismo paquete para tests de caja blanca solo cuando se testea lógica no exportada
+- Nombrar tests: `Test_FunctionName` o `Test_Type_Method` (guion bajo después de Test)
+- Elegir un estilo de assertion por proyecto y ser consistente
 
 ---
 
-## Table-Driven Tests
+## Tests con Tabla (Table-Driven Tests)
 
-The default pattern for any function with multiple input scenarios:
+El patrón por defecto para cualquier función con múltiples escenarios de entrada:
 
 ```go
 func Test_ParseAmount(t *testing.T) {
@@ -121,9 +121,9 @@ func Test_ParseAmount(t *testing.T) {
 }
 ```
 
-Rules:
-- Every test case has a descriptive `name`
-- stdlib: use `t.Fatalf` for fatal checks (stop on failure), `t.Errorf` for non-fatal
-- testify: use `require` for fatal checks, `assert` for non-fatal
-- Error cases check the error message/type, not just `err != nil`
-- Keep test data inline when simple, use `testdata/` for complex fixtures
+Reglas:
+- Cada caso de test tiene un `name` descriptivo
+- stdlib: usar `t.Fatalf` para verificaciones fatales (detiene en fallo), `t.Errorf` para no-fatales
+- testify: usar `require` para verificaciones fatales, `assert` para no-fatales
+- Los casos de error verifican el mensaje/tipo del error, no solo `err != nil`
+- Mantener los datos de test inline cuando son simples, usar `testdata/` para fixtures complejos

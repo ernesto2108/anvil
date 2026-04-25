@@ -1,93 +1,93 @@
 ---
 name: service-map
-description: Cross-service dependency awareness for microservices. Use when modifying endpoints, DB schemas, shared contracts, or any code that other services consume. Triggers on "service map", "who uses this endpoint", "impact analysis", "cross-service", "dependency check", "what services depend on", "before refactoring endpoint", or when working in a project that has a service-map.yaml file.
+description: Conciencia de dependencias entre servicios para microservicios. Úsalo al modificar endpoints, esquemas de BD, contratos compartidos, o cualquier código que otros servicios consumen. Se activa con "service map", "quién usa este endpoint", "análisis de impacto", "cross-service", "verificación de dependencias", "qué servicios dependen de", "antes de refactorizar endpoint", o cuando se trabaja en un proyecto con archivo service-map.yaml.
 ---
 
-# Service Map — Cross-Service Dependency Awareness
+# Service Map — Conciencia de Dependencias entre Servicios
 
-## Purpose
+## Propósito
 
-Prevent breaking changes across microservices by checking dependencies **before** modifying endpoints, DB schemas, shared contracts, or inter-service communication.
+Prevenir cambios que rompan la compatibilidad entre microservicios verificando las dependencias **antes** de modificar endpoints, esquemas de BD, contratos compartidos o comunicación entre servicios.
 
-## Service Map Location
+## Ubicación del Service Map
 
 ```
 <vault>/04-architecture/service-map.yaml
 ```
 
-If no service map exists, prompt the user to create one using the template in `service-map-template.yaml`.
+Si no existe un service map, solicitar al usuario que cree uno usando la plantilla en `service-map-template.yaml`.
 
-## Pre-Change Flow
+## Flujo Pre-Cambio
 
-**Step 1 — Identify what's changing**
-- HTTP endpoint (route, request/response schema, status codes)
-- DB table/column (schema change, migration)
-- Event/message (payload structure, topic)
-- Shared library/package
-- Environment variable or config
+**Paso 1 — Identificar qué está cambiando**
+- Endpoint HTTP (ruta, esquema de solicitud/respuesta, códigos de estado)
+- Tabla/columna de BD (cambio de esquema, migración)
+- Evento/mensaje (estructura del payload, topic)
+- Librería/paquete compartido
+- Variable de entorno o configuración
 
-**Step 2 — Consult the service map**
-- Look up the resource in service-map.yaml
-- Identify all consumers and the owner
-- Resolve local paths: `projects_root` + service's `local_path`
+**Paso 2 — Consultar el service map**
+- Buscar el recurso en service-map.yaml
+- Identificar todos los consumidores y el propietario
+- Resolver rutas locales: `projects_root` + `local_path` del servicio
 
-**Step 3 — Report impact**
+**Paso 3 — Reportar el impacto**
 ```
-## Impact Analysis
-**Changing:** [what]
-**Owner:** [service]
-**Consumers:** [list]
+## Análisis de Impacto
+**Cambiando:** [qué]
+**Propietario:** [servicio]
+**Consumidores:** [lista]
 
-### Breaking changes:
-- [what could break and where]
+### Cambios que rompen compatibilidad:
+- [qué podría romperse y dónde]
 
-### Safe changes:
-- [additive/non-breaking]
+### Cambios seguros:
+- [aditivos/sin ruptura de compatibilidad]
 
-### Recommended approach:
-- [steps to change safely]
+### Enfoque recomendado:
+- [pasos para cambiar de forma segura]
 ```
 
-**Step 4 — Inspect affected services**
-- Use resolved paths to locate consumer repos on disk
-- Read consumer code to find WHERE the dependency exists
-- Report exact file and line
-- If repo not found on disk, warn the user
+**Paso 4 — Inspeccionar servicios afectados**
+- Usar rutas resueltas para localizar los repositorios consumidores en disco
+- Leer el código del consumidor para encontrar DÓNDE existe la dependencia
+- Reportar el archivo exacto y la línea
+- Si el repositorio no se encuentra en disco, advertir al usuario
 
-**Step 5 — If uncertain, ASK**
-- Never assume a change is safe — verify or ask
+**Paso 5 — Si hay incertidumbre, PREGUNTAR**
+- Nunca asumir que un cambio es seguro — verificar o preguntar
 
-## Change Safety Rules
+## Reglas de Seguridad de Cambios
 
-**Always safe:** new optional response field, new endpoint, new event topic, new DB column with default
+**Siempre seguros:** nuevo campo de respuesta opcional, nuevo endpoint, nuevo topic de evento, nueva columna en BD con valor por defecto
 
-**Potentially breaking (requires consumer check):** removing/renaming response field, changing field type, changing URL/method, stricter validation, changing DB column type, changing event payload
+**Potencialmente disruptivos (requieren verificación con el consumidor):** eliminar/renombrar campo de respuesta, cambiar tipo de campo, cambiar URL/método, validación más estricta, cambiar tipo de columna en BD, cambiar payload del evento
 
-**Always breaking (coordinated deploy):** removing endpoint, changing auth, renaming shared DB table, changing event topic name
+**Siempre disruptivos (deploy coordinado):** eliminar endpoint, cambiar autenticación, renombrar tabla compartida en BD, cambiar nombre del topic del evento
 
-## Recommended Patterns
+## Patrones Recomendados
 
-**Endpoint versioning:** keep v1 unchanged, add v2
+**Versionado de endpoints:** mantener v1 sin cambios, agregar v2
 
-**Expand-and-contract for DB:** add new column → migrate consumers → backfill → remove old
+**Expand-and-contract para BD:** agregar nueva columna → migrar consumidores → backfill → eliminar la anterior
 
-**Deprecation flow:** mark in service-map.yaml with `status: deprecated`, `deprecated_since`, `replacement`, `consumed_by`
+**Flujo de deprecación:** marcar en service-map.yaml con `status: deprecated`, `deprecated_since`, `replacement`, `consumed_by`
 
-## Cross-Stack Awareness
+## Conciencia Cross-Stack
 
-| Stack | What to check |
+| Stack | Qué verificar |
 |-------|--------------|
-| Backend (Go) | HTTP endpoints, gRPC protos, DB schemas, event producers |
-| Frontend (React) | API calls, shared types, environment configs |
-| Mobile (Flutter) | API calls, push notification contracts, deep link schemas |
-| Infrastructure | Environment variables, secrets, DNS, load balancer routes |
+| Backend (Go) | Endpoints HTTP, protos gRPC, esquemas de BD, productores de eventos |
+| Frontend (React) | Llamadas a API, tipos compartidos, configuraciones de entorno |
+| Mobile (Flutter) | Llamadas a API, contratos de notificaciones push, esquemas de deep link |
+| Infraestructura | Variables de entorno, secretos, DNS, rutas del balanceador de carga |
 
-## When to Trigger
+## Cuándo Activar
 
-- User modifies endpoints, APIs, DB schemas, protos, shared types
-- Always ask: "Does any other service consume what I'm about to change?"
-- If yes → consult service map. If no map → ask the user.
+- El usuario modifica endpoints, APIs, esquemas de BD, protos, tipos compartidos
+- Siempre preguntar: "¿Algún otro servicio consume lo que estoy por cambiar?"
+- Si sí → consultar el service map. Si no hay mapa → preguntar al usuario.
 
-## Schema Reference
+## Referencia del Esquema
 
-See `service-map-template.yaml` for full schema. Key sections: `services`, `shared_databases`, `events`, `shared_contracts`.
+Ver `service-map-template.yaml` para el esquema completo. Secciones clave: `services`, `shared_databases`, `events`, `shared_contracts`.

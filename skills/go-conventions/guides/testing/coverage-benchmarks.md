@@ -1,26 +1,26 @@
-# Coverage Guidelines & Benchmark Tests
+# Guía de Cobertura y Tests de Benchmark
 
-## Coverage Guidelines
+## Guía de Cobertura
 
-**What to cover:**
-- Business logic and domain rules
-- Error paths and edge cases
-- Input validation
-- State transitions
+**Qué cubrir:**
+- Lógica de negocio y reglas de dominio
+- Caminos de error y casos borde
+- Validación de entrada
+- Transiciones de estado
 
-**What NOT to obsess over:**
-- Simple getters/setters
-- Wire-up / DI code
-- Generated code
-- Third-party library wrappers (test via integration)
+**Qué NO obsesionarse:**
+- Getters/setters simples
+- Código de wire-up / DI
+- Código generado
+- Wrappers de librerías de terceros (testear vía integración)
 
-Target: 80%+ on business logic packages. Don't chase 100% — diminishing returns.
+Meta: 80%+ en paquetes de lógica de negocio. No perseguir el 100% — los retornos son decrecientes.
 
-Check coverage: `go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out`
+Verificar cobertura: `go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out`
 
 ---
 
-## Benchmark Tests
+## Tests de Benchmark
 
 ```go
 func BenchmarkParseAmount(b *testing.B) {
@@ -29,7 +29,7 @@ func BenchmarkParseAmount(b *testing.B) {
     }
 }
 
-// With sub-benchmarks
+// Con sub-benchmarks
 func BenchmarkHash(b *testing.B) {
     sizes := []int{64, 256, 1024, 4096}
     for _, size := range sizes {
@@ -43,4 +43,4 @@ func BenchmarkHash(b *testing.B) {
 }
 ```
 
-Run: `go test -bench=. -benchmem ./...`
+Ejecutar: `go test -bench=. -benchmem ./...`

@@ -1,35 +1,35 @@
 ---
 name: backlog-management
-description: Task creation, backlog management, and sprint board format. Defines how to break PRDs into tickets, assign agents, and track progress. Used by the PM agent after writing a PRD.
+description: Creación de tareas, gestión del backlog y formato del tablero de sprint. Define cómo descomponer PRDs en tickets, asignar agentes y hacer seguimiento del progreso. Usado por el agente PM después de escribir un PRD.
 ---
 
-# Backlog Management
+# Gestión del Backlog
 
-## When to use
+## Cuándo usar
 
-After a PRD is written, the PM MUST break it into tasks before any agent starts working. No PRD without tasks. No tasks without a PRD reference.
+Después de escribir un PRD, el PM DEBE descomponerlo en tareas antes de que cualquier agente comience a trabajar. Sin PRD no hay tareas. Sin tareas no hay referencia a un PRD.
 
-## Work hierarchy
+## Jerarquía de trabajo
 
 ```
-PROJECT (the repo/product — e.g., Anvil, Dashboard)
-  └── MILESTONE (deliverable milestone — e.g., MVP, v1.0, v2.0)
-       └── US (User Stories / Features — each PRD is a US)
-            └── TASKS (technical tasks — backend, frontend, DB, tests)
-                 └── SUB TASKS (steps within a task — tracked in handoff, not backlog)
+PROJECT (el repo/producto — ej. Anvil, Dashboard)
+  └── MILESTONE (milestone de entrega — ej. MVP, v1.0, v2.0)
+       └── US (User Stories / Features — cada PRD es una US)
+            └── TASKS (tareas técnicas — backend, frontend, DB, tests)
+                 └── SUB TASKS (pasos dentro de una tarea — rastreados en handoff, no en backlog)
 ```
 
-- **PROJECT** — implicit from the repo. Not tracked in backlog
-- **MILESTONE** — groups of related features with a shared delivery goal. Tracked as a field in PRD Scope and task frontmatter
-- **US** — each PRD represents a User Story or Feature. The PRD is the US
-- **TASKS** — the decomposition of a US into technical work items. These are the rows in sprint-current.md
-- **SUB TASKS** — implementation steps within a task. Tracked in `.handoff/` files, not in the backlog
+- **PROJECT** — implícito desde el repo. No se rastrea en el backlog
+- **MILESTONE** — grupos de features relacionadas con un objetivo de entrega compartido. Rastreado como campo en el PRD Scope y en el frontmatter de la tarea
+- **US** — cada PRD representa una User Story o Feature. El PRD es la US
+- **TASKS** — la descomposición de una US en ítems de trabajo técnico. Estas son las filas en sprint-current.md
+- **SUB TASKS** — pasos de implementación dentro de una tarea. Rastreados en archivos `.handoff/`, no en el backlog
 
-### Milestone management
+### Gestión de milestones
 
-Milestones are defined in the PRD's `## Scope` section (`Milestone` field) and propagated to every task.
+Los milestones se definen en la sección `## Scope` del PRD (campo `Milestone`) y se propagan a cada tarea.
 
-**In sprint-current.md:** group tasks by milestone using section headers:
+**En sprint-current.md:** agrupar tareas por milestone usando encabezados de sección:
 ```
 | | **── 🎯 MVP ──** | | | | | |
 | PROJ-FEAT-001 | Create auth flow | P0 | feat | developer | 5 | my-service |
@@ -38,41 +38,41 @@ Milestones are defined in the PRD's `## Scope` section (`Milestone` field) and p
 | PROJ-FEAT-010 | Add analytics | P1 | feat | developer | 3 | my-service |
 ```
 
-**In task frontmatter:** include `milestone: <name>` so Dataview can group/filter by milestone.
+**En el frontmatter de la tarea:** incluir `milestone: <name>` para que Dataview pueda agrupar/filtrar por milestone.
 
-**Dashboard query:** `dashboard.md` can use `GROUP BY milestone` to show progress per milestone.
+**Query del dashboard:** `dashboard.md` puede usar `GROUP BY milestone` para mostrar el progreso por milestone.
 
-## Task ID format
+## Formato del ID de tarea
 
 `<PROJECT>-<AREA>-<NNN>`
 
-Areas: FEAT, SEC, BUG, TECH, INFRA, DOC, TEST
+Áreas: FEAT, SEC, BUG, TECH, INFRA, DOC, TEST
 
-Check existing IDs in `<docs>/02-backlog/sprint-current.md` before assigning new ones.
+Verificar los IDs existentes en `<docs>/02-backlog/sprint-current.md` antes de asignar nuevos.
 
-## Breaking a PRD into tasks
+## Descomponer un PRD en tareas
 
-Read the PRD's functional requirements and acceptance criteria. Create one task per:
+Leer los requisitos funcionales y criterios de aceptación del PRD. Crear una tarea por:
 
-1. **Each P0 requirement** → at least one task
-2. **Each component that needs separate work** (backend, frontend, DB, infra)
-3. **Tests** → separate task per component (developer writes code, tester writes tests)
-4. **Migrations** → separate task if DB changes needed
-5. **Documentation** → separate task if user-facing docs needed
+1. **Cada requisito P0** → al menos una tarea
+2. **Cada componente que requiere trabajo separado** (backend, frontend, DB, infra)
+3. **Tests** → tarea separada por componente (el desarrollador escribe el código, el tester escribe los tests)
+4. **Migraciones** → tarea separada si se necesitan cambios en DB
+5. **Documentación** → tarea separada si se necesitan docs orientadas al usuario
 
-### Decomposition rules
+### Reglas de descomposición
 
-- One concern per task — if a task touches backend AND frontend, split it
-- Tasks should be completable in 1-8 points (if > 8, break down further)
-- Every task must reference its PRD: `PRD: <TASK-ID>`
-- Every task must have an assigned agent type
-- Tests are ALWAYS a separate task from implementation
+- Una preocupación por tarea — si una tarea toca backend Y frontend, separarla
+- Las tareas deben ser completables en 1-8 puntos (si > 8, descomponer más)
+- Cada tarea debe referenciar su PRD: `PRD: <TASK-ID>`
+- Cada tarea debe tener un tipo de agente asignado
+- Los tests son SIEMPRE una tarea separada de la implementación
 
-### Example decomposition
+### Ejemplo de descomposición
 
 PRD: `PROJ-FEAT-042` — Add password reset flow
 
-| Task ID | Title | Agent | Points | Depends on |
+| Task ID | Título | Agente | Puntos | Depende de |
 |---|---|---|---|---|
 | PROJ-FEAT-042-01 | Create password reset endpoint | developer | 5 | — |
 | PROJ-FEAT-042-02 | Add email sending service | developer | 3 | — |
@@ -83,83 +83,83 @@ PRD: `PROJ-FEAT-042` — Add password reset flow
 | PROJ-FEAT-042-07 | Tests for reset UI | tester | 3 | 03 |
 | PROJ-FEAT-042-08 | Security review | security | 2 | 01, 02 |
 
-## Task format
+## Formato de tarea
 
-**CRITICAL:** Always read the existing `sprint-current.md` before adding tasks. Match the format that already exists — never impose a different format.
+**CRÍTICO:** Siempre leer el `sprint-current.md` existente antes de agregar tareas. Coincidir con el formato que ya existe — nunca imponer un formato diferente.
 
-The standard format uses **tables**, not markdown headers:
+El formato estándar usa **tablas**, no encabezados markdown:
 
-### Backlog table row
+### Fila de tabla en Backlog
 ```
 | TASK-ID | Task description | P | Type | Agent | Pts | Repo |
 ```
 
-### Section header row (for grouping related tasks)
+### Fila de encabezado de sección (para agrupar tareas relacionadas)
 ```
 | | **── Feature Name (PARENT-ID, date) ──** | | | | | |
 ```
 
-### In Progress table row
+### Fila de tabla In Progress
 ```
 | TASK-ID | Task | P | Agent | Start date | Branch |
 ```
 
-### Done table row
+### Fila de tabla Done
 ```
 | TASK-ID | Task | Type | Date | Notes |
 ```
 
-## Obsidian integration (MANDATORY)
+## Integración con Obsidian (OBLIGATORIO)
 
-The backlog lives in an Obsidian vault. Every task and sprint file must be compatible with Obsidian plugins: **Dataview** (queries) and **Kanban** (visual board).
+El backlog vive en un vault de Obsidian. Cada tarea y archivo de sprint debe ser compatible con los plugins de Obsidian: **Dataview** (queries) y **Kanban** (tablero visual).
 
-**All templates live in `vault-template/` in the Anvil repo root.** Read them directly — never hardcode templates inline in skills or agents.
+**Todos los templates viven en `vault-template/` en la raíz del repo Anvil.** Leerlos directamente — nunca hardcodear templates inline en skills o agentes.
 
-### Task file frontmatter (MANDATORY for every task.md)
+### Frontmatter de archivo de tarea (OBLIGATORIO para cada task.md)
 
-Every `<docs>/03-tasks/<TASK-ID>/task.md` MUST include Dataview frontmatter. Read `vault-template/03-tasks/task-template.md` for the exact format and fields.
+Cada `<docs>/03-tasks/<TASK-ID>/task.md` DEBE incluir frontmatter para Dataview. Leer `vault-template/03-tasks/task-template.md` para el formato y campos exactos.
 
-**Without this frontmatter, Dataview queries and the Kanban board will not work.** This is not optional.
+**Sin este frontmatter, las queries de Dataview y el tablero Kanban no funcionarán.** Esto no es opcional.
 
-### Sprint companion files (create alongside sprint-current.md)
+### Archivos companion del sprint (crear junto con sprint-current.md)
 
-When creating a new sprint, the PM MUST create 3 files based on the templates in `vault-template/02-backlog/`:
+Al crear un nuevo sprint, el PM DEBE crear 3 archivos basados en los templates en `vault-template/02-backlog/`:
 
-| File | Template source | Purpose |
+| Archivo | Fuente del template | Propósito |
 |---|---|---|
-| `<docs>/02-backlog/sprint-current.md` | `vault-template/02-backlog/sprint-current.md` | Sprint table with sections |
-| `<docs>/02-backlog/board.md` | `vault-template/02-backlog/board.md` | Kanban board (Obsidian plugin) |
-| `<docs>/02-backlog/dashboard.md` | `vault-template/02-backlog/dashboard.md` | Dataview dashboard queries |
+| `<docs>/02-backlog/sprint-current.md` | `vault-template/02-backlog/sprint-current.md` | Tabla del sprint con secciones |
+| `<docs>/02-backlog/board.md` | `vault-template/02-backlog/board.md` | Tablero Kanban (plugin Obsidian) |
+| `<docs>/02-backlog/dashboard.md` | `vault-template/02-backlog/dashboard.md` | Queries del dashboard Dataview |
 
-**All three files must exist together.** Never create one without the others.
+**Los tres archivos deben existir juntos.** Nunca crear uno sin los otros.
 
-Each task in board.md is a checkbox item with a wiki-link and relevant tags:
+Cada tarea en board.md es un ítem de checkbox con un wiki-link y etiquetas relevantes:
 ```
 - [ ] [[TASK-ID/task]] Titulo de la tarea #proyecto #tag
 ```
 
-### Updating companion files
+### Actualizar archivos companion
 
-- When tasks move between states → update both `sprint-current.md` AND `board.md` (move the checkbox to the correct column)
-- When tasks are added → add to `sprint-current.md` table AND `board.md` Backlog column
-- Update the task's frontmatter `status` field to match
-- The `dashboard.md` is self-updating via Dataview queries — no manual updates needed
+- Cuando las tareas cambian de estado → actualizar tanto `sprint-current.md` COMO `board.md` (mover el checkbox a la columna correcta)
+- Cuando se agregan tareas → agregar a la tabla de `sprint-current.md` Y a la columna Backlog de `board.md`
+- Actualizar el campo `status` del frontmatter de la tarea para que coincida
+- El `dashboard.md` se actualiza solo via queries Dataview — no se necesitan actualizaciones manuales
 
-### State transitions — the 3-places rule (CRITICAL)
+### Transiciones de estado — la regla de los 3 lugares (CRÍTICO)
 
-Every time a task changes state, you MUST update **exactly 3 files**. Forgetting any one of them causes drift: `sprint-current.md` and `board.md` are manual views, but `dashboard.md` is built on Dataview queries that read from task frontmatters — if you only update the first two, the dashboard shows stale data and the next orchestrator session thinks the task is still pending.
+Cada vez que una tarea cambia de estado, se DEBEN actualizar **exactamente 3 archivos**. Olvidar cualquiera de ellos causa deriva: `sprint-current.md` y `board.md` son vistas manuales, pero `dashboard.md` se basa en queries Dataview que leen los frontmatters de las tareas — si solo se actualizan los primeros dos, el dashboard muestra datos desactualizados y la próxima sesión del orquestador pensará que la tarea aún está pendiente.
 
-**Checklist for EVERY state transition:**
+**Lista de verificación para CADA transición de estado:**
 
-1. **`<docs>/02-backlog/sprint-current.md`** — move the row to the correct section (Backlog / TODO / In Progress / Blocked / In Review / Done). Done rows include: `| ID | Title | Type | YYYY-MM-DD | Notes |`.
+1. **`<docs>/02-backlog/sprint-current.md`** — mover la fila a la sección correcta (Backlog / TODO / In Progress / Blocked / In Review / Done). Las filas Done incluyen: `| ID | Title | Type | YYYY-MM-DD | Notes |`.
 
-2. **`<docs>/02-backlog/board.md`** — move the `- [ ]` / `- [x]` checkbox line to the correct Kanban column. When moving to Done, change `- [ ]` to `- [x]`.
+2. **`<docs>/02-backlog/board.md`** — mover la línea de checkbox `- [ ]` / `- [x]` a la columna Kanban correcta. Al mover a Done, cambiar `- [ ]` a `- [x]`.
 
-3. **`<docs>/03-tasks/<TASK-ID>/task.md`** frontmatter — update the `status` field. If moving to Done, ALSO add a `completed: YYYY-MM-DD` field. **This is the one that gets forgotten.**
+3. **Frontmatter de `<docs>/03-tasks/<TASK-ID>/task.md`** — actualizar el campo `status`. Si se mueve a Done, TAMBIÉN agregar el campo `completed: YYYY-MM-DD`. **Este es el que se olvida.**
 
-### State → frontmatter value mapping
+### Mapeo de estado → valor en frontmatter
 
-| Kanban column | Frontmatter `status` | Extra fields |
+| Columna Kanban | Frontmatter `status` | Campos extra |
 |---|---|---|
 | Backlog | `backlog` | — |
 | TODO | `todo` | — |
@@ -168,21 +168,21 @@ Every time a task changes state, you MUST update **exactly 3 files**. Forgetting
 | In Review | `in-review` | `pr: <URL>` |
 | Done | `done` | `completed: YYYY-MM-DD` |
 
-### Common mistake — Done with stale frontmatter
+### Error común — Done con frontmatter desactualizado
 
-**Symptom:** user says "I see task X still in the backlog" even though `sprint-current.md` and `board.md` show it in Done.
+**Síntoma:** el usuario dice "veo la tarea X todavía en el backlog" aunque `sprint-current.md` y `board.md` la muestren en Done.
 
-**Cause:** `03-tasks/<ID>/task.md` still has `status: backlog`. The Dataview query in `dashboard.md` reads frontmatters, not the Kanban columns, so it shows the task as pending.
+**Causa:** `03-tasks/<ID>/task.md` todavía tiene `status: backlog`. La query Dataview en `dashboard.md` lee los frontmatters, no las columnas Kanban, por lo que muestra la tarea como pendiente.
 
-**Fix:** grep for stale statuses before closing a sprint:
+**Corrección:** buscar statuses desactualizados antes de cerrar un sprint:
 ```bash
-# Any task file whose status does not match the sprint-current section it is in
+# Cualquier archivo de tarea cuyo status no coincida con la sección de sprint-current en la que está
 grep -r "status: backlog" <docs>/03-tasks/ | grep -v "$(awk '/## Backlog/,/## TODO/' <docs>/02-backlog/sprint-current.md)"
 ```
 
-**Prevention:** when moving to Done, do all 3 file edits in the same tool call batch. Never split across messages — that is where the third file gets forgotten.
+**Prevención:** al mover a Done, hacer las 3 ediciones de archivo en el mismo lote de llamadas a herramientas. Nunca dividirlas entre mensajes — ahí es donde se olvida el tercer archivo.
 
-## Sprint board format
+## Formato del tablero de sprint
 
 `<docs>/02-backlog/sprint-current.md`:
 
@@ -220,23 +220,23 @@ grep -r "status: backlog" <docs>/03-tasks/ | grep -v "$(awk '/## Backlog/,/## TO
 |----|-------|------|-------|-------|
 ```
 
-## Task lifecycle
+## Ciclo de vida de la tarea
 
 ```
-PM creates PRD
-  → PM breaks into tasks (this skill)
-  → Tasks go to Backlog column
-  → Orchestrator picks task, assigns to agent
-  → Agent starts → task moves to In Progress
-  → Agent finishes → task moves to Done with date
-  → All tasks done → PRD is complete
+PM crea PRD
+  → PM descompone en tareas (este skill)
+  → Tareas van a la columna Backlog
+  → Orquestador toma tarea, asigna a agente
+  → Agente comienza → tarea se mueve a In Progress
+  → Agente termina → tarea se mueve a Done con fecha
+  → Todas las tareas completadas → PRD está completo
 ```
 
-## Rules
+## Reglas
 
-- **No work without a ticket** — if an agent needs to do something, there must be a task for it
-- **No ticket without a PRD** — every task references its parent PRD (except bugs with repro steps)
-- **Dependencies must be explicit** — if task B needs task A done first, write "Depends on: A"
-- **Acceptance criteria from PRD** — each task's criteria come from the PRD's Given/When/Then scenarios
-- **Points are fibonacci** — 1, 2, 3, 5, 8, 13. If > 8, break it down
-- **Status updates are mandatory** — agents must update task status when starting and finishing
+- **Sin trabajo sin ticket** — si un agente necesita hacer algo, debe haber una tarea para ello
+- **Sin ticket sin PRD** — cada tarea referencia su PRD padre (excepto bugs con pasos de reproducción)
+- **Las dependencias deben ser explícitas** — si la tarea B necesita que la tarea A esté terminada primero, escribir "Depends on: A"
+- **Los criterios de aceptación vienen del PRD** — los criterios de cada tarea provienen de los escenarios Given/When/Then del PRD
+- **Los puntos son fibonacci** — 1, 2, 3, 5, 8, 13. Si > 8, descomponer
+- **Las actualizaciones de estado son obligatorias** — los agentes deben actualizar el estado de la tarea al comenzar y al terminar

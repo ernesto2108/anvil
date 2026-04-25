@@ -1,6 +1,6 @@
-# Database Examples
+# Ejemplos de Base de Datos
 
-## Good: HTTP Handler — Clean Separation (Gin)
+## Bien: Handler HTTP — Separación Limpia (Gin)
 
 ```go
 // DTO for transport layer
@@ -35,13 +35,13 @@ func (h *Handler) CreateUser(c *gin.Context) {
 }
 ```
 
-**Why:** Handler has no business logic. Gin's `ShouldBindJSON` handles decode + validation. DTOs prevent domain types from leaking into the API contract.
+**Por qué:** El handler no tiene lógica de negocio. El `ShouldBindJSON` de Gin maneja decode + validación. Los DTOs evitan que los tipos de dominio se filtren al contrato de la API.
 
 ---
 
-## Good: Repository Pattern — Query Separation + Persistence DTOs
+## Bien: Patrón Repository — Separación de Queries + DTOs de Persistencia
 
-### Query Function (in `queries/` package)
+### Función de Query (en el paquete `queries/`)
 
 ```go
 // queries/user.go — each query is a pure function returning (string, []any, error)
@@ -73,7 +73,7 @@ func SearchUsers(filters SearchFilters) (string, []any, error) {
 }
 ```
 
-### Persistence DTO + Mapper
+### DTO de Persistencia + Mapper
 
 ```go
 // dto/user.go — all fields are sql.Null* to absorb NULL values
@@ -104,7 +104,7 @@ func NewToBusiness(dtos []User) []entities.User {
 }
 ```
 
-### Repository Method (query → execute → scan → map)
+### Método de Repositorio (query → execute → scan → map)
 
 ```go
 type repository struct {
@@ -159,11 +159,11 @@ func (r *repository) Transfer(ctx context.Context, from, to string, amount int64
 }
 ```
 
-**Why:** `WithTimeout` on every call. Query separation keeps SQL out of repo logic. Persistence DTO absorbs NULL. Mapper returns clean domain type. `PostgresError` translates DB-specific errors to domain errors.
+**Por qué:** `WithTimeout` en cada llamada. La separación de queries mantiene SQL fuera de la lógica del repositorio. El DTO de persistencia absorbe NULL. El mapper retorna un tipo de dominio limpio. `PostgresError` traduce errores específicos de DB a errores de dominio.
 
 ---
 
-## Bad: SQL Inline in Repository
+## Mal: SQL Inline en el Repositorio
 
 ```go
 // BAD — SQL strings mixed with business logic, no persistence DTO, no error translation

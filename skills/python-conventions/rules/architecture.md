@@ -1,23 +1,23 @@
-# Architecture Rules
+# Reglas de Arquitectura
 
-## Project Structure
+## Estructura del Proyecto
 
-1. **src layout** — `src/my_package/` not flat `my_package/`. Prevents import confusion with tests
-2. **`pyproject.toml` as single source** — no setup.py, setup.cfg, requirements.txt. All config in one file
-3. **`py.typed` marker** — PEP 561, include in `src/my_package/` for typed packages
-4. **One module = one concern** — `models.py`, `services/embedding.py`, not `utils.py` catch-all
+1. **Layout src** — `src/my_package/` no `my_package/` plano. Previene confusión de imports con los tests
+2. **`pyproject.toml` como única fuente** — sin setup.py, setup.cfg, requirements.txt. Toda la configuración en un archivo
+3. **Marcador `py.typed`** — PEP 561, incluir en `src/my_package/` para paquetes tipados
+4. **Un módulo = una responsabilidad** — `models.py`, `services/embedding.py`, no `utils.py` como catch-all
 
-## Toolchain
+## Cadena de Herramientas
 
-5. **uv** for package management — replaces pip, virtualenv, pip-tools. Lockfile built-in, 10-100x faster
-6. **Ruff** for lint + format — replaces flake8 + isort + black + pyupgrade. Single tool, single config
-7. **mypy strict mode** — `strict = true` in pyproject.toml. Catches type errors at analysis time
+5. **uv** para gestión de paquetes — reemplaza pip, virtualenv, pip-tools. Lockfile incorporado, 10-100x más rápido
+6. **Ruff** para lint + formato — reemplaza flake8 + isort + black + pyupgrade. Herramienta única, configuración única
+7. **mypy en modo strict** — `strict = true` en pyproject.toml. Detecta errores de tipos en tiempo de análisis
 
 ## Imports
 
-8. **Absolute imports** — `from my_package.models import User` not `from .models import User` (except within sub-packages)
-9. **No `import *`** — ever. Pollutes namespace, breaks static analysis
-10. **TYPE_CHECKING guard** — heavy imports used only for annotations: numpy, pandas, torch
+8. **Imports absolutos** — `from my_package.models import User` no `from .models import User` (excepto dentro de sub-paquetes)
+9. **Sin `import *`** — nunca. Contamina el namespace, rompe el análisis estático
+10. **Guard `TYPE_CHECKING`** — imports pesados usados solo para anotaciones: numpy, pandas, torch
 
 ```python
 from __future__ import annotations
@@ -28,9 +28,9 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 ```
 
-## Dependency Injection
+## Inyección de Dependencias
 
-11. **Constructor injection** — pass dependencies explicitly, never import and call globals
+11. **Inyección por constructor** — pasar dependencias explícitamente, nunca importar y llamar globales
 
 ```python
 # WRONG
@@ -45,7 +45,7 @@ class UserRepo:
         self._pool = pool
 ```
 
-12. **Protocol for dependencies** — define what you need, not what exists
+12. **Protocol para dependencias** — definir qué necesitas, no qué existe
 
 ```python
 from typing import Protocol
@@ -54,12 +54,12 @@ class EmbeddingProvider(Protocol):
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 ```
 
-## Pydantic at Boundaries
+## Pydantic en las Fronteras
 
-13. **Pydantic v2 BaseModel** for all external data — API requests/responses, config, file parsing
-14. **`ConfigDict(strict=True, frozen=True)`** — immutable, strict type coercion
-15. **`field_validator` + `@classmethod`** — v2 style, not v1 `@validator`
-16. **`pydantic-settings`** for env vars — `BaseSettings` with `.env` support, fails fast on missing vars
+13. **Pydantic v2 BaseModel** para todos los datos externos — requests/responses de API, config, parseo de archivos
+14. **`ConfigDict(strict=True, frozen=True)`** — inmutable, coerción de tipos estricta
+15. **`field_validator` + `@classmethod`** — estilo v2, no `@validator` de v1
+16. **`pydantic-settings`** para variables de entorno — `BaseSettings` con soporte `.env`, falla rápido en vars faltantes
 
 ```python
 from pydantic import BaseModel, Field, ConfigDict, field_validator
@@ -71,7 +71,7 @@ class SearchRequest(BaseModel):
     top_k: int = Field(ge=1, le=100, default=10)
 ```
 
-## Ruff Configuration
+## Configuración de Ruff
 
 ```toml
 [tool.ruff]

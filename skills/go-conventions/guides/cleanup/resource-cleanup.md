@@ -1,6 +1,6 @@
-# Resource Cleanup Patterns
+# Patrones de Limpieza de Recursos
 
-## Database Rows — the #1 leak source
+## Rows de Base de Datos — la fuente #1 de fugas
 
 ```go
 // BAD — connection stays checked out forever
@@ -40,7 +40,7 @@ func processOne(ctx context.Context, db *sql.DB, id int) error {
 }
 ```
 
-## Transactions — defer Rollback as safety net
+## Transacciones — defer Rollback como red de seguridad
 
 ```go
 // BAD — early return without rollback leaks the connection
@@ -93,9 +93,9 @@ defer resp.Body.Close()
 defer io.Copy(io.Discard, resp.Body) // drain for connection reuse
 ```
 
-**Why drain?** If you don't fully read the body, the underlying TCP connection can't be reused by the connection pool. `io.Copy(io.Discard, resp.Body)` reads and discards the remaining bytes so the connection returns to the pool.
+**¿Por qué drenar?** Si no lees completamente el body, la conexión TCP subyacente no puede reutilizarse por el pool de conexiones. `io.Copy(io.Discard, resp.Body)` lee y descarta los bytes restantes para que la conexión vuelva al pool.
 
-## Context Cancel Functions
+## Funciones Cancel de Contexto
 
 ```go
 // BAD — context resources never freed

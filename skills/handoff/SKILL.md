@@ -1,175 +1,175 @@
 ---
 name: handoff
 disable-model-invocation: true
-description: Session continuity for Medium+ tasks. Creates, updates, reads, and archives handoff notes so developers can resume work across sessions without re-reading everything. Invoked by developer and orchestrator — not directly by the user.
+description: Continuidad de sesión para tareas Medium+. Crea, actualiza, lee y archiva notas de handoff para que los desarrolladores puedan retomar el trabajo entre sesiones sin tener que releer todo. Invocado por el desarrollador y el orquestador — no directamente por el usuario.
 ---
 
-# Handoff Notes
+# Notas de Handoff
 
-Handoff files live at `.handoff/` in the project root. They enable session continuity — if a developer runs out of tokens, the next session reads the handoff and picks up exactly where it left off.
+Los archivos de handoff viven en `.handoff/` en la raíz del proyecto. Habilitan la continuidad de sesión — si a un desarrollador se le acaban los tokens, la siguiente sesión lee el handoff y retoma exactamente donde se quedó.
 
-## When handoff applies
+## Cuándo aplica el handoff
 
-| Complexity | Handoff | Why |
+| Complejidad | Handoff | Por qué |
 |---|---|---|
-| **Small (1-5 pts)** | NO | Fits in one session, not worth the overhead |
-| **Medium (5-8 pts)** | YES | May span sessions, context loss is expensive |
-| **Large (8-13 pts)** | YES | Will almost certainly span sessions |
+| **Small (1-5 pts)** | NO | Cabe en una sesión, no vale el overhead |
+| **Medium (5-8 pts)** | SÍ | Puede abarcar sesiones, la pérdida de contexto es costosa |
+| **Large (8-13 pts)** | SÍ | Casi con certeza abarcará varias sesiones |
 
-Applies whether the task comes from the backlog (TASK-ID) or is invoked directly without one.
+Aplica tanto si la tarea viene del backlog (con TASK-ID) como si se invoca directamente sin uno.
 
-## File naming
+## Nomenclatura de archivos
 
-- **With TASK-ID:** `.handoff/<TASK-ID>.md`
-- **Without TASK-ID:** `.handoff/<short-slug>.md` — derive a slug from the task description (e.g., `add-auth-middleware.md`, `fix-payment-flow.md`). The orchestrator or user may provide a name; if not, generate one.
+- **Con TASK-ID:** `.handoff/<TASK-ID>.md`
+- **Sin TASK-ID:** `.handoff/<short-slug>.md` — derivar un slug de la descripción de la tarea (ej. `add-auth-middleware.md`, `fix-payment-flow.md`). El orquestador o el usuario pueden proporcionar un nombre; si no, generarlo.
 
-## Operations
+## Operaciones
 
-### Create (on task start)
+### Crear (al inicio de la tarea)
 
-1. Create `.handoff/` directory if it doesn't exist
-2. Read `template.md` from this skill and use it to write the handoff file
-3. Fill in the execution plan and empty Token usage table
-4. **Return control to the orchestrator with the plan** — do NOT present the plan directly to the user and do NOT auto-continue. The orchestrator is responsible for the user approval gate (see Approval Gate below).
+1. Crear el directorio `.handoff/` si no existe
+2. Leer `template.md` de este skill y usarlo para escribir el archivo de handoff
+3. Completar el plan de ejecución y la tabla de uso de tokens vacía
+4. **Devolver el control al orquestador con el plan** — NO presentar el plan directamente al usuario ni continuar automáticamente. El orquestador es responsable del gate de aprobación del usuario (ver Approval Gate abajo).
 
-### Approval Gate (MANDATORY — user must approve manually)
+### Approval Gate (OBLIGATORIO — el usuario debe aprobar manualmente)
 
-The plan presented in the handoff MUST be approved by the **user**, not by the orchestrator. The orchestrator is a relay, not an authority on approvals.
+El plan presentado en el handoff DEBE ser aprobado por el **usuario**, no por el orquestador. El orquestador es un relay, no una autoridad en aprobaciones.
 
-**Flow:**
-1. Developer finishes creating the handoff with the execution plan and returns control to the orchestrator with a plan summary
-2. **Orchestrator surfaces the plan to the user in Spanish** and waits for an explicit response. The orchestrator uses `AskUserQuestion` or a direct text prompt — never assumes approval from silence
-3. Developer does NOT continue coding until the orchestrator resumes it with explicit user approval (flag `plan_preapproved=true` or "plan approved — proceed")
+**Flujo:**
+1. El desarrollador termina de crear el handoff con el plan de ejecución y devuelve el control al orquestador con un resumen del plan
+2. **El orquestador presenta el plan al usuario en español** y espera una respuesta explícita. El orquestador usa `AskUserQuestion` o un prompt de texto directo — nunca asume aprobación por el silencio
+3. El desarrollador NO continúa codificando hasta que el orquestador lo reanude con aprobación explícita del usuario (flag `plan_preapproved=true` o "plan approved — proceed")
 
-**Orchestrator presentation format (Spanish):**
+**Formato de presentación del orquestador (español):**
 
 ```
 ## Plan de ejecución — <TASK-ID or slug>
 
 **Pasos:**
-1. <step description>
-2. <step description>
-3. <step description>
+1. <descripción del paso>
+2. <descripción del paso>
+3. <descripción del paso>
 
 **Archivos que voy a tocar:**
 - `path/to/file` — qué cambio y por qué
 - `path/to/file` — qué cambio y por qué
 
 **Enfoque técnico:**
-<brief explanation of the approach>
+<breve explicación del enfoque>
 
 ¿Apruebas este plan, quieres ajustar algo, o prefieres otra cosa?
 ```
 
-**Rules:**
-- The orchestrator MUST NOT auto-approve. Phrases like "el plan coincide con las specs, apruebo y continúo" are forbidden — the user decides
-- The orchestrator waits for an explicit user response before resuming the developer
-- User may say: "dale", "ok", "aprobado", "sí" → orchestrator resumes developer with `plan_preapproved=true`
-- User may say: "cambia X", "no me gusta Y", "mejor usa Z" → orchestrator sends feedback back to developer, developer updates the handoff plan, loop
-- User may say: "no, mejor hacemos otra cosa" → orchestrator discards plan, restart with new scope
-- On **continuations** (handoff already exists with approved plan) → skip the gate, resume from "Siguiente paso"
+**Reglas:**
+- El orquestador NO DEBE auto-aprobar. Frases como "el plan coincide con las specs, apruebo y continúo" están prohibidas — el usuario decide
+- El orquestador espera una respuesta explícita del usuario antes de reanudar al desarrollador
+- El usuario puede decir: "dale", "ok", "aprobado", "sí" → el orquestador reanuda al desarrollador con `plan_preapproved=true`
+- El usuario puede decir: "cambia X", "no me gusta Y", "mejor usa Z" → el orquestador envía el feedback al desarrollador, el desarrollador actualiza el plan en el handoff, bucle
+- El usuario puede decir: "no, mejor hacemos otra cosa" → el orquestador descarta el plan, reiniciar con nuevo alcance
+- En **continuaciones** (handoff ya existe con plan aprobado) → omitir el gate, reanudar desde "Siguiente paso"
 
-### Pre-approved plans (orchestrator shortcut)
+### Planes pre-aprobados (atajo del orquestador)
 
-When the orchestrator has already designed the plan in detail in the main conversation AND the user has already approved it in the main conversation (before any agent was invoked), the orchestrator may pass `plan_preapproved=true` directly in the first developer invocation. In this case:
+Cuando el orquestador ya diseñó el plan en detalle en la conversación principal Y el usuario ya lo aprobó en la conversación principal (antes de invocar cualquier agente), el orquestador puede pasar `plan_preapproved=true` directamente en la primera invocación del desarrollador. En este caso:
 
-1. Developer creates the handoff file as a progress artifact (NOT as a blocking gate)
-2. Developer proceeds to implementation immediately — no second invocation, no separate approval step
-3. This avoids the overhead of two developer invocations (plan + impl) when the orchestrator has already done the planning work
+1. El desarrollador crea el archivo de handoff como artefacto de progreso (NO como gate bloqueante)
+2. El desarrollador procede a la implementación inmediatamente — sin segunda invocación, sin paso de aprobación separado
+3. Esto evita el overhead de dos invocaciones del desarrollador (plan + impl) cuando el orquestador ya hizo el trabajo de planificación
 
-**Orchestrator responsibility:** be honest about pre-approval. If there is ANY doubt that the user has explicitly approved the plan (not just said "continue" or "sigue" without seeing the details), use the normal flow, not the shortcut. When in doubt, ask.
+**Responsabilidad del orquestador:** ser honesto sobre la pre-aprobación. Si hay CUALQUIER duda de que el usuario aprobó explícitamente el plan (no solo dijo "continúa" o "sigue" sin ver los detalles), usar el flujo normal, no el atajo. En caso de duda, preguntar.
 
-### Update (after each milestone)
+### Actualizar (después de cada milestone)
 
-Update incrementally — don't rewrite the whole file, append or update sections:
-- Check off completed steps in "Estado actual"
-- Add new entries to "Archivos modificados"
-- Record decisions in "Decisiones tomadas"
-- Update "Siguiente paso" to reflect current state
+Actualizar incrementalmente — no reescribir todo el archivo, agregar o actualizar secciones:
+- Marcar como completados los pasos en "Estado actual"
+- Agregar nuevas entradas a "Archivos modificados"
+- Registrar decisiones en "Decisiones tomadas"
+- Actualizar "Siguiente paso" para reflejar el estado actual
 
-### Read (on session continuation)
+### Leer (al continuar una sesión)
 
-The orchestrator reads the handoff and passes it inline to the developer. The developer resumes from "Siguiente paso" — does NOT re-read PRD/design/context unless the handoff explicitly says to.
+El orquestador lee el handoff y lo pasa inline al desarrollador. El desarrollador reanuda desde "Siguiente paso" — NO relee PRD/design/context a menos que el handoff lo indique explícitamente.
 
-### Archive (on task completion)
+### Archivar (al completar la tarea)
 
-Called by `/task-complete` or manually by the orchestrator:
+Llamado por `/task-complete` o manualmente por el orquestador:
 
-1. Read handoff content
-2. **Append `## Resumen de completacion` to the task file in the Obsidian vault** (e.g., `anvil-knowledge-base/03-tasks/<TASK-ID>/task.md`). This is the permanent record — include: fecha, archivos creados, archivos modificados, decisiones tomadas, resultado de tests. Follow the same format as existing completed tasks in the vault.
-3. Move the handoff file to `.handoff/archive/<TASK-ID>.md`
-4. Update the board in the vault (`02-backlog/board.md`) — move task from current column to Done
-5. Update the task frontmatter: `status: done`, `completed: <date>`
+1. Leer el contenido del handoff
+2. **Agregar `## Resumen de completacion` al archivo de la tarea en el vault de Obsidian** (ej. `anvil-knowledge-base/03-tasks/<TASK-ID>/task.md`). Este es el registro permanente — incluir: fecha, archivos creados, archivos modificados, decisiones tomadas, resultado de tests. Seguir el mismo formato que las tareas completadas existentes en el vault.
+3. Mover el archivo de handoff a `.handoff/archive/<TASK-ID>.md`
+4. Actualizar el board en el vault (`02-backlog/board.md`) — mover la tarea de la columna actual a Done
+5. Actualizar el frontmatter de la tarea: `status: done`, `completed: <fecha>`
 
 ## Template
 
-See `template.md` in this skill directory for the handoff file structure.
+Ver `template.md` en el directorio de este skill para la estructura del archivo de handoff.
 
-## Token usage tracking
+## Seguimiento de uso de tokens
 
-At the end of every session (complete or not), append a row to the **Token usage** table:
+Al final de cada sesión (completa o no), agregar una fila a la tabla de **Token usage**:
 
-- **Session**: sequential number
-- **Tokens used**: approximate tokens consumed (from agent metadata if available, otherwise estimate)
-- **Tokens available**: token budget for the model used
-- **Tool calls**: number of tool invocations
-- **Files read**: number of files read
-- **Files written**: number of files created or modified
+- **Session**: número secuencial
+- **Tokens used**: tokens aproximados consumidos (de los metadatos del agente si están disponibles, de lo contrario estimar)
+- **Tokens available**: presupuesto de tokens para el modelo utilizado
+- **Tool calls**: número de invocaciones de herramientas
+- **Files read**: número de archivos leídos
+- **Files written**: número de archivos creados o modificados
 
-## Cross-stack tasks
+## Tareas cross-stack
 
-When a task touches multiple stacks (e.g., Go backend + React frontend):
+Cuando una tarea toca múltiples stacks (ej. backend Go + frontend React):
 
-1. Use `## Fases` instead of `## Estado actual` — one phase per stack, ordered by dependency (backend first)
-2. Fill `## Puente de contratos` — the exact struct/DTO/interface that connects both sides, with JSON tags and TypeScript types side by side
-3. Group `### Tests requeridos — por stack` by stack — each group with its own file path, run command, and numbered test list
+1. Usar `## Fases` en lugar de `## Estado actual` — una fase por stack, ordenadas por dependencia (backend primero)
+2. Completar `## Puente de contratos` — el struct/DTO/interface exacto que conecta ambos lados, con JSON tags y tipos TypeScript lado a lado
+3. Agrupar `### Tests requeridos — por stack` por stack — cada grupo con su propio file path, comando de ejecución y lista numerada de tests
 
-**Why this matters:** cross-stack bugs almost always happen at the contract boundary. If the Go struct has `json:"runId"` but the TS interface expects `run_id`, a flat handoff won't catch it. The contract bridge makes both sides visible in one place.
+**Por qué importa:** los bugs cross-stack casi siempre ocurren en el límite del contrato. Si el struct Go tiene `json:"runId"` pero la interfaz TS espera `run_id`, un handoff plano no lo detectará. El puente de contratos hace visibles ambos lados en un solo lugar.
 
-For single-stack tasks, use the flat `## Estado actual` checklist and omit `## Fases`, `## Puente de contratos`, and the stack grouping in tests.
+Para tareas single-stack, usar el checklist plano `## Estado actual` y omitir `## Fases`, `## Puente de contratos` y el agrupamiento por stack en los tests.
 
-## Cross-service tasks
+## Tareas cross-service
 
-When a task touches multiple repos/services:
+Cuando una tarea toca múltiples repos/servicios:
 
-1. Fill `## Dependencias cross-service` — table with service, repo, what changes, and deploy order
-2. Document shared contracts (API endpoints, event schemas, DB tables that cross boundaries)
-3. Flag breaking changes and migration plan
+1. Completar `## Dependencias cross-service` — tabla con servicio, repo, qué cambia y orden de deploy
+2. Documentar contratos compartidos (endpoints de API, schemas de eventos, tablas de DB que cruzan límites)
+3. Señalar cambios breaking y el plan de migración
 
-The orchestrator MUST verify deploy order before closing the task.
+El orquestador DEBE verificar el orden de deploy antes de cerrar la tarea.
 
-## Input/Output tracking
+## Seguimiento de Input/Output
 
-### Input recibido (on task start)
+### Input recibido (al inicio de la tarea)
 
-The developer fills `## Input recibido` when creating the handoff. This is a receipt of what the orchestrator provided — if the next session finds a gap, it knows what was missing vs. what was lost.
+El desarrollador completa `## Input recibido` al crear el handoff. Es un acuse de recibo de lo que el orquestador proporcionó — si la siguiente sesión encuentra una brecha, sabe qué faltaba vs. qué se perdió.
 
-### Output entregado (before finishing)
+### Output entregado (antes de terminar)
 
-The developer fills `## Output entregado` before reporting done. This is the delivery checklist the orchestrator verifies. Must include: build result, lint result, existing tests result, file counts, contract bridge verification (if cross-stack), and cross-service impact.
+El desarrollador completa `## Output entregado` antes de reportar como terminado. Es el checklist de entrega que verifica el orquestador. Debe incluir: resultado del build, resultado del lint, resultado de tests existentes, conteo de archivos, verificación del puente de contratos (si es cross-stack) e impacto cross-service.
 
-## Retro (on task completion)
+## Retro (al completar la tarea)
 
-After the task is done (all agents finished, QA passed or skipped), fill `## Retro` before archiving. This is NOT optional for Medium+ tasks.
+Después de que la tarea esté terminada (todos los agentes finalizaron, QA aprobado o saltado), completar `## Retro` antes de archivar. NO es opcional para tareas Medium+.
 
-**What to record:**
-- **Qué funcionó** — patterns, decisions, approaches worth repeating
-- **Qué no funcionó** — rework, QA bounces, wrong assumptions, wasted reads. Be specific: "assumed nullable column was NOT NULL, caused QA bounce" not "should have checked"
-- **Métricas** — estimated vs actual: story points, QA bounces, developer invocations, tester invocations
-- **Aprendizaje** — one concrete takeaway for future tasks (not generic)
+**Qué registrar:**
+- **Qué funcionó** — patrones, decisiones, enfoques que vale la pena repetir
+- **Qué no funcionó** — retrabajos, rebotes de QA, suposiciones incorrectas, lecturas desperdiciadas. Ser específico: "asumí que la columna nullable era NOT NULL, causó rebote de QA" no "debería haber verificado"
+- **Métricas** — estimado vs real: story points, rebotes de QA, invocaciones del desarrollador, invocaciones del tester
+- **Aprendizaje** — un aprendizaje concreto para tareas futuras (no genérico)
 
-**Who fills it:**
-- Developer fills "qué funcionó" and "qué no funcionó" from their perspective
-- Orchestrator fills "métricas" (has the full picture of agent invocations and bounces)
-- Either fills "aprendizaje"
+**Quién lo completa:**
+- El desarrollador completa "qué funcionó" y "qué no funcionó" desde su perspectiva
+- El orquestador completa "métricas" (tiene el panorama completo de invocaciones de agentes y rebotes)
+- Cualquiera puede completar "aprendizaje"
 
-**How it feeds improvement:**
-- The orchestrator reads retros from `.handoff/archive/` when planning similar tasks
-- Patterns that repeat across 3+ retros should become memory entries or convention skill updates
+**Cómo alimenta la mejora:**
+- El orquestador lee las retros de `.handoff/archive/` al planificar tareas similares
+- Los patrones que se repiten en 3+ retros deberían convertirse en entradas de memoria o actualizaciones del convention skill
 
-## Rules
+## Reglas
 
-- One file per task
-- `.handoff/` MUST be in the project's `.gitignore`
-- Handoff files are temporary — they do not belong in version control or documentation
-- Do NOT create handoff for Small tasks
+- Un archivo por tarea
+- `.handoff/` DEBE estar en el `.gitignore` del proyecto
+- Los archivos de handoff son temporales — no pertenecen al control de versiones ni a la documentación
+- NO crear handoff para tareas Small

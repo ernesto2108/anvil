@@ -1,8 +1,8 @@
 # Template: architecture-db.md
 
-Inspired by: Google "Data Storage" section + DBML spec format.
+Inspirado en: sección "Data Storage" de Google + formato de spec DBML.
 
-**Generate when:** database changes are involved.
+**Generar cuando:** hay cambios de base de datos involucrados.
 
 ## Template
 
@@ -11,7 +11,7 @@ Inspired by: Google "Data Storage" section + DBML spec format.
 
 ## Schema intent
 
-<!-- DBML format — executable spec. DBA agent generates migrations from this. -->
+<!-- Formato DBML — spec ejecutable. El agente DBA genera migraciones de esto. -->
 
 ```dbml
 Table <table_name> {
@@ -29,10 +29,10 @@ Table <table_name> {
 Ref: <table_name>.foreign_id > other_table.id
 ```
 
-<!-- Alternative: SQL DDL intent for simple changes -->
+<!-- Alternativa: SQL DDL intent para cambios simples -->
 
 ```sql
--- Intent: add status tracking to runs table
+-- Intent: agregar tracking de status a tabla runs
 ALTER TABLE runs ADD COLUMN status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE runs ADD COLUMN finished_at DATETIME;
 CREATE INDEX idx_runs_status ON runs(status);
@@ -51,7 +51,7 @@ CREATE INDEX idx_runs_status ON runs(status);
 
 ## Patrones de consulta
 
-<!-- Expected query patterns and performance implications -->
+<!-- Patrones de query esperados e implicaciones de rendimiento -->
 - ...
 
 ## Diagrama ERD
@@ -64,12 +64,12 @@ erDiagram
 
 ## Patrones de acceso — incluir si aplica
 
-<!-- Describe how data flows beyond simple CRUD -->
+<!-- Describir cómo fluyen los datos más allá de CRUD simple -->
 
 ### CQRS — incluir si hay separación read/write
-- **Write side:** qué tabla/aggregate recibe comandos
-- **Read side:** qué tabla/view sirve queries (puede ser diferente)
-- **Sincronización:** cómo el read side se actualiza (evento, trigger, polling)
+- **Lado write:** qué tabla/aggregate recibe comandos
+- **Lado read:** qué tabla/view sirve queries (puede ser diferente)
+- **Sincronización:** cómo el lado read se actualiza (evento, trigger, polling)
 
 ### Event sourcing — incluir si el estado se reconstruye de eventos
 - **Event store:** tabla donde se persisten eventos (`id`, `aggregate_id`, `event_type`, `payload`, `occurred_at`)
@@ -81,13 +81,13 @@ erDiagram
 - **Poller / relay:** quién lee y publica los mensajes pendientes
 - **Garantía:** at-least-once delivery desde DB hacia broker
 
-## Rules
+## Reglas
 
-- DBML is the preferred format for new tables — machine-readable, generates migrations
-- SQL DDL intent is acceptable for simple ALTER TABLE changes
-- Every index must have a justification — which query needs it
-- Migration strategy must address rollback — what happens if we need to revert
-- ERD diagram shows relationships, not all columns — keep it readable
-- Schema intent must match backend persistence types if both views exist
-- NEVER propose new tables without confirming existing tables can't be extended
-- Include "Patrones de acceso" section whenever the feature uses events, projections, or separate read/write paths — simple CRUD tasks can omit it
+- DBML es el formato preferido para tablas nuevas — legible por máquinas, genera migraciones
+- SQL DDL intent es aceptable para cambios simples de ALTER TABLE
+- Cada índice debe tener justificación — qué query lo necesita
+- La estrategia de migración debe abordar rollback — qué pasa si necesitamos revertir
+- El diagrama ERD muestra relaciones, no todas las columnas — mantenerlo legible
+- El schema intent debe coincidir con los tipos de persistencia backend si ambas vistas existen
+- NUNCA proponer tablas nuevas sin confirmar que las existentes no pueden extenderse
+- Incluir sección "Patrones de acceso" cuando la feature usa eventos, proyecciones, o paths separados de read/write — tareas CRUD simples pueden omitirla

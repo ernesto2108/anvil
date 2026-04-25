@@ -1,15 +1,15 @@
 ---
 name: ui-component-scan
-description: Scan existing UI component library to promote reuse and maintain visual consistency. Use when user says "what components exist", "check Storybook", "reuse component", "is there a Button already", or before creating a new UI component to avoid duplication.
+description: Escanea la librería de componentes UI existente para promover la reutilización y mantener la consistencia visual. Úsalo cuando el usuario diga "qué componentes existen", "revisar Storybook", "reutilizar componente", "ya hay un Button", o antes de crear un nuevo componente UI para evitar duplicados.
 ---
 
-Scan the existing UI component library (e.g., Storybook, components folder) to promote reuse and maintain visual consistency.
+Escanea la librería de componentes UI existente (ej., Storybook, carpeta de componentes) para promover la reutilización y mantener la consistencia visual.
 
-Steps:
-1. Identify common components like Button, Input, Modal, etc.
-2. Read their documentation or implementation to understand props and behavior
-3. Suggest reuse instead of creating new redundant components
+Pasos:
+1. Identificar componentes comunes como Button, Input, Modal, etc.
+2. Leer su documentación o implementación para entender props y comportamiento
+3. Sugerir reutilización en lugar de crear nuevos componentes redundantes
 
-Output:
-- List of reusable components found
-- Recommendations for use in current task
+Salida:
+- Lista de componentes reutilizables encontrados
+- Recomendaciones de uso para la tarea actual

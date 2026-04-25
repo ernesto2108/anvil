@@ -1,8 +1,8 @@
 # Template: architecture.md (Overview)
 
-Inspired by: Google Design Docs + ADR format.
+Inspirado en: Google Design Docs + formato ADR.
 
-**Always generated.** This is the entry point — decisions, boundaries, trade-offs.
+**Siempre se genera.** Este es el punto de entrada — decisiones, límites, trade-offs.
 
 ## Template
 
@@ -11,7 +11,7 @@ Inspired by: Google Design Docs + ADR format.
 
 ## Contexto y alcance
 
-<!-- System landscape. What exists today, what changes, why. -->
+<!-- Landscape del sistema. Qué existe hoy, qué cambia, por qué. -->
 
 ## Objetivos
 
@@ -23,12 +23,12 @@ Inspired by: Google Design Docs + ADR format.
 
 ## Convenciones aplicadas
 
-<!-- 3-5 convention rules that shaped this architecture -->
+<!-- 3-5 reglas de convención que moldearon esta arquitectura -->
 - ...
 
 ## Decisiones de diseño (ADR)
 
-<!-- MADR format per decision. One block per non-obvious choice. -->
+<!-- Formato MADR por decisión. Un bloque por cada elección no obvia. -->
 
 ### ADR-01: <Título de la decisión>
 
@@ -42,7 +42,7 @@ Inspired by: Google Design Docs + ADR format.
 - **Consecuencias positivas:** ...
 - **Consecuencias negativas / tradeoffs aceptados:** ...
 
-<!-- Repeat block for each non-obvious decision -->
+<!-- Repetir bloque por cada decisión no obvia -->
 
 ## Concerns transversales
 
@@ -68,11 +68,11 @@ sequenceDiagram
 ```
 ```
 
-## Rules
+## Reglas
 
-- Every decision needs a "why" AND rejected alternatives — no unexplained choices
-- ADR format: context → options considered → decision + forces → consequences
-- Alternatives section is mandatory for Medium+ tasks — shows the architect weighed options
-- C4 Context diagram shows the system in its environment, not internal details
-- Keep this file under 200 lines — detail belongs in domain views
-- "Concerns transversales" must address idempotency and observability — not just security
+- Cada decisión necesita un "por qué" Y alternativas rechazadas — sin elecciones inexplicadas
+- Formato ADR: contexto → opciones consideradas → decisión + fuerzas → consecuencias
+- La sección de alternativas es obligatoria para tareas Medium+ — demuestra que el architect sopesó opciones
+- El diagrama C4 Context muestra el sistema en su entorno, no detalles internos
+- Mantener este archivo bajo 200 líneas — el detalle pertenece a las vistas de dominio
+- "Concerns transversales" debe abordar idempotencia y observabilidad — no solo seguridad

@@ -1,35 +1,35 @@
-# Frontend Pipeline — React
+# Pipeline Frontend — React
 
-## Output pattern
+## Patrón de salida
 
 ```
 <docs>/04-architecture/<project>/
-├── context-summary.md      # Stack, deps, structure, state, APIs
-├── context-modules.md      # Modules/features with routes, components, API calls
-├── context-risks.md        # XSS, token storage, deps, PII (with code snippets)
-├── overview.md             # C4, route tree, state diagram, auth flow
-├── security-audit.md       # OWASP client-side with score
+├── context-summary.md      # Stack, deps, estructura, estado, APIs
+├── context-modules.md      # Módulos/features con rutas, componentes, llamadas API
+├── context-risks.md        # XSS, almacenamiento de tokens, deps, PII (con fragmentos de código)
+├── overview.md             # C4, árbol de rutas, diagrama de estado, flujo de autenticación
+├── security-audit.md       # OWASP lado cliente con puntaje
 └── modules/
-    └── <module-name>.md    # One per module with user flow diagram
+    └── <module-name>.md    # Uno por módulo con diagrama de flujo de usuario
 ```
 
-## Skeleton
+## Esqueleto
 
-File: `<docs>/07-references/frontend-skeleton.md`
+Archivo: `<docs>/07-references/frontend-skeleton.md`
 
-Covers: store setup, auth query/hooks, i18n config, auth guards, route helpers.
+Cubre: configuración del store, query/hooks de autenticación, configuración de i18n, guards de autenticación, helpers de rutas.
 
-## Scanner instructions
+## Instrucciones para el Scanner
 
-"The skeleton describes patterns common to frontends of this type. Do NOT re-explore these patterns. Focus on what DIFFERS: modules/features, API endpoints, state slices beyond auth, route tree with guards, external integrations (Sentry, Stripe, PostHog), build tool specifics, TypeScript vs JS. In context-summary.md, reference the skeleton for common patterns and only detail differences. In context-risks.md, include CODE SNIPPETS (5-10 lines) for each finding so security does not need to re-read files."
+"El esqueleto describe patrones comunes en frontends de este tipo. NO re-explorar estos patrones. Enfocarse en lo que DIFIERE: módulos/features, endpoints API, slices de estado más allá de auth, árbol de rutas con guards, integraciones externas (Sentry, Stripe, PostHog), especificidades de la herramienta de build, TypeScript vs JS. En context-summary.md, referenciar el esqueleto para patrones comunes y detallar solo las diferencias. En context-risks.md, incluir FRAGMENTOS DE CÓDIGO (5-10 líneas) por cada hallazgo para que seguridad no tenga que re-leer los archivos."
 
-Output: `context-summary.md`, `context-modules.md`, `context-risks.md`
+Salida: `context-summary.md`, `context-modules.md`, `context-risks.md`
 
-## Architect — Overview
+## Arquitecto — Overview
 
-Inject: context-summary.md INLINE. Do NOT inject modules or risks.
+Inyectar: context-summary.md INLINE. NO inyectar modules ni risks.
 
-Output `overview.md` with:
+Generar `overview.md` con:
 1. Descripcion del frontend (que hace, quien lo usa, stack)
 2. Diagrama de Contexto (C4) — frontend <-> backends <-> auth <-> 3rd parties
 3. Arbol de rutas completo (Mermaid graph TD) — con guards y layouts
@@ -38,27 +38,27 @@ Output `overview.md` with:
 6. Dependencias externas (tabla)
 7. Notas tecnicas
 
-## Architect — Detail (modules)
+## Arquitecto — Detalle (módulos)
 
-Before launching, read `<docs>/07-references/template-module.md`.
+Antes de lanzar, leer `<docs>/07-references/template-module.md`.
 
-Inject: template-module.md + context-modules.md INLINE. Do NOT inject summary or risks.
+Inyectar: template-module.md + context-modules.md INLINE. NO inyectar summary ni risks.
 
-Instructions: "Use the template as the EXACT format reference. Do NOT read example files."
+Instrucciones: "Usar el template como referencia de formato EXACTA. NO leer archivos de ejemplo."
 
-Output: `modules/*.md` (one per module/feature)
+Salida: `modules/*.md` (uno por módulo/feature)
 
-## Security instructions (client-side)
+## Instrucciones de Seguridad (lado cliente)
 
-"CLIENT-SIDE audit of a React frontend. Focus on: (1) Token storage — localStorage vs HttpOnly cookies, XSS theft risk. (2) XSS — dangerouslySetInnerHTML, unsanitized input, URL injection. (3) Sensitive data in console.log, Sentry, APM, URL params. (4) Dependency CVEs in package.json. (5) CORS/CSP headers. (6) Auth bypass — route guards, client-only validation. (7) Hardcoded secrets. Context-risks.md has CODE SNIPPETS — do NOT re-read those files. Only Read to trace cross-file dependencies."
+"Auditoría LADO CLIENTE de un frontend React. Enfocarse en: (1) Almacenamiento de tokens — localStorage vs HttpOnly cookies, riesgo de robo por XSS. (2) XSS — dangerouslySetInnerHTML, input sin sanitizar, inyección de URL. (3) Datos sensibles en console.log, Sentry, APM, parámetros de URL. (4) CVEs de dependencias en package.json. (5) Headers CORS/CSP. (6) Bypass de autenticación — guards de rutas, validación solo en cliente. (7) Secretos hardcodeados. context-risks.md tiene FRAGMENTOS DE CÓDIGO — NO re-leer esos archivos. Solo usar Read para rastrear dependencias entre archivos."
 
-Output: `security-audit.md`, bug files in `<docs>/05-bugs/` (critical/high only)
+Salida: `security-audit.md`, archivos de bugs en `<docs>/05-bugs/` (solo critical/high)
 
-## Injection cheat sheet
+## Tabla de inyección rápida
 
-| Agent | Inject INLINE | Do NOT inject |
+| Agente | Inyectar INLINE | NO inyectar |
 |---|---|---|
 | Scanner | frontend-skeleton.md | — |
-| Architect (overview) | context-summary.md | modules, risks |
-| Architect (modules) | template-module.md + context-modules.md | summary, risks |
-| Security | known-systemic-issues.md + context-risks.md + overview summary | full modules |
+| Arquitecto (overview) | context-summary.md | modules, risks |
+| Arquitecto (modules) | template-module.md + context-modules.md | summary, risks |
+| Seguridad | known-systemic-issues.md + context-risks.md + overview summary | full modules |

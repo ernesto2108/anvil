@@ -1,6 +1,6 @@
-# Cancellation Safety & Shutdown
+# Seguridad ante Cancelación y Shutdown
 
-## select! Safety
+## Seguridad en select!
 
 ```rust
 // WRONG — read_buf is NOT cancellation safe
@@ -30,15 +30,15 @@ loop {
 }
 ```
 
-## Cancellation-Safe Methods
+## Métodos Seguros ante Cancelación
 
-| Safe | Unsafe |
+| Seguro | No Seguro |
 |------|--------|
 | `mpsc::Receiver::recv()` | `AsyncReadExt::read_buf()` |
 | `oneshot::Receiver::recv()` | `AsyncBufReadExt::read_line()` |
-| `broadcast::Receiver::recv()` | `tokio::io::split` read half |
-| `TcpListener::accept()` | Partial reads/writes |
-| `JoinSet::join_next()` | `BufWriter::write` without flush |
+| `broadcast::Receiver::recv()` | Mitad de lectura de `tokio::io::split` |
+| `TcpListener::accept()` | Lecturas/escrituras parciales |
+| `JoinSet::join_next()` | `BufWriter::write` sin flush |
 
 ## Graceful Shutdown
 

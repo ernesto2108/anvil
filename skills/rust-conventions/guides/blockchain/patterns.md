@@ -1,4 +1,4 @@
-# Blockchain & Crypto Patterns
+# Patrones de Blockchain y Crypto
 
 ## Solana / Anchor
 
@@ -52,7 +52,7 @@ pub enum MyError {
 }
 ```
 
-## Alloy (Ethereum, replaces ethers-rs)
+## Alloy (Ethereum, reemplaza ethers-rs)
 
 ```rust
 use alloy::{providers::ProviderBuilder, primitives::{Address, U256}, sol};
@@ -74,7 +74,7 @@ async fn check_balance(rpc: &str, token: Address, wallet: Address) -> anyhow::Re
 }
 ```
 
-## Cryptographic Primitives (RustCrypto)
+## Primitivos Criptográficos (RustCrypto)
 
 ```rust
 use sha2::{Sha256, Digest};
@@ -98,7 +98,7 @@ fn verify(expected: &[u8; 32], computed: &[u8; 32]) -> bool {
 }
 ```
 
-## no_std for Embedded/WASM
+## no_std para Embedded/WASM
 
 ```rust
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -124,15 +124,15 @@ impl core::fmt::Display for Error {
 }
 ```
 
-## Key Crates
+## Crates Clave
 
-- `alloy` 0.9.x — Ethereum (replaces ethers-rs)
-- `anchor-lang` 0.30.x — Solana programs
-- `solana-sdk` 2.x — Solana base SDK
+- `alloy` 0.9.x — Ethereum (reemplaza ethers-rs)
+- `anchor-lang` 0.30.x — programas Solana
+- `solana-sdk` 2.x — SDK base de Solana
 - `sha2`/`sha3` 0.10.x — hashing (RustCrypto)
-- `ed25519-dalek` 2.x — Ed25519 signatures
-- `k256` 0.13.x — secp256k1 (Ethereum curve)
-- `aes-gcm` 0.10.x — AES-GCM encryption
-- `subtle` 2.x — constant-time ops
+- `ed25519-dalek` 2.x — firmas Ed25519
+- `k256` 0.13.x — secp256k1 (curva Ethereum)
+- `aes-gcm` 0.10.x — cifrado AES-GCM
+- `subtle` 2.x — operaciones en tiempo constante
 - `rand` 0.8.x + `rand_chacha` — CSPRNG
-- `secrecy` 0.10.x — zeroize on drop
+- `secrecy` 0.10.x — zeroize al soltar

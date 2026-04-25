@@ -1,67 +1,67 @@
-# Go Anti-Patterns — Detection Reference
+# Anti-Patrones Go — Referencia de Detección
 
-## Passive Detection
+## Detección Pasiva
 
-When reviewing Go code, scan for these patterns and report using the format:
+Al revisar código Go, escanear estos patrones y reportar usando el formato:
 `[file:line] [severity] [category] anti-pattern-name`
 
-Only report `error` and `warning` by default. Report `suggestion` only when user asks to improve/refactor/optimize.
+Reportar solo `error` y `warning` por defecto. Reportar `suggestion` solo cuando el usuario pide mejorar/refactorizar/optimizar.
 
-## Anti-Pattern Table
+## Tabla de Anti-Patrones
 
-| Code Pattern | Anti-Pattern | Severity | Category | Fix → Pattern |
+| Patrón de código | Anti-patrón | Severidad | Categoría | Corrección → Patrón |
 |---|---|---|---|---|
-| `panic()` outside `main()` | panic-in-library | error | reliability | Return `error` — see Error Handling |
-| `init()` doing real work | hidden-init | error | reliability | Constructor injection — see Patterns > Constructor Functions |
-| `_ = f.Close()` or error ignored | ignored-error | error | reliability | Handle or log — see Error Handling |
-| `var db *sql.DB` at package level | global-mutable-state | error | concurrency | Inject via constructor — see Architecture Rules #7 |
-| `setInterval`/ticker without stop | resource-leak | error | memory | `defer ticker.Stop()` in setup |
-| `sync.Mutex` protecting channel ops | double-sync | error | concurrency | Use one mechanism — see Concurrency |
-| `defer` in loop body | deferred-in-loop | error | memory | Close explicitly in loop body |
-| Bare `return err` from raw/untyped errors | unwrapped-error | warning | errors | Map to `errors.New(errors.SomeCode)` or `fmt.Errorf("op: %w", err)` in standalone pkgs — see Error Handling |
-| `fmt.Errorf` wrapping an already-mapped `*Errors` | double-wrapped-error | warning | errors | Just `return err` — infra already mapped it — see Error Handling |
-| `context.Background()` in handlers | missing-context | warning | reliability | Use `r.Context()` — see Context |
-| `context.Context` stored in struct | stored-context | warning | reliability | Pass as first param — see Context |
-| `interface{}` / `any` in domain | untyped-domain | warning | types | Concrete types or generics — see domain-entity-guardrails |
-| God interface (>5 methods) | god-interface | warning | design | Small interfaces by consumer — see Architecture Rules #2 |
-| Circular imports | circular-import | warning | design | Extract shared interface — see Architecture Rules #5 |
-| >3 levels of if/else nesting | deep-nesting | warning | readability | Guard clauses — see Patterns > Guard Clauses |
-| Long function (>5 params) | param-bloat | warning | readability | Options struct — see Patterns > Functional Options |
-| Tests without `t.Run()` subtests | flat-tests | warning | testing | Table-driven with subtests — see Testing Patterns |
-| Tests depending on execution order | coupled-tests | warning | testing | Independent setup per test — see Testing Patterns |
-| Shared test state between `t.Run` | shared-test-state | warning | testing | Each subtest creates own fixtures |
-| `time.Sleep` in tests | sleep-in-tests | warning | testing | Channels, sync, or polling with timeout |
-| Missing `t.Helper()` on helpers | missing-t-helper | suggestion | testing | Add `t.Helper()` first line |
-| Exporting unused symbols | over-export | suggestion | design | Unexport what's not used externally |
-| `log` package instead of `slog` | unstructured-logging | suggestion | observability | Use `slog` (stdlib) |
-| String typing for enums | string-enum | suggestion | types | `type Status int` with `iota` |
-| `reflect` for simple tasks | unnecessary-reflect | suggestion | performance | Type switches, generics, or concrete code |
-| Error strings with capital/period | error-format | suggestion | style | Lowercase, no trailing punctuation |
-| Package name `users` or `user_service` | bad-package-name | suggestion | style | Short, singular, no underscores: `user` |
-| `math/rand` for tokens/keys/sessions | insecure-random | error | security | Use `crypto/rand` — see security-guide.md |
-| `fmt.Sprintf` with user input in SQL | sql-injection | error | security | Parameterized queries with `$N` — see security-guide.md |
-| No request body size limit | missing-body-limit | warning | security | `http.MaxBytesReader(w, r.Body, limit)` — see security-guide.md |
-| No `/healthz` or `/readyz` endpoint | missing-health-check | warning | observability | Add liveness + readiness — see observability-guide.md |
-| `os.Getenv` deep in call stack | scattered-config | warning | design | Load config once in `main()`, inject via constructor |
-| Logging PII/secrets (password, token) | logged-secrets | error | security | Implement `LogValuer`, redact fields — see slog-guide.md |
-| `strings.TrimSpace` + `== ""` checks in service layer | validation-in-service | warning | architecture | Move to `entity.Validate()` method — see Architecture Rules #8 |
-| Service method with >2 field validations before business logic | scattered-validation | warning | architecture | Create input entity with `Validate()` — see Architecture Rules #8 |
-| `g.Param("id")` with inline string literal | magic-param-string | warning | architecture | Use `dto.ParamXxx` constant from `dto/constants.go` — see Architecture Rules #9 |
-| `g.Query("status")` with inline string literal | magic-query-string | warning | architecture | Use `dto.QueryXxx` constant from `dto/constants.go` — see Architecture Rules #9 |
-| TrimSpace + empty check for URL path params in application layer | param-validation-wrong-layer | warning | architecture | Validate path params in handler, not service — see Architecture Rules #9 |
-| `errors.WithMessage("foo: " + variable)` string concatenation | concat-in-error-message | warning | style | Use `fmt.Sprintf("foo: %s", variable)` — never concatenate with `+` in error messages |
-| `http.Get()`/`http.Post()` (no timeout, no context) | http-no-timeout | error | reliability | `http.NewRequestWithContext(ctx, ...)` — see context-cleanup-guide.md |
-| `http.DefaultClient` without Timeout | default-client | warning | reliability | `&http.Client{Timeout: 15*time.Second}` — see context-cleanup-guide.md |
-| `db.Query()` without Context | query-no-context | error | reliability | `db.QueryContext(ctx, ...)` — see context-cleanup-guide.md |
-| `Query()` for INSERT/UPDATE/DELETE | query-for-exec | error | memory | Use `ExecContext()` — Query returns rows that must be closed |
-| Missing `rows.Close()` after QueryContext | unclosed-rows | error | memory | `defer rows.Close()` immediately after error check |
-| Missing `rows.Err()` after iteration loop | unchecked-rows-err | warning | reliability | Always check `rows.Err()` after `for rows.Next()` |
-| `defer` in a loop body | defer-in-loop-cleanup | error | memory | Extract to helper function — see context-cleanup-guide.md |
-| Missing `sql.DB` pool config (MaxOpenConns) | no-pool-config | warning | reliability | Set MaxOpenConns, MaxIdleConns, ConnMaxLifetime |
-| `resp.Body.Close()` before error check | close-before-check | error | crashes | Check error first, then `defer resp.Body.Close()` |
-| `func AsError(err error, target interface{}) bool { return errors.As(err, &target) }` | errors-as-double-pointer | error | crashes | `target` is already a pointer inside `interface{}` — `&target` creates `*interface{}` which `errors.As` cannot unwrap. Use `errors.As(err, &customErr)` directly at the call site, never wrap it |
-| External service error discarded: `if err != nil { return errors.New(domainErr) }` without logging `err` | swallowed-external-error | warning | observability | Log the original error before returning domain error: `log.Error("service X failed", log.WithError(err))` — otherwise debugging is impossible |
-| Service interface method receives >1 raw `string` parameter (e.g., `GetStats(ctx, tenantID string, status string)`) | service-accepts-raw-strings | warning | architecture | Create a request/filter entity struct with `Validate()`. Service receives the entity, not raw strings. See `examples/service-contracts.md` — matches `DTO → Entity.ToBusiness() → Service(entity) → entity.Validate()` flow |
-| Type named `*DTO` inside `domain/entities/` package | dto-in-domain | warning | naming | `DTO` belongs at transport boundaries (`http/dto/`, `psql/dto/`). Domain uses descriptive names: `Detail`, `Summary`, `Filter` — see Architecture Rules #11 |
-| Domain aggregate struct duplicates fields from child entities instead of composing them | flattened-aggregate | warning | architecture | Compose with existing entity types: `OrderDetail{Order, []Item}` not field-by-field copy — see Architecture Rules #10 |
-| Persistence DTO struct (in `infrastructure/output/persistencia/*/dto/`) uses plain `string`, `int`, or `time.Time` instead of `sql.Null*` types | dto-without-sql-null | warning | architecture | ALL fields in persistence DTOs must use `sql.NullString`, `sql.NullInt64`, `sql.NullTime`, etc. Mapper's `ToBusiness()` extracts actual values. Plain types cause silent zero-value bugs on NULL from JOINs, COALESCE, or GROUPING SETS |
+| `panic()` fuera de `main()` | panic-in-library | error | reliability | Retornar `error` — ver Error Handling |
+| `init()` haciendo trabajo real | hidden-init | error | reliability | Constructor injection — ver Patterns > Constructor Functions |
+| `_ = f.Close()` o error ignorado | ignored-error | error | reliability | Manejar o loguear — ver Error Handling |
+| `var db *sql.DB` a nivel de paquete | global-mutable-state | error | concurrency | Inyectar via constructor — ver Architecture Rules #7 |
+| `setInterval`/ticker sin stop | resource-leak | error | memory | `defer ticker.Stop()` en el setup |
+| `sync.Mutex` protegiendo operaciones de canal | double-sync | error | concurrency | Usar un solo mecanismo — ver Concurrency |
+| `defer` en el cuerpo de un loop | deferred-in-loop | error | memory | Cerrar explícitamente en el cuerpo del loop |
+| `return err` desnudo de errores crudos/sin tipo | unwrapped-error | warning | errors | Mapear a `errors.New(errors.SomeCode)` o `fmt.Errorf("op: %w", err)` en pkgs standalone — ver Error Handling |
+| `fmt.Errorf` envolviendo un `*Errors` ya mapeado | double-wrapped-error | warning | errors | Solo `return err` — la infra ya lo mapeó — ver Error Handling |
+| `context.Background()` en handlers | missing-context | warning | reliability | Usar `r.Context()` — ver Context |
+| `context.Context` almacenado en struct | stored-context | warning | reliability | Pasar como primer parámetro — ver Context |
+| `interface{}` / `any` en el dominio | untyped-domain | warning | types | Tipos concretos o generics — ver domain-entity-guardrails |
+| Interfaz dios (>5 métodos) | god-interface | warning | design | Interfaces pequeñas por consumidor — ver Architecture Rules #2 |
+| Importaciones circulares | circular-import | warning | design | Extraer interfaz compartida — ver Architecture Rules #5 |
+| >3 niveles de anidado if/else | deep-nesting | warning | readability | Guard clauses — ver Patterns > Guard Clauses |
+| Función larga (>5 parámetros) | param-bloat | warning | readability | Options struct — ver Patterns > Functional Options |
+| Tests sin subtests `t.Run()` | flat-tests | warning | testing | Table-driven con subtests — ver Testing Patterns |
+| Tests dependientes del orden de ejecución | coupled-tests | warning | testing | Setup independiente por test — ver Testing Patterns |
+| Estado de test compartido entre `t.Run` | shared-test-state | warning | testing | Cada subtest crea sus propios fixtures |
+| `time.Sleep` en tests | sleep-in-tests | warning | testing | Canales, sync, o polling con timeout |
+| Falta `t.Helper()` en helpers | missing-t-helper | suggestion | testing | Agregar `t.Helper()` en la primera línea |
+| Exportar símbolos no usados | over-export | suggestion | design | No exportar lo que no se usa externamente |
+| Paquete `log` en vez de `slog` | unstructured-logging | suggestion | observability | Usar `slog` (stdlib) |
+| String typing para enums | string-enum | suggestion | types | `type Status int` con `iota` |
+| `reflect` para tareas simples | unnecessary-reflect | suggestion | performance | Type switches, generics, o código concreto |
+| Strings de error con mayúscula/punto | error-format | suggestion | style | Minúsculas, sin puntuación al final |
+| Nombre de paquete `users` o `user_service` | bad-package-name | suggestion | style | Corto, singular, sin underscores: `user` |
+| `math/rand` para tokens/keys/sesiones | insecure-random | error | security | Usar `crypto/rand` — ver security-guide.md |
+| `fmt.Sprintf` con input de usuario en SQL | sql-injection | error | security | Queries parametrizadas con `$N` — ver security-guide.md |
+| Sin límite de tamaño en request body | missing-body-limit | warning | security | `http.MaxBytesReader(w, r.Body, limit)` — ver security-guide.md |
+| Sin endpoint `/healthz` o `/readyz` | missing-health-check | warning | observability | Agregar liveness + readiness — ver observability-guide.md |
+| `os.Getenv` profundo en el call stack | scattered-config | warning | design | Cargar config una vez en `main()`, inyectar via constructor |
+| Logueando PII/secretos (password, token) | logged-secrets | error | security | Implementar `LogValuer`, redactar campos — ver slog-guide.md |
+| `strings.TrimSpace` + `== ""` en capa de servicio | validation-in-service | warning | architecture | Mover a método `entity.Validate()` — ver Architecture Rules #8 |
+| Método de servicio con >2 validaciones de campo antes de lógica de negocio | scattered-validation | warning | architecture | Crear entidad input con `Validate()` — ver Architecture Rules #8 |
+| `g.Param("id")` con literal de string inline | magic-param-string | warning | architecture | Usar constante `dto.ParamXxx` de `dto/constants.go` — ver Architecture Rules #9 |
+| `g.Query("status")` con literal de string inline | magic-query-string | warning | architecture | Usar constante `dto.QueryXxx` de `dto/constants.go` — ver Architecture Rules #9 |
+| TrimSpace + verificación vacía para parámetros de ruta URL en capa de aplicación | param-validation-wrong-layer | warning | architecture | Validar params de ruta en el handler, no en el servicio — ver Architecture Rules #9 |
+| `errors.WithMessage("foo: " + variable)` concatenación de strings | concat-in-error-message | warning | style | Usar `fmt.Sprintf("foo: %s", variable)` — nunca concatenar con `+` en mensajes de error |
+| `http.Get()`/`http.Post()` (sin timeout, sin context) | http-no-timeout | error | reliability | `http.NewRequestWithContext(ctx, ...)` — ver context-cleanup-guide.md |
+| `http.DefaultClient` sin Timeout | default-client | warning | reliability | `&http.Client{Timeout: 15*time.Second}` — ver context-cleanup-guide.md |
+| `db.Query()` sin Context | query-no-context | error | reliability | `db.QueryContext(ctx, ...)` — ver context-cleanup-guide.md |
+| `Query()` para INSERT/UPDATE/DELETE | query-for-exec | error | memory | Usar `ExecContext()` — Query retorna rows que deben cerrarse |
+| Falta `rows.Close()` después de QueryContext | unclosed-rows | error | memory | `defer rows.Close()` inmediatamente después de la verificación de error |
+| Falta `rows.Err()` después del loop de iteración | unchecked-rows-err | warning | reliability | Siempre verificar `rows.Err()` después de `for rows.Next()` |
+| `defer` en el cuerpo de un loop | defer-in-loop-cleanup | error | memory | Extraer a función helper — ver context-cleanup-guide.md |
+| Falta config de pool en `sql.DB` (MaxOpenConns) | no-pool-config | warning | reliability | Configurar MaxOpenConns, MaxIdleConns, ConnMaxLifetime |
+| `resp.Body.Close()` antes de verificar error | close-before-check | error | crashes | Verificar error primero, luego `defer resp.Body.Close()` |
+| `func AsError(err error, target interface{}) bool { return errors.As(err, &target) }` | errors-as-double-pointer | error | crashes | `target` ya es un puntero dentro de `interface{}` — `&target` crea `*interface{}` que `errors.As` no puede desenvolver. Usar `errors.As(err, &customErr)` directamente en el call site, nunca envolverlo |
+| Error de servicio externo descartado: `if err != nil { return errors.New(domainErr) }` sin loguear `err` | swallowed-external-error | warning | observability | Loguear el error original antes de retornar el error de dominio: `log.Error("service X failed", log.WithError(err))` — de lo contrario el debugging es imposible |
+| Método de interfaz de servicio recibe >1 parámetro `string` crudo (ej. `GetStats(ctx, tenantID string, status string)`) | service-accepts-raw-strings | warning | architecture | Crear un struct de entidad request/filter con `Validate()`. El servicio recibe la entidad, no strings crudos. Ver `examples/service-contracts.md` — coincide con el flujo `DTO → Entity.ToBusiness() → Service(entity) → entity.Validate()` |
+| Tipo llamado `*DTO` dentro del paquete `domain/entities/` | dto-in-domain | warning | naming | `DTO` pertenece a los límites de transporte (`http/dto/`, `psql/dto/`). El dominio usa nombres descriptivos: `Detail`, `Summary`, `Filter` — ver Architecture Rules #11 |
+| Struct de agregado de dominio duplica campos de entidades hijas en vez de componerlos | flattened-aggregate | warning | architecture | Componer con tipos de entidad existentes: `OrderDetail{Order, []Item}` no copia campo por campo — ver Architecture Rules #10 |
+| Struct DTO de persistencia (en `infrastructure/output/persistencia/*/dto/`) usa `string`, `int` o `time.Time` planos en vez de tipos `sql.Null*` | dto-without-sql-null | warning | architecture | TODOS los campos en DTOs de persistencia deben usar `sql.NullString`, `sql.NullInt64`, `sql.NullTime`, etc. El método `ToBusiness()` del mapper extrae los valores reales. Los tipos planos causan bugs silenciosos de valor-cero en NULL provenientes de JOINs, COALESCE o GROUPING SETS |

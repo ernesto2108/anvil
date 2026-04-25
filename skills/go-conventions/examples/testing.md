@@ -1,6 +1,6 @@
-# Testing Examples
+# Ejemplos de Testing
 
-## Good: Table-Driven Test with Subtests
+## Bien: Test Table-Driven con Subtests
 
 ```go
 func Test_ValidateEmail(t *testing.T) {
@@ -30,11 +30,11 @@ func Test_ValidateEmail(t *testing.T) {
 }
 ```
 
-**Why:** Each case is a data row. Adding new cases is one line. Subtests give you `go test -run Test_ValidateEmail/missing_@`.
+**Por qué:** Cada caso es una fila de datos. Agregar nuevos casos es una sola línea. Los subtests permiten `go test -run Test_ValidateEmail/missing_@`.
 
 ---
 
-## Bad: Tests Without Structure — Sequential Assertions
+## Mal: Tests Sin Estructura — Aserciones Secuenciales
 
 ```go
 // BAD — sequential assertions, can't isolate failures or run selectively

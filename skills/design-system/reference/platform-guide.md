@@ -1,27 +1,27 @@
-# Platform-Specific Design Token Guide
+# Guía de Design Tokens por Plataforma
 
-## Web Only
+## Solo Web
 
-### Defaults
-- **Base unit:** 4px (0.25rem)
-- **Font size base:** 16px (1rem) — browser default, accessible
-- **Font family:** System stack or custom web font (Inter, Geist, etc.)
-- **Breakpoints:** 640, 768, 1024, 1280, 1536px (Tailwind standard)
-- **Approach:** Mobile-first with `min-width` media queries
+### Valores por Defecto
+- **Unidad base:** 4px (0.25rem)
+- **Tamaño base de fuente:** 16px (1rem) — por defecto del navegador, accesible
+- **Font family:** System stack o fuente web personalizada (Inter, Geist, etc.)
+- **Breakpoints:** 640, 768, 1024, 1280, 1536px (estándar Tailwind)
+- **Enfoque:** Mobile-first con media queries `min-width`
 
-### Web-Specific Tokens
-- Breakpoints (sm through 2xl)
-- Container max-widths
-- Focus ring styles (2px solid, 2px offset — WCAG 2.2)
-- Scrollbar styling tokens (if custom)
-- Print-specific overrides (optional)
+### Tokens Específicos de Web
+- Breakpoints (sm hasta 2xl)
+- Max-widths de contenedor
+- Estilos de anillo de foco (2px solid, 2px offset — WCAG 2.2)
+- Tokens de estilo de scrollbar (si es personalizado)
+- Overrides específicos para impresión (opcional)
 
-### Framework Integration
+### Integración con Frameworks
 
 **Tailwind CSS:**
-- Tokens map directly to `@theme` CSS custom properties
-- Semantic tokens become Tailwind utilities via `theme.extend`
-- Example: `color-primary` → `--color-primary` → `bg-primary`, `text-primary`
+- Los tokens se mapean directamente a custom properties CSS de `@theme`
+- Los tokens semánticos se convierten en utilidades de Tailwind via `theme.extend`
+- Ejemplo: `color-primary` → `--color-primary` → `bg-primary`, `text-primary`
 
 **CSS Custom Properties (vanilla):**
 ```css
@@ -37,18 +37,18 @@
 
 ---
 
-## Mobile Only (iOS / Android)
+## Solo Mobile (iOS / Android)
 
-### Defaults
-- **Base unit:** 8pt (Apple), 4dp (Material)
-- **Font size base:** 17pt iOS (Body), 16sp Android (Body1)
-- **Font family:** SF Pro (iOS), Roboto (Android), or custom
-- **Touch targets:** 44x44pt minimum
+### Valores por Defecto
+- **Unidad base:** 8pt (Apple), 4dp (Material)
+- **Tamaño base de fuente:** 17pt iOS (Body), 16sp Android (Body1)
+- **Font family:** SF Pro (iOS), Roboto (Android), o personalizada
+- **Touch targets:** mínimo 44x44pt
 
-### iOS-Specific Tokens (Apple HIG)
+### Tokens Específicos de iOS (Apple HIG)
 
-**Text styles** — use semantic names, not fixed sizes:
-| Role | iOS name | Default size |
+**Estilos de texto** — usa nombres semánticos, no tamaños fijos:
+| Rol | Nombre iOS | Tamaño por defecto |
 |---|---|---|
 | Display | Large Title | 34pt |
 | Heading 1 | Title 1 | 28pt |
@@ -59,18 +59,18 @@
 | Caption | Caption 1 | 12pt |
 | Label | Footnote | 13pt |
 
-**Dynamic Type is mandatory** — all text must scale with user accessibility settings (xSmall through AX5).
+**Dynamic Type es obligatorio** — todo el texto debe escalar con la configuración de accesibilidad del usuario (xSmall hasta AX5).
 
-**Color approach:**
-- Use semantic system colors (`label`, `secondaryLabel`, `systemBackground`)
-- Dark mode adapts automatically
-- Elevated surfaces get lighter in dark mode (opposite of light)
-- Safe areas vary by device — never hardcode margins
+**Enfoque de color:**
+- Usa colores semánticos del sistema (`label`, `secondaryLabel`, `systemBackground`)
+- El modo oscuro se adapta automáticamente
+- Las superficies elevadas se vuelven más claras en modo oscuro (opuesto a la luz)
+- Las safe areas varían por dispositivo — nunca hardcodees márgenes
 
-### Android-Specific Tokens (Material Design 3)
+### Tokens Específicos de Android (Material Design 3)
 
-**Type scale:**
-| Role | M3 name | Default size |
+**Escala de tipos:**
+| Rol | Nombre M3 | Tamaño por defecto |
 |---|---|---|
 | Display | Display Large | 57sp |
 | Heading 1 | Headline Large | 32sp |
@@ -81,55 +81,55 @@
 | Caption | Body Small | 12sp |
 | Label | Label Large | 14sp |
 
-**Shape scale:**
+**Escala de formas:**
 - Extra-Small: 4dp (inputs)
-- Small: 8dp (buttons)
+- Small: 8dp (botones)
 - Medium: 12dp (cards)
-- Large: 16dp (modals)
+- Large: 16dp (modales)
 - Extra-Large: 28dp (bottom sheets)
 - Full: circular
 
 ---
 
-## Both (Web + Mobile)
+## Ambos (Web + Mobile)
 
-### Strategy
-Define tokens at an abstract level, then map to platform-specific values.
+### Estrategia
+Define tokens a un nivel abstracto, luego mapea a valores específicos de plataforma.
 
 ```
-Abstract token        →  Web (CSS)           →  iOS (Swift)        →  Android (Compose)
-color-primary         →  --color-primary     →  .accentColor       →  MaterialTheme.colorScheme.primary
-type-body             →  font-size: 1rem     →  .body              →  Typography.bodyLarge
-spacing-4             →  1rem (16px)         →  16pt               →  16.dp
-radius-md             →  0.375rem (6px)      →  6pt                →  8.dp (M3 Small)
+Token abstracto      →  Web (CSS)           →  iOS (Swift)        →  Android (Compose)
+color-primary        →  --color-primary     →  .accentColor       →  MaterialTheme.colorScheme.primary
+type-body            →  font-size: 1rem     →  .body              →  Typography.bodyLarge
+spacing-4            →  1rem (16px)         →  16pt               →  16.dp
+radius-md            →  0.375rem (6px)      →  6pt                →  8.dp (M3 Small)
 ```
 
-### Shared Decisions
-- Color palette: identical across platforms (same hex values)
-- Typography roles: same semantic names, platform-specific sizes
-- Spacing scale: same ratios, may differ in absolute values (pt vs px vs dp)
-- Shadows: similar visual weight, platform-native implementation
+### Decisiones Compartidas
+- Paleta de colores: idéntica entre plataformas (mismos valores hex)
+- Roles tipográficos: mismos nombres semánticos, tamaños específicos de plataforma
+- Escala de espaciado: mismas proporciones, pueden diferir en valores absolutos (pt vs px vs dp)
+- Sombras: peso visual similar, implementación nativa de plataforma
 
-### Platform Differences to Document
+### Diferencias de Plataforma a Documentar
 
-| Concern | Web | iOS | Android |
+| Aspecto | Web | iOS | Android |
 |---|---|---|---|
-| Font size base | 16px | 17pt | 16sp |
-| Touch target min | 44px | 44pt | 48dp |
-| Safe areas | None (viewport) | Dynamic Island, home indicator | Status bar, nav bar |
-| Dark mode | CSS `prefers-color-scheme` or `data-theme` | `UITraitCollection.userInterfaceStyle` | `isSystemInDarkTheme()` |
-| Dynamic text | `rem` units + media queries | Dynamic Type (mandatory) | `sp` units (scalable) |
-| Focus indicators | Visible focus ring (WCAG) | VoiceOver cursor | TalkBack focus |
+| Tamaño base de fuente | 16px | 17pt | 16sp |
+| Touch target mínimo | 44px | 44pt | 48dp |
+| Safe areas | Ninguna (viewport) | Dynamic Island, home indicator | Status bar, nav bar |
+| Modo oscuro | CSS `prefers-color-scheme` o `data-theme` | `UITraitCollection.userInterfaceStyle` | `isSystemInDarkTheme()` |
+| Texto dinámico | Unidades `rem` + media queries | Dynamic Type (obligatorio) | Unidades `sp` (escalables) |
+| Indicadores de foco | Anillo de foco visible (WCAG) | VoiceOver cursor | TalkBack focus |
 | Haptics | N/A | `UIImpactFeedbackGenerator` | `HapticFeedback` |
 
-### Flutter-Specific Notes
+### Notas Específicas de Flutter
 
-When the project uses Flutter for mobile:
-- Tokens map to `ThemeData` and `ColorScheme`
-- Typography uses `TextTheme` with named styles
-- Spacing via `EdgeInsets` and `SizedBox`
+Cuando el proyecto usa Flutter para mobile:
+- Los tokens se mapean a `ThemeData` y `ColorScheme`
+- La tipografía usa `TextTheme` con estilos nombrados
+- Espaciado via `EdgeInsets` y `SizedBox`
 - Material 3 via `useMaterial3: true`
-- Adaptive widgets handle iOS/Android differences
+- Los widgets adaptativos manejan las diferencias iOS/Android
 
 ```dart
 // Token → Flutter mapping

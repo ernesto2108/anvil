@@ -1,75 +1,75 @@
 ---
 name: scan-project
 disable-model-invocation: true
-description: Scan repo structure and write context.md to the vault with product objective and technical snapshot. Use when starting a new session, user says "scan the project", "what stack is this", "analyze the repo", or when context.md is missing or stale.
+description: Escanear la estructura del repo y escribir context.md en el vault con el objetivo del producto y un snapshot técnico. Usar al iniciar una nueva sesión, cuando el usuario diga "scan the project", "what stack is this", "analyze the repo", o cuando context.md esté ausente o desactualizado.
 ---
 
 # Scan Project
 
-Discover the REAL repository structure and tooling. Do NOT assume any architecture or folder naming. Mirror the project exactly as it exists.
+Descubrir la estructura REAL del repositorio y las herramientas utilizadas. NO asumir ninguna arquitectura ni nombres de carpetas. Reflejar el proyecto exactamente como existe.
 
-## Step 1: Product Objective
+## Paso 1: Objetivo del Producto
 
-If product objective context is missing or outdated in ``<vault>/01-project/context.md``, ask these questions first:
+Si el contexto del objetivo del producto está ausente o desactualizado en ``<vault>/01-project/context.md``, hacer estas preguntas primero:
 1. "What is the project objective in 3-6 lines?"
 2. "What non-negotiable rules must I always respect?"
 
-## Step 2: Detect Stacks
+## Paso 2: Detectar Stacks
 
-Check for these marker files to determine which stacks are present:
+Verificar estos archivos marcadores para determinar qué stacks están presentes:
 
-| File | Stack | What to collect |
+| Archivo | Stack | Qué recopilar |
 |------|-------|-----------------|
-| `go.mod` | Go | Go version, modules, `*_test.go` locations, `.golangci.*` |
-| `package.json` | Node/React | Node version, framework (Next/Vite/CRA), `*.test.tsx` locations, eslint config |
-| `pubspec.yaml` | Flutter | Dart version, dependencies, `*_test.dart` locations, `analysis_options.yaml` |
-| `Cargo.toml` | Rust | Edition, dependencies |
-| `requirements.txt` / `pyproject.toml` | Python | Python version, framework |
+| `go.mod` | Go | Versión de Go, módulos, ubicaciones de `*_test.go`, `.golangci.*` |
+| `package.json` | Node/React | Versión de Node, framework (Next/Vite/CRA), ubicaciones de `*.test.tsx`, config de eslint |
+| `pubspec.yaml` | Flutter | Versión de Dart, dependencias, ubicaciones de `*_test.dart`, `analysis_options.yaml` |
+| `Cargo.toml` | Rust | Edition, dependencias |
+| `requirements.txt` / `pyproject.toml` | Python | Versión de Python, framework |
 
-Multiple stacks can coexist (e.g., Go backend + React frontend).
+Múltiples stacks pueden coexistir (ej. backend Go + frontend React).
 
-## Step 3: Collect Information
+## Paso 3: Recopilar Información
 
-For ALL stacks:
-1. Directory tree (depth 3)
-2. CI / runtime hints — `Dockerfile`, `docker-compose.*`, `.github/workflows/*`
-3. Config files — `Makefile`, `taskfile`, scripts
-4. Ignore: `<vault>/`, `.git/`, `vendor/`, `node_modules/`, `dist/`, `build/`, `tmp/`, `.next/`
+Para TODOS los stacks:
+1. Árbol de directorios (profundidad 3)
+2. Hints de CI / runtime — `Dockerfile`, `docker-compose.*`, `.github/workflows/*`
+3. Archivos de configuración — `Makefile`, `taskfile`, scripts
+4. Ignorar: `<vault>/`, `.git/`, `vendor/`, `node_modules/`, `dist/`, `build/`, `tmp/`, `.next/`
 
-### Go-specific
-- Read `go.mod` — version and dependencies
-- Search `*_test.go` — list test locations
-- Search `.golangci.yml` / `.golangci.yaml`
-- Search `internal/`, `cmd/`, `pkg/` structure
+### Específico de Go
+- Leer `go.mod` — versión y dependencias
+- Buscar `*_test.go` — listar ubicaciones de tests
+- Buscar `.golangci.yml` / `.golangci.yaml`
+- Buscar estructura de `internal/`, `cmd/`, `pkg/`
 
-### React/Node-specific
-- Read `package.json` — scripts, dependencies, devDependencies
-- Detect framework: Next.js (`next.config.*`), Vite (`vite.config.*`), CRA (`react-scripts`)
-- Search `*.test.tsx`, `*.test.ts`, `*.spec.tsx`
-- Search eslint config (`.eslintrc.*`, `eslint.config.*`)
-- Search prettier config (`.prettierrc.*`)
-- Check for `tsconfig.json`
+### Específico de React/Node
+- Leer `package.json` — scripts, dependencies, devDependencies
+- Detectar framework: Next.js (`next.config.*`), Vite (`vite.config.*`), CRA (`react-scripts`)
+- Buscar `*.test.tsx`, `*.test.ts`, `*.spec.tsx`
+- Buscar config de eslint (`.eslintrc.*`, `eslint.config.*`)
+- Buscar config de prettier (`.prettierrc.*`)
+- Verificar `tsconfig.json`
 
-### Flutter-specific
-- Read `pubspec.yaml` — dependencies, dev_dependencies
-- Search `*_test.dart`
-- Check `analysis_options.yaml`
-- Check for `l10n.yaml` (localization)
-- Check `lib/`, `test/`, `integration_test/` structure
+### Específico de Flutter
+- Leer `pubspec.yaml` — dependencies, dev_dependencies
+- Buscar `*_test.dart`
+- Verificar `analysis_options.yaml`
+- Verificar `l10n.yaml` (localización)
+- Verificar estructura de `lib/`, `test/`, `integration_test/`
 
-## Step 4: Write Output
+## Paso 4: Escribir Salida
 
-Write ONLY: ``<vault>/01-project/context.md`` (overwrite if exists).
-Never drop technical sections when adding product objective context; keep both.
+Escribir ÚNICAMENTE: ``<vault>/01-project/context.md`` (sobreescribir si existe).
+Nunca eliminar secciones técnicas al agregar contexto del objetivo del producto; conservar ambas.
 
-Use the template from `output-template.md` — include only sections for detected stacks.
+Usar el template de `output-template.md` — incluir solo las secciones para los stacks detectados.
 
-## Actions Checklist
+## Checklist de Acciones
 
-- [ ] Read marker files (`go.mod`, `package.json`, `pubspec.yaml`)
-- [ ] List directories (depth 3)
-- [ ] Per detected stack: collect version, deps, test files, linter config
-- [ ] Search CI files (`.github/workflows/*`, `Dockerfile`, `docker-compose.*`)
-- [ ] Search build tools (`Makefile`, `taskfile.*`)
-- [ ] Ask product objective questions if missing
-- [ ] Write ``<vault>/01-project/context.md``
+- [ ] Leer archivos marcadores (`go.mod`, `package.json`, `pubspec.yaml`)
+- [ ] Listar directorios (profundidad 3)
+- [ ] Por stack detectado: recopilar versión, deps, archivos de test, config del linter
+- [ ] Buscar archivos CI (`.github/workflows/*`, `Dockerfile`, `docker-compose.*`)
+- [ ] Buscar herramientas de build (`Makefile`, `taskfile.*`)
+- [ ] Preguntar sobre el objetivo del producto si está ausente
+- [ ] Escribir ``<vault>/01-project/context.md``

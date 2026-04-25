@@ -1,15 +1,15 @@
-# Post-Implementation Checklist
+# Checklist Post-Implementación
 
-- [ ] `cargo fmt --check` — formatting correct
-- [ ] `cargo clippy -- -D warnings` — no lint errors
-- [ ] `cargo test --workspace` — all tests pass
-- [ ] No `.unwrap()` or `panic!()` in library code
-- [ ] Every `unsafe` block has `// SAFETY:` comment
-- [ ] Every `?` has `.context()` or `.with_context()`
-- [ ] No blocking IO in async functions
-- [ ] `JoinSet` for spawned tasks, not fire-and-forget
-- [ ] `select!` only with cancellation-safe futures
-- [ ] No `static mut` — using atomics/Mutex/LazyLock
-- [ ] `cargo audit` clean — no known vulnerabilities
-- [ ] `cargo machete` clean — no unused dependencies
-- [ ] For crypto: constant-time comparisons, secrets redacted from Debug
+- [ ] `cargo fmt --check` — formato correcto
+- [ ] `cargo clippy -- -D warnings` — sin errores de lint
+- [ ] `cargo test --workspace` — todos los tests pasan
+- [ ] Sin `.unwrap()` ni `panic!()` en código de librería
+- [ ] Cada bloque `unsafe` tiene comentario `// SAFETY:`
+- [ ] Cada `?` tiene `.context()` o `.with_context()`
+- [ ] Sin IO bloqueante en funciones async
+- [ ] `JoinSet` para tareas spawneadas, no fire-and-forget
+- [ ] `select!` solo con futures seguros ante cancelación
+- [ ] Sin `static mut` — usar atomics/Mutex/LazyLock
+- [ ] `cargo audit` limpio — sin vulnerabilidades conocidas
+- [ ] `cargo machete` limpio — sin dependencias no utilizadas
+- [ ] Para crypto: comparaciones en tiempo constante, secretos redactados del Debug

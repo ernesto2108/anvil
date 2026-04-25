@@ -1,26 +1,26 @@
-# Security Guide
+# Guía de Seguridad
 
-## XSS Prevention
+## Prevención de XSS
 
-Never use `innerHTML`, `outerHTML`, or `document.write` with untrusted content. In React, avoid `dangerouslySetInnerHTML`. If you must render HTML, always sanitize first.
+Nunca usar `innerHTML`, `outerHTML` o `document.write` con contenido no confiable. En React, evitar `dangerouslySetInnerHTML`. Si es imprescindible renderizar HTML, siempre sanitizar primero.
 
 ```typescript
-// WRONG: XSS vector — attacker controls content
+// INCORRECTO: vector de XSS — el atacante controla el contenido
 element.innerHTML = userContent;
 element.innerHTML = `<div>${comment.body}</div>`;
 document.write(serverData);
 
-// WRONG: React XSS via dangerouslySetInnerHTML without sanitization
+// INCORRECTO: XSS en React via dangerouslySetInnerHTML sin sanitización
 function Comment({ body }: { body: string }) {
-  return <div dangerouslySetInnerHTML={{ __html: body }} />; // DO NOT DO THIS
+  return <div dangerouslySetInnerHTML={{ __html: body }} />; // NO HACER ESTO
 }
 
-// RIGHT: text content only — React escapes automatically
+// CORRECTO: solo text content — React escapa automáticamente
 function Comment({ body }: { body: string }) {
-  return <div>{body}</div>; // safe — React renders as text node
+  return <div>{body}</div>; // seguro — React renderiza como nodo de texto
 }
 
-// RIGHT: when HTML rendering is unavoidable — sanitize with DOMPurify
+// CORRECTO: cuando el renderizado de HTML es inevitable — sanitizar con DOMPurify
 import DOMPurify from "dompurify";
 
 const SANITIZE_CONFIG = {
@@ -31,73 +31,73 @@ const SANITIZE_CONFIG = {
 
 function SafeHtml({ html }: { html: string }): React.ReactElement {
   const sanitized = DOMPurify.sanitize(html, SANITIZE_CONFIG);
-  // Force noopener/noreferrer on all links after sanitization
+  // Forzar noopener/noreferrer en todos los links después de la sanitización
   return <div dangerouslySetInnerHTML={{ __html: sanitized }} />;
 }
 
-// RIGHT: use textContent for dynamic DOM manipulation
-element.textContent = userContent; // safe — treated as text
+// CORRECTO: usar textContent para manipulación dinámica del DOM
+element.textContent = userContent; // seguro — tratado como texto
 ```
 
-## Input Sanitization
+## Sanitización de Entradas
 
-Validate and sanitize at every trust boundary. Use Zod for structure validation; sanitize free-form text inputs for downstream use.
+Validar y sanitizar en cada frontera de confianza. Usar Zod para validación de estructura; sanitizar entradas de texto libre para uso posterior.
 
 ```typescript
-// WRONG: raw user input used directly in query/HTML
-const query = req.query.search; // could be anything
+// INCORRECTO: entrada del usuario usada directamente en query/HTML
+const query = req.query.search; // puede ser cualquier cosa
 const result = await db.execute(`SELECT * FROM products WHERE name LIKE '%${query}%'`);
 
-// RIGHT: validate with Zod, use parameterized queries
+// CORRECTO: validar con Zod, usar queries parametrizadas
 const searchSchema = z.string().trim().min(1).max(200);
 const query = searchSchema.parse(req.query.search);
 const result = await db.execute(
   "SELECT * FROM products WHERE name LIKE $1",
-  [`%${query}%`] // parameterized — SQL injection impossible
+  [`%${query}%`] // parametrizado — inyección SQL imposible
 );
 
-// URL validation — never redirect to arbitrary URLs
+// Validación de URL — nunca redirigir a URLs arbitrarias
 function safeRedirect(url: string, allowedOrigins: string[]): string {
   try {
     const parsed = new URL(url);
     if (!allowedOrigins.includes(parsed.origin)) {
-      return "/"; // fallback to safe default
+      return "/"; // fallback al default seguro
     }
     return url;
   } catch {
-    return "/"; // invalid URL — redirect to home
+    return "/"; // URL inválida — redirigir al inicio
   }
 }
 
-// Filename sanitization for file uploads
+// Sanitización de nombre de archivo para uploads
 function sanitizeFilename(name: string): string {
   return name
-    .replace(/[^a-zA-Z0-9._-]/g, "_") // allow only safe chars
-    .replace(/\.{2,}/g, "_")           // no path traversal (..)
-    .slice(0, 255);                    // max filename length
+    .replace(/[^a-zA-Z0-9._-]/g, "_") // permitir solo caracteres seguros
+    .replace(/\.{2,}/g, "_")           // sin traversal de ruta (..)
+    .slice(0, 255);                    // longitud máxima de nombre de archivo
 }
 ```
 
-## CSRF Protection
+## Protección CSRF
 
-For cookie-based sessions, require CSRF tokens on state-mutating requests. For JWT-based APIs (Authorization header), CSRF is not applicable.
+Para sesiones basadas en cookies, requerir tokens CSRF en solicitudes que mutan estado. Para APIs basadas en JWT (cabecera Authorization), CSRF no aplica.
 
 ```typescript
-// Server: set CSRF token in cookie + validate on POST/PUT/DELETE/PATCH
+// Servidor: establecer token CSRF en cookie + validar en POST/PUT/DELETE/PATCH
 import csrf from "csrf";
 
 const tokens = new csrf();
 const secret = await tokens.secret();
 
-// Set in cookie (httpOnly: false so JS can read it)
+// Establecer en cookie (httpOnly: false para que JS pueda leerlo)
 res.cookie("csrf-token", tokens.create(secret), {
   sameSite: "strict",
   secure: true,
 });
-// Store secret server-side (session or DB)
+// Almacenar secret en el servidor (sesión o DB)
 req.session.csrfSecret = secret;
 
-// Validate on mutations
+// Validar en mutaciones
 function csrfMiddleware(req: Request, res: Response, next: NextFunction) {
   if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
 
@@ -108,7 +108,7 @@ function csrfMiddleware(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-// Client: attach token from cookie to every mutating request
+// Cliente: adjuntar token de la cookie en cada solicitud mutante
 function getCsrfToken(): string {
   const match = document.cookie.match(/csrf-token=([^;]+)/);
   return match?.[1] ?? "";
@@ -129,31 +129,31 @@ async function apiPost(url: string, body: unknown): Promise<Response> {
 
 ## Content Security Policy (CSP)
 
-Set CSP headers on every HTML response. Never use `unsafe-inline` or `unsafe-eval` in production.
+Establecer cabeceras CSP en cada respuesta HTML. Nunca usar `unsafe-inline` o `unsafe-eval` en producción.
 
 ```typescript
 // Next.js — next.config.ts
 const cspHeader = [
   "default-src 'self'",
-  "script-src 'self' 'nonce-{NONCE}'",       // use nonces, not unsafe-inline
+  "script-src 'self' 'nonce-{NONCE}'",       // usar nonces, no unsafe-inline
   "style-src 'self' 'nonce-{NONCE}'",
   "img-src 'self' data: https://cdn.example.com",
   "font-src 'self'",
   "connect-src 'self' https://api.example.com",
-  "frame-ancestors 'none'",                   // prevents clickjacking
+  "frame-ancestors 'none'",                   // previene clickjacking
   "base-uri 'self'",
   "form-action 'self'",
   "upgrade-insecure-requests",
 ].join("; ");
 
-// Nonce-based approach for inline scripts (when truly needed)
+// Enfoque basado en nonces para scripts inline (cuando sea realmente necesario)
 function generateNonce(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
   return btoa(String.fromCharCode(...bytes));
 }
 
-// Express middleware
+// Middleware de Express
 function cspMiddleware(req: Request, res: Response, next: NextFunction) {
   const nonce = generateNonce();
   res.locals.nonce = nonce;
@@ -168,30 +168,30 @@ function cspMiddleware(req: Request, res: Response, next: NextFunction) {
 }
 ```
 
-## Secrets and Sensitive Data
+## Secretos y Datos Sensibles
 
 ```typescript
-// WRONG: secrets in source code
-const API_KEY = "sk-proj-abc123"; // committed to git
+// INCORRECTO: secretos en el código fuente
+const API_KEY = "sk-proj-abc123"; // commiteado en git
 
-// WRONG: secrets in localStorage (accessible by JS, not encrypted)
+// INCORRECTO: secretos en localStorage (accesible por JS, no encriptado)
 localStorage.setItem("authToken", token);
 
-// RIGHT: load secrets from environment at startup (validated with Zod)
-const env = loadEnv(); // throws if missing — see rules/architecture.md
+// CORRECTO: cargar secretos desde el entorno al inicio (validados con Zod)
+const env = loadEnv(); // lanza si falta — ver rules/architecture.md
 const apiKey = env.STRIPE_SECRET_KEY;
 
-// RIGHT: auth tokens in httpOnly cookies — not accessible via JS
+// CORRECTO: tokens de auth en cookies httpOnly — no accesibles via JS
 res.cookie("auth-token", jwt, {
-  httpOnly: true,      // not accessible via document.cookie
-  secure: true,        // HTTPS only
-  sameSite: "lax",     // CSRF mitigation
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  httpOnly: true,      // no accesible via document.cookie
+  secure: true,        // solo HTTPS
+  sameSite: "lax",     // mitigación CSRF
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
 });
 
-// WRONG: logging sensitive fields
-console.log("User logged in", { email, password, token }); // never log credentials
+// INCORRECTO: registrar campos sensibles en logs
+console.log("User logged in", { email, password, token }); // nunca loguear credenciales
 
-// RIGHT: log only safe identifiers
+// CORRECTO: loguear solo identificadores seguros
 logger.info("User logged in", { userId: user.id, email: user.email });
 ```

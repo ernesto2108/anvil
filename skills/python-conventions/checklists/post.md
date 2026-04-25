@@ -1,15 +1,15 @@
-# Post-Implementation Checklist
+# Checklist Post-Implementación
 
-After writing Python code, verify:
+Después de escribir código Python, verificar:
 
-- [ ] `ruff check .` passes — no lint errors
-- [ ] `ruff format --check .` passes — formatting correct
-- [ ] `mypy --strict` passes — no type errors
-- [ ] No `Union`, `Optional`, `Dict`, `List` imports — using modern syntax
-- [ ] No mutable defaults — `def f(x=None)` not `def f(x=[])`
-- [ ] Exceptions chained — `raise X from original_exc`
-- [ ] All resources have context managers — `async with`, `with`
-- [ ] For ML: dtype is `float32`, arrays preallocated, operations vectorized
-- [ ] For async: TaskGroup used, timeouts in place, no sync calls in async
-- [ ] Tests pass with `pytest -x --tb=short`
-- [ ] No hardcoded secrets — using env vars + pydantic-settings
+- [ ] `ruff check .` pasa — sin errores de lint
+- [ ] `ruff format --check .` pasa — formato correcto
+- [ ] `mypy --strict` pasa — sin errores de tipos
+- [ ] Sin `Union`, `Optional`, `Dict`, `List` imports — usar sintaxis moderna
+- [ ] Sin defaults mutables — `def f(x=None)` no `def f(x=[])`
+- [ ] Excepciones encadenadas — `raise X from original_exc`
+- [ ] Todos los recursos tienen context managers — `async with`, `with`
+- [ ] Para ML: dtype es `float32`, arrays pre-allocados, operaciones vectorizadas
+- [ ] Para async: se usa TaskGroup, timeouts establecidos, sin llamadas sync en async
+- [ ] Tests pasan con `pytest -x --tb=short`
+- [ ] Sin secrets hardcodeados — usar env vars + pydantic-settings

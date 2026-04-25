@@ -1,8 +1,8 @@
-# Pipeline (Stage1 -> Stage2 -> Stage3)
+# Pipeline (Etapa1 -> Etapa2 -> Etapa3)
 
-**When:** Data flows through sequential transformation stages, each potentially concurrent.
+**Cuándo:** Los datos fluyen a través de etapas de transformación secuenciales, cada una potencialmente concurrente.
 
-**Real scenario:** ETL pipeline: read CSV rows -> validate/transform -> batch insert to database.
+**Escenario real:** Pipeline ETL: leer filas de CSV -> validar/transformar -> inserción en lotes en base de datos.
 
 ```go
 package main
@@ -29,7 +29,7 @@ type InsertResult struct {
     OK   bool
 }
 
-// Stage 1: Read raw data
+// Etapa 1: Leer datos crudos
 func readRows(ctx context.Context, lines []string) <-chan RawRow {
     out := make(chan RawRow)
     go func() {
@@ -45,7 +45,7 @@ func readRows(ctx context.Context, lines []string) <-chan RawRow {
     return out
 }
 
-// Stage 2: Validate and transform (can run multiple workers)
+// Etapa 2: Validar y transformar (puede ejecutar múltiples workers)
 func validate(ctx context.Context, in <-chan RawRow) <-chan ValidRow {
     out := make(chan ValidRow)
     go func() {
@@ -53,10 +53,10 @@ func validate(ctx context.Context, in <-chan RawRow) <-chan ValidRow {
         for row := range in {
             parts := strings.SplitN(row.Data, ",", 2)
             if len(parts) != 2 {
-                continue // skip invalid rows
+                continue // omitir filas inválidas
             }
             select {
-            case out <- ValidRow{Line: row.Line, Name: parts[0]}: // simplified
+            case out <- ValidRow{Line: row.Line, Name: parts[0]}: // simplificado
             case <-ctx.Done():
                 return
             }
@@ -65,13 +65,13 @@ func validate(ctx context.Context, in <-chan RawRow) <-chan ValidRow {
     return out
 }
 
-// Stage 3: Batch insert
+// Etapa 3: Inserción en lotes
 func batchInsert(ctx context.Context, in <-chan ValidRow) <-chan InsertResult {
     out := make(chan InsertResult)
     go func() {
         defer close(out)
         for row := range in {
-            // Simulate DB insert
+            // Simula inserción en DB
             select {
             case out <- InsertResult{Line: row.Line, OK: true}:
             case <-ctx.Done():
@@ -88,7 +88,7 @@ func main() {
 
     lines := []string{"Alice,30", "Bob,25", "bad-line", "Carol,28"}
 
-    // Wire the pipeline: read -> validate -> insert
+    // Conecta el pipeline: leer -> validar -> insertar
     raw := readRows(ctx, lines)
     valid := validate(ctx, raw)
     results := batchInsert(ctx, valid)
@@ -99,6 +99,6 @@ func main() {
 }
 ```
 
-**Key rule from the Go blog:** "Stages close their outbound channels when all send operations are done. Stages keep receiving from inbound channels until those channels are closed or senders are unblocked." (Source: [Go Concurrency Patterns: Pipelines](https://go.dev/blog/pipelines))
+**Regla clave del blog de Go:** "Las etapas cierran sus canales de salida cuando todas las operaciones de envío están completas. Las etapas continúan recibiendo de los canales de entrada hasta que esos canales se cierran o los remitentes se desbloquean." (Fuente: [Go Concurrency Patterns: Pipelines](https://go.dev/blog/pipelines))
 
-**Common mistake:** Not closing channels. If stage 2 never closes its output channel, stage 3 blocks on `range` forever. Every goroutine that owns a channel must `defer close(out)`.
+**Error común:** No cerrar los channels. Si la etapa 2 nunca cierra su channel de salida, la etapa 3 se bloquea en `range` indefinidamente. Cada goroutine que es dueña de un channel debe hacer `defer close(out)`.

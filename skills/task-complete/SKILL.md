@@ -1,64 +1,64 @@
 ---
 name: task-complete
-description: Mark a task as done — updates task file status, moves card on Kanban board, cleans duplicates. Use when user says "task done", "complete task", "mark as done", or "/task-complete TASK-XXX".
+description: Marcar una tarea como completada — actualiza el estado del archivo de tarea, mueve la tarjeta en el tablero Kanban, limpia duplicados. Úsalo cuando el usuario diga "tarea lista", "completar tarea", "marcar como hecho", o "/task-complete TASK-XXX".
 disable-model-invocation: true
 ---
 
 # Task Complete
 
-Automates the 5 steps needed to close a task in the Obsidian vault.
+Automatiza los 5 pasos necesarios para cerrar una tarea en el vault de Obsidian.
 
-## Usage
+## Uso
 
 ```
 /task-complete TASK-006
 /task-complete TASK-006 "Documentación completada + 2 bugs encontrados"
 ```
 
-## Workflow
+## Flujo de Trabajo
 
-When invoked with a TASK-ID (and optional summary):
+Cuando se invoca con un TASK-ID (y resumen opcional):
 
-### Step 1 — Find the task file
+### Paso 1 — Encontrar el archivo de tarea
 
-Search for `<TASK-ID>.md` in `<docs>/03-tasks/` (check sprint folders first, then backlog).
+Buscar `<TASK-ID>.md` en `<docs>/03-tasks/` (verificar primero las carpetas de sprint, luego el backlog).
 
-### Step 2 — Update task status
+### Paso 2 — Actualizar el estado de la tarea
 
-In the task file frontmatter, set:
+En el frontmatter del archivo de tarea, establecer:
 ```yaml
 status: done
 ```
 
-### Step 3 — Update Kanban board
+### Paso 3 — Actualizar el tablero Kanban
 
-In `<docs>/02-backlog/board.md`:
-1. **Remove** the task line from whatever column it's in (Backlog, To Do, In Progress, Blocked)
-2. **Remove** any duplicate in Backlog if the task also exists in a sprint folder
-3. **Add** to Done column:
+En `<docs>/02-backlog/board.md`:
+1. **Eliminar** la línea de la tarea de cualquier columna en la que se encuentre (Backlog, To Do, In Progress, Blocked)
+2. **Eliminar** cualquier duplicado en Backlog si la tarea también existe en una carpeta de sprint
+3. **Agregar** a la columna Done:
    ```
-   - [x] [[<sprint>/<TASK-ID>]] <summary or title> #<service> #<labels>
+   - [x] [[<sprint>/<TASK-ID>]] <resumen o título> #<service> #<labels>
    ```
 
-### Step 4 — Update sprint metrics (if applicable)
+### Paso 4 — Actualizar métricas del sprint (si aplica)
 
-In `<docs>/02-backlog/sprint-current.md`, increment SP completed by the task's `story_points`.
+En `<docs>/02-backlog/sprint-current.md`, incrementar los SP completados por los `story_points` de la tarea.
 
-### Step 5 — Archive handoff note
+### Paso 5 — Archivar la nota de handoff
 
-Follow the `/handoff` skill Archive operation: read, append summary to task file, delete handoff file. Skip if no handoff exists.
+Seguir la operación de Archivo de la skill `/handoff`: leer, agregar resumen al archivo de tarea, eliminar el archivo de handoff. Omitir si no existe handoff.
 
-### Step 6 — Confirm
+### Paso 6 — Confirmar
 
-Output a one-line confirmation:
+Emitir una confirmación de una línea:
 ```
 ✓ <TASK-ID> marcada como done (<story_points> SP)
 ```
 
-## Rules
+## Reglas
 
-- Resolve `<docs>` from `~/.claude/project-registry.md`
-- If task file not found → report error, do not create it
-- If task is already `status: done` → skip, report "already done"
-- Do NOT modify any file other than: the task .md, board.md, sprint-current.md
-- Maximum 6 tool calls: 1 Read (task file) + 1 Edit (task status) + 1 Edit (board) + 1 Edit (sprint metrics) + 1 Read (handoff) + 1 Delete (handoff)
+- Resolver `<docs>` desde `~/.claude/project-registry.md`
+- Si no se encuentra el archivo de tarea → reportar error, no crearlo
+- Si la tarea ya tiene `status: done` → omitir, reportar "already done"
+- NO modificar ningún archivo que no sea: el .md de la tarea, board.md, sprint-current.md
+- Máximo 6 llamadas a herramientas: 1 Read (archivo de tarea) + 1 Edit (estado de tarea) + 1 Edit (board) + 1 Edit (métricas de sprint) + 1 Read (handoff) + 1 Delete (handoff)

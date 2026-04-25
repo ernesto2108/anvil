@@ -1,4 +1,4 @@
-# Terraform Review Checklist
+# Checklist de Revisión Terraform
 
 ## Correctness
 

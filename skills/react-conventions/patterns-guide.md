@@ -1,8 +1,8 @@
-# React Patterns Guide
+# Guía de Patrones React
 
-## Custom Hooks — Primary Pattern
+## Custom Hooks — Patrón Principal
 
-The hook IS the container — it encapsulates all logic; the component is pure UI.
+El hook ES el contenedor — encapsula toda la lógica; el componente es UI pura.
 
 ```tsx
 function useUserList() {
@@ -30,17 +30,17 @@ function UserList() {
 }
 ```
 
-**Rules:**
-- Prefix with `use`
-- Use `useCallback` for returned functions
-- Return `as const` for tuple returns
-- Custom hooks always validate context with null check + `throw new Error()`
+**Reglas:**
+- Prefijo `use`
+- Usar `useCallback` para funciones retornadas
+- Retornar `as const` para retornos de tupla
+- Los custom hooks siempre validan el contexto con verificación de null + `throw new Error()`
 
 ---
 
 ## Compound Components
 
-Related components sharing state implicitly via Context (Tabs, Accordion, Select).
+Componentes relacionados que comparten estado implícitamente via Context (Tabs, Accordion, Select).
 
 ```tsx
 // API: <Tabs><Tabs.List><Tabs.Tab /></Tabs.List><Tabs.Panel /></Tabs>
@@ -84,13 +84,13 @@ Tabs.Tab = Tab
 Tabs.Panel = Panel
 ```
 
-**When to use:** UI components with multiple sub-parts sharing implicit state (accordions, tabs, selects, menus).
+**Cuándo usar:** Componentes de UI con múltiples sub-partes que comparten estado implícito (accordions, tabs, selects, menús).
 
 ---
 
 ## Facade Hooks
 
-Hide data source complexity behind a simple hook interface. UI never imports `useSelector`/`useDispatch` directly.
+Ocultan la complejidad de la fuente de datos detrás de una interfaz de hook simple. La UI nunca importa `useSelector`/`useDispatch` directamente.
 
 ```tsx
 // bad: component knows about Redux internals
@@ -123,13 +123,13 @@ function Profile() {
 }
 ```
 
-**When to use:** When components consume state from Redux, Zustand, Context, or API layers. Swap data source without touching UI.
+**Cuándo usar:** Cuando los componentes consumen estado de Redux, Zustand, Context o capas de API. Cambiar la fuente de datos sin tocar la UI.
 
 ---
 
 ## State Machine
 
-Replace boolean hell with explicit status states using discriminated unions or `useReducer`.
+Reemplazar boolean hell con estados de status explícitos usando uniones discriminadas o `useReducer`.
 
 ```tsx
 // bad: boolean hell
@@ -167,13 +167,13 @@ function useAsync<T>() {
 }
 ```
 
-**When to use:** Any flow with mutually exclusive states. Eliminates impossible states at compile time.
+**Cuándo usar:** Cualquier flujo con estados mutuamente excluyentes. Elimina estados imposibles en tiempo de compilación.
 
 ---
 
 ## Control Props
 
-Controlled/uncontrolled dual-mode components — component works both ways.
+Componentes con modo controlado/no-controlado dual — el componente funciona de ambas formas.
 
 ```tsx
 interface ToggleProps {
@@ -197,13 +197,13 @@ function Toggle({ isOn: controlledIsOn, defaultIsOn = false, onChange }: ToggleP
 }
 ```
 
-**When to use:** Form elements, toggles, selects — anything that should work standalone or parent-controlled.
+**Cuándo usar:** Elementos de formulario, toggles, selects — cualquier cosa que deba funcionar de forma autónoma o controlada por el padre.
 
 ---
 
 ## Adapter Component
 
-Wrapping 3rd-party libraries to isolate vendor lock-in.
+Envolver librerías de terceros para aislar el vendor lock-in.
 
 ```tsx
 // bad: 3rd party API leaks everywhere
@@ -223,13 +223,13 @@ function Chart({ data, type, height = 300 }: ChartProps) {
 }
 ```
 
-**When to use:** Any 3rd-party UI library (charts, maps, editors, date pickers). Swap vendors by changing one file.
+**Cuándo usar:** Cualquier librería de UI de terceros (gráficas, mapas, editores, date pickers). Cambiar de vendor modificando un solo archivo.
 
 ---
 
 ## Strategy Pattern
 
-Replace `if/else`/`switch` blocks with interchangeable strategy objects.
+Reemplazar bloques `if/else`/`switch` con objetos de estrategia intercambiables.
 
 ```tsx
 // bad: switch in component
@@ -254,13 +254,13 @@ function PricingDisplay({ plan }: { plan: Plan }) {
 }
 ```
 
-**When to use:** Rendering different UI variants based on a discriminator. Adding a variant = adding one entry, no conditionals.
+**Cuándo usar:** Renderizar variantes de UI diferentes basadas en un discriminador. Agregar una variante = agregar una entrada, sin condicionales.
 
 ---
 
 ## Observer Pattern
 
-Event bus for communication outside the React tree (toasts, WebSocket events, micro-frontends).
+Bus de eventos para comunicación fuera del árbol de React (toasts, eventos WebSocket, micro-frontends).
 
 ```tsx
 type EventMap = {
@@ -290,13 +290,13 @@ function useEventBus<K extends keyof EventMap>(event: K, handler: (data: EventMa
 }
 ```
 
-**When to use:** Cross-cutting events that don't fit React's component tree (toasts, analytics, WebSocket routing).
+**Cuándo usar:** Eventos transversales que no encajan en el árbol de componentes de React (toasts, analytics, enrutamiento WebSocket).
 
 ---
 
 ## Decorator Hooks
 
-Wrapping existing hooks to add cross-cutting concerns (analytics, permissions, logging).
+Envolver hooks existentes para agregar responsabilidades transversales (analytics, permisos, logging).
 
 ```tsx
 // base hook
@@ -329,13 +329,13 @@ function useUsersWithPermissions() {
 }
 ```
 
-**When to use:** Adding analytics, permissions, caching, or logging to existing hooks without modifying them.
+**Cuándo usar:** Agregar analytics, permisos, caché o logging a hooks existentes sin modificarlos.
 
 ---
 
 ## Factory Pattern
 
-Generating hooks/components dynamically from configuration.
+Generar hooks/componentes dinámicamente a partir de configuración.
 
 ```tsx
 function createResourceHook<T>(endpoint: string) {
@@ -353,11 +353,11 @@ const useProducts = createResourceHook<Product[]>('/products')
 const useOrders = createResourceHook<Order[]>('/orders')
 ```
 
-**When to use:** Multiple resources with identical fetch/cache patterns. Avoid copy-pasting hooks.
+**Cuándo usar:** Múltiples recursos con patrones idénticos de fetch/caché. Evitar copiar y pegar hooks.
 
 ---
 
-## Pattern Relationships
+## Relaciones Entre Patrones
 
 ```
 compound-components --> provider-pattern (when state goes global)

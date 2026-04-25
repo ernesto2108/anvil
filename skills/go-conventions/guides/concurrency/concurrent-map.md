@@ -1,10 +1,10 @@
-# Safe Concurrent Map Access
+# Acceso Seguro a Mapas Concurrentes
 
-**When:** Multiple goroutines reading/writing to a shared map.
+**Cuándo usar:** Múltiples goroutines leyendo/escribiendo en un mapa compartido.
 
-**Real scenario:** In-memory cache accessed by HTTP handlers.
+**Escenario real:** Caché en memoria accedida por handlers HTTP.
 
-## Using sync.RWMutex (recommended for most cases)
+## Usando sync.RWMutex (recomendado para la mayoría de los casos)
 
 ```go
 type Cache struct {
@@ -48,7 +48,7 @@ func (c *Cache) GetOrSet(key string, create func() Item) Item {
 }
 ```
 
-## Using sync.Map (specific use cases only)
+## Usando sync.Map (solo casos de uso específicos)
 
 ```go
 // sync.Map is optimized for two specific cases:
@@ -71,4 +71,4 @@ if val, ok := cache.Load("key"); ok {
 actual, loaded := cache.LoadOrStore("key", newItem)
 ```
 
-**Common mistake:** Using a bare `map` across goroutines. Maps are NOT safe for concurrent writes. The runtime will panic with "concurrent map writes" (if you are lucky) or silently corrupt data. Always protect with a mutex or use `sync.Map`.
+**Error común:** Usar un `map` desnudo entre goroutines. Los mapas NO son seguros para escrituras concurrentes. El runtime entrará en pánico con "concurrent map writes" (si tienes suerte) o corromperá los datos silenciosamente. Siempre proteger con un mutex o usar `sync.Map`.

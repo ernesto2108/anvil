@@ -1,4 +1,4 @@
-# Report Format
+# Formato de Reporte
 
 El reporte se imprime directamente en consola. Sin archivos, sin preamble.
 

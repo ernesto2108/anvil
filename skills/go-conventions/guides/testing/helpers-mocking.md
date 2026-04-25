@@ -1,9 +1,9 @@
-# Test Helpers & Mocking with Interfaces
+# Helpers de Test y Mocking con Interfaces
 
-## Test Helpers
+## Helpers de Test
 
 ```go
-// Always mark helpers with t.Helper() — errors report the caller's line
+// Siempre marcar los helpers con t.Helper() — los errores reportan la línea del caller
 func setupTestDB(t *testing.T) *sql.DB {
     t.Helper()
 
@@ -19,7 +19,7 @@ func setupTestDB(t *testing.T) *sql.DB {
     return db
 }
 
-// Factory helpers for common test objects
+// Factory helpers para objetos de test comunes
 func newTestOrder(t *testing.T, opts ...func(*Order)) *Order {
     t.Helper()
     o := &Order{
@@ -34,19 +34,19 @@ func newTestOrder(t *testing.T, opts ...func(*Order)) *Order {
 }
 ```
 
-- `t.Helper()` on every helper — makes error output point to the test, not the helper
-- `t.Cleanup()` instead of `defer` — runs after the test regardless of subtest nesting
-- Factory functions use functional options for flexibility
+- `t.Helper()` en cada helper — hace que el output de errores apunte al test, no al helper
+- `t.Cleanup()` en lugar de `defer` — ejecuta después del test sin importar el anidamiento de subtests
+- Las factory functions usan functional options para mayor flexibilidad
 
 ---
 
-## Mocking with Interfaces
+## Mocking con Interfaces
 
-No mocking frameworks. Define interfaces, implement hand-written test doubles.
+Sin frameworks de mocking. Definir interfaces, implementar test doubles escritos a mano.
 
-### Pattern A: Function-pointer fakes
+### Patrón A: Function-pointer fakes
 
-Best for fine-grained control — configure behavior per test case:
+Ideal para control fino — configurar comportamiento por caso de test:
 
 ```go
 // Production interface (defined by consumer)
@@ -106,9 +106,9 @@ func Test_CreateUser_repoError(t *testing.T) {
 }
 ```
 
-### Pattern B: Embedding + panic stubs
+### Patrón B: Embedding + panic stubs
 
-Best for compile-time safety — ensures new interface methods are noticed:
+Ideal para seguridad en tiempo de compilación — garantiza que se noten los nuevos métodos de interfaz:
 
 ```go
 // Base stub that panics on unimplemented methods
@@ -142,6 +142,6 @@ func Test_Handler_Create_success(t *testing.T) {
 }
 ```
 
-**When to use which:**
-- Function-pointer fakes → control per test case, nil = no-op default
-- Embedding + panic stubs → compile-time safety, interface changes break fast
+**Cuándo usar cuál:**
+- Function-pointer fakes → control por caso de test, nil = no-op por defecto
+- Embedding + panic stubs → seguridad en tiempo de compilación, los cambios de interfaz rompen rápido

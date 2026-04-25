@@ -1,4 +1,4 @@
-# Connection Pool Configuration (sql.DB)
+# Configuración del Pool de Conexiones (sql.DB)
 
 ```go
 db, err := sql.Open("postgres", dsn)
@@ -13,19 +13,19 @@ db.SetConnMaxLifetime(5 * time.Minute)  // default: 0 (forever) — stale after 
 db.SetConnMaxIdleTime(5 * time.Minute)  // releases idle conns when load drops
 ```
 
-| Setting | Default | Risk |
+| Configuración | Por defecto | Riesgo |
 |---------|---------|------|
-| MaxOpenConns | 0 (unlimited) | Overwhelms database |
-| MaxIdleConns | 2 | Reconnection overhead under load |
-| ConnMaxLifetime | 0 (forever) | Stale connections after DB failover |
-| ConnMaxIdleTime | 0 (forever) | Idle connections waste resources |
+| MaxOpenConns | 0 (ilimitado) | Satura la base de datos |
+| MaxIdleConns | 2 | Overhead de reconexión bajo carga |
+| ConnMaxLifetime | 0 (para siempre) | Conexiones obsoletas después de failover de DB |
+| ConnMaxIdleTime | 0 (para siempre) | Las conexiones inactivas desperdician recursos |
 
-**Rules:**
-- `MaxIdleConns` <= `MaxOpenConns` (enforced automatically)
-- Setting `MaxOpenConns` too low causes app deadlock (goroutines wait like a semaphore)
-- Monitor `db.Stats()`: alert on `WaitCount` increasing or `InUse` near `MaxOpenConns`
+**Reglas:**
+- `MaxIdleConns` <= `MaxOpenConns` (aplicado automáticamente)
+- Configurar `MaxOpenConns` demasiado bajo causa deadlock en la app (las goroutines esperan como un semáforo)
+- Monitorear `db.Stats()`: alertar si `WaitCount` aumenta o `InUse` se acerca a `MaxOpenConns`
 
-## Monitor Connection Pool Health
+## Monitorear la Salud del Pool de Conexiones
 
 ```go
 stats := db.Stats()
@@ -40,7 +40,7 @@ stats := db.Stats()
 // - InUse not returning to ~0 after request burst → CONNECTION LEAK
 ```
 
-## Background Operations (Go 1.21+)
+## Operaciones en Background (Go 1.21+)
 
 ```go
 // When you need fire-and-forget without parent cancellation
@@ -51,4 +51,4 @@ func handler(w http.ResponseWriter, req *http.Request) {
 }
 ```
 
-Use sparingly — most operations should respect parent cancellation.
+Usar con moderación — la mayoría de las operaciones deberían respetar la cancelación del padre.

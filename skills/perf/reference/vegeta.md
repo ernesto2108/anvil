@@ -1,40 +1,40 @@
-# Vegeta — Reference Guide
+# Vegeta — Guía de Referencia
 
-> Go-based HTTP load testing library and CLI. Best for: Go projects, precise rate control, binary results for custom analysis.
+> Librería y CLI de load testing HTTP basada en Go. Ideal para: proyectos Go, control preciso de tasa, resultados binarios para análisis personalizado.
 
-## Install
+## Instalación
 
 ```bash
 # CLI
 go install github.com/tsenart/vegeta/v12@latest
-# Or brew
+# O con brew
 brew install vegeta
 ```
 
-## CLI Usage
+## Uso de CLI
 
 ```bash
-# Basic attack
+# Ataque básico
 echo 'GET https://api.example.com/health' | vegeta attack -rate=50/s -duration=30s > results.bin
 
-# POST with body and headers
+# POST con body y headers
 echo 'POST https://api.example.com/endpoint' | \
   vegeta attack -rate=50/s -duration=30s \
   -header "Content-Type: application/json" \
   -header "Authorization: Bearer TOKEN" \
   -body payload.json > results.bin
 
-# Report
+# Reporte
 vegeta report results.bin
 
-# Encode to JSON (for analysis)
+# Codificar a JSON (para análisis)
 vegeta encode < results.bin > results.json
 
-# Plot (basic text histogram)
+# Plot (histograma de texto básico)
 vegeta report -type=hist[0,100ms,200ms,500ms,1s,5s] results.bin
 ```
 
-## Go Library Usage
+## Uso de la Librería Go
 
 ```go
 import vegeta "github.com/tsenart/vegeta/v12/lib"
@@ -53,9 +53,9 @@ for res := range attacker.Attack(targeter, pacer, 30*time.Second, "test-name") {
 metrics.Close()
 ```
 
-## Result Decoding (for charts)
+## Decodificación de Resultados (para gráficas)
 
-Vegeta has NO native charts. Use this pattern to decode and chart with matplotlib:
+Vegeta NO tiene gráficas nativas. Usar este patrón para decodificar y graficar con matplotlib:
 
 ```python
 import matplotlib
@@ -98,27 +98,27 @@ ax.legend()
 plt.savefig('chart-completions.png', dpi=150, bbox_inches='tight')
 ```
 
-## Binary Format
+## Formato Binario
 
-Each result in the `.bin` file (gob-encoded) contains:
-- `timestamp` — when the request was sent (ISO 8601)
-- `latency` — response time in nanoseconds
-- `code` — HTTP status code
-- `body` — response body (base64)
-- `headers` — response headers
-- `error` — error string if failed
-- `seq` — sequence number
+Cada resultado en el archivo `.bin` (codificado en gob) contiene:
+- `timestamp` — cuándo se envió el request (ISO 8601)
+- `latency` — tiempo de respuesta en nanosegundos
+- `code` — código de estado HTTP
+- `body` — cuerpo de la respuesta (base64)
+- `headers` — headers de la respuesta
+- `error` — string de error si falló
+- `seq` — número de secuencia
 
-**Completion time** = `timestamp` + `latency` (for timeline analysis).
+**Tiempo de completado** = `timestamp` + `latency` (para análisis de timeline).
 
-## Comparison with Other Tools
+## Comparación con Otras Herramientas
 
-| Feature | Vegeta |
+| Característica | Vegeta |
 |---------|--------|
-| Native charts | No — use matplotlib |
-| Real-time dashboard | No |
-| HTML report | No |
-| Binary results for replay | Yes |
-| Precise rate control | Yes (ConstantPacer, LinearPacer) |
-| Custom targeter (Go) | Yes — full control per request |
-| Best for | Go projects, CI pipelines, custom analysis |
+| Gráficas nativas | No — usar matplotlib |
+| Dashboard en tiempo real | No |
+| Reporte HTML | No |
+| Resultados binarios para replay | Sí |
+| Control preciso de tasa | Sí (ConstantPacer, LinearPacer) |
+| Targeter personalizado (Go) | Sí — control total por request |
+| Ideal para | Proyectos Go, pipelines CI, análisis personalizado |

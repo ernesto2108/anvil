@@ -1,10 +1,10 @@
-# Coding Rules
+# Reglas de Código
 
-## Error Handling
+## Manejo de Errores
 
-### Centralized error catalog (`pkg/errors`)
+### Catálogo centralizado de errores (`pkg/errors`)
 
-Use a centralized `pkg/errors` package to define all domain error codes with their HTTP/gRPC mappings. Each error is a typed struct (`*Errors`) with `Code`, `Message`, `HttpErrorCode`, and `GrpcErrorCode`. The error middleware extracts `*Errors` via `errors.As` and responds with the correct status code automatically.
+Usar un paquete `pkg/errors` centralizado para definir todos los códigos de error de dominio con sus mappings HTTP/gRPC. Cada error es un struct tipado (`*Errors`) con `Code`, `Message`, `HttpErrorCode`, y `GrpcErrorCode`. El middleware de errores extrae `*Errors` vía `errors.As` y responde con el código de estado correcto automáticamente.
 
 ```go
 // pkg/errors/error-definition.go
@@ -17,9 +17,9 @@ const (
 // Each code maps to an Errors struct with HTTP code, gRPC code, and message
 ```
 
-### Error flow by layer
+### Flujo de errores por capa
 
-**Infrastructure** — maps external errors (DB, cache, HTTP) to domain error codes:
+**Infrastructure** — mapea errores externos (DB, cache, HTTP) a códigos de error de dominio:
 
 ```go
 // good: infrastructure maps raw errors to domain errors
@@ -33,7 +33,7 @@ default:
 }
 ```
 
-**Application** — uses domain errors for business conditions, propagates infra errors as-is:
+**Application** — usa errores de dominio para condiciones de negocio, propaga errores de infra tal cual:
 
 ```go
 // good: infra already mapped the error — just propagate
@@ -54,7 +54,7 @@ if err != nil {
 }
 ```
 
-**Handler/HTTP** — passes errors to gin context, middleware handles the rest:
+**Handler/HTTP** — pasa errores al contexto de gin, el middleware se encarga del resto:
 
 ```go
 // good: handler just forwards errors — middleware resolves HTTP codes
@@ -65,19 +65,19 @@ if err != nil {
 }
 ```
 
-### When to use `fmt.Errorf` vs `errors.New`
+### Cuándo usar `fmt.Errorf` vs `errors.New`
 
-| Situation | Use | Why |
-|-----------|-----|-----|
-| Known business/domain condition | `errors.New(errors.SomeCode)` | Middleware maps code → HTTP status automatically |
-| Error already mapped by lower layer | `return err` | Don't re-wrap what's already a `*Errors` |
-| Truly unexpected internal failure | `errors.New(errors.InternalErr)` | Don't leak internal details to the client |
-| Standalone library / pkg with no error catalog | `fmt.Errorf("context: %w", err)` | No domain errors available, wrap for traceability |
-| Error message with dynamic values | `errors.WithMessage(fmt.Sprintf("msg: %s", v))` | Always use `fmt.Sprintf` for messages with variables — never string concatenation with `+` |
+| Situación | Usar | Por qué |
+|-----------|------|---------|
+| Condición de negocio/dominio conocida | `errors.New(errors.SomeCode)` | El middleware mapea el código → estado HTTP automáticamente |
+| Error ya mapeado por una capa inferior | `return err` | No re-envolver lo que ya es `*Errors` |
+| Fallo interno verdaderamente inesperado | `errors.New(errors.InternalErr)` | No filtrar detalles internos al cliente |
+| Librería standalone / pkg sin catálogo de errores | `fmt.Errorf("context: %w", err)` | Sin errores de dominio disponibles, envolver para trazabilidad |
+| Mensaje de error con valores dinámicos | `errors.WithMessage(fmt.Sprintf("msg: %s", v))` | Siempre usar `fmt.Sprintf` para mensajes con variables — nunca concatenación de strings con `+` |
 
-**Anti-pattern**: wrapping an already-mapped `*Errors` with `fmt.Errorf` — it adds noise and can confuse middleware that checks error types.
+**Anti-patrón**: envolver un `*Errors` ya mapeado con `fmt.Errorf` — agrega ruido y puede confundir al middleware que verifica tipos de error.
 
-**Anti-pattern**: `errors.WithMessage("prefix: " + variable)` — use `fmt.Sprintf("prefix: %s", variable)` instead. String concatenation in error messages is harder to read and inconsistent with Go idioms.
+**Anti-patrón**: `errors.WithMessage("prefix: " + variable)` — usar `fmt.Sprintf("prefix: %s", variable)` en su lugar. La concatenación de strings en mensajes de error es más difícil de leer e inconsistente con los idiomas de Go.
 
 ```go
 // bad: GetByEmail already returns *Errors (UserNotFoundErr or ScanErr)
@@ -92,34 +92,34 @@ if err != nil {
 }
 ```
 
-- Never `panic` in library/application code — only in `main()` for unrecoverable bootstrap failures
-- Check errors immediately — never defer error checking
+- Nunca `panic` en código de librería/aplicación — solo en `main()` para fallos de bootstrap irrecuperables
+- Verificar errores inmediatamente — nunca diferir la verificación de errores
 
-## Naming
+## Nomenclatura
 
-- **Receivers**: short, 1-2 letter, consistent across methods (`func (s *Server)`, not `func (server *Server)`)
-- **Interfaces**: verb-based, small (`Reader`, `Validator`, not `UserServiceInterface`)
-- **Constructors**: `NewXxx` returns concrete type, not interface
-- **Unexported by default** — only export what the package API needs
-- **Acronyms**: all caps (`HTTP`, `ID`, `URL`), not `Http`, `Id`, `Url`
-- **Package names**: short, lowercase, no underscores, singular (`user`, not `users` or `user_service`)
+- **Receptores**: cortos, 1-2 letras, consistentes entre métodos (`func (s *Server)`, no `func (server *Server)`)
+- **Interfaces**: basadas en verbos, pequeñas (`Reader`, `Validator`, no `UserServiceInterface`)
+- **Constructores**: `NewXxx` retorna tipo concreto, no interfaz
+- **No exportado por defecto** — exportar solo lo que la API del paquete necesita
+- **Acrónimos**: todo en mayúsculas (`HTTP`, `ID`, `URL`), no `Http`, `Id`, `Url`
+- **Nombres de paquetes**: cortos, lowercase, sin guiones bajos, singular (`user`, no `users` ni `user_service`)
 
-## Context & Resource Cleanup
+## Context y Limpieza de Recursos
 
-- Always first parameter: `func DoThing(ctx context.Context, ...)`
-- Set timeouts on every external call (HTTP, DB, Redis, gRPC)
-- Never store `context.Context` in structs
-- Never use `http.Get()` / `http.Post()` / `http.DefaultClient` — create client with `Timeout`
-- Always `defer rows.Close()` immediately after `QueryContext` error check
-- Always `defer resp.Body.Close()` immediately after `client.Do()` error check
-- Always `defer cancel()` after `context.WithTimeout` / `context.WithCancel`
-- Configure `sql.DB` pool: `MaxOpenConns`, `MaxIdleConns`, `ConnMaxLifetime`
-- See `guides/cleanup/` for full patterns, multi-level timeouts, and connection pool config
+- Siempre primer parámetro: `func DoThing(ctx context.Context, ...)`
+- Establecer timeouts en cada llamada externa (HTTP, DB, Redis, gRPC)
+- Nunca almacenar `context.Context` en structs
+- Nunca usar `http.Get()` / `http.Post()` / `http.DefaultClient` — crear cliente con `Timeout`
+- Siempre `defer rows.Close()` inmediatamente después de la verificación de error de `QueryContext`
+- Siempre `defer resp.Body.Close()` inmediatamente después de la verificación de error de `client.Do()`
+- Siempre `defer cancel()` después de `context.WithTimeout` / `context.WithCancel`
+- Configurar el pool de `sql.DB`: `MaxOpenConns`, `MaxIdleConns`, `ConnMaxLifetime`
+- Ver `guides/cleanup/` para patrones completos, timeouts multi-nivel, y configuración del connection pool
 
-## Concurrency
+## Concurrencia
 
-- Protect shared state with `sync.Mutex` or channels — choose one per resource
-- Prefer channels for coordination, mutexes for state protection
-- Always handle goroutine lifecycle — no fire-and-forget
-- Use `errgroup` for parallel work with error propagation
-- Run tests with `-race` flag always
+- Proteger estado compartido con `sync.Mutex` o channels — elegir uno por recurso
+- Preferir channels para coordinación, mutexes para protección de estado
+- Siempre manejar el ciclo de vida de goroutines — sin fire-and-forget
+- Usar `errgroup` para trabajo paralelo con propagación de errores
+- Ejecutar tests siempre con la flag `-race`

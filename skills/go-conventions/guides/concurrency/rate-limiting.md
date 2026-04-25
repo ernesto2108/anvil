@@ -1,10 +1,10 @@
 # Rate Limiting
 
-**When:** Calling external APIs with rate limits, processing events without overwhelming downstream systems.
+**Cuándo:** Al llamar APIs externas con límites de tasa, o al procesar eventos sin saturar sistemas downstream.
 
-**Real scenario:** Calling a third-party API that allows 10 requests per second.
+**Escenario real:** Llamar a una API de terceros que permite 10 requests por segundo.
 
-## Using golang.org/x/time/rate (token bucket)
+## Usando golang.org/x/time/rate (token bucket)
 
 ```go
 package main
@@ -24,15 +24,15 @@ func callExternalAPI(ctx context.Context, itemID int) error {
 }
 
 func processWithRateLimit(ctx context.Context, itemIDs []int) error {
-    limiter := rate.NewLimiter(rate.Limit(10), 1) // 10 per second, burst of 1
+    limiter := rate.NewLimiter(rate.Limit(10), 1) // 10 por segundo, burst de 1
 
     g, ctx := errgroup.WithContext(ctx)
-    g.SetLimit(5) // Also bound concurrency
+    g.SetLimit(5) // También limita la concurrencia
 
     for _, id := range itemIDs {
         id := id
         g.Go(func() error {
-            // Wait for rate limiter token
+            // Espera un token del rate limiter
             if err := limiter.Wait(ctx); err != nil {
                 return err
             }
@@ -44,11 +44,11 @@ func processWithRateLimit(ctx context.Context, itemIDs []int) error {
 }
 ```
 
-## Using time.Ticker (simple fixed-rate)
+## Usando time.Ticker (tasa fija simple)
 
 ```go
 func processAtFixedRate(ctx context.Context, items []string) error {
-    ticker := time.NewTicker(100 * time.Millisecond) // 10 per second
+    ticker := time.NewTicker(100 * time.Millisecond) // 10 por segundo
     defer ticker.Stop()
 
     for _, item := range items {
@@ -65,4 +65,4 @@ func processAtFixedRate(ctx context.Context, items []string) error {
 }
 ```
 
-**Common mistake:** Forgetting `ticker.Stop()`. Tickers that are not stopped leak a goroutine and a timer internally. Always `defer ticker.Stop()`.
+**Error común:** Olvidar `ticker.Stop()`. Los tickers que no se detienen generan un goroutine leak y un timer interno. Siempre `defer ticker.Stop()`.

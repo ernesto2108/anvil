@@ -1,6 +1,6 @@
-# Flutter Theming & Design System Guide
+# Guía de Temas y Sistema de Diseño Flutter
 
-## Material 3 Setup
+## Configuración de Material 3
 
 ```dart
 final lightTheme = ThemeData(
@@ -36,15 +36,15 @@ MaterialApp(
 
 ### `ColorScheme.fromSeed`
 
-Generates a harmonious, accessible color palette from a single seed color. All Material 3 components automatically use these colors.
+Genera una paleta de colores armoniosa y accesible a partir de un único color semilla. Todos los componentes de Material 3 usan estos colores automáticamente.
 
 ---
 
-## Custom Design Tokens via ThemeExtension
+## Tokens de Diseño Personalizados via ThemeExtension
 
-For project-specific tokens (spacing, border radius, shadows) not covered by Material 3.
+Para tokens específicos del proyecto (espaciado, radio de borde, sombras) no cubiertos por Material 3.
 
-### Define
+### Definición
 
 ```dart
 class AppSpacing extends ThemeExtension<AppSpacing> {
@@ -122,7 +122,7 @@ class AppRadius extends ThemeExtension<AppRadius> {
 }
 ```
 
-### Register
+### Registro
 
 ```dart
 final theme = ThemeData(
@@ -135,7 +135,7 @@ final theme = ThemeData(
 );
 ```
 
-### Use
+### Uso
 
 ```dart
 @override
@@ -160,7 +160,7 @@ Widget build(BuildContext context) {
 
 ---
 
-## Responsive Layouts
+## Layouts Responsivos
 
 ### LayoutBuilder
 
@@ -178,7 +178,7 @@ LayoutBuilder(
 )
 ```
 
-### Never Hardcode Dimensions
+### Nunca Hardcodear Dimensiones
 
 ```dart
 // bad
@@ -193,19 +193,19 @@ Container(
 
 ---
 
-## Accessibility in Theming
+## Accesibilidad en el Tema
 
-- **Color contrast**: Material 3 `ColorScheme.fromSeed` generates accessible palettes by default
-- **Text scaling**: use `Theme.of(context).textTheme` — respects user's font size preference
-- **Never hardcode font sizes** — always reference `textTheme`
-- **Dark mode**: provide `darkTheme` for users who prefer reduced light
+- **Contraste de colores**: `ColorScheme.fromSeed` de Material 3 genera paletas accesibles por defecto
+- **Escalado de texto**: usar `Theme.of(context).textTheme` — respeta la preferencia de tamaño de fuente del usuario
+- **Nunca hardcodear tamaños de fuente** — siempre referenciar `textTheme`
+- **Modo oscuro**: proveer `darkTheme` para usuarios que prefieren menos luz
 
 ---
 
-## Rules
+## Reglas
 
-1. **Components consume token references, never literal values** — `spacing.md` not `16.0`
-2. **Use `ColorScheme` colors** — `colors.primary`, `colors.surface`, never hardcoded hex
-3. **Use `textTheme` styles** — `textTheme.bodyLarge`, never inline `TextStyle`
-4. **`ThemeExtension` for custom tokens** — spacing, radius, shadows, durations
-5. **Test both light and dark themes** in widget tests and golden tests
+1. **Los componentes consumen referencias a tokens, nunca valores literales** — `spacing.md` no `16.0`
+2. **Usar colores de `ColorScheme`** — `colors.primary`, `colors.surface`, nunca hex hardcodeado
+3. **Usar estilos de `textTheme`** — `textTheme.bodyLarge`, nunca `TextStyle` inline
+4. **`ThemeExtension` para tokens personalizados** — espaciado, radio, sombras, duraciones
+5. **Testear tanto tema claro como oscuro** en widget tests y golden tests

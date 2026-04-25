@@ -1,34 +1,34 @@
-# Concurrency Decision Matrix
+# Matriz de Decisión de Concurrencia
 
-When to use which concurrency primitive:
+Cuándo usar cada primitiva de concurrencia:
 
-| Scenario | Use | Why |
+| Escenario | Usar | Por qué |
 |---|---|---|
-| Protect shared state (cache, counter, config) | `sync.Mutex` / `sync.RWMutex` | Simplest, fastest for guarding data |
-| Coordinate goroutines, pass data between stages | Channels | Natural for producer-consumer, pipelines |
-| Parallel tasks that can fail | `errgroup.Group` | Combines WaitGroup + error propagation + context cancellation |
-| Wait for N goroutines to finish (no errors) | `sync.WaitGroup` | Lightweight, no error handling needed |
-| Atomic counter or flag | `sync/atomic` | Lock-free, fastest for single values |
-| One-time initialization | `sync.Once` | Thread-safe lazy init |
-| Concurrent map access | `sync.Map` or `map` + `sync.RWMutex` | `sync.Map` for read-heavy with stable keys; `map` + mutex for everything else |
-| Rate limiting | `time.Ticker` + channel or `golang.org/x/time/rate` | Token bucket for API rate limits |
-| Timeout / cancellation propagation | `context.Context` | Always -- it is the standard cancellation mechanism |
+| Proteger estado compartido (caché, contador, config) | `sync.Mutex` / `sync.RWMutex` | Lo más simple y rápido para resguardar datos |
+| Coordinar goroutines, pasar datos entre etapas | Channels | Natural para productor-consumidor, pipelines |
+| Tareas paralelas que pueden fallar | `errgroup.Group` | Combina WaitGroup + propagación de errores + cancelación de contexto |
+| Esperar a que N goroutines terminen (sin errores) | `sync.WaitGroup` | Ligero, no requiere manejo de errores |
+| Contador o flag atómico | `sync/atomic` | Sin locks, el más rápido para valores únicos |
+| Inicialización única | `sync.Once` | Init lazy thread-safe |
+| Acceso concurrente a mapas | `sync.Map` o `map` + `sync.RWMutex` | `sync.Map` para lectura intensiva con claves estables; `map` + mutex para todo lo demás |
+| Rate limiting | `time.Ticker` + channel o `golang.org/x/time/rate` | Token bucket para límites de API |
+| Propagación de timeout / cancelación | `context.Context` | Siempre -- es el mecanismo estándar de cancelación |
 
-## Quick Decision Flow
+## Flujo de Decisión Rápido
 
 ```
-Need to share data between goroutines?
-  YES -> Are goroutines passing ownership of data?
-           YES -> Channel
-           NO  -> Is it read-heavy, write-rare?
-                    YES -> sync.RWMutex
+¿Necesitas compartir datos entre goroutines?
+  SÍ -> ¿Las goroutines transfieren ownership de los datos?
+           SÍ -> Channel
+           NO  -> ¿Es lectura intensiva, escritura poco frecuente?
+                    SÍ -> sync.RWMutex
                     NO  -> sync.Mutex
-  NO  -> Are goroutines doing parallel work?
-           YES -> Can they fail?
-                    YES -> errgroup
+  NO  -> ¿Las goroutines realizan trabajo paralelo?
+           SÍ -> ¿Pueden fallar?
+                    SÍ -> errgroup
                     NO  -> sync.WaitGroup
-           NO  -> Do you need timeout/cancellation?
-                    YES -> context.WithTimeout / context.WithCancel
+           NO  -> ¿Necesitas timeout/cancelación?
+                    SÍ -> context.WithTimeout / context.WithCancel
 ```
 
-Source: [Go Wiki: Mutex or Channel](https://go.dev/wiki/MutexOrChannel) -- "Use whichever is most expressive and simple for your problem."
+Fuente: [Go Wiki: Mutex or Channel](https://go.dev/wiki/MutexOrChannel) -- "Usa el que sea más expresivo y simple para tu problema."

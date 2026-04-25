@@ -1,42 +1,42 @@
-# GitHub Actions Best Practices
+# Mejores Prácticas de GitHub Actions
 
-## Workflow Structure
-- One concern per job; keep jobs focused and fast
-- Set `permissions:` explicitly on every workflow (least privilege)
-- Pin actions to full commit SHA: `uses: actions/checkout@<sha>` (not tags)
-- Use path filters: `on.push.paths` to skip pipelines for non-code changes
-- Use `concurrency` groups to cancel superseded runs on same branch
+## Estructura del Workflow
+- Un concern por job; mantén los jobs enfocados y rápidos
+- Establece `permissions:` explícitamente en cada workflow (menor privilegio)
+- Fija actions al SHA completo del commit: `uses: actions/checkout@<sha>` (no tags)
+- Usa filtros de ruta: `on.push.paths` para omitir pipelines en cambios que no son código
+- Usa grupos de `concurrency` para cancelar runs supersedidos en la misma rama
 
-## Reusable Workflows
-- Define with `on: workflow_call` in `.github/workflows/`
-- Reference: `uses: ./.github/workflows/file.yml` or `org/repo/.github/workflows/file.yml@sha`
-- Use `secrets: inherit` for same-org; explicitly forward otherwise
-- Max nesting: 10 levels; no loops
-- Permissions can only be maintained or reduced in nested chains
+## Workflows Reutilizables
+- Define con `on: workflow_call` en `.github/workflows/`
+- Referencia: `uses: ./.github/workflows/file.yml` o `org/repo/.github/workflows/file.yml@sha`
+- Usa `secrets: inherit` para la misma org; pasa explícitamente de lo contrario
+- Máximo de anidamiento: 10 niveles; sin bucles
+- Los permisos solo pueden mantenerse o reducirse en cadenas anidadas
 
 ## Composite Actions vs Reusable Workflows
-- **Composite actions**: small repeated step sequences (setup, formatting, caching)
-- **Reusable workflows**: full shared pipelines (build + test + deploy)
+- **Composite actions**: secuencias de pasos pequeñas y repetidas (setup, formateo, caché)
+- **Reusable workflows**: pipelines completos compartidos (build + test + deploy)
 
-## Caching
-- Enable dependency caching (`actions/cache` or built-in setup actions)
-- Docker layer caching: `cache-from: type=gha` / `cache-to: type=gha,mode=max`
-- Parallelize independent jobs — remove unnecessary `needs:` dependencies
+## Caché
+- Habilita caché de dependencias (`actions/cache` o actions de setup incorporadas)
+- Caché de capas Docker: `cache-from: type=gha` / `cache-to: type=gha,mode=max`
+- Paraleliza jobs independientes — elimina dependencias `needs:` innecesarias
 
-## Secrets
-- Use OIDC for cloud auth (no long-lived keys):
+## Secretos
+- Usa OIDC para auth en la nube (sin claves de larga duración):
   - AWS: `aws-actions/configure-aws-credentials`
   - GCP: `google-github-actions/auth`
-- Never echo or print secrets; mask with `::add-mask::`
-- Store at org level for shared, repo level for project-specific
-- Rotate on schedule; prefer short-lived tokens
+- Nunca hagas echo o prints de secretos; enmascara con `::add-mask::`
+- Almacena a nivel de org para los compartidos, a nivel de repo para los específicos del proyecto
+- Rota en schedule; prefiere tokens de corta duración
 
 ## Matrix Builds
-- `strategy.matrix` for cross-platform/version testing
-- `fail-fast: false` when all combinations must complete
-- Combine with caching to avoid redundant installs per cell
+- `strategy.matrix` para testing cross-platform/versión
+- `fail-fast: false` cuando todas las combinaciones deben completarse
+- Combina con caché para evitar instalaciones redundantes por celda
 
-## CI Pipeline Template (Go)
+## Plantilla de Pipeline CI (Go)
 
 ```yaml
 name: CI
@@ -98,7 +98,7 @@ jobs:
           tags: app:${{ github.sha }}
 ```
 
-## CD Pipeline Template (Deploy to Cloud Run)
+## Plantilla de Pipeline CD (Deploy a Cloud Run)
 
 ```yaml
 name: Deploy

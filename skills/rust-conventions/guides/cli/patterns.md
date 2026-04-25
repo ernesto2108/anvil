@@ -1,6 +1,6 @@
-# CLI Patterns
+# Patrones CLI
 
-## clap v4 Derive API
+## API Derive de clap v4
 
 ```rust
 use clap::{Parser, Subcommand, Args, ValueEnum};
@@ -35,7 +35,7 @@ struct InitArgs {
 enum Format { Text, Json, Table }
 ```
 
-## tracing (Structured Logging)
+## tracing (Logging Estructurado)
 
 ```rust
 use tracing::{info, warn, instrument};
@@ -58,7 +58,7 @@ fn process_file(path: &str, content: &[u8]) -> Result<()> {
 }
 ```
 
-## indicatif (Progress)
+## indicatif (Progreso)
 
 ```rust
 use indicatif::{ProgressBar, ProgressStyle};
@@ -75,7 +75,7 @@ for item in items {
 pb.finish_with_message("done");
 ```
 
-## Error Display (miette for rich diagnostics)
+## Visualización de Errores (miette para diagnósticos enriquecidos)
 
 ```rust
 use miette::{Diagnostic, SourceSpan};
@@ -92,12 +92,12 @@ pub struct ConfigError {
 }
 ```
 
-## Key Crates
+## Crates Clave
 
-- `clap` 4.x — arg parsing (derive or builder)
-- `tracing` + `tracing-subscriber` — structured logging
-- `indicatif` 0.17.x — progress bars
-- `dialoguer` 0.11.x — interactive prompts
-- `console` / `owo-colors` — terminal colors
-- `miette` 7.x / `color-eyre` 0.6.x — rich error display
-- `assert_cmd` + `predicates` — CLI integration testing
+- `clap` 4.x — parseo de argumentos (derive o builder)
+- `tracing` + `tracing-subscriber` — logging estructurado
+- `indicatif` 0.17.x — barras de progreso
+- `dialoguer` 0.11.x — prompts interactivos
+- `console` / `owo-colors` — colores de terminal
+- `miette` 7.x / `color-eyre` 0.6.x — visualización enriquecida de errores
+- `assert_cmd` + `predicates` — testing de integración de CLI

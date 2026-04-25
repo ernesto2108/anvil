@@ -1,8 +1,8 @@
-# Architecture Rules
+# Reglas de Arquitectura
 
-## 1. ESM First
+## 1. ESM Primero
 
-All projects use `"type": "module"` in `package.json`. Never use `require()` or `module.exports` in new code. If a dependency is CJS-only, wrap it in a thin ESM adapter at the boundary.
+Todos los proyectos usan `"type": "module"` en `package.json`. Nunca usar `require()` o `module.exports` en código nuevo. Si una dependencia es solo CJS, envolverla en un adaptador ESM delgado en la frontera.
 
 ```json
 // package.json
@@ -17,27 +17,27 @@ All projects use `"type": "module"` in `package.json`. Never use `require()` or 
 }
 ```
 
-## 2. No Barrel Exports
+## 2. Sin Barrel Exports
 
-Barrel files (`index.ts` that re-exports everything) are a tree-shaking killer. They also create circular dependency risks and slow down TypeScript's module resolution.
+Los barrel files (`index.ts` que re-exporta todo) matan el tree-shaking. También crean riesgos de dependencias circulares y ralentizan la resolución de módulos de TypeScript.
 
 ```typescript
-// WRONG: src/utils/index.ts
+// INCORRECTO: src/utils/index.ts
 export { formatDate } from "./formatDate.js";
 export { parseAmount } from "./parseAmount.js";
 export { slugify } from "./slugify.js";
-// Importing one pulls in the entire barrel at bundler analysis time
+// Importar uno arrastra todo el barrel en el análisis del bundler
 
-// RIGHT: direct imports
+// CORRECTO: importaciones directas
 import { formatDate } from "../utils/formatDate.js";
 import { parseAmount } from "../utils/parseAmount.js";
 ```
 
-**Exception:** Public package entry points (the `"exports"` field) may use a carefully curated index. This is different from internal barrels.
+**Excepción:** Los puntos de entrada de paquetes públicos (el campo `"exports"`) pueden usar un índice cuidadosamente curado. Esto es diferente de los barrels internos.
 
-## 3. Path Aliases via tsconfig `paths`
+## 3. Path Aliases via `paths` de tsconfig
 
-Use `paths` for module aliases instead of deep relative imports. Configure the same aliases in your bundler (Vite, Webpack, etc.).
+Usar `paths` para aliases de módulos en lugar de imports relativos profundos. Configurar los mismos aliases en el bundler (Vite, Webpack, etc.).
 
 ```jsonc
 // tsconfig.json
@@ -52,7 +52,7 @@ Use `paths` for module aliases instead of deep relative imports. Configure the s
   }
 }
 
-// vite.config.ts — mirror the aliases
+// vite.config.ts — reflejar los aliases
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -60,19 +60,19 @@ export default defineConfig({ plugins: [tsconfigPaths()] });
 ```
 
 ```typescript
-// WRONG: deep relative import
+// INCORRECTO: import relativo profundo
 import { UserService } from "../../../../services/user/UserService.js";
 
-// RIGHT: alias import
+// CORRECTO: import con alias
 import { UserService } from "@features/user/UserService.js";
 ```
 
-## 4. Zod at Boundaries
+## 4. Zod en las Fronteras
 
-Runtime validation belongs only at trust boundaries: API inputs, environment variables, third-party webhook payloads, localStorage reads, form submissions. Inside the application, trust the types.
+La validación en tiempo de ejecución pertenece solo a las fronteras de confianza: entradas de API, variables de entorno, payloads de webhooks de terceros, lecturas de localStorage, envíos de formularios. Dentro de la aplicación, confiar en los tipos.
 
 ```typescript
-// Environment — validate once at startup, typed everywhere after
+// Variables de entorno — validar una vez al inicio, tipadas en todas partes después
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
@@ -90,7 +90,7 @@ export function loadEnv(): Env {
   return result.data;
 }
 
-// API handler — validate request body, not internal service calls
+// Handler de API — validar el body del request, no las llamadas internas al servicio
 const createUserSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1).max(100).trim(),
@@ -103,19 +103,19 @@ async function handleCreateUser(req: Request): Promise<Response> {
   if (!parsed.success) {
     return Response.json({ errors: parsed.error.flatten() }, { status: 422 });
   }
-  // parsed.data is fully typed — no validation inside the service
+  // parsed.data está completamente tipado — sin validación dentro del servicio
   const user = await userService.create(parsed.data);
   return Response.json(user, { status: 201 });
 }
 ```
 
-## 5. Dependency Injection
+## 5. Inyección de Dependencias
 
-Pass dependencies explicitly via constructors or function parameters. Never import services as singletons in application modules. Use interfaces (TypeScript `interface`) to decouple implementations.
+Pasar dependencias explícitamente via constructores o parámetros de función. Nunca importar servicios como singletons en módulos de aplicación. Usar interfaces (TypeScript `interface`) para desacoplar implementaciones.
 
 ```typescript
-// WRONG: singleton import — hard to test, hidden coupling
-import { db } from "../db.js"; // global singleton
+// INCORRECTO: import de singleton — difícil de testear, acoplamiento oculto
+import { db } from "../db.js"; // singleton global
 
 export class UserService {
   async getUser(id: UserId) {
@@ -123,7 +123,7 @@ export class UserService {
   }
 }
 
-// RIGHT: interface + constructor injection
+// CORRECTO: interface + inyección por constructor
 interface UserRepository {
   findById(id: UserId): Promise<User | null>;
 }
@@ -141,16 +141,16 @@ const userRepo = new PostgresUserRepository(pool);
 const userService = new UserService(userRepo);
 ```
 
-## 6. tsconfig Strict Settings
+## 6. Configuración Strict de tsconfig
 
-Required `tsconfig.json` baseline for all TypeScript projects:
+Baseline requerida de `tsconfig.json` para todos los proyectos TypeScript:
 
 ```jsonc
 {
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "bundler",   // or "NodeNext" for Node.js
+    "moduleResolution": "bundler",   // o "NodeNext" para Node.js
     "lib": ["ES2022"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -158,9 +158,9 @@ Required `tsconfig.json` baseline for all TypeScript projects:
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": true,    // enforces "import type" for type-only imports
-    "isolatedModules": true,         // required for bundler compatibility
-    "skipLibCheck": false,           // only set true as last resort
+    "verbatimModuleSyntax": true,    // fuerza "import type" para imports de solo tipo
+    "isolatedModules": true,         // requerido para compatibilidad con bundlers
+    "skipLibCheck": false,           // establecer en true solo como último recurso
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -169,31 +169,31 @@ Required `tsconfig.json` baseline for all TypeScript projects:
 }
 ```
 
-## 7. `import type` Enforced
+## 7. `import type` Forzado
 
-Use `import type` for type-only imports. This is enforced by `verbatimModuleSyntax` and ensures zero runtime overhead from type imports.
+Usar `import type` para imports de solo tipo. Esto es forzado por `verbatimModuleSyntax` y garantiza cero overhead en tiempo de ejecución por imports de tipos.
 
 ```typescript
-// WRONG: runtime import for types only
+// INCORRECTO: import en tiempo de ejecución para solo tipos
 import { User, CreateUserDto } from "./types.js";
 
-// RIGHT: type-only import
+// CORRECTO: import de solo tipo
 import type { User, CreateUserDto } from "./types.js";
 
-// RIGHT: mixed import
+// CORRECTO: import mixto
 import { createUser, type User } from "./user.js";
 ```
 
-## 8. One Concern Per Module
+## 8. Un Concern por Módulo
 
-A module should have one reason to change. Avoid mixing validation logic, HTTP-specific code, and business logic in the same file. Suggested structure for a feature:
+Un módulo debe tener un solo motivo para cambiar. Evitar mezclar lógica de validación, código específico de HTTP y lógica de negocio en el mismo archivo. Estructura sugerida para un feature:
 
 ```
 src/features/user/
-  user.schema.ts      # Zod schemas only
-  user.types.ts       # TypeScript types derived from schemas
-  user.service.ts     # Business logic, takes interfaces
-  user.repository.ts  # Data access implementation
-  user.handler.ts     # HTTP adapter, validation, response shaping
+  user.schema.ts      # Solo esquemas Zod
+  user.types.ts       # Tipos TypeScript derivados de los esquemas
+  user.service.ts     # Lógica de negocio, toma interfaces
+  user.repository.ts  # Implementación de acceso a datos
+  user.handler.ts     # Adaptador HTTP, validación, formato de respuesta
   user.test.ts        # Tests
 ```

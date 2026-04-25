@@ -1,6 +1,6 @@
-# Node.js ESM Patterns (2025)
+# Patrones de Node.js ESM (2025)
 
-## Package Setup
+## Configuración del Paquete
 
 ```jsonc
 // package.json
@@ -27,37 +27,37 @@
 }
 ```
 
-## Import Rules
+## Reglas de Import
 
 ```typescript
-// RIGHT — node: protocol for builtins
+// CORRECTO — protocolo node: para módulos built-in
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 
-// RIGHT — .js extension required in NodeNext (even for .ts source)
+// CORRECTO — extensión .js requerida en NodeNext (incluso para fuente .ts)
 import { helper } from "./utils.js";
 import type { Config } from "./types.js";
 
-// RIGHT — top-level await (ESM only)
+// CORRECTO — top-level await (solo ESM)
 const config = JSON.parse(await readFile("./config.json", "utf-8"));
 ```
 
 ## `verbatimModuleSyntax`
 
 ```typescript
-// RIGHT — explicit type vs value imports
-import type { User } from "./models.js";   // erased at runtime
-import { validateUser } from "./models.js"; // kept at runtime
+// CORRECTO — imports explícitos de tipo vs valor
+import type { User } from "./models.js";   // borrado en tiempo de ejecución
+import { validateUser } from "./models.js"; // conservado en tiempo de ejecución
 
-// WRONG — ambiguous without verbatimModuleSyntax
-import { User, validateUser } from "./models"; // which is type?
+// INCORRECTO — ambiguo sin verbatimModuleSyntax
+import { User, validateUser } from "./models"; // ¿cuál es el tipo?
 ```
 
 ## `Promise.withResolvers()` (ES2024)
 
 ```typescript
-// WRONG — manual deferred pattern
+// INCORRECTO — patrón deferred manual
 let resolve: (value: string) => void;
 let reject: (error: Error) => void;
 const promise = new Promise<string>((res, rej) => {
@@ -65,14 +65,14 @@ const promise = new Promise<string>((res, rej) => {
   reject = rej;
 });
 
-// RIGHT — Promise.withResolvers (TS 5.4+)
+// CORRECTO — Promise.withResolvers (TS 5.4+)
 const { promise, resolve, reject } = Promise.withResolvers<string>();
 ```
 
-## Web Standard APIs (Portable)
+## APIs Web Estándar (Portables)
 
 ```typescript
-// Use these — they work in Node 18+, Bun, Deno, and browsers
+// Usar estas — funcionan en Node 18+, Bun, Deno y navegadores
 const response = await fetch("https://api.example.com/data");
 const url = new URL("/path", "https://example.com");
 const encoded = new TextEncoder().encode("hello");
@@ -80,7 +80,7 @@ const id = crypto.randomUUID();
 const bytes = crypto.getRandomValues(new Uint8Array(32));
 ```
 
-## Subpath Exports (Replaces Path Aliases in Libraries)
+## Subpath Exports (Reemplaza los Path Aliases en Librerías)
 
 ```jsonc
 // package.json
@@ -94,7 +94,7 @@ const bytes = crypto.getRandomValues(new Uint8Array(32));
 ```
 
 ```typescript
-// Consumer imports
+// Imports del consumidor
 import { formatCurrency } from "@myapp/shared/utils";
 import { emailSchema } from "@myapp/shared/validators";
 ```

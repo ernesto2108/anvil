@@ -1,8 +1,8 @@
 # Graceful Shutdown
 
-**When:** Every production service. HTTP servers, background workers, message consumers.
+**Cuándo:** Todo servicio en producción. Servidores HTTP, workers de fondo, consumidores de mensajes.
 
-**Real scenario:** Kubernetes sends SIGTERM, you have 30 seconds to drain connections and finish in-flight work.
+**Escenario real:** Kubernetes envía SIGTERM, tienes 30 segundos para drenar conexiones y terminar el trabajo en vuelo.
 
 ```go
 package main
@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-    // Root context canceled on SIGINT or SIGTERM
+    // Contexto raíz cancelado en SIGINT o SIGTERM
     ctx, stop := signal.NotifyContext(context.Background(),
         syscall.SIGINT, syscall.SIGTERM)
     defer stop()
@@ -34,7 +34,7 @@ func main() {
         w.WriteHeader(http.StatusOK)
     })
     mux.HandleFunc("/work", func(w http.ResponseWriter, r *http.Request) {
-        // Use request context -- it will be canceled on shutdown
+        // Usa el contexto de la request -- se cancela al hacer shutdown
         select {
         case <-time.After(2 * time.Second):
             fmt.Fprintln(w, "done")
@@ -45,14 +45,14 @@ func main() {
 
     server := &http.Server{Addr: ":8080", Handler: mux}
 
-    // Start server in background
+    // Inicia el servidor en background
     go func() {
         if err := server.ListenAndServe(); err != http.ErrServerClosed {
             fmt.Printf("server error: %v\n", err)
         }
     }()
 
-    // Start background worker
+    // Inicia el worker de fondo
     workerCtx, workerCancel := context.WithCancel(context.Background())
     workerDone := make(chan struct{})
     go func() {
@@ -60,24 +60,24 @@ func main() {
         backgroundWorker(workerCtx)
     }()
 
-    // Wait for shutdown signal
+    // Espera la señal de shutdown
     <-ctx.Done()
-    stop() // Allow second Ctrl+C to force-kill
+    stop() // Permite que un segundo Ctrl+C fuerce el cierre
 
     fmt.Println("shutting down...")
     isShuttingDown.Store(true)
 
-    // 1. Fail readiness probe, wait for load balancer propagation
+    // 1. Falla el readiness probe, espera la propagación del load balancer
     time.Sleep(5 * time.Second)
 
-    // 2. Shutdown HTTP server (waits for in-flight requests)
+    // 2. Apaga el servidor HTTP (espera a que terminen las requests en vuelo)
     shutdownCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
     defer cancel()
     if err := server.Shutdown(shutdownCtx); err != nil {
         fmt.Printf("server shutdown error: %v\n", err)
     }
 
-    // 3. Stop background worker and wait for it
+    // 3. Detiene el worker de fondo y espera a que termine
     workerCancel()
     <-workerDone
 
@@ -100,6 +100,6 @@ func backgroundWorker(ctx context.Context) {
 }
 ```
 
-**Common mistake:** Releasing resources (DB connections, caches) immediately on signal. In-flight HTTP handlers still need them. Shut down the HTTP server first (which drains in-flight requests), then close resources.
+**Error común:** Liberar recursos (conexiones DB, cachés) inmediatamente al recibir la señal. Los handlers HTTP en vuelo todavía los necesitan. Primero apaga el servidor HTTP (que drena las requests en vuelo), luego cierra los recursos.
 
-Source: [Graceful Shutdown in Go: Practical Patterns (VictoriaMetrics)](https://victoriametrics.com/blog/go-graceful-shutdown/)
+Fuente: [Graceful Shutdown in Go: Practical Patterns (VictoriaMetrics)](https://victoriametrics.com/blog/go-graceful-shutdown/)

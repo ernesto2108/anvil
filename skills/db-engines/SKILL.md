@@ -1,57 +1,57 @@
 ---
 name: db-engines
-description: Engine-specific knowledge for PostgreSQL, SQLite, and MySQL. PRAGMAs, limitations, best practices, drivers, connection tuning, and migration quirks per engine. Load before writing migrations or optimizing queries.
+description: Conocimiento específico por motor para PostgreSQL, SQLite y MySQL. PRAGMAs, limitaciones, mejores prácticas, drivers, ajuste de conexiones y particularidades de migración por motor. Cargar antes de escribir migraciones u optimizar queries.
 ---
 
-# Database Engine Reference
+# Referencia de Motores de Base de Datos
 
-> Engine-specific rules, limitations, and best practices. The DBA agent loads this skill to adapt migrations and schema decisions to the target engine.
+> Reglas, limitaciones y mejores prácticas específicas por motor. El agente DBA carga este skill para adaptar las migraciones y decisiones de schema al motor objetivo.
 
-## When to Use
+## Cuándo Usar
 
-- Before writing any migration — detect the engine first, then load the relevant reference
-- When optimizing queries — engine-specific techniques differ
-- When setting up a new database — connection tuning, PRAGMAs, pooling
+- Antes de escribir cualquier migración — detectar el motor primero, luego cargar la referencia correspondiente
+- Al optimizar queries — las técnicas difieren por motor
+- Al configurar una nueva base de datos — ajuste de conexiones, PRAGMAs, pooling
 
-## Engine Detection
+## Detección del Motor
 
-Detect the engine from project signals (check in order):
+Detectar el motor a partir de señales del proyecto (verificar en orden):
 
-1. Existing migration files — syntax reveals engine (e.g., `SERIAL` = Postgres, `AUTOINCREMENT` = SQLite)
-2. Driver imports in code — `pq` / `pgx` = Postgres, `go-sqlite3` = SQLite, `go-sql-driver/mysql` = MySQL
-3. Connection strings in config — `postgres://`, `file:*.db`, `mysql://`
-4. `docker-compose.yml` or infra files — service image names
-5. Architect's design doc — may specify engine choice
+1. Archivos de migración existentes — la sintaxis revela el motor (ej. `SERIAL` = Postgres, `AUTOINCREMENT` = SQLite)
+2. Imports de driver en el código — `pq` / `pgx` = Postgres, `go-sqlite3` = SQLite, `go-sql-driver/mysql` = MySQL
+3. Cadenas de conexión en la configuración — `postgres://`, `file:*.db`, `mysql://`
+4. `docker-compose.yml` u otros archivos de infra — nombres de imagen de servicio
+5. Documento de diseño del arquitecto — puede especificar la elección del motor
 
-## Engine References
+## Referencias de Motor
 
-Load ONLY the engine(s) relevant to the current task:
+Cargar SOLO el o los motores relevantes para la tarea actual:
 
-- **PostgreSQL** → read `engines/postgresql.md`
-- **SQLite** → read `engines/sqlite.md`
-- **MySQL** → read `engines/mysql.md`
+- **PostgreSQL** → leer `engines/postgresql.md`
+- **SQLite** → leer `engines/sqlite.md`
+- **MySQL** → leer `engines/mysql.md`
 
-Each reference covers: types, limitations, migration patterns, performance tuning, multi-tenant patterns, and Go drivers.
+Cada referencia cubre: tipos, limitaciones, patrones de migración, ajuste de rendimiento, patrones multi-tenant y drivers de Go.
 
-## Migration Tooling by Language
+## Herramientas de Migración por Lenguaje
 
-| Language | Tool | Notes |
+| Lenguaje | Herramienta | Notas |
 |----------|------|-------|
-| Go | `github.com/golang-migrate/migrate/v4` | Use `file://` source driver with `NewWithDatabaseInstance`. Do NOT use `embed.FS` / `iofs` — keep SQL files as plain files in `migrations/`. Do NOT call `m.Close()` when using `WithInstance` (it closes the shared `*sql.DB`). See `/go-conventions` for setup code |
-| Node.js | `knex` or `prisma migrate` | |
-| Python | `alembic` (SQLAlchemy) or `django.db.migrations` | |
-| Rust | `sqlx migrate` or `diesel migrations` | |
+| Go | `github.com/golang-migrate/migrate/v4` | Usar driver de fuente `file://` con `NewWithDatabaseInstance`. NO usar `embed.FS` / `iofs` — mantener los archivos SQL como archivos planos en `migrations/`. NO llamar `m.Close()` cuando se usa `WithInstance` (cierra el `*sql.DB` compartido). Ver `/go-conventions` para código de configuración |
+| Node.js | `knex` o `prisma migrate` | |
+| Python | `alembic` (SQLAlchemy) o `django.db.migrations` | |
+| Rust | `sqlx migrate` o `diesel migrations` | |
 
-## Quick Reference — Engine Comparison
+## Referencia Rápida — Comparación de Motores
 
-| Feature | PostgreSQL | SQLite | MySQL |
+| Característica | PostgreSQL | SQLite | MySQL |
 |---------|-----------|--------|-------|
-| UUID native | Yes | No (TEXT) | No (CHAR(36)) |
-| ENUM type | Yes | No (CHECK) | Yes |
-| ALTER TABLE DROP COLUMN | Yes | No (4-step) | Yes |
-| Concurrent index | Yes | No | No |
-| RLS | Yes | No | No |
-| FK enforcement | Always on | Per-connection PRAGMA | Always on (InnoDB) |
-| Transactions in migrations | Explicit ok | Implicit only | Explicit ok |
-| Max concurrent writers | Many | One | Many |
-| Recommended Go driver | pgx/v5 | mattn/go-sqlite3 | go-sql-driver/mysql |
+| UUID nativo | Sí | No (TEXT) | No (CHAR(36)) |
+| Tipo ENUM | Sí | No (CHECK) | Sí |
+| ALTER TABLE DROP COLUMN | Sí | No (4 pasos) | Sí |
+| Índice concurrente | Sí | No | No |
+| RLS | Sí | No | No |
+| Enforcement de FK | Siempre activo | Por conexión PRAGMA | Siempre activo (InnoDB) |
+| Transacciones en migraciones | Explícitas ok | Solo implícitas | Explícitas ok |
+| Máx escritores concurrentes | Muchos | Uno | Muchos |
+| Driver Go recomendado | pgx/v5 | mattn/go-sqlite3 | go-sql-driver/mysql |

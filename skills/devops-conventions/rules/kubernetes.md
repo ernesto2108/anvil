@@ -1,48 +1,48 @@
-# Kubernetes Best Practices
+# Mejores Prácticas de Kubernetes
 
-## Resource Management
-- Always set `requests` and `limits` for CPU and memory on every container
-- Use VPA in recommendation mode to right-size, then apply
-- Use HPA for production; scale on custom metrics when CPU/memory isn't enough
+## Gestión de Recursos
+- Siempre establece `requests` y `limits` para CPU y memoria en cada contenedor
+- Usa VPA en modo de recomendación para dimensionar correctamente, luego aplica
+- Usa HPA para producción; escala en métricas personalizadas cuando CPU/memoria no es suficiente
 
 ## Health Checks
-- `readinessProbe`: gates traffic — pod only receives requests when ready
-- `livenessProbe`: restarts unhealthy pods — use cautiously (wrong thresholds cause restart loops)
-- `startupProbe`: protects slow-starting containers — disables liveness/readiness until startup succeeds
-- Set `initialDelaySeconds`, `periodSeconds`, `failureThreshold` based on actual app startup time
+- `readinessProbe`: controla el tráfico — el pod solo recibe requests cuando está listo
+- `livenessProbe`: reinicia pods no saludables — úsalo con cuidado (umbrales incorrectos causan bucles de reinicio)
+- `startupProbe`: protege contenedores de arranque lento — desactiva liveness/readiness hasta que el arranque tenga éxito
+- Establece `initialDelaySeconds`, `periodSeconds`, `failureThreshold` basado en el tiempo de arranque real de la app
 
 ## Rolling Updates
-- `strategy.type: RollingUpdate` with explicit `maxSurge` and `maxUnavailable`
-- Set `minReadySeconds` to prevent marking pods ready too quickly
-- Use `progressDeadlineSeconds` to auto-fail stuck rollouts
-- Define `revisionHistoryLimit` to control stored ReplicaSets
+- `strategy.type: RollingUpdate` con `maxSurge` y `maxUnavailable` explícitos
+- Establece `minReadySeconds` para evitar marcar pods como listos demasiado rápido
+- Usa `progressDeadlineSeconds` para auto-fallar rollouts atascados
+- Define `revisionHistoryLimit` para controlar los ReplicaSets almacenados
 
-## Secrets & Config
-- Use external secrets operators (AWS SM, GCP SM, Vault) over native K8s secrets
-- Never store secrets in manifests committed to Git
-- Mount secrets as volumes, not env vars (env vars leak in logs/crash dumps)
-- Use sealed-secrets or SOPS for GitOps secret management
+## Secretos y Config
+- Usa operadores de secretos externos (AWS SM, GCP SM, Vault) sobre secretos nativos de K8s
+- Nunca almacenes secretos en manifiestos commiteados a Git
+- Monta secretos como volúmenes, no como variables de entorno (las env vars se filtran en logs/crash dumps)
+- Usa sealed-secrets o SOPS para gestión de secretos GitOps
 
-## Namespaces & RBAC
-- One namespace per environment or team
-- ResourceQuotas and LimitRanges per namespace
-- RBAC with least privilege; avoid `cluster-admin` for app service accounts
-- NetworkPolicies to restrict pod-to-pod traffic; default-deny ingress per namespace
+## Namespaces y RBAC
+- Un namespace por entorno o equipo
+- ResourceQuotas y LimitRanges por namespace
+- RBAC con menor privilegio; evita `cluster-admin` para cuentas de servicio de apps
+- NetworkPolicies para restringir el tráfico pod-a-pod; default-deny ingress por namespace
 
 ## Labels
-- Use standard labels consistently:
+- Usa labels estándar de forma consistente:
   - `app.kubernetes.io/name`
   - `app.kubernetes.io/version`
   - `app.kubernetes.io/component`
   - `app.kubernetes.io/managed-by`
 
 ## General
-- Treat manifests as code: version control, PR reviews, GitOps (ArgoCD or Flux)
-- Set `terminationGracePeriodSeconds` to match app shutdown time
-- Use PodDisruptionBudgets for critical workloads
-- One process per container; use sidecars for cross-cutting concerns
+- Trata los manifiestos como código: control de versiones, PR reviews, GitOps (ArgoCD o Flux)
+- Establece `terminationGracePeriodSeconds` para que coincida con el tiempo de shutdown de la app
+- Usa PodDisruptionBudgets para cargas de trabajo críticas
+- Un proceso por contenedor; usa sidecars para concerns transversales
 
-## Deployment Template
+## Plantilla de Deployment
 
 ```yaml
 apiVersion: apps/v1

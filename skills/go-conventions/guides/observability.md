@@ -1,21 +1,21 @@
-# Observability Guide
+# Guía de Observabilidad
 
-Three pillars: health checks, metrics, tracing. Combined with structured logging (see `slog-guide.md`), these give you full visibility into production systems.
+Tres pilares: health checks, métricas, trazas. Combinados con logging estructurado (ver `slog-guide.md`), te dan visibilidad completa de los sistemas en producción.
 
-## Health Check Endpoints
+## Endpoints de Health Check
 
-Required for Kubernetes liveness and readiness probes.
+Requeridos para los probes de liveness y readiness de Kubernetes.
 
 ```go
-// /healthz — liveness: "is the process alive?"
-// If this fails, Kubernetes restarts the pod
+// /healthz — liveness: "¿está vivo el proceso?"
+// Si falla, Kubernetes reinicia el pod
 mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(http.StatusOK)
     w.Write([]byte("ok"))
 })
 
-// /readyz — readiness: "can it handle traffic?"
-// If this fails, Kubernetes stops sending traffic to this pod
+// /readyz — readiness: "¿puede recibir tráfico?"
+// Si falla, Kubernetes deja de enviar tráfico a este pod
 mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
     ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
     defer cancel()
@@ -24,21 +24,21 @@ mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "database not ready", http.StatusServiceUnavailable)
         return
     }
-    // Add more checks: cache, external services, etc.
+    // Agrega más checks: caché, servicios externos, etc.
     w.WriteHeader(http.StatusOK)
     w.Write([]byte("ok"))
 })
 ```
 
-**Rules:**
-- `/healthz` should be fast and simple — no external dependencies
-- `/readyz` should check critical dependencies (DB, cache, message broker)
-- Both should respond within 2 seconds
-- Don't expose internal details in health check responses in production
+**Reglas:**
+- `/healthz` debe ser rápido y simple — sin dependencias externas
+- `/readyz` debe verificar dependencias críticas (DB, caché, message broker)
+- Ambos deben responder en menos de 2 segundos
+- No expongas detalles internos en las respuestas de health check en producción
 
-## Metrics (Prometheus — RED Method)
+## Métricas (Prometheus — Método RED)
 
-RED = Rate, Errors, Duration — the minimum metrics for any service.
+RED = Rate, Errors, Duration — las métricas mínimas para cualquier servicio.
 
 ```go
 import (
@@ -47,7 +47,7 @@ import (
     "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Define metrics
+// Define métricas
 var (
     httpRequestsTotal = promauto.NewCounterVec(
         prometheus.CounterOpts{
@@ -67,10 +67,10 @@ var (
     )
 )
 
-// Expose /metrics endpoint
+// Expone el endpoint /metrics
 mux.Handle("GET /metrics", promhttp.Handler())
 
-// Instrument via middleware (see middleware-guide.md)
+// Instrumenta vía middleware (ver middleware-guide.md)
 func MetricsMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         start := time.Now()
@@ -80,7 +80,7 @@ func MetricsMiddleware(next http.Handler) http.Handler {
 
         duration := time.Since(start).Seconds()
         status := strconv.Itoa(wrapped.status)
-        path := r.Pattern // Go 1.22+ — use matched pattern, not raw path
+        path := r.Pattern // Go 1.22+ — usa el patrón matched, no el path crudo
 
         httpRequestsTotal.WithLabelValues(r.Method, path, status).Inc()
         httpRequestDuration.WithLabelValues(r.Method, path).Observe(duration)
@@ -88,16 +88,16 @@ func MetricsMiddleware(next http.Handler) http.Handler {
 }
 ```
 
-**Rules:**
-- Instrument middleware, not individual handlers — cross-cutting concern
-- Use `r.Pattern` (Go 1.22+) not `r.URL.Path` — avoids high-cardinality labels
-- Track RED: request rate, error rate, duration distribution
-- Add business metrics sparingly: `orders_created_total`, `payments_processed_total`
-- Never put user IDs or high-cardinality values in labels
+**Reglas:**
+- Instrumenta en middleware, no en handlers individuales — es una preocupación transversal
+- Usa `r.Pattern` (Go 1.22+) no `r.URL.Path` — evita labels de alta cardinalidad
+- Sigue RED: tasa de requests, tasa de errores, distribución de duración
+- Agrega métricas de negocio con moderación: `orders_created_total`, `payments_processed_total`
+- Nunca pongas IDs de usuario o valores de alta cardinalidad en labels
 
-## Tracing (OpenTelemetry)
+## Trazas (OpenTelemetry)
 
-Distributed tracing follows a request across services.
+El distributed tracing sigue una request a través de los servicios.
 
 ```go
 import (
@@ -108,12 +108,12 @@ import (
 
 var tracer = otel.Tracer("service-name")
 
-// Create spans in service methods
+// Crea spans en los métodos del servicio
 func (s *UserService) Create(ctx context.Context, input CreateUserInput) (*User, error) {
     ctx, span := tracer.Start(ctx, "UserService.Create")
     defer span.End()
 
-    // Add attributes for debugging
+    // Agrega atributos para debugging
     span.SetAttributes(attribute.String("user.email", input.Email))
 
     user, err := s.repo.Insert(ctx, input)
@@ -126,36 +126,36 @@ func (s *UserService) Create(ctx context.Context, input CreateUserInput) (*User,
     return user, nil
 }
 
-// Repository also creates child spans
+// El repositorio también crea spans hijo
 func (r *UserRepository) Insert(ctx context.Context, input CreateUserInput) (*User, error) {
     ctx, span := tracer.Start(ctx, "UserRepository.Insert")
     defer span.End()
 
-    // DB operation — span captures duration automatically
+    // Operación DB — el span captura la duración automáticamente
     // ...
 }
 ```
 
-**Existing APM integrations:** If the project uses Elastic APM, the pattern is the same:
+**Integraciones APM existentes:** Si el proyecto usa Elastic APM, el patrón es el mismo:
 ```go
-// Elastic APM equivalent
+// Equivalente en Elastic APM
 span, ctx := apm.StartSpan(ctx, "UserService.Create", "app")
 defer span.End()
 ```
 
-**Rules:**
-- Always propagate `context.Context` — it carries the trace
-- Name spans as `Package.Method` for clarity in trace viewers
-- Add attributes that help debugging — but never PII
-- Record errors on spans with `span.RecordError(err)`
-- Create spans at service boundaries and expensive operations, not every function
+**Reglas:**
+- Siempre propaga `context.Context` — lleva la traza
+- Nombra los spans como `Package.Method` para claridad en los trace viewers
+- Agrega atributos que ayuden al debugging — pero nunca PII
+- Registra errores en spans con `span.RecordError(err)`
+- Crea spans en los límites de servicio y operaciones costosas, no en cada función
 
-## Log Correlation
+## Correlación de Logs
 
-Connect logs, metrics, and traces with shared identifiers:
+Conecta logs, métricas y trazas con identificadores compartidos:
 
 ```go
-// Add trace_id and request_id to every log line
+// Agrega trace_id y request_id a cada línea de log
 func (s *UserService) Create(ctx context.Context, input CreateUserInput) (*User, error) {
     ctx, span := tracer.Start(ctx, "UserService.Create")
     defer span.End()
@@ -168,15 +168,15 @@ func (s *UserService) Create(ctx context.Context, input CreateUserInput) (*User,
 }
 ```
 
-This lets you jump from a log line → trace → metrics in your observability platform.
+Esto te permite saltar de una línea de log → traza → métricas en tu plataforma de observabilidad.
 
 ## Graceful Shutdown
 
-Flush pending spans and metrics before the process exits:
+Vacía los spans y métricas pendientes antes de que el proceso termine:
 
 ```go
 func main() {
-    // Setup tracing exporter
+    // Configura el exporter de trazas
     tp, err := initTracerProvider()
     if err != nil {
         log.Fatal(err)
@@ -185,11 +185,11 @@ func main() {
     ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
     defer stop()
 
-    // ... start server ...
+    // ... inicia el servidor ...
 
     <-ctx.Done()
 
-    // Graceful shutdown — flush telemetry
+    // Graceful shutdown — vacía la telemetría
     shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
@@ -202,4 +202,4 @@ func main() {
 }
 ```
 
-Without graceful shutdown, the last few seconds of spans and metrics are lost — making it harder to debug the issue that caused the shutdown.
+Sin graceful shutdown, los últimos segundos de spans y métricas se pierden — dificultando el debugging del problema que causó el shutdown.

@@ -1,41 +1,41 @@
-# Coding Rules
+# Reglas de Código
 
-## Modern Syntax (Python 3.12+)
+## Sintaxis Moderna (Python 3.12+)
 
-1. **PEP 695 type aliases** — `type Vector = list[float]` not `Vector: TypeAlias = list[float]`
-2. **PEP 604 unions** — `int | str` not `Union[int, str]`, `str | None` not `Optional[str]`
-3. **Generic classes** — `class Stack[T]:` not `class Stack(Generic[T]):`
-4. **Match statements** — use `match/case` for structural pattern matching instead of if/elif chains
-5. **F-strings always** — never `%` formatting or `.format()`, f-strings support nested quotes in 3.12+
-6. **`itertools.batched`** — use stdlib batching (3.12+), don't write manual chunking
+1. **Alias de tipo PEP 695** — `type Vector = list[float]` no `Vector: TypeAlias = list[float]`
+2. **Uniones PEP 604** — `int | str` no `Union[int, str]`, `str | None` no `Optional[str]`
+3. **Clases genéricas** — `class Stack[T]:` no `class Stack(Generic[T]):`
+4. **Sentencias match** — usar `match/case` para coincidencia estructural de patrones en lugar de cadenas if/elif
+5. **F-strings siempre** — nunca formato `%` ni `.format()`, los f-strings soportan comillas anidadas en 3.12+
+6. **`itertools.batched`** — usar batching de stdlib (3.12+), no escribir chunking manual
 
 ## Type Hints
 
-7. **Type hints on all public functions** — parameters and return types. Private helpers can omit if obvious
-8. **`from __future__ import annotations`** — for forward references and deferred evaluation
-9. **Protocol over ABC** — structural typing, no inheritance needed. Use `@runtime_checkable` when needed
-10. **TypedDict for unstructured data** — not `dict[str, Any]`. Use `NotRequired` for optional keys (3.11+)
-11. **`NDArray[np.float32]`** — always explicit dtype for numpy arrays
-12. **TYPE_CHECKING guard** — heavy imports (numpy, pandas, torch) only for annotations go in `if TYPE_CHECKING:`
+7. **Type hints en todas las funciones públicas** — parámetros y tipos de retorno. Helpers privados pueden omitirlos si es obvio
+8. **`from __future__ import annotations`** — para referencias adelantadas y evaluación diferida
+9. **Protocol sobre ABC** — tipado estructural, sin herencia necesaria. Usar `@runtime_checkable` cuando se necesite
+10. **TypedDict para datos no estructurados** — no `dict[str, Any]`. Usar `NotRequired` para claves opcionales (3.11+)
+11. **`NDArray[np.float32]`** — siempre dtype explícito para arrays numpy
+12. **Guard `TYPE_CHECKING`** — imports pesados (numpy, pandas, torch) solo para anotaciones van en `if TYPE_CHECKING:`
 
-## Naming
+## Nomenclatura
 
-13. **snake_case** for functions, methods, variables, modules
-14. **PascalCase** for classes, type aliases, Protocols
-15. **UPPER_SNAKE** for module-level constants
-16. **Leading underscore** for private (`_helper`), never dunder (`__mangled`) unless needed
-17. **No single-letter names** except `i/j/k` for indices, `x/y/z` for coordinates, `n` for counts, `T` for generics
+13. **snake_case** para funciones, métodos, variables, módulos
+14. **PascalCase** para clases, alias de tipo, Protocols
+15. **UPPER_SNAKE** para constantes a nivel de módulo
+16. **Guión bajo inicial** para privados (`_helper`), nunca dunder (`__mangled`) a menos que sea necesario
+17. **Sin nombres de una sola letra** excepto `i/j/k` para índices, `x/y/z` para coordenadas, `n` para conteos, `T` para genéricos
 
-## Error Handling
+## Manejo de Errores
 
-18. **Domain exception hierarchy** — `class AppError(Exception)` as base, specific subclasses
-19. **Chain exceptions** — `raise NewError("msg") from original_exc`, never lose traceback
-20. **Exception groups** (3.11+) — use `ExceptionGroup` and `except*` for concurrent error aggregation
-21. **No bare except** — always catch specific exceptions. `except Exception` only with re-raise
-22. **Structured logging** — `structlog` with bound context, not f-strings in `logging.info()`
+18. **Jerarquía de excepciones de dominio** — `class AppError(Exception)` como base, subclases específicas
+19. **Encadenar excepciones** — `raise NewError("msg") from original_exc`, nunca perder el traceback
+20. **Grupos de excepciones** (3.11+) — usar `ExceptionGroup` y `except*` para agregación de errores concurrentes
+21. **Sin bare except** — siempre capturar excepciones específicas. `except Exception` solo con re-lanzamiento
+22. **Logging estructurado** — `structlog` con contexto vinculado, no f-strings en `logging.info()`
 
-## Data Classes
+## Clases de Datos
 
-23. **`@dataclass(slots=True, frozen=True)`** for value objects — saves memory, prevents mutation
-24. **Pydantic `BaseModel`** at boundaries — API inputs, config, external data validation
-25. **Pydantic v2 patterns** — `field_validator` + `@classmethod`, `ConfigDict`, not v1 `Config` class
+23. **`@dataclass(slots=True, frozen=True)`** para objetos de valor — ahorra memoria, previene mutación
+24. **Pydantic `BaseModel`** en las fronteras — inputs de API, config, validación de datos externos
+25. **Patrones Pydantic v2** — `field_validator` + `@classmethod`, `ConfigDict`, no la clase `Config` de v1

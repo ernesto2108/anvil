@@ -1,20 +1,20 @@
-# Kafka Dead Letter Queue & Retry Patterns
+# Kafka Dead Letter Queue & Patrones de Reintento
 
 ## Dead Letter Queue (DLQ)
 
-Kafka has **no native DLQ**. Implement at the application layer.
+Kafka **no tiene DLQ nativo**. Se implementa a nivel de aplicación.
 
-### Pattern: Retry Topics + Dead Letter Topic
+### Patrón: Retry Topics + Dead Letter Topic
 
 ```
 main-topic
-  → main-topic.retry-1  (1s delay)
-  → main-topic.retry-2  (5s delay)
-  → main-topic.retry-3  (30s delay)
+  → main-topic.retry-1  (1s de delay)
+  → main-topic.retry-2  (5s de delay)
+  → main-topic.retry-3  (30s de delay)
   → main-topic.dlt      (dead letter topic)
 ```
 
-### DLQ Message Structure
+### Estructura del Mensaje DLQ
 
 ```go
 type DLQMessage struct {
@@ -29,7 +29,7 @@ type DLQMessage struct {
 }
 ```
 
-### DLQ Producer
+### Productor DLQ
 
 ```go
 type DLQProducer struct {
@@ -81,32 +81,32 @@ func (d *DLQProducer) Close() error {
 }
 ```
 
-### When to Use DLQs
+### Cuándo Usar DLQs
 
-- Schema mismatches — producer sends a format the consumer can't deserialize
-- Malformed payloads — corrupted or incomplete data
-- Business rule violations — valid format but semantically invalid
-- Permanent downstream failures
+- Incompatibilidades de schema — el productor envía un formato que el consumer no puede deserializar
+- Payloads malformados — datos corruptos o incompletos
+- Violaciones de reglas de negocio — formato válido pero semánticamente inválido
+- Fallas permanentes en sistemas downstream
 
-### When NOT to Use DLQs
+### Cuándo NO Usar DLQs
 
-- When strict message ordering is required (DLQ breaks order)
-- When automated retries are sufficient for transient failures
-- When messages have no recovery path — log and drop instead
+- Cuando se requiere ordenamiento estricto de mensajes (el DLQ rompe el orden)
+- Cuando los reintentos automatizados son suficientes para fallas transitorias
+- Cuando los mensajes no tienen camino de recuperación — registrar y descartar en su lugar
 
-### DLQ Operational Framework
+### Framework Operativo del DLQ
 
-1. **Inspect and discard** — fundamentally invalid messages (corrupted payloads)
-2. **Fix data and replay** — recoverable failures requiring manual intervention
-3. **Escalate operationally** — system-level signals (broken deployments, dependency changes)
+1. **Inspeccionar y descartar** — mensajes fundamentalmente inválidos (payloads corruptos)
+2. **Corregir datos y repetir** — fallas recuperables que requieren intervención manual
+3. **Escalar operacionalmente** — señales a nivel de sistema (deploys rotos, cambios de dependencias)
 
 ---
 
-## Retry Patterns
+## Patrones de Reintento
 
-### Failure Classification
+### Clasificación de Fallas
 
-Always distinguish transient from permanent failures:
+Siempre distingue fallas transitorias de permanentes:
 
 ```go
 type RetriableError struct {
@@ -117,24 +117,24 @@ func (e *RetriableError) Error() string { return e.Err.Error() }
 func (e *RetriableError) Unwrap() error { return e.Err }
 
 func classifyError(err error) error {
-    // schema/deserialization errors are permanent
+    // los errores de schema/deserialización son permanentes
     var syntaxErr *json.SyntaxError
     if errors.As(err, &syntaxErr) {
-        return err // non-retriable — goes to DLQ
+        return err // no retriable — va al DLQ
     }
 
-    // network/timeout errors are transient
+    // los errores de red/timeout son transitorios
     var netErr net.Error
     if errors.As(err, &netErr) && netErr.Timeout() {
         return &RetriableError{Err: err}
     }
 
-    // default: treat as transient
+    // por defecto: tratar como transitorio
     return &RetriableError{Err: err}
 }
 ```
 
-### Exponential Backoff with Jitter
+### Backoff Exponencial con Jitter
 
 ```go
 type RetryConfig struct {
@@ -164,7 +164,7 @@ func calculateBackoff(attempt int, initial, max time.Duration) time.Duration {
 }
 ```
 
-### Process with Retry + DLQ
+### Procesar con Reintento + DLQ
 
 ```go
 func (mp *MessageProcessor) ProcessWithRetry(
@@ -181,7 +181,7 @@ func (mp *MessageProcessor) ProcessWithRetry(
             lastErr = err
         }
 
-        // non-retriable errors go straight to DLQ
+        // los errores no retriables van directo al DLQ
         var retriable *RetriableError
         if !errors.As(lastErr, &retriable) {
             return mp.dlq.Send(ctx, msg, lastErr, attempt)
@@ -201,14 +201,14 @@ func (mp *MessageProcessor) ProcessWithRetry(
 
 ---
 
-## Poison Message Detection
+## Detección de Mensajes Veneno
 
-A poison message causes the consumer to fail repeatedly, blocking the entire partition.
+Un mensaje veneno hace que el consumer falle repetidamente, bloqueando toda la partición.
 
 ```go
 type PoisonDetector struct {
     mu          sync.Mutex
-    failCounts  map[string]int // key: topic:partition:offset
+    failCounts  map[string]int // clave: topic:partition:offset
     maxFailures int
     dlq         *DLQProducer
 }
@@ -224,7 +224,7 @@ func (pd *PoisonDetector) Handle(ctx context.Context, msg kafka.Message, err err
     if count >= pd.maxFailures {
         slog.Warn("poison message detected", "key", key, "failures", count)
         if dlqErr := pd.dlq.Send(ctx, msg, err, count); dlqErr != nil {
-            return ActionPause // pause if DLQ fails
+            return ActionPause // pausa si el DLQ falla
         }
         pd.mu.Lock()
         delete(pd.failCounts, key)

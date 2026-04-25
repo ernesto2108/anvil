@@ -1,29 +1,29 @@
 ---
 name: read-files
-description: Safely read project files to gather context before making decisions. Use when needing to understand existing code before modifying it, gathering context from multiple files, or summarizing large codebases.
+description: Leer archivos del proyecto de forma segura para recopilar contexto antes de tomar decisiones. Usar cuando se necesite entender el código existente antes de modificarlo, recopilar contexto de múltiples archivos, o resumir codebases grandes.
 user-invocable: false
 ---
 
-Read only what is necessary to complete the task.
+Leer solo lo necesario para completar la tarea.
 
-Capabilities:
-- read one or multiple files
-- read folders recursively
-- summarize large files
-- extract only relevant sections
-- search by keyword or symbol
+Capacidades:
+- leer uno o múltiples archivos
+- leer carpetas de forma recursiva
+- resumir archivos grandes
+- extraer solo las secciones relevantes
+- buscar por keyword o símbolo
 
-Usage rules:
-- avoid loading the whole repo if not needed
-- prefer targeted reads (specific files first)
-- summarize long outputs
-- highlight only relevant parts
+Reglas de uso:
+- evitar cargar todo el repo si no es necesario
+- preferir lecturas dirigidas (archivos específicos primero)
+- resumir outputs largos
+- destacar solo las partes relevantes
 
-Output format:
-- file path
-- short summary
-- relevant snippets only
+Formato de salida:
+- path del archivo
+- resumen breve
+- solo los snippets relevantes
 
-Never:
-- hallucinate file contents
-- assume code without reading it
+Nunca:
+- alucinar contenido de archivos
+- asumir código sin haberlo leído

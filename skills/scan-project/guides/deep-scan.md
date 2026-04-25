@@ -1,36 +1,36 @@
-# Deep Scan Guide
+# Guía de Escaneo Profundo
 
-Used when scanner is invoked with `mode: deep` (documentation pipelines).
+Se usa cuando el escáner se invoca con `mode: deep` (pipelines de documentación).
 
-## Stack detection (FIRST)
+## Detección de stack (PRIMERO)
 
-Check marker files to determine the stack:
+Verifica los archivos marcadores para determinar el stack:
 
-| File | Stack | Recipe |
+| Archivo | Stack | Receta |
 |---|---|---|
-| `go.mod` | Go | Check `docs/scanner-recipe-go-gin.md` if gin import exists |
-| `package.json` + `src/` with `.tsx` | React | Follow frontend patterns below |
-| `pubspec.yaml` | Flutter | Follow mobile patterns below |
-| `Cargo.toml` | Rust | Follow generic approach |
-| `requirements.txt` / `pyproject.toml` | Python | Follow generic approach |
+| `go.mod` | Go | Consulta `docs/scanner-recipe-go-gin.md` si existe el import de gin |
+| `package.json` + `src/` con `.tsx` | React | Sigue los patrones de frontend a continuación |
+| `pubspec.yaml` | Flutter | Sigue los patrones de mobile a continuación |
+| `Cargo.toml` | Rust | Sigue el enfoque genérico |
+| `requirements.txt` / `pyproject.toml` | Python | Sigue el enfoque genérico |
 
-If a stack-specific recipe exists in `docs/`, load it. It defines extraction order, grep patterns, what to skip, and token budget.
+Si existe una receta específica para el stack en `docs/`, cárgala. Define el orden de extracción, patrones de grep, qué omitir y el presupuesto de tokens.
 
-If no recipe exists for the detected stack, follow the generic approach.
+Si no existe receta para el stack detectado, sigue el enfoque genérico.
 
-## Generic approach
+## Enfoque genérico
 
-Works for any stack:
+Funciona para cualquier stack:
 
-1. Perform standard scan (project structure, deps, tests, CI)
-2. Trace endpoint/route flows: handler → logic → data layer chain
-3. **Prefer Grep over Read:** extract function signatures, bindings, queries, external calls. Only Read full functions when grep context isn't enough
-4. **Write THREE segmented files** (not one monolith)
-5. The goal: **no subsequent agent needs to re-read source code** — all flows are already traced
+1. Realiza el escaneo estándar (estructura del proyecto, dependencias, tests, CI)
+2. Traza los flujos de endpoint/ruta: cadena handler → lógica → capa de datos
+3. **Prefiere Grep sobre Read:** extrae firmas de funciones, bindings, queries, llamadas externas. Solo usa Read en funciones completas cuando el contexto de grep no es suficiente
+4. **Escribe TRES archivos segmentados** (no un monolito)
+5. El objetivo: **ningún agente posterior necesita releer el código fuente** — todos los flujos ya están trazados
 
-## Output files
+## Archivos de salida
 
-### context-summary.md (~200 lines max)
+### context-summary.md (~200 líneas máx)
 
 ```markdown
 # {project-name} — Contexto tecnico
@@ -46,29 +46,29 @@ Works for any stack:
 ## 10. Notas tecnicas (deuda tecnica, issues conocidos)
 ```
 
-Be concise: tables over prose. Omit config values — only structure and keys.
+Sé conciso: tablas sobre prosa. Omite los valores de configuración — solo estructura y claves.
 
-### context-detail.md (~400 lines max)
+### context-detail.md (~400 líneas máx)
 
-The "detail" file adapts to project type:
-- **Backend (Go, Python, Rust):** endpoint flows (handler → service → repo)
-- **Frontend (React):** module/feature flows (routes, components, API calls, state)
-- **Mobile (Flutter):** screen flows (widgets, BLoC/providers, API calls)
+El archivo de "detalle" se adapta al tipo de proyecto:
+- **Backend (Go, Python, Rust):** flujos de endpoint (handler → service → repo)
+- **Frontend (React):** flujos de módulo/feature (routes, components, API calls, state)
+- **Mobile (Flutter):** flujos de pantalla (widgets, BLoC/providers, API calls)
 
 ```markdown
 # {project-name} — Flujos detallados
 
-### POST /endpoint-name (or Screen/Module name)
-- Entry: {file}:{line} → description
-- Logic: {file}:{line} → what it does
+### POST /endpoint-name (o nombre de Screen/Module)
+- Entry: {file}:{line} → descripción
+- Logic: {file}:{line} → qué hace
 - Data: {file}:{line} → queries, API calls, cache
 - External: {url/service} (timeout, protocol)
 - Side effects: events, notifications
 ```
 
-Keep each flow to 5-15 lines. Summarize similar ones.
+Mantén cada flujo entre 5 y 15 líneas. Resume los similares.
 
-### context-risks.md (~100 lines max)
+### context-risks.md (~100 líneas máx)
 
 ```markdown
 # {project-name} — Areas de riesgo para auditoria
@@ -79,10 +79,10 @@ Keep each flow to 5-15 lines. Summarize similar ones.
 ## Codigo sospechoso (error ignorado, panic sin recover, SQL concat, eval, dangerouslySetInnerHTML)
 ```
 
-Only facts relevant to security. No architecture, no business logic.
+Solo hechos relevantes para seguridad. Sin arquitectura, sin lógica de negocio.
 
-## Line budget
+## Presupuesto de líneas
 
-**CRITICAL:** The three files combined MUST NOT exceed 700 lines. If many endpoints/screens, summarize patterns (e.g., "CRUD endpoints all follow the same handler → service → repo chain").
+**CRÍTICO:** Los tres archivos combinados NO DEBEN superar las 700 líneas. Si hay muchos endpoints/pantallas, resume los patrones (ej., "los endpoints CRUD siguen todos la misma cadena handler → service → repo").
 
-This enables the orchestrator to inject ONLY the relevant file into each agent prompt, keeping each under 10k tokens.
+Esto permite al orquestador inyectar SOLO el archivo relevante en cada prompt de agente, manteniéndolos por debajo de 10k tokens.

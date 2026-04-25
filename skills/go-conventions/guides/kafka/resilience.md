@@ -1,16 +1,16 @@
-# Kafka Resilience Patterns
+# Patrones de Resiliencia en Kafka
 
 ## Circuit Breaker
 
-Prevents cascading failures when downstream services are unhealthy.
+Previene fallas en cascada cuando los servicios downstream no están saludables.
 
 ```go
 type State int
 
 const (
-    StateClosed   State = iota // normal operation
-    StateOpen                   // rejecting all requests
-    StateHalfOpen              // testing with limited requests
+    StateClosed   State = iota // operación normal
+    StateOpen                   // rechazando todas las requests
+    StateHalfOpen              // probando con requests limitadas
 )
 
 type CircuitBreaker struct {
@@ -77,13 +77,13 @@ func (cb *CircuitBreaker) Execute(fn func() error) error {
 }
 ```
 
-**Pipeline**: retry transient errors → circuit breaker trips if downstream is down → DLQ for unrecoverable messages.
+**Pipeline**: reintentar errores transitorios → el circuit breaker se abre si el downstream está caído → DLQ para mensajes irrecuperables.
 
 ---
 
-## Idempotent Consumer
+## Consumer Idempotente
 
-Most production systems use **at-least-once delivery with consumer-side deduplication**.
+La mayoría de sistemas en producción usan **entrega at-least-once con deduplicación en el lado del consumer**.
 
 ```go
 // schema
@@ -107,7 +107,7 @@ func (ic *IdempotentConsumer) ProcessIdempotently(
         return fmt.Errorf("check processed: %w", err)
     }
     if exists {
-        return nil // already processed
+        return nil // ya procesado
     }
 
     tx, err := ic.db.BeginTx(ctx, nil)
@@ -134,20 +134,20 @@ func (ic *IdempotentConsumer) ProcessIdempotently(
 }
 ```
 
-### Idempotency Key Strategies
+### Estrategias de Clave de Idempotencia
 
-| Source | Key Strategy |
+| Fuente | Estrategia de Clave |
 |--------|-------------|
-| Kafka message | Header `x-idempotency-key` set by producer |
+| Mensaje Kafka | Header `x-idempotency-key` definido por el producer |
 | Event sourcing | `{aggregate_id}:{event_sequence}` |
-| External API | `{entity_type}:{entity_id}:{version}` |
-| Fallback | `{topic}:{partition}:{offset}` (not ideal — offset can change after rebalance) |
+| API externa | `{entity_type}:{entity_id}:{version}` |
+| Fallback | `{topic}:{partition}:{offset}` (no ideal — el offset puede cambiar tras un rebalanceo) |
 
 ---
 
 ## Backpressure
 
-### Worker Pool with Bounded Channel
+### Worker Pool con Channel Acotado
 
 ```go
 type WorkerPool struct {
@@ -191,32 +191,32 @@ func (wp *WorkerPool) Start(ctx context.Context, handler func(context.Context, k
             continue
         }
 
-        messages <- msg // blocks if workers are busy (backpressure)
+        messages <- msg // bloquea si los workers están ocupados (backpressure)
     }
 }
 ```
 
-> **Warning**: worker pools break ordering within a partition. Use only when ordering is not required, or route same-key messages to the same worker.
+> **Advertencia**: los worker pools rompen el ordenamiento dentro de una partición. Úsalos solo cuando el ordenamiento no sea requerido, o enruta mensajes con la misma clave al mismo worker.
 
 ### Pause/Resume (confluent-kafka-go)
 
 ```go
-// pause specific partitions when buffer is full
+// pausa particiones específicas cuando el buffer está lleno
 consumer.Pause([]kafka.TopicPartition{
     {Topic: &topic, Partition: 0},
 })
 
-// resume when buffer drains below threshold
+// reanuda cuando el buffer baja del umbral
 consumer.Resume([]kafka.TopicPartition{
     {Topic: &topic, Partition: 0},
 })
 ```
 
-### Key Config Parameters
+### Parámetros de Configuración Clave
 
-| Parameter | Default | Recommendation |
+| Parámetro | Valor Por Defecto | Recomendación |
 |-----------|---------|----------------|
-| `max.poll.records` | 500 | Lower for slow processors |
-| `max.poll.interval.ms` | 300000 | Increase for heavy processing |
-| `fetch.max.bytes` | 52428800 | Reduce to limit memory |
-| `session.timeout.ms` | 45000 | High enough to survive GC pauses |
+| `max.poll.records` | 500 | Reducir para procesadores lentos |
+| `max.poll.interval.ms` | 300000 | Aumentar para procesamiento pesado |
+| `fetch.max.bytes` | 52428800 | Reducir para limitar memoria |
+| `session.timeout.ms` | 45000 | Suficientemente alto para sobrevivir pausas de GC |

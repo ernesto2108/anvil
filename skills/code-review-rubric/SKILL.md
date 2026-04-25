@@ -1,93 +1,93 @@
 ---
 name: code-review-rubric
-description: Scoring rubric and report format for code reviews. Defines evaluation criteria, scoring scale, and output structure. Used by the QA agent and anyone reviewing code quality.
+description: Rúbrica de puntuación y formato de reporte para revisiones de código. Define criterios de evaluación, escala de puntuación y estructura de salida. Usado por el agente QA y cualquiera que revise calidad de código.
 ---
 
-# Code Review Rubric
+# Rúbrica de Revisión de Código
 
-## Evaluation Criteria
+## Criterios de Evaluación
 
-### Correctness
-- Logic bugs, edge cases, nil/null safety
-- Error handling (wrapped errors, no bare returns)
-- Contract compliance (matches PRD/design)
+### Corrección
+- Bugs de lógica, casos borde, seguridad ante nil/null
+- Manejo de errores (errores envueltos, sin retornos desnudos)
+- Cumplimiento de contrato (coincide con PRD/diseño)
 
-### Performance
-- Unnecessary allocations, blocking I/O
-- N+1 queries, inefficient algorithms
-- Missing pagination, unbounded queries
+### Rendimiento
+- Asignaciones innecesarias, I/O bloqueante
+- Queries N+1, algoritmos ineficientes
+- Falta de paginación, queries sin límite
 
-### Code Quality
-- Naming clarity, readability
-- Cyclomatic complexity, duplication
-- Single responsibility, minimal abstractions
+### Calidad de Código
+- Claridad de nombres, legibilidad
+- Complejidad ciclomática, duplicación
+- Responsabilidad única, abstracciones mínimas
 
 ### Testing
-- Unit tests present for business logic
-- Critical paths covered
-- Edge cases and error paths tested
-- Deterministic (no flaky, no time-dependent)
+- Tests unitarios presentes para lógica de negocio
+- Rutas críticas cubiertas
+- Casos borde y rutas de error testeadas
+- Determinístico (sin flaky, sin dependencia de tiempo)
 
-### Concurrency Safety
-- Race conditions, shared state
-- Proper use of mutexes/channels/errgroups
-- Context propagation and cancellation
+### Seguridad ante Concurrencia
+- Race conditions, estado compartido
+- Uso correcto de mutexes/channels/errgroups
+- Propagación de contexto y cancelación
 
-### Security
-- Input validation at boundaries
+### Seguridad
+- Validación de entrada en los límites
 - SQL injection, XSS, command injection
-- Auth/authorization checks present
-- Secrets not hardcoded
+- Verificaciones de auth/autorización presentes
+- Secretos no hardcodeados
 
-## Scoring Scale
+## Escala de Puntuación
 
-| Score | Meaning | Action |
+| Puntuación | Significado | Acción |
 |---|---|---|
-| 9-10 | Excellent — production ready | Approve |
-| 7-8 | Good — minor improvements only | Approve with suggestions |
-| 5-6 | Needs work — significant issues | Block, create tasks |
-| 3-4 | Major problems — rethink approach | Block, escalate to architect |
-| 1-2 | Critical — security/data risk | Block immediately |
+| 9-10 | Excelente — listo para producción | Aprobar |
+| 7-8 | Bueno — solo mejoras menores | Aprobar con sugerencias |
+| 5-6 | Requiere trabajo — problemas significativos | Bloquear, crear tareas |
+| 3-4 | Problemas mayores — repensar el enfoque | Bloquear, escalar al arquitecto |
+| 1-2 | Crítico — riesgo de seguridad/datos | Bloquear de inmediato |
 
-**Threshold: score < 7 → BLOCK and create backlog tasks.**
+**Umbral: puntuación < 7 → BLOQUEAR y crear tareas en el backlog.**
 
-## Report Format
+## Formato del Reporte
 
-Write to: `<docs>/03-tasks/<TASK-ID>/qa-review.md`
+Escribir en: `<docs>/03-tasks/<TASK-ID>/qa-review.md`
 
 ```markdown
 # QA Review — <TASK-ID>
 
 ## Score: X/10
 
-## Summary
-One paragraph: what was reviewed, overall assessment.
+## Resumen
+Un párrafo: qué se revisó, evaluación general.
 
-## Strengths
-- What was done well (acknowledge good work)
+## Fortalezas
+- Qué se hizo bien (reconocer el buen trabajo)
 
-## Issues
-| # | Severity | Category | File | Description |
+## Problemas
+| # | Severidad | Categoría | Archivo | Descripción |
 |---|---|---|---|---|
 | 1 | critical | correctness | internal/user/service.go:45 | Missing nil check on... |
 | 2 | high | testing | — | No tests for error path in... |
 | 3 | medium | quality | internal/order/handler.go:12 | Function too complex (cyclomatic 15) |
 
-## Improvements
-- Actionable suggestions (not vague "improve this")
+## Mejoras
+- Sugerencias accionables (no vagas como "mejorar esto")
 
-## Risk Level
-low / medium / high — based on blast radius of issues found
+## Nivel de Riesgo
+low / medium / high — basado en el radio de explosión de los problemas encontrados
 ```
 
-## Backlog Task Format
+## Formato de Tarea para el Backlog
 
-When issues are found, append to: `<docs>/02-backlog/sprint-current.md`
+Cuando se encuentran problemas, agregar a: `<docs>/02-backlog/sprint-current.md`
 
-Each task must include:
-- Title (imperative: "Fix nil check in user service")
-- Type (bug / tech-debt / test-gap)
-- Description (what's wrong and why it matters)
-- Severity (critical / high / medium / low)
-- Suggested fix (concrete, not vague)
-- Affected files (with line numbers)
+Cada tarea debe incluir:
+- Título (imperativo: "Fix nil check in user service")
+- Tipo (bug / tech-debt / test-gap)
+- Descripción (qué está mal y por qué importa)
+- Severidad (critical / high / medium / low)
+- Corrección sugerida (concreta, no vaga)
+- Archivos afectados (con números de línea)

@@ -1,6 +1,6 @@
-# Kafka Consumer Patterns
+# Patrones de Consumer Kafka
 
-## segmentio/kafka-go Consumer with Manual Commits
+## Consumer segmentio/kafka-go con Commits Manuales
 
 ```go
 reader := kafka.NewReader(kafka.ReaderConfig{
@@ -10,7 +10,7 @@ reader := kafka.NewReader(kafka.ReaderConfig{
     MinBytes:          10e3,              // 10 KB
     MaxBytes:          10e6,              // 10 MB
     MaxWait:           3 * time.Second,
-    CommitInterval:    0,                 // manual commit only
+    CommitInterval:    0,                 // solo commit manual
     StartOffset:       kafka.LastOffset,
     SessionTimeout:    45 * time.Second,
     HeartbeatInterval: 15 * time.Second,
@@ -29,7 +29,7 @@ for {
     }
 
     if err := process(ctx, msg); err != nil {
-        // handle error: retry, DLQ, or skip
+        // maneja el error: reintentar, DLQ, o saltar
         continue
     }
 
@@ -39,14 +39,14 @@ for {
 }
 ```
 
-## confluent-kafka-go Consumer with Topic Map
+## Consumer confluent-kafka-go con Topic Map
 
 ```go
 consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
     "bootstrap.servers":                brokers,
     "group.id":                         groupID,
     "auto.offset.reset":               "latest",
-    "group.instance.id":               "instance-" + hostname, // static membership
+    "group.instance.id":               "instance-" + hostname, // membresía estática
     "partition.assignment.strategy":    "cooperative-sticky",
     "session.timeout.ms":              45000,
 })
@@ -66,24 +66,24 @@ for t := range topicHandlers {
 consumer.SubscribeTopics(topics, nil)
 ```
 
-## Consumer Rules
+## Reglas del Consumer
 
-- **Manual commits after successful processing** — never auto-commit before processing
-- **Use `cooperative-sticky` rebalance** — minimal disruption, unaffected consumers keep processing
-- **Static group membership** (`group.instance.id`) — reduces rebalances during rolling deploys
-- **One consumer per topic** (Netflix pattern) — simpler maintenance and tuning
-- **Set `session.timeout.ms >= 45s`** — high enough to survive GC pauses
-- **Always handle `ctx.Done()`** in the consume loop
+- **Commits manuales después del procesamiento exitoso** — nunca auto-commit antes de procesar
+- **Usa rebalanceo `cooperative-sticky`** — disrupción mínima, los consumers no afectados siguen procesando
+- **Membresía estática de grupo** (`group.instance.id`) — reduce rebalanceos durante deploys rolling
+- **Un consumer por topic** (patrón Netflix) — mantenimiento y tuning más simples
+- **Configura `session.timeout.ms >= 45s`** — suficientemente alto para sobrevivir pausas de GC
+- **Siempre maneja `ctx.Done()`** en el loop de consume
 
-## Consumer Group Configuration
+## Configuración de Consumer Group
 
-| Strategy | Behavior | Best For |
+| Estrategia | Comportamiento | Mejor Para |
 |----------|----------|----------|
-| `cooperative-sticky` | Minimal disruption, even distribution | Most applications (recommended) |
-| `range` | Per-topic range division | Co-partitioned topics |
-| `roundrobin` | Even distribution across all topics | Homogeneous workloads |
+| `cooperative-sticky` | Disrupción mínima, distribución uniforme | La mayoría de aplicaciones (recomendado) |
+| `range` | División por rango por topic | Topics co-particionados |
+| `roundrobin` | Distribución uniforme entre todos los topics | Cargas de trabajo homogéneas |
 
-### Production-Ready Config
+### Configuración Lista para Producción
 
 ```go
 // segmentio/kafka-go
@@ -91,26 +91,26 @@ reader := kafka.NewReader(kafka.ReaderConfig{
     SessionTimeout:    45 * time.Second,
     HeartbeatInterval: 15 * time.Second,
     RebalanceTimeout:  60 * time.Second,
-    CommitInterval:    0,                // manual commits
+    CommitInterval:    0,                // commits manuales
     StartOffset:       kafka.LastOffset,
 })
 ```
 
-## Message Ordering
+## Ordenamiento de Mensajes
 
-- **Within a partition**: strictly ordered
-- **Across partitions**: no guarantee
+- **Dentro de una partición**: orden estricto
+- **Entre particiones**: sin garantía
 
 ```go
-// use entity ID as key — all events for the same entity go to the same partition
+// usa el ID de la entidad como clave — todos los eventos de la misma entidad van a la misma partición
 writer.WriteMessages(ctx, kafka.Message{
-    Key:   []byte(orderID), // hash-based partitioning
+    Key:   []byte(orderID), // particionamiento basado en hash
     Value: payload,
 })
 ```
 
-**With idempotent producer** (`enable.idempotence=true`): order is preserved even with retries and `max.in.flight=5`.
+**Con productor idempotente** (`enable.idempotence=true`): el orden se preserva incluso con reintentos y `max.in.flight=5`.
 
-**Without idempotence**: set `max.in.flight.requests.per.connection=1` (throughput cost).
+**Sin idempotencia**: configura `max.in.flight.requests.per.connection=1` (costo en throughput).
 
-**Worker pools break ordering** — if you parallelize processing, route same-key messages to the same worker.
+**Los worker pools rompen el ordenamiento** — si paralelizas el procesamiento, enruta mensajes con la misma clave al mismo worker.

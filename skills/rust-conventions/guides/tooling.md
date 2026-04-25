@@ -1,6 +1,6 @@
-# Tooling & Linting
+# Herramientas y Linting
 
-## Clippy Configuration
+## Configuración de Clippy
 
 ```toml
 # Cargo.toml
@@ -23,7 +23,7 @@ module_name_repetitions = "allow"
 must_use_candidate = "allow"
 ```
 
-## rustfmt Configuration
+## Configuración de rustfmt
 
 ```toml
 # rustfmt.toml
@@ -37,7 +37,7 @@ group_imports = "StdExternalCrate"
 newline_style = "Unix"
 ```
 
-## CI Pipeline
+## Pipeline CI
 
 ```yaml
 - name: Format
@@ -80,14 +80,14 @@ unknown-registry = "deny"
 unknown-git = "deny"
 ```
 
-## Key Tools
+## Herramientas Clave
 
-- `rustfmt` — formatting (ships with rustup)
-- `clippy` — linting (ships with rustup)
-- `cargo-audit` — vulnerability scanning (RustSec)
-- `cargo-deny` — license/ban/advisory/source checking
-- `cargo-machete` — unused dependency detection
-- `cargo-vet` — supply chain verification
-- `cargo-bloat` — binary size analysis
-- `cargo-expand` — macro expansion viewer
-- `rust-analyzer` — IDE support (LSP)
+- `rustfmt` — formateo (incluido con rustup)
+- `clippy` — linting (incluido con rustup)
+- `cargo-audit` — escaneo de vulnerabilidades (RustSec)
+- `cargo-deny` — verificación de licencias/bans/advisories/fuentes
+- `cargo-machete` — detección de dependencias no utilizadas
+- `cargo-vet` — verificación de cadena de suministro
+- `cargo-bloat` — análisis de tamaño del binario
+- `cargo-expand` — visualizador de expansión de macros
+- `rust-analyzer` — soporte IDE (LSP)

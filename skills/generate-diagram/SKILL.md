@@ -1,20 +1,20 @@
 ---
 name: generate-diagram
-description: Create Mermaid.js diagrams for architecture, flows, sequences, ERDs, and C4. Use when user says "draw a diagram", "create a flowchart", "sequence diagram", "ERD", "architecture diagram", "visualize", or needs visual documentation.
+description: Crear diagramas Mermaid.js para arquitectura, flujos, secuencias, ERDs y C4. Usar cuando el usuario diga "dibuja un diagrama", "crea un flowchart", "diagrama de secuencia", "ERD", "diagrama de arquitectura", "visualizar", o cuando necesite documentación visual.
 ---
 
-Create or update visual representations of code or architecture using Mermaid.js syntax within Markdown files.
+Crea o actualiza representaciones visuales de código o arquitectura usando sintaxis Mermaid.js dentro de archivos Markdown.
 
-Capabilities:
-- Flowcharts (process flows)
-- Sequence diagrams (component interaction)
-- Class/Module diagrams (structure)
-- Entity Relationship Diagrams (ERD — database schema)
-- C4 diagrams (system context and containers)
+Capacidades:
+- Flowcharts (flujos de proceso)
+- Diagramas de secuencia (interacción entre componentes)
+- Diagramas de clase/módulo (estructura)
+- Diagramas de Relación de Entidades (ERD — esquema de base de datos)
+- Diagramas C4 (contexto del sistema y contenedores)
 
-Rules:
-- Always use standard Mermaid.js syntax
-- Place diagrams inside ```mermaid ... ``` blocks
-- Keep diagrams simple enough to be readable on a standard screen
-- Prefer sequence diagrams for explaining complex asynchronous flows
-- Use C4 for high-level architectural overviews
+Reglas:
+- Usar siempre la sintaxis estándar de Mermaid.js
+- Colocar los diagramas dentro de bloques ```mermaid ... ```
+- Mantener los diagramas lo suficientemente simples para ser legibles en una pantalla estándar
+- Preferir diagramas de secuencia para explicar flujos asíncronos complejos
+- Usar C4 para vistas generales arquitectónicas de alto nivel

@@ -1,4 +1,4 @@
-# pytest Patterns
+# Patrones de pytest
 
 ## Fixtures
 
@@ -31,7 +31,7 @@ def test_embed_returns_correct_count(
     assert len(result) == expected_count
 ```
 
-## Factory Fixtures
+## Fixtures de Fábrica
 
 ```python
 @pytest.fixture
@@ -46,7 +46,7 @@ def test_cosine_similarity(make_embedding) -> None:
     assert cosine_similarity(a, b) == pytest.approx(0.0)
 ```
 
-## Mock at the Boundary
+## Mock en la Frontera
 
 ```python
 # WRONG — mocking implementation details
@@ -70,7 +70,7 @@ def test_similarity_search(fake_provider: EmbeddingProvider) -> None:
     assert len(results) <= 5
 ```
 
-## Async Testing
+## Tests Async
 
 ```python
 # pyproject.toml: asyncio_mode = "auto"
@@ -80,7 +80,7 @@ async def test_fetch_embeddings(mock_client: AsyncClient) -> None:
     assert "embeddings" in result.json()
 ```
 
-## Temporary Files and Directories
+## Archivos y Directorios Temporales
 
 ```python
 def test_save_embeddings(tmp_path: Path) -> None:
@@ -90,11 +90,11 @@ def test_save_embeddings(tmp_path: Path) -> None:
     np.testing.assert_array_equal(loaded, [[1.0, 2.0]])
 ```
 
-## Key Rules
+## Reglas Clave
 
-- **Fixtures over setUp/tearDown** — composable, explicit dependencies
-- **Parametrize for variations** — one test function, many cases
-- **Mock at boundaries, not internals** — use Protocol fakes
-- **`pytest.approx`** for floating point — never `==` on floats
-- **`tmp_path`** for file tests — auto-cleaned by pytest
-- **No `time.sleep` in tests** — use events, queues, or `asyncio.wait_for`
+- **Fixtures sobre setUp/tearDown** — composables, dependencias explícitas
+- **Parametrize para variaciones** — una función de test, muchos casos
+- **Mock en las fronteras, no en los internos** — usar fakes de Protocol
+- **`pytest.approx`** para punto flotante — nunca `==` en floats
+- **`tmp_path`** para tests de archivos — limpiado automáticamente por pytest
+- **Sin `time.sleep` en tests** — usar eventos, colas o `asyncio.wait_for`

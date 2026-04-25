@@ -1,80 +1,80 @@
 ---
 name: python-conventions
-description: Python conventions and coding standards for 3.12+. Use when writing Python code, reviewing Python patterns, or user mentions "python conventions", "type hints", "pydantic", "pytest", "embeddings", "numpy", "async python", or working with .py files.
+description: Convenciones y estándares de código Python para 3.12+. Usar al escribir código Python, revisar patrones Python, o cuando el usuario mencione "python conventions", "type hints", "pydantic", "pytest", "embeddings", "numpy", "async python", o al trabajar con archivos .py.
 ---
 
 # Python Conventions
 
-> **IMPORTANT:** This file is a lightweight dispatcher. Do NOT load all referenced files at once. Read the routing table below, identify which files are relevant to the current task, and load ONLY those using the Read tool. Each file is ~3-5KB. Loading unnecessary files wastes context tokens.
+> **IMPORTANTE:** Este archivo es un dispatcher ligero. NO cargar todos los archivos referenciados a la vez. Leer la tabla de enrutamiento abajo, identificar qué archivos son relevantes para la tarea actual y cargar SOLO esos usando la herramienta Read. Cada archivo pesa ~3-5KB. Cargar archivos innecesarios desperdicia tokens de contexto.
 
-## Stack & Philosophy
+## Stack y Filosofía
 
-- **Python 3.12+ features first** — type aliases, `X | Y` unions, `match`, `itertools.batched`
-- **Type hints everywhere** — Pydantic v2, Protocol, TypedDict, `NDArray[np.float32]`
-- **Ruff replaces everything** — one tool for lint + format (no flake8, black, isort)
-- **uv over pip** — faster, lockfile built-in, single tool
-- **Structured over stringly** — structlog, Pydantic models, not f-strings and dicts
-- **Vectorize, don't loop** — numpy/pandas operations, preallocate, batch everything
+- **Python 3.12+ primero** — type aliases, uniones `X | Y`, `match`, `itertools.batched`
+- **Type hints en todas partes** — Pydantic v2, Protocol, TypedDict, `NDArray[np.float32]`
+- **Ruff reemplaza todo** — una sola herramienta para lint + formato (sin flake8, black, isort)
+- **uv sobre pip** — más rápido, lockfile integrado, herramienta única
+- **Estructurado sobre strings** — structlog, modelos Pydantic, no f-strings y dicts
+- **Vectorizar, no iterar** — operaciones numpy/pandas, preasignar, hacer todo en batch
 
-## Red Flags (always stop work)
+## Red Flags (siempre detener el trabajo)
 
-- `from typing import Union, Optional` on Python 3.10+ → use `X | Y`, `X | None`
-- Mutable default arguments (`def f(x=[])`) → error
-- `eval()` or `exec()` with user input → error
-- f-strings in SQL queries → SQL injection
+- `from typing import Union, Optional` en Python 3.10+ → usar `X | Y`, `X | None`
+- Argumentos por defecto mutables (`def f(x=[])`) → error
+- `eval()` o `exec()` con input del usuario → error
+- f-strings en queries SQL → SQL injection
 - `import *` → error
-- Bare `except:` or `except Exception:` without re-raise → error
-- `os.system()` or `subprocess.call(shell=True)` with user input → error
+- `except:` desnudo o `except Exception:` sin re-raise → error
+- `os.system()` o `subprocess.call(shell=True)` con input del usuario → error
 
-## Anti-Pattern Detection
+## Detección de Anti-Patrones
 
-**Passive detection:** When reviewing Python code, load `detection/anti-patterns.md` and scan for `error` and `warning` patterns. Report as `[file:line] [severity] [category] anti-pattern-name`.
+**Detección pasiva:** Al revisar código Python, cargar `detection/anti-patterns.md` y escanear en busca de patrones `error` y `warning`. Reportar como `[file:line] [severity] [category] anti-pattern-name`.
 
-**Active detection:** When user asks to "improve", "refactor", "optimize", or "clean" — also report `suggestion` level patterns and propose fixes.
+**Detección activa:** Cuando el usuario pide "mejorar", "refactorizar", "optimizar" o "limpiar" — también reportar patrones de nivel `suggestion` y proponer correcciones.
 
-## What to Load
+## Qué Cargar
 
-Load **only** the files relevant to the current task:
+Cargar **solo** los archivos relevantes para la tarea actual:
 
-### Rules (quick reference, ~2-3KB each)
+### Rules (referencia rápida, ~2-3KB cada uno)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| Type hints, naming, error handling, modern syntax | `rules/coding.md` |
-| Project structure, imports, DI, Pydantic models | `rules/architecture.md` |
-| NumPy, Pandas, vectorization, memory management | `rules/data.md` |
+| Type hints, naming, manejo de errores, sintaxis moderna | `rules/coding.md` |
+| Estructura del proyecto, imports, DI, modelos Pydantic | `rules/architecture.md` |
+| NumPy, Pandas, vectorización, gestión de memoria | `rules/data.md` |
 
-### Guides (detailed patterns with code, ~3-5KB each)
+### Guides (patrones detallados con código, ~3-5KB cada uno)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| asyncio, TaskGroup, structured concurrency | `guides/async/patterns.md` |
-| Async context managers, timeouts, streaming | `guides/async/resources.md` |
-| pytest fixtures, parametrize, mocking | `guides/testing/pytest.md` |
-| Async testing, factory fixtures | `guides/testing/async-testing.md` |
-| Embeddings, batch processing, vector ops | `guides/ml/embeddings.md` |
-| Memory-mapped arrays, large datasets, GPU memory | `guides/ml/memory.md` |
+| asyncio, TaskGroup, concurrencia estructurada | `guides/async/patterns.md` |
+| Context managers asíncronos, timeouts, streaming | `guides/async/resources.md` |
+| Fixtures de pytest, parametrize, mocking | `guides/testing/pytest.md` |
+| Testing asíncrono, factory fixtures | `guides/testing/async-testing.md` |
+| Embeddings, procesamiento en batch, operaciones vectoriales | `guides/ml/embeddings.md` |
+| Arrays memory-mapped, datasets grandes, memoria GPU | `guides/ml/memory.md` |
 | Context managers, connection pools, cleanup | `guides/cleanup/resources.md` |
-| Input validation, SQL injection, secrets | `guides/security.md` |
+| Validación de input, SQL injection, secrets | `guides/security.md` |
 
-### Detection & Checklists
+### Detección y Checklists
 
-| When... | Load |
+| Cuándo... | Cargar |
 |---|---|
-| Code review | `detection/anti-patterns.md` |
-| Before writing Python code | `checklists/pre.md` |
-| After writing Python code | `checklists/post.md` |
+| Revisión de código | `detection/anti-patterns.md` |
+| Antes de escribir código Python | `checklists/pre.md` |
+| Después de escribir código Python | `checklists/post.md` |
 
-### Examples (good + bad patterns by domain, ~2-3KB each)
+### Ejemplos (patrones buenos y malos por dominio, ~2-3KB cada uno)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| Type hints, modern syntax, Pydantic v2 | `examples/types.md` |
-| Error handling, exception groups, logging | `examples/errors.md` |
-| Testing patterns, fixtures, mocking | `examples/testing.md` |
-| NumPy/Pandas, vectorization, batch processing | `examples/data.md` |
-| Async patterns, TaskGroup, timeouts | `examples/async.md` |
+| Type hints, sintaxis moderna, Pydantic v2 | `examples/types.md` |
+| Manejo de errores, exception groups, logging | `examples/errors.md` |
+| Patrones de testing, fixtures, mocking | `examples/testing.md` |
+| NumPy/Pandas, vectorización, procesamiento en batch | `examples/data.md` |
+| Patrones async, TaskGroup, timeouts | `examples/async.md` |
 
-## Post-Implementation Gate
+## Gate Post-Implementación
 
-After ANY code change to `.py` files, run `ruff check` and `ruff format --check` before considering the task done.
+Después de CUALQUIER cambio de código en archivos `.py`, ejecutar `ruff check` y `ruff format --check` antes de considerar la tarea como terminada.

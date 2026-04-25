@@ -1,18 +1,18 @@
-# Islands Architecture
+# Arquitectura de Islands
 
-## Core Principle
+## Principio Fundamental
 
-Pages render as static HTML. Interactive components ("islands") hydrate independently with their own JS bundle. The rest of the page is zero JS.
+Las páginas se renderizan como HTML estático. Los componentes interactivos ("islands") se hidratan de forma independiente con su propio bundle de JS. El resto de la página es cero JS.
 
-## Client Directives
+## Directivas de Cliente
 
-| Directive | When it hydrates | Use for |
+| Directiva | Cuándo se hidrata | Usar para |
 |---|---|---|
-| `client:load` | Immediately on page load | Critical: auth state, nav dropdowns |
-| `client:idle` | Browser is idle | Medium: search bar, forms |
-| `client:visible` | Scrolled into viewport | Below-fold: comments, carousels, maps |
-| `client:media="(max-width: 768px)"` | Media query matches | Mobile-only: hamburger menu |
-| `client:only="react"` | Client only, skip SSR | Components that can't render server-side |
+| `client:load` | Inmediatamente al cargar la página | Crítico: estado de auth, dropdowns de nav |
+| `client:idle` | El navegador está inactivo | Medio: barra de búsqueda, formularios |
+| `client:visible` | Desplazado al viewport | Debajo del fold: comentarios, carruseles, mapas |
+| `client:media="(max-width: 768px)"` | La media query coincide | Solo móvil: menú hamburguesa |
+| `client:only="react"` | Solo cliente, sin SSR | Componentes que no pueden renderizar en servidor |
 
 ```astro
 ---
@@ -32,7 +32,7 @@ import MobileNav from '../components/islands/MobileNav.tsx';
 
 ## Server Islands
 
-`server:defer` isolates slow/dynamic server content so it doesn't block page render:
+`server:defer` aísla contenido de servidor lento/dinámico para que no bloquee el renderizado de la página:
 
 ```astro
 ---
@@ -43,11 +43,11 @@ import UserGreeting from '../components/UserGreeting.astro';
 </UserGreeting>
 ```
 
-Use for: personalized content, slow API calls, auth-dependent UI.
+Usar para: contenido personalizado, llamadas lentas a la API, UI dependiente de auth.
 
-## Multi-Framework Islands
+## Islands Multi-Framework
 
-Different frameworks coexist because each island is isolated:
+Diferentes frameworks coexisten porque cada island está aislada:
 
 ```astro
 ---
@@ -60,33 +60,33 @@ import SvelteToggle from '../components/islands/Toggle.svelte';
 <SvelteToggle client:load />
 ```
 
-Each ships only its own framework runtime — React islands don't load Vue, etc.
+Cada una envía solo su propio runtime de framework — las islands de React no cargan Vue, etc.
 
-## Decision Matrix
+## Matriz de Decisión
 
 ```
-Is it interactive? (needs browser events, state, effects)
-├── NO → Astro component (.astro) — zero JS
-└── YES
-    ├── Is it above the fold / critical for first interaction?
-    │   ├── YES → client:load
+¿Es interactivo? (necesita eventos del navegador, estado, efectos)
+├── NO → Componente Astro (.astro) — cero JS
+└── SÍ
+    ├── ¿Está sobre el fold / es crítico para la primera interacción?
+    │   ├── SÍ → client:load
     │   └── NO
-    │       ├── Is it visible on initial viewport?
-    │       │   ├── YES → client:idle
+    │       ├── ¿Es visible en el viewport inicial?
+    │       │   ├── SÍ → client:idle
     │       │   └── NO → client:visible
-    │       └── Is it device-specific?
-    │           └── YES → client:media
-    └── Can it render on the server?
-        ├── YES → client:load/idle/visible (pick one)
+    │       └── ¿Es específico del dispositivo?
+    │           └── SÍ → client:media
+    └── ¿Puede renderizar en el servidor?
+        ├── SÍ → client:load/idle/visible (elige uno)
         └── NO → client:only="framework"
 ```
 
-## Anti-Patterns
+## Anti-Patrones
 
-| Anti-Pattern | Why it's bad | Fix |
+| Anti-Patrón | Por qué es malo | Solución |
 |---|---|---|
-| `client:load` on everything | Defeats zero-JS purpose | Audit each: idle? visible? |
-| Layout-level framework wrapper | Ships entire framework for static layout | Break into small islands |
-| `{items.map(() => <Island client:load />)}` | N islands = N JS bundles | Static list + 1 hydrated controller |
-| Island for static content | Unnecessary JS for content that doesn't change | Use .astro component |
-| No `client:*` on framework component | Component renders but isn't interactive | Add directive or convert to .astro |
+| `client:load` en todo | Derrota el propósito de cero JS | Audita cada uno: ¿idle? ¿visible? |
+| Wrapper de framework a nivel de layout | Envía el framework completo para layout estático | Rompe en islands pequeñas |
+| `{items.map(() => <Island client:load />)}` | N islands = N bundles de JS | Lista estática + 1 controlador hidratado |
+| Island para contenido estático | JS innecesario para contenido que no cambia | Usa componente .astro |
+| Sin `client:*` en componente de framework | El componente renderiza pero no es interactivo | Agrega directiva o convierte a .astro |

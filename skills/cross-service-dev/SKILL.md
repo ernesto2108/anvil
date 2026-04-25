@@ -1,131 +1,131 @@
 ---
 name: cross-service-dev
-description: Orchestrate agents across multiple microservice repos in a single session. Use when user says "implement across services", "this touches X and Y services", "cross-service feature", "work on multiple repos", "remove this endpoint from all services", "deprecate this across services", "refactor cross-service", or describes any change (create, update, delete, deprecate) that requires coordinated work in 2+ services. Extends the orchestrate workflow for multi-repo scenarios. Requires service-map.yaml to resolve repo paths.
+description: Orquesta agentes en múltiples repos de microservicios en una sola sesión. Usar cuando el usuario diga "implement across services", "this touches X and Y services", "cross-service feature", "work on multiple repos", "remove this endpoint from all services", "deprecate this across services", "refactor cross-service", o describa cualquier cambio (crear, actualizar, eliminar, deprecar) que requiera trabajo coordinado en 2+ servicios. Extiende el workflow de orchestrate para escenarios multi-repo. Requiere service-map.yaml para resolver rutas de repos.
 disable-model-invocation: true
 ---
 
-# Cross-Service Dev — Multi-Repo Orchestration
+# Cross-Service Dev — Orquestación Multi-Repo
 
-## Purpose
+## Propósito
 
-Extend the `orchestrate` workflow to coordinate agents across multiple microservice repos in one session. Same agents, same gates — The orchestrator resolves paths, discovers dependencies, and routes agents to the right repos.
+Extender el workflow de `orchestrate` para coordinar agentes en múltiples repos de microservicios en una sesión. Los mismos agentes, los mismos gates — el orquestador resuelve rutas, descubre dependencias y enruta agentes a los repos correctos.
 
 ```
-orchestrate          = pipeline for 1 repo
-cross-service-dev    = orchestrate × N repos (coordinated)
+orchestrate          = pipeline para 1 repo
+cross-service-dev    = orchestrate × N repos (coordinado)
 ```
 
-## Prerequisites
+## Prerequisitos
 
-- `service-map.yaml` exists in `<vault>/04-architecture/`
-- Affected service repos are on disk (local_path must resolve)
-- If `service-map.local.yaml` exists, use it for local path overrides
+- `service-map.yaml` existe en `<vault>/04-architecture/`
+- Los repos de servicios afectados están en disco (local_path debe resolver)
+- Si existe `service-map.local.yaml`, usarlo para overrides de rutas locales
 
 ---
 
 ## Workflow
 
-### Phase 1 — PM Discovery (pm agent)
+### Fase 1 — Descubrimiento PM (agente pm)
 
-Invoke pm agent with the user request + vault path. PM handles discovery in Spanish.
+Invocar al agente pm con la solicitud del usuario + ruta del vault. El PM maneja el descubrimiento en español.
 
-Additionally, The orchestrator must:
+Adicionalmente, el orquestador debe:
 
-1. **Classify operation type:** Create | Update | Delete | Deprecate
+1. **Clasificar el tipo de operación:** Create | Update | Delete | Deprecate
 
-2. **Resolve service paths from service-map.yaml:**
+2. **Resolver rutas de servicio desde service-map.yaml:**
    ```
    full_path = projects_root + "/" + service.local_path
-   Verify each path exists on disk. If missing → warn user, ask for path.
+   Verificar que cada ruta existe en disco. Si falta → advertir al usuario, pedir la ruta.
    ```
 
-3. **Discover transitive dependencies (MANDATORY):**
-   For each service being changed, check service-map.yaml:
-   - Who consumes this endpoint? (consumed_by)
-   - Who subscribes to this event? (consumed_by in publishes)
-   - Who reads this table? (readers in shared_database)
-   - Who depends on this service? (depends_on)
+3. **Descubrir dependencias transitivas (OBLIGATORIO):**
+   Para cada servicio que se está cambiando, verificar service-map.yaml:
+   - ¿Quién consume este endpoint? (consumed_by)
+   - ¿Quién se suscribe a este evento? (consumed_by en publishes)
+   - ¿Quién lee esta tabla? (readers en shared_database)
+   - ¿Quién depende de este servicio? (depends_on)
 
-   **If additional services found → STOP and report to user before proceeding.**
-   Rules:
-   - NEVER silently skip affected services
-   - DELETE/DEPRECATE → transitive check is CRITICAL
-   - UPDATE with contract changes → all consumers are affected
+   **Si se encuentran servicios adicionales → DETENERSE y reportar al usuario antes de continuar.**
+   Reglas:
+   - NUNCA omitir silenciosamente servicios afectados
+   - DELETE/DEPRECATE → la verificación transitiva es CRÍTICA
+   - UPDATE con cambios de contrato → todos los consumidores están afectados
 
-4. PM writes **one** `prd.md` in `<vault>/03-tasks/<TASK-ID>/prd.md`
-   - Must list ALL services in scope under Dependencies
-   - Must note skipped services as pending
-   - Must specify operation type
+4. El PM escribe **un** `prd.md` en `<vault>/03-tasks/<TASK-ID>/prd.md`
+   - Debe listar TODOS los servicios en scope bajo Dependencias
+   - Debe notar los servicios omitidos como pendientes
+   - Debe especificar el tipo de operación
 
-### Phase 2 — Architecture (1 architect agent)
+### Fase 2 — Arquitectura (1 agente architect)
 
-One architect receives:
+Un arquitecto recibe:
 - `<vault>/03-tasks/<TASK-ID>/prd.md`
-- `<vault>/01-project/context.md` from **each** service in scope
+- `<vault>/01-project/context.md` de **cada** servicio en scope
 
-Produces one `<vault>/03-tasks/<TASK-ID>/design.md` with:
-- A section per service
-- Contract definitions (shared)
-- Execution order
-- Migration ownership
+Produce un solo `<vault>/03-tasks/<TASK-ID>/design.md` con:
+- Una sección por servicio
+- Definiciones de contrato (compartidas)
+- Orden de ejecución
+- Propiedad de migración
 
-**GATE: architect veto → STOP**
+**GATE: veto del architect → DETENER**
 
-### Phase 3 — Implementation (N developer agents)
+### Fase 3 — Implementación (N agentes developer)
 
-One developer agent per service. Each receives:
+Un agente developer por servicio. Cada uno recibe:
 - `<vault>/03-tasks/<TASK-ID>/prd.md`
 - `<vault>/03-tasks/<TASK-ID>/design.md`
-- Convention skill to load
-- Their specific service path as working directory
+- Skill de convención a cargar
+- La ruta de su servicio específico como directorio de trabajo
 
-**Parallelism:** independent services → parallel. If B depends on A's output → sequential.
-**DBA:** 0-1 agent, runs before developers if migration needed.
-**DELETE operations:** reverse order — consumers first, producer last.
+**Paralelismo:** servicios independientes → en paralelo. Si B depende de la salida de A → secuencial.
+**DBA:** 0-1 agente, ejecuta antes que los developers si se necesita migración.
+**Operaciones DELETE:** orden inverso — consumidores primero, productor último.
 
-### Phase 4 — Testing (N tester agents, parallel)
+### Fase 4 — Testing (N agentes tester, en paralelo)
 
-One tester per modified service. All run in parallel.
+Un tester por servicio modificado. Todos ejecutan en paralelo.
 
-### Phase 5 — QA (1 QA agent)
+### Fase 5 — QA (1 agente QA)
 
-One QA agent sees combined diff from all services. Focus on:
-- Contract consistency between producer and consumers
-- Event payload matches
-- API type alignment
-- DB consistency across shared tables
+Un agente QA ve el diff combinado de todos los servicios. Foco en:
+- Consistencia de contrato entre productor y consumidores
+- Coincidencia de payloads de eventos
+- Alineación de tipos de API
+- Consistencia de DB en tablas compartidas
 
-**GATE: score < 7 → STOP**
+**GATE: puntuación < 7 → DETENER**
 
-### Phase 6 — Document + Report
+### Fase 6 — Documentar + Reportar
 
-**6a.** Append to `<vault>/06-reports/cross-service-changes.md`:
-- Date, operation, scope, changes per service, contracts, pending work, deploy order
+**6a.** Agregar a `<vault>/06-reports/cross-service-changes.md`:
+- Fecha, operación, scope, cambios por servicio, contratos, trabajo pendiente, orden de deploy
 
-**6b.** Update `<vault>/04-architecture/service-map.yaml` to reflect new state
+**6b.** Actualizar `<vault>/04-architecture/service-map.yaml` para reflejar el nuevo estado
 
-**6c.** Reporter agent → `<vault>/06-reports/last-run.md`
+**6c.** Agente reporter → `<vault>/06-reports/last-run.md`
 
 ---
 
-## Agent routing summary
+## Resumen de enrutamiento de agentes
 
-| Phase | Agent | Count | Parallel? |
+| Fase | Agente | Cantidad | ¿En paralelo? |
 |-------|-------|-------|-----------|
 | PM | pm | 1 | — |
-| Architecture | architect | 1 | — |
-| DB migration | dba | 0-1 | — |
-| Implementation | developer | N | Yes (when independent) |
-| Testing | tester | N | Yes |
+| Arquitectura | architect | 1 | — |
+| Migración DB | dba | 0-1 | — |
+| Implementación | developer | N | Sí (cuando son independientes) |
+| Testing | tester | N | Sí |
 | QA | qa | 1 | — |
-| Security | security | 0-1 | — |
-| Report | reporter | 1 | — |
+| Seguridad | security | 0-1 | — |
+| Reporte | reporter | 1 | — |
 
-## Key Rules
+## Reglas Clave
 
-1. Same agents, same gates as orchestrate
-2. Architect and QA see ALL services — full cross-service context
-3. Developer and Tester are per-service — guided by consolidated design.md
-4. NEVER silently skip affected services
-5. Delete order is reverse of create — consumers first, producer last
-6. All docs centralized in vault — no duplication across repos
+1. Los mismos agentes, los mismos gates que orchestrate
+2. Architect y QA ven TODOS los servicios — contexto cross-service completo
+3. Developer y Tester son por servicio — guiados por design.md consolidado
+4. NUNCA omitir silenciosamente servicios afectados
+5. El orden de eliminación es inverso al de creación — consumidores primero, productor último
+6. Todos los docs centralizados en el vault — sin duplicación entre repos

@@ -1,33 +1,33 @@
-# RabbitMQ Dead Letter Queue & Retry Patterns
+# RabbitMQ Dead Letter Queue & Patrones de Reintento
 
-## Dead Letter Queue (DLQ) — Native DLX
+## Dead Letter Queue (DLQ) — DLX Nativo
 
-RabbitMQ has **native DLQ support** via Dead Letter Exchanges (DLX). Messages are dead-lettered when:
+RabbitMQ tiene **soporte nativo de DLQ** vía Dead Letter Exchanges (DLX). Los mensajes se convierten en dead letter cuando:
 
-- Consumer sends `Nack` or `Reject` with `requeue=false`
-- Message TTL expires
-- Queue max-length is exceeded
+- El consumer envía `Nack` o `Reject` con `requeue=false`
+- El TTL del mensaje expira
+- Se supera el max-length de la cola
 
-### DLQ Setup
+### Configuración del DLQ
 
 ```go
 func SetupQueueWithDLQ(ch *amqp.Channel, mainQueue, dlxExchange, dlqQueue string) error {
-    // 1. declare dead-letter exchange
+    // 1. declara el dead-letter exchange
     if err := ch.ExchangeDeclare(dlxExchange, "direct", true, false, false, false, nil); err != nil {
         return fmt.Errorf("declare DLX: %w", err)
     }
 
-    // 2. declare dead-letter queue
+    // 2. declara la dead-letter queue
     if _, err := ch.QueueDeclare(dlqQueue, true, false, false, false, nil); err != nil {
         return fmt.Errorf("declare DLQ: %w", err)
     }
 
-    // 3. bind DLQ to DLX
+    // 3. vincula el DLQ al DLX
     if err := ch.QueueBind(dlqQueue, dlqQueue, dlxExchange, false, nil); err != nil {
         return fmt.Errorf("bind DLQ: %w", err)
     }
 
-    // 4. declare main queue with DLX arguments
+    // 4. declara la cola principal con argumentos DLX
     args := amqp.Table{
         "x-dead-letter-exchange":    dlxExchange,
         "x-dead-letter-routing-key": dlqQueue,
@@ -40,7 +40,7 @@ func SetupQueueWithDLQ(ch *amqp.Channel, mainQueue, dlxExchange, dlqQueue string
 }
 ```
 
-### Consumer with DLQ
+### Consumer con DLQ
 
 ```go
 func ConsumeWithDLQ(ch *amqp.Channel, queue string, handler func(amqp.Delivery) error) error {
@@ -56,7 +56,7 @@ func ConsumeWithDLQ(ch *amqp.Channel, queue string, handler func(amqp.Delivery) 
     for msg := range msgs {
         if err := handler(msg); err != nil {
             slog.Error("processing failed, routing to DLQ", "error", err)
-            // nack with requeue=false → DLX routes to DLQ automatically
+            // nack con requeue=false → DLX enruta automáticamente al DLQ
             msg.Nack(false, false)
             continue
         }
@@ -69,23 +69,23 @@ func ConsumeWithDLQ(ch *amqp.Channel, queue string, handler func(amqp.Delivery) 
 
 ---
 
-## Retry with TTL Queues
+## Reintento con Colas TTL
 
-RabbitMQ supports retry via **TTL-based redelivery** through chained queues. When a message's TTL expires in a retry queue, it dead-letters back to the main exchange.
+RabbitMQ soporta reintentos vía **reentrega basada en TTL** a través de colas encadenadas. Cuando el TTL de un mensaje expira en una cola de reintento, se convierte en dead letter y vuelve al exchange principal.
 
-### Retry Topology
+### Topología de Reintento
 
 ```
 main-exchange → main-queue
                   ↓ (nack)
-              retry-exchange-1 → retry-queue-1 (TTL: 1s) → back to main-exchange
+              retry-exchange-1 → retry-queue-1 (TTL: 1s) → vuelve a main-exchange
                                    ↓ (nack)
-                               retry-exchange-2 → retry-queue-2 (TTL: 5s) → back to main-exchange
+                               retry-exchange-2 → retry-queue-2 (TTL: 5s) → vuelve a main-exchange
                                                     ↓ (nack)
                                                 dlx-exchange → dlq-queue
 ```
 
-### Setup
+### Configuración
 
 ```go
 type RetryLevel struct {
@@ -102,7 +102,7 @@ type RetryTopology struct {
 }
 
 func SetupRetryTopology(ch *amqp.Channel, t RetryTopology) error {
-    // main exchange
+    // exchange principal
     if err := ch.ExchangeDeclare(t.MainExchange, "direct", true, false, false, false, nil); err != nil {
         return fmt.Errorf("declare main exchange: %w", err)
     }
@@ -118,7 +118,7 @@ func SetupRetryTopology(ch *amqp.Channel, t RetryTopology) error {
         return fmt.Errorf("bind DLQ: %w", err)
     }
 
-    // retry queues — each has TTL, dead-letters back to main exchange
+    // colas de reintento — cada una tiene TTL, dead-letters de vuelta al exchange principal
     for _, level := range t.Levels {
         retryExchange := fmt.Sprintf("%s.retry.%s", t.MainExchange, level.Name)
         retryQueue := fmt.Sprintf("%s.retry.%s", t.MainQueue, level.Name)
@@ -142,7 +142,7 @@ func SetupRetryTopology(ch *amqp.Channel, t RetryTopology) error {
         }
     }
 
-    // main queue — dead-letters to DLX after all retries exhausted
+    // cola principal — dead-letters al DLX después de agotar todos los reintentos
     mainArgs := amqp.Table{
         "x-dead-letter-exchange": t.DLXExchange,
     }
@@ -157,7 +157,7 @@ func SetupRetryTopology(ch *amqp.Channel, t RetryTopology) error {
 }
 ```
 
-### Example Usage
+### Ejemplo de Uso
 
 ```go
 topology := RetryTopology{
@@ -177,9 +177,9 @@ if err := SetupRetryTopology(ch, topology); err != nil {
 }
 ```
 
-### Retry with x-death Header
+### Reintento con Header x-death
 
-RabbitMQ adds an `x-death` header each time a message is dead-lettered. Use it to track retry count:
+RabbitMQ agrega un header `x-death` cada vez que un mensaje se convierte en dead letter. Úsalo para rastrear el conteo de reintentos:
 
 ```go
 func getRetryCount(msg amqp.Delivery) int {

@@ -1,6 +1,6 @@
-# Architecture Examples
+# Ejemplos de Arquitectura
 
-## Good: Small Interfaces Defined by Consumer
+## Bien: Interfaces Pequeñas Definidas por el Consumidor
 
 ```go
 // In the package that USES the dependency, not the one that implements it
@@ -16,11 +16,11 @@ type Service struct {
 }
 ```
 
-**Why:** Small interfaces are easier to mock, test, and swap. The consumer knows what it needs.
+**Por qué:** Las interfaces pequeñas son más fáciles de mockear, testear e intercambiar. El consumidor sabe qué necesita.
 
 ---
 
-## Good: Constructor with Functional Options
+## Bien: Constructor con Functional Options
 
 ```go
 type Server struct {
@@ -57,11 +57,11 @@ func NewServer(logger *slog.Logger, opts ...Option) *Server {
 }
 ```
 
-**Why:** Required dependencies are explicit parameters. Optional config uses functional options with sensible defaults.
+**Por qué:** Las dependencias requeridas son parámetros explícitos. La configuración opcional usa functional options con valores predeterminados razonables.
 
 ---
 
-## Bad: God Interfaces
+## Mal: Interfaces Dios
 
 ```go
 // BAD — forces implementors to implement everything, hard to mock
@@ -93,7 +93,7 @@ type UserActivator interface {
 
 ---
 
-## Bad: Global Mutable State
+## Mal: Estado Global Mutable
 
 ```go
 // BAD — global DB connection, untestable, race-prone
@@ -127,7 +127,7 @@ func (r *UserRepo) GetUser(ctx context.Context, id string) (*User, error) {
 
 ---
 
-## Bad: Cross-Boundary Imports
+## Mal: Importaciones Cross-Boundary
 
 ```go
 // BAD — domain imports from infrastructure
@@ -153,7 +153,7 @@ type UserService struct {
 
 ---
 
-## Bad: Unnecessary Pointer Fields
+## Mal: Campos Puntero Innecesarios
 
 ```go
 // BAD — pointer fields when zero value is fine

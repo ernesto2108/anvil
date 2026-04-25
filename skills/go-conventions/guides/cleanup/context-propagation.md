@@ -1,8 +1,8 @@
-# Context Propagation & The Golden Rule
+# Propagación de Contexto y la Regla de Oro
 
-The two most common sources of production incidents in Go: hanging connections from missing context/timeouts, and resource leaks from missing Close() calls. Both are silent — they work fine in dev, then explode under load.
+Las dos fuentes más comunes de incidentes en producción con Go: conexiones colgadas por falta de contexto/timeouts, y fugas de recursos por falta de llamadas a Close(). Ambas son silenciosas — funcionan bien en dev, luego explotan bajo carga.
 
-## The Golden Rule
+## La Regla de Oro
 
 ```go
 resource, err := acquire()
@@ -12,11 +12,11 @@ if err != nil {
 defer resource.Close() // ALWAYS immediately after error check
 ```
 
-Error check FIRST, then defer close. Never defer before checking the error (nil pointer panic). Never skip the defer (resource leak on any error path).
+Verificar el error PRIMERO, luego defer close. Nunca hacer defer antes de verificar el error (pánico por puntero nil). Nunca omitir el defer (fuga de recursos en cualquier ruta de error).
 
 ---
 
-## HTTP Client Calls
+## Llamadas HTTP Client
 
 ```go
 // BAD — hangs forever if server is unresponsive
@@ -40,13 +40,13 @@ if err != nil {
 defer resp.Body.Close()
 ```
 
-**Rules:**
-- Never use `http.Get()`, `http.Post()`, `http.Head()` — they have no timeout
-- Never use `http.DefaultClient` in production — create a client with `Timeout`
-- Always use `http.NewRequestWithContext(ctx, ...)` — propagates cancellation
-- The `http.Client.Timeout` is a safety net; per-call context timeouts are the primary control
+**Reglas:**
+- Nunca usar `http.Get()`, `http.Post()`, `http.Head()` — no tienen timeout
+- Nunca usar `http.DefaultClient` en producción — crear un cliente con `Timeout`
+- Siempre usar `http.NewRequestWithContext(ctx, ...)` — propaga la cancelación
+- El `http.Client.Timeout` es una red de seguridad; los timeouts de contexto por llamada son el control primario
 
-## Database Queries
+## Queries de Base de Datos
 
 ```go
 // BAD — no context, no cancellation, hangs on slow DB or network partition
@@ -73,11 +73,11 @@ if err := rows.Err(); err != nil { // always check iteration errors
 }
 ```
 
-**Rules:**
-- Always use `QueryContext`, `ExecContext`, `QueryRowContext` — never the non-context versions
-- Always `defer rows.Close()` after `QueryContext`
-- Always check `rows.Err()` after the loop — it catches mid-iteration failures
-- Use `ExecContext` for INSERT/UPDATE/DELETE — never `Query` (leaked rows)
+**Reglas:**
+- Siempre usar `QueryContext`, `ExecContext`, `QueryRowContext` — nunca las versiones sin contexto
+- Siempre `defer rows.Close()` después de `QueryContext`
+- Siempre verificar `rows.Err()` después del loop — captura fallos a mitad de iteración
+- Usar `ExecContext` para INSERT/UPDATE/DELETE — nunca `Query` (rows filtradas)
 
 ## Redis
 
@@ -101,7 +101,7 @@ func getFromRedis(ctx context.Context, rdb *redis.Client, key string) (string, e
 }
 ```
 
-**Important:** When a Redis context deadline is exceeded, the client must close that connection (it can't be safely reused). This forces a new TCP + TLS handshake, which can cascade: timeouts → connection churn → more timeouts. Configure read/write timeouts on the Redis client itself as a separate safety layer.
+**Importante:** Cuando el deadline de un contexto Redis se excede, el cliente debe cerrar esa conexión (no puede reutilizarse de forma segura). Esto fuerza un nuevo handshake TCP + TLS, que puede generar cascada: timeouts → churning de conexiones → más timeouts. Configurar timeouts de lectura/escritura en el propio cliente Redis como capa de seguridad adicional.
 
 ## gRPC
 
@@ -115,7 +115,7 @@ defer cancel()
 resp, err := client.GetUser(ctx, &pb.UserRequest{Id: id})
 ```
 
-gRPC propagates deadlines through metadata — the server sees the remaining time budget automatically.
+gRPC propaga los deadlines a través de los metadatos — el servidor ve el tiempo restante disponible automáticamente.
 
 ## AWS SDK
 

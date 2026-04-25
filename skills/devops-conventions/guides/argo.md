@@ -1,16 +1,16 @@
-# Argo Ecosystem Guide
+# Guía del Ecosistema Argo
 
-## Argo CD — GitOps Continuous Delivery
+## Argo CD — Entrega Continua GitOps
 
-### Repository Structure
-- **Separate config from source code** — manifests in dedicated repo, not alongside app source
-- **Environments as folders, not branches** — `environments/dev/`, `environments/staging/`, `environments/prod/`
-- Pin all remote references (Helm chart versions, Kustomize bases) to tag or SHA
+### Estructura del Repositorio
+- **Separa la config del código fuente** — manifiestos en repositorio dedicado, no junto al código fuente de la app
+- **Entornos como carpetas, no como ramas** — `environments/dev/`, `environments/staging/`, `environments/prod/`
+- Fija todas las referencias remotas (versiones de Helm chart, bases de Kustomize) a tag o SHA
 
-### Sync Policies
+### Políticas de Sync
 - **Non-prod:** `automated.selfHeal: true` + `automated.prune: true`
-- **Production:** `automated: false` — require human approval gate
-- Exclude HPA-managed fields with `ignoreDifferences`:
+- **Producción:** `automated: false` — requiere gate de aprobación humana
+- Excluye los campos manejados por HPA con `ignoreDifferences`:
   ```yaml
   spec:
     ignoreDifferences:
@@ -20,55 +20,55 @@
           - /spec/replicas
   ```
 
-### Sync Waves & Hooks
-- Waves control ordering: annotate `argocd.argoproj.io/sync-wave: "-1"` (negative = earlier)
-- Execution order: Phase > Wave > Kind > Name
-- Hook phases: PreSync (DB migrations), Sync (deploy), PostSync (smoke tests), SyncFail (cleanup)
-- Hook deletion: `BeforeHookCreation` for idempotent Jobs, `HookSucceeded` for auto-cleanup
+### Sync Waves y Hooks
+- Las waves controlan el orden: anota `argocd.argoproj.io/sync-wave: "-1"` (negativo = antes)
+- Orden de ejecución: Phase > Wave > Kind > Name
+- Fases de hook: PreSync (migraciones DB), Sync (deploy), PostSync (smoke tests), SyncFail (limpieza)
+- Eliminación de hooks: `BeforeHookCreation` para Jobs idempotentes, `HookSucceeded` para auto-limpieza
 
 ### Multi-Cluster
-- Under 20 clusters: hub-and-spoke (single Argo CD manages all)
-- Over 20 clusters: federated (each cluster has own Argo CD, meta-ArgoCD manages them)
-- Label clusters at registration: `environment`, `region`, `tier`
-- Never expose K8s API publicly; use VPN or PrivateLink
+- Menos de 20 clusters: hub-and-spoke (un solo Argo CD maneja todos)
+- Más de 20 clusters: federado (cada cluster tiene su propio Argo CD, un meta-ArgoCD los gestiona)
+- Etiqueta los clusters al registrarlos: `environment`, `region`, `tier`
+- Nunca expongas la API de K8s públicamente; usa VPN o PrivateLink
 
 ### ApplicationSets
-- **Cluster Generator:** Same app to all clusters matching labels
-- **Git Directory Generator:** One app per directory in monorepo (microservices)
-- **Matrix Generator:** Combine cluster + git for N-apps x M-clusters
-- **Merge Generator:** Base config + per-cluster overrides
-- Enable `goTemplate: true` for conditional logic
-- Adding a new cluster should require zero ApplicationSet changes
+- **Cluster Generator:** La misma app a todos los clusters que coincidan con las etiquetas
+- **Git Directory Generator:** Una app por directorio en monorepo (microservicios)
+- **Matrix Generator:** Combina cluster + git para N-apps x M-clusters
+- **Merge Generator:** Config base + overrides por cluster
+- Habilita `goTemplate: true` para lógica condicional
+- Agregar un nuevo cluster no debe requerir cambios en ApplicationSet
 
-### Project & RBAC
-- One AppProject per team/domain — restrict source repos, destinations, allowed kinds
-- Developers get `sync`; platform team gets `override`, `delete`, prod access
-- Dedicated service accounts for CI — never share human credentials
+### Proyectos y RBAC
+- Un AppProject por equipo/dominio — restringe repos de origen, destinos, kinds permitidos
+- Los desarrolladores obtienen `sync`; el equipo de plataforma obtiene `override`, `delete`, acceso a prod
+- Cuentas de servicio dedicadas para CI — nunca compartas credenciales humanas
 
-### Secrets Management
-| Approach | Complexity | Auto-Rotation | Best For |
+### Gestión de Secretos
+| Enfoque | Complejidad | Auto-Rotación | Mejor para |
 |---|---|---|---|
-| Sealed Secrets | Low | Manual | Small teams |
-| External Secrets Operator | Medium | Automatic | Multi-cloud orgs |
-| SOPS + KSOPS | Medium | Manual | Teams using KMS |
-| Vault Plugin | High | Automatic | Orgs with Vault |
+| Sealed Secrets | Baja | Manual | Equipos pequeños |
+| External Secrets Operator | Media | Automática | Orgs multi-cloud |
+| SOPS + KSOPS | Media | Manual | Equipos usando KMS |
+| Vault Plugin | Alta | Automática | Orgs con Vault |
 
-Rules:
-- Never plaintext secrets in Git
-- Sealed Secrets: `scope: strict`, back up controller key pair
-- External Secrets: `ClusterSecretStore`, authenticate via IRSA/Workload Identity
-- Add `ignoreDifferences` on auto-rotated Secret `/data` fields
+Reglas:
+- Nunca secretos en texto plano en Git
+- Sealed Secrets: `scope: strict`, haz backup del key pair del controlador
+- External Secrets: `ClusterSecretStore`, autenticar via IRSA/Workload Identity
+- Agrega `ignoreDifferences` en campos `/data` de Secret auto-rotados
 
 ---
 
-## Argo Workflows — Container-Native Workflow Engine
+## Argo Workflows — Motor de Workflows Nativo de Contenedores
 
 ### DAG vs Steps
-- **DAG:** Complex dependency graphs with parallelism — tasks declare explicit dependencies
-- **Steps:** Simple sequential/parallel pipelines
-- Compose large workflows from smaller reusable DAGs
+- **DAG:** Grafos de dependencias complejos con paralelismo — las tareas declaran dependencias explícitas
+- **Steps:** Pipelines secuenciales/paralelos simples
+- Compone workflows grandes desde DAGs reutilizables más pequeños
 
-### Retry Policies
+### Políticas de Retry
 ```yaml
 retryStrategy:
   limit: 3
@@ -78,35 +78,35 @@ retryStrategy:
     factor: 2
     maxDuration: "5m"
 ```
-- `OnFailure`: retries on non-zero exit code only
-- `Always`: retries on any error including infra failures
-- Always set `maxDuration`
+- `OnFailure`: reintentos solo en código de salida no-cero
+- `Always`: reintentos en cualquier error incluyendo fallos de infra
+- Siempre establece `maxDuration`
 
-### Resource Management
-- Set `requests` + `limits` on every task container
-- `activeDeadlineSeconds` on workflows to prevent indefinite execution
-- `podPriorityClassName` for critical workflows
+### Gestión de Recursos
+- Establece `requests` + `limits` en cada contenedor de tarea
+- `activeDeadlineSeconds` en workflows para prevenir ejecución indefinida
+- `podPriorityClassName` para workflows críticos
 
-### Templates & Reusability
-- `WorkflowTemplate` for common patterns, reference with `templateRef`
-- `ClusterWorkflowTemplate` for org-wide patterns (notifications, cleanup)
-- Parameterize everything: image tags, limits, artifact paths
+### Templates y Reutilización
+- `WorkflowTemplate` para patrones comunes, referencia con `templateRef`
+- `ClusterWorkflowTemplate` para patrones de toda la org (notificaciones, limpieza)
+- Parametriza todo: tags de imagen, límites, rutas de artefactos
 
 ### Cron Workflows
 - `concurrencyPolicy`: Allow, Replace, Forbid
-- Set `startingDeadlineSeconds` for missed schedules
-- Always set `successfulJobsHistoryLimit` and `failedJobsHistoryLimit`
+- Establece `startingDeadlineSeconds` para schedules perdidos
+- Siempre establece `successfulJobsHistoryLimit` y `failedJobsHistoryLimit`
 
 ---
 
 ## Argo Rollouts — Progressive Delivery
 
-### Strategy Selection
-- **Start with Blue-Green** — simpler, full preview, single cutover
-- **Graduate to Canary** when you have reliable metrics (5-15 min analysis windows)
-- Not for: shared-resource apps, queue workers, infra controllers
+### Selección de Estrategia
+- **Empieza con Blue-Green** — más simple, preview completo, un solo corte
+- **Pasa a Canary** cuando tengas métricas confiables (ventanas de análisis de 5-15 min)
+- No usar para: apps de recursos compartidos, queue workers, controladores de infra
 
-### Canary Pattern
+### Patrón Canary
 ```yaml
 strategy:
   canary:
@@ -122,44 +122,44 @@ strategy:
       - pause: { duration: 5m }
 ```
 
-### Blue-Green Pattern
+### Patrón Blue-Green
 - Define `activeService` + `previewService`
-- `autoPromotionEnabled: false` initially
-- `scaleDownDelaySeconds` to keep old RS for quick rollback
+- `autoPromotionEnabled: false` inicialmente
+- `scaleDownDelaySeconds` para mantener el RS antiguo para rollback rápido
 
 ### Analysis Templates
-- Query metrics provider (Prometheus, Datadog, CloudWatch)
-- Target success rate > 99%, p99 latency < 500ms, error rate < 0.1%
-- Test queries via dry-runs before production
+- Consulta al proveedor de métricas (Prometheus, Datadog, CloudWatch)
+- Objetivo: tasa de éxito > 99%, latencia p99 < 500ms, tasa de error < 0.1%
+- Prueba las consultas via dry-runs antes de producción
 
-### Operations
-- Lower `RevisionHistoryLimit` to 2-3 on high-volume clusters
-- Hash ConfigMap content into name for config-triggered rollouts
-- Integrate notifications (Slack, PagerDuty)
+### Operaciones
+- Reduce `RevisionHistoryLimit` a 2-3 en clusters de alto volumen
+- Hashea el contenido de ConfigMap en el nombre para rollouts disparados por config
+- Integra notificaciones (Slack, PagerDuty)
 
 ---
 
-## Argo Events — Event-Driven Automation
+## Argo Events — Automatización Dirigida por Eventos
 
-### Architecture
-EventSource (produces) → EventBus (transport) → Sensor (consumes + triggers)
+### Arquitectura
+EventSource (produce) → EventBus (transporte) → Sensor (consume + dispara)
 
 ### Event Sources
 - Webhooks, S3, Cron, Kafka, SQS/SNS, Pub/Sub, GitHub, GitLab, NATS, AMQP
-- Apply filters at EventSource level to drop irrelevant events early
-- Dedicated service accounts per EventSource
+- Aplica filtros a nivel de EventSource para descartar eventos irrelevantes temprano
+- Cuentas de servicio dedicadas por EventSource
 
 ### EventBus
-- Default: NATS JetStream — run 3-node cluster for production
-- Alternative: Kafka for orgs already running it
+- Por defecto: NATS JetStream — ejecuta cluster de 3 nodos para producción
+- Alternativa: Kafka para orgs que ya lo ejecutan
 
-### Sensors & Triggers
-- Combine dependencies: `A && B` (both required), `A || B` (either)
-- Filters to match specific payloads (e.g., push to `main` only)
-- Trigger types: Argo Workflow, HTTP, K8s object, Log
-- `retryStrategy` with backoff + `dlqTrigger` for dead letter queue
+### Sensors y Triggers
+- Combina dependencias: `A && B` (ambos requeridos), `A || B` (cualquiera)
+- Filtros para coincidir con payloads específicos (ej., push a `main` solo)
+- Tipos de trigger: Argo Workflow, HTTP, K8s object, Log
+- `retryStrategy` con backoff + `dlqTrigger` para dead letter queue
 
-### Integration with Workflows
+### Integración con Workflows
 ```yaml
 triggers:
   - template:
@@ -179,10 +179,10 @@ triggers:
 
 ---
 
-## Terraform Bootstrap Pattern
+## Patrón de Bootstrap con Terraform
 
-Terraform owns: cluster, VPC, IAM, Argo CD install, bootstrap app-of-apps.
-Argo CD owns: all workloads, namespaces, RBAC, add-ons after bootstrap.
+Terraform gestiona: cluster, VPC, IAM, instalación de Argo CD, app-of-apps de bootstrap.
+Argo CD gestiona: todas las cargas de trabajo, namespaces, RBAC, add-ons después del bootstrap.
 
 ```hcl
 resource "helm_release" "argocd" {
@@ -196,8 +196,8 @@ resource "helm_release" "argocd" {
 }
 ```
 
-Rules:
-- Never use `kubernetes_manifest` for Argo-managed resources
-- Pin Helm chart versions, never `latest`
-- Separate Terraform state per cluster
-- Exec-based auth (short-lived tokens), not static kubeconfig
+Reglas:
+- Nunca uses `kubernetes_manifest` para recursos gestionados por Argo
+- Fija versiones de Helm chart, nunca `latest`
+- Estado de Terraform separado por cluster
+- Autenticación basada en exec (tokens de corta duración), no kubeconfig estático

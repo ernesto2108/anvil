@@ -1,10 +1,10 @@
-# Worker Pool (Bounded Concurrency)
+# Worker Pool (Concurrencia Acotada)
 
-**When:** You have many tasks but need to limit concurrent execution (API rate limits, DB connection pools, memory constraints).
+**Cuándo:** Tienes muchas tareas pero necesitas limitar la ejecución concurrente (límites de rate de API, pools de conexiones DB, restricciones de memoria).
 
-**Real scenario:** Processing 10,000 database records with at most 20 concurrent HTTP calls.
+**Escenario real:** Procesar 10,000 registros de base de datos con máximo 20 llamadas HTTP concurrentes.
 
-## Using errgroup.SetLimit (preferred for new code)
+## Usando errgroup.SetLimit (preferido para código nuevo)
 
 ```go
 package main
@@ -23,7 +23,7 @@ type Record struct {
 }
 
 func processRecord(ctx context.Context, r Record) error {
-    // Simulate external API call
+    // Simula llamada a API externa
     select {
     case <-time.After(100 * time.Millisecond):
         fmt.Printf("processed record %d\n", r.ID)
@@ -35,16 +35,16 @@ func processRecord(ctx context.Context, r Record) error {
 
 func processAll(ctx context.Context, records []Record) error {
     g, ctx := errgroup.WithContext(ctx)
-    g.SetLimit(20) // At most 20 concurrent goroutines
+    g.SetLimit(20) // Máximo 20 goroutines concurrentes
 
     for _, r := range records {
-        r := r // capture loop variable (not needed in Go 1.22+)
+        r := r // captura la variable del loop (no requerido en Go 1.22+)
         g.Go(func() error {
             return processRecord(ctx, r)
         })
     }
 
-    return g.Wait() // Returns first error; cancels ctx on error
+    return g.Wait() // Retorna el primer error; cancela ctx en caso de error
 }
 
 func main() {
@@ -62,15 +62,15 @@ func main() {
 }
 ```
 
-## Using channels (classic pattern)
+## Usando channels (patrón clásico)
 
 ```go
 func workerPool(ctx context.Context, jobs []Record, numWorkers int) error {
     jobsCh := make(chan Record)
-    errCh := make(chan error, 1) // buffered: first error wins
+    errCh := make(chan error, 1) // con buffer: gana el primer error
     var wg sync.WaitGroup
 
-    // Start fixed number of workers
+    // Inicia un número fijo de workers
     for i := 0; i < numWorkers; i++ {
         wg.Add(1)
         go func() {
@@ -78,8 +78,8 @@ func workerPool(ctx context.Context, jobs []Record, numWorkers int) error {
             for job := range jobsCh {
                 if err := processRecord(ctx, job); err != nil {
                     select {
-                    case errCh <- err: // send first error
-                    default: // already have an error
+                    case errCh <- err: // envía el primer error
+                    default: // ya hay un error
                     }
                     return
                 }
@@ -87,7 +87,7 @@ func workerPool(ctx context.Context, jobs []Record, numWorkers int) error {
         }()
     }
 
-    // Send jobs
+    // Envía los jobs
     go func() {
         defer close(jobsCh)
         for _, job := range jobs {
@@ -105,4 +105,4 @@ func workerPool(ctx context.Context, jobs []Record, numWorkers int) error {
 }
 ```
 
-**Common mistake:** Spawning one goroutine per item without bounds. 10,000 goroutines making HTTP calls will exhaust file descriptors and overwhelm downstream services. Always bound concurrency.
+**Error común:** Crear una goroutine por elemento sin límite. 10,000 goroutines haciendo llamadas HTTP agotarán los descriptores de archivo y saturarán los servicios downstream. Siempre acota la concurrencia.

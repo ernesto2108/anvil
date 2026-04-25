@@ -1,23 +1,23 @@
-# Resource Checklist & Detection
+# Checklist de Recursos y Detección
 
-## Complete Resource Checklist
+## Checklist Completo de Recursos
 
-| Resource | Acquire | Release | If You Forget |
+| Recurso | Adquirir | Liberar | Si lo olvidas |
 |----------|---------|---------|---------------|
-| `*sql.Rows` | `db.QueryContext()` | `defer rows.Close()` | Connection pool exhaustion → app deadlock |
-| `*sql.Tx` | `db.BeginTx()` | `defer tx.Rollback()` + `tx.Commit()` | Connection pool exhaustion |
-| `*sql.Conn` | `db.Conn()` | `defer conn.Close()` | Connection pool exhaustion |
-| `http.Response.Body` | `client.Do(req)` | `defer resp.Body.Close()` | File descriptor exhaustion (CLOSE_WAIT) |
-| `*os.File` | `os.Open()` | `defer f.Close()` | File descriptor exhaustion |
+| `*sql.Rows` | `db.QueryContext()` | `defer rows.Close()` | Agotamiento del pool de conexiones → deadlock en la app |
+| `*sql.Tx` | `db.BeginTx()` | `defer tx.Rollback()` + `tx.Commit()` | Agotamiento del pool de conexiones |
+| `*sql.Conn` | `db.Conn()` | `defer conn.Close()` | Agotamiento del pool de conexiones |
+| `http.Response.Body` | `client.Do(req)` | `defer resp.Body.Close()` | Agotamiento de file descriptors (CLOSE_WAIT) |
+| `*os.File` | `os.Open()` | `defer f.Close()` | Agotamiento de file descriptors |
 | `net.Conn` | `net.Dial()` | `defer conn.Close()` | Socket leak |
 | `*grpc.ClientConn` | `grpc.Dial()` | `defer conn.Close()` | Connection leak |
 | `time.Ticker` | `time.NewTicker()` | `defer ticker.Stop()` | Timer/goroutine leak |
 | `context cancel` | `context.WithTimeout()` | `defer cancel()` | Timer goroutine leak |
 | Redis client | `redis.NewClient()` | `defer rdb.Close()` | Connection leak |
 
-## Linters That Catch These Automatically
+## Linters que Detectan Estos Problemas Automáticamente
 
-Add to `.golangci.yml`:
+Agregar a `.golangci.yml`:
 
 ```yaml
 linters:
@@ -30,15 +30,15 @@ linters:
     - durationcheck   # incorrect time.Duration multiplication
 ```
 
-These catch ~80% of context/cleanup issues at compile time.
+Estos detectan ~80% de los problemas de context/cleanup en tiempo de compilación.
 
-## Detection in Production
+## Detección en Producción
 
 **Goroutine leaks:**
-- Expose `/debug/pprof/goroutine` and monitor count
-- Use `runtime.NumGoroutine()` as a Prometheus metric
-- Alert when count exceeds 2-3x baseline
-- Use `uber-go/goleak` in tests:
+- Exponer `/debug/pprof/goroutine` y monitorear el conteo
+- Usar `runtime.NumGoroutine()` como métrica de Prometheus
+- Alertar cuando el conteo supere 2-3x la línea base
+- Usar `uber-go/goleak` en tests:
 
 ```go
 func TestNoLeaks(t *testing.T) {
@@ -48,27 +48,27 @@ func TestNoLeaks(t *testing.T) {
 ```
 
 **Connection pool leaks:**
-- Export `db.Stats()` to Prometheus
-- Alert on `InUse` not returning to baseline after request bursts
-- Alert on `WaitCount` steadily increasing
+- Exportar `db.Stats()` a Prometheus
+- Alertar si `InUse` no vuelve a la línea base después de ráfagas de requests
+- Alertar si `WaitCount` aumenta constantemente
 
 **File descriptor leaks:**
-- Monitor `lsof -p <pid> | wc -l` or expose via metrics
-- Alert when approaching system limit (`ulimit -n`, typically 1024)
-- Symptom: `EMFILE (Too many open files)` — all new connections fail
+- Monitorear `lsof -p <pid> | wc -l` o exponer vía métricas
+- Alertar cuando se acerque al límite del sistema (`ulimit -n`, típicamente 1024)
+- Síntoma: `EMFILE (Too many open files)` — todas las nuevas conexiones fallan
 
-## Anti-Patterns Found in Production Codebases
+## Anti-Patrones Encontrados en Codebases de Producción
 
-These are real patterns that cause production incidents:
+Estos son patrones reales que causan incidentes en producción:
 
-| Pattern | Why It's Dangerous | Fix |
+| Patrón | Por qué es peligroso | Corrección |
 |---|---|---|
-| `http.Get(url)` | No timeout, no context, hangs forever | `http.NewRequestWithContext(ctx, ...)` |
-| `http.DefaultClient.Do(req)` | No timeout configured | Custom client: `&http.Client{Timeout: 15*time.Second}` |
-| `db.Query(...)` without context | No cancellation, hangs on slow DB | `db.QueryContext(ctx, ...)` |
-| `defer` in a loop | Resources accumulate until function returns | Extract to helper function |
-| `resp.Body.Close()` before error check | Nil pointer panic when request fails | Check error first, then defer |
-| Missing `rows.Err()` check | Silent mid-iteration failures | Always check after the `for rows.Next()` loop |
-| `context.TODO()` in request handlers | No timeout, no cancellation | Use `r.Context()` or derive with timeout |
-| Missing pool config on `sql.Open` | Unlimited connections overwhelm DB | Set `MaxOpenConns`, `MaxIdleConns`, lifetimes |
-| Not draining response body | TCP connection can't be reused | `io.Copy(io.Discard, resp.Body)` |
+| `http.Get(url)` | Sin timeout, sin contexto, cuelga para siempre | `http.NewRequestWithContext(ctx, ...)` |
+| `http.DefaultClient.Do(req)` | Sin timeout configurado | Cliente personalizado: `&http.Client{Timeout: 15*time.Second}` |
+| `db.Query(...)` sin contexto | Sin cancelación, cuelga con DB lenta | `db.QueryContext(ctx, ...)` |
+| `defer` en un loop | Los recursos se acumulan hasta que la función retorna | Extraer a función helper |
+| `resp.Body.Close()` antes de verificar error | Pánico por puntero nil cuando la request falla | Verificar error primero, luego defer |
+| Falta verificación de `rows.Err()` | Fallos silenciosos a mitad de iteración | Siempre verificar después del loop `for rows.Next()` |
+| `context.TODO()` en request handlers | Sin timeout, sin cancelación | Usar `r.Context()` o derivar con timeout |
+| Falta config del pool en `sql.Open` | Conexiones ilimitadas saturan la DB | Configurar `MaxOpenConns`, `MaxIdleConns`, lifetimes |
+| No drenar el response body | La conexión TCP no puede reutilizarse | `io.Copy(io.Discard, resp.Body)` |

@@ -1,31 +1,31 @@
 ---
 name: perf
-description: Run load/stress/performance tests, analyze bottlenecks, and generate visual reports. Auto-detects Vegeta, k6, Locust. Use when user says "load test", "stress test", "performance test", "prueba de carga", "benchmark", "run vegeta", "run k6", "run locust", "throughput", "rps", "50 rps", "latency", "bottleneck", "perf", or investigating performance under concurrency.
+description: Ejecutar pruebas de carga/estrés/rendimiento, analizar cuellos de botella y generar reportes visuales. Auto-detecta Vegeta, k6, Locust. Usar cuando el usuario diga "load test", "stress test", "performance test", "prueba de carga", "benchmark", "run vegeta", "run k6", "run locust", "throughput", "rps", "50 rps", "latency", "bottleneck", "perf", o al investigar rendimiento bajo concurrencia.
 ---
 
-# Perf — Performance Testing & Analysis
+# Perf — Pruebas de Rendimiento y Análisis
 
-> Execute load tests, analyze bottlenecks, and produce visual performance reports.
+> Ejecutar pruebas de carga, analizar cuellos de botella y producir reportes visuales de rendimiento.
 
-## Phase 1 — Discovery
+## Fase 1 — Descubrimiento
 
-Before running anything, gather ALL context interactively. ALWAYS ask in Spanish.
+Antes de ejecutar cualquier cosa, recopilar TODO el contexto de forma interactiva. SIEMPRE preguntar en español.
 
-### Step 1: Detect existing setup
+### Paso 1: Detectar configuración existente
 
-Check if the project already has load test tooling:
+Verificar si el proyecto ya tiene herramientas de prueba de carga:
 
-| File/Pattern | Framework |
+| Archivo/Patrón | Framework |
 |-------------|-----------|
-| `loadtest/main.go` + `vegeta` in go.mod | Vegeta (Go library) |
-| `loadtest` binary in project | Vegeta (pre-compiled) |
-| `*.js` with `import http from 'k6/http'` | k6 |
+| `loadtest/main.go` + `vegeta` en go.mod | Vegeta (librería Go) |
+| binario `loadtest` en el proyecto | Vegeta (pre-compilado) |
+| `*.js` con `import http from 'k6/http'` | k6 |
 | `locustfile.py` | Locust |
-| `vegeta` in PATH | Vegeta CLI |
+| `vegeta` en PATH | Vegeta CLI |
 
-If found, read the config/profiles and skip questions already answered.
+Si se encuentra, leer la configuración/perfiles y omitir las preguntas ya respondidas.
 
-### Step 2: Ask what's missing (ALWAYS in Spanish)
+### Paso 2: Preguntar lo que falta (SIEMPRE en español)
 
 | # | Pregunta | Ejemplo |
 |---|----------|---------|
@@ -40,9 +40,9 @@ If found, read the config/profiles and skip questions already answered.
 | 9 | Necesita autenticacion o bypass? | API key, recaptcha bypass, JWT |
 | 10 | Los datos varian entre requests? | IDs random, contadores, datos de un CSV |
 
-### Step 3: Ask framework preference
+### Paso 3: Preguntar preferencia de framework
 
-**NEVER choose the framework yourself.** Always ask the user/team:
+**NUNCA elegir el framework tú mismo.** Siempre preguntar al usuario/equipo:
 
 > "Que herramienta de carga prefieren usar? Las opciones son:
 >
@@ -54,12 +54,12 @@ If found, read the config/profiles and skip questions already answered.
 >
 > Si ya tienen algo configurado en el proyecto, usamos eso."
 
-Once the framework is chosen, load the reference guide:
+Una vez elegido el framework, cargar la guía de referencia:
 - Vegeta → `reference/vegeta.md`
 - Locust → `reference/locust.md`
 - k6 → `reference/k6.md`
 
-### Step 4: Ask where to put the tests
+### Paso 4: Preguntar dónde guardar los tests
 
 > "Donde quieres guardar las pruebas de carga?
 >
@@ -80,9 +80,9 @@ Once the framework is chosen, load the reference guide:
 >
 > Cual prefieren?"
 
-Adapt the project structure based on their answer.
+Adaptar la estructura del proyecto según su respuesta.
 
-### Step 5: Ask output format
+### Paso 5: Preguntar formato de salida
 
 > "En que formato quieres el reporte?
 >
@@ -92,147 +92,147 @@ Adapt the project structure based on their answer.
 >
 > Puedo generar mas de uno."
 
-## Phase 2 — Setup & Execution
+## Fase 2 — Configuración y Ejecución
 
-### Pre-flight Checks
+### Verificaciones Pre-vuelo
 
-1. **Verify endpoint** — `curl -s -o /dev/null -w "%{http_code}" <url>`
-2. **Check state** — for stateful endpoints (inventory, tokens), query current counts
-3. **Confirm environment** — NEVER run against production without explicit confirmation
-4. **Check for existing results** — look for previous results for comparison
+1. **Verificar endpoint** — `curl -s -o /dev/null -w "%{http_code}" <url>`
+2. **Verificar estado** — para endpoints con estado (inventario, tokens), consultar conteos actuales
+3. **Confirmar ambiente** — NUNCA ejecutar contra producción sin confirmación explícita
+4. **Verificar resultados existentes** — buscar resultados anteriores para comparación
 
-### Execute
+### Ejecutar
 
-Use the framework-specific reference guide for commands.
+Usar la guía de referencia específica del framework para los comandos.
 
-Always save raw results with descriptive names:
+Siempre guardar resultados raw con nombres descriptivos:
 ```
 {YYYY-MM-DD}-{profile}-{rate}rps[-{suffix}].{ext}
 
-Examples:
+Ejemplos:
   2026-03-30-normal-50rps.bin
   2026-04-01-saturado-50rps.bin
   2026-04-06-normal-50rps-after-sp-fix.bin
 ```
 
-## Phase 3 — Analysis
+## Fase 3 — Análisis
 
-### Summary Metrics
+### Métricas Resumen
 
-Extract from every load test run:
+Extraer de cada ejecución de prueba de carga:
 
-| Metric | SLO Threshold |
+| Métrica | Umbral SLO |
 |--------|---------------|
-| Rate real (req/s) | >= 90% of target |
-| Throughput (req/s) | >= 90% of target |
-| Success rate | >= 99.5% |
-| p50 latency | < 1s |
-| p95 latency | < 3s |
-| p99 latency | < 5s |
-| Max latency | < 30s |
-| Error distribution | No 5xx |
+| Rate real (req/s) | >= 90% del objetivo |
+| Throughput (req/s) | >= 90% del objetivo |
+| Tasa de éxito | >= 99.5% |
+| Latencia p50 | < 1s |
+| Latencia p95 | < 3s |
+| Latencia p99 | < 5s |
+| Latencia máxima | < 30s |
+| Distribución de errores | Sin 5xx |
 
-### Second-by-Second Timeline
+### Timeline Segundo a Segundo
 
-The most valuable analysis. Decode results to see completions per second.
+El análisis más valioso. Decodificar resultados para ver completaciones por segundo.
 
-**What to look for:**
-- **Consistent completions** (~target/s each second) = healthy
-- **Spike then collapse** (50 sent, 2 completed) = lock contention / serialization
-- **Gradual degradation** = resource exhaustion (connections, memory, CPU)
-- **Periodic dips** = GC pauses, cron jobs, background processes
+**Qué buscar:**
+- **Completaciones consistentes** (~objetivo/s cada segundo) = saludable
+- **Pico luego colapso** (50 enviados, 2 completados) = contención de bloqueos / serialización
+- **Degradación gradual** = agotamiento de recursos (conexiones, memoria, CPU)
+- **Caídas periódicas** = pausas de GC, cron jobs, procesos en background
 
-### Bottleneck Patterns
+### Patrones de Cuello de Botella
 
-| Pattern | Likely Cause | Investigation |
+| Patrón | Causa probable | Investigación |
 |---------|-------------|---------------|
-| p50 > 1s on single span | Lock contention in DB | Check `pg_locks`, advisory locks, `FOR UPDATE` |
-| High variance (p50 low, p99 high) | Queuing / serialization | Advisory locks, spin-locks, mutex |
-| All spans fast but total slow | Network / infra | CDN, WAF, API gateway latency |
-| Throughput << target, no errors | Workers saturated | Increase workers or fix blocking calls |
-| Success drops under load | Pool exhaustion | `max_connections`, pool settings |
+| p50 > 1s en un solo span | Contención de bloqueos en DB | Verificar `pg_locks`, advisory locks, `FOR UPDATE` |
+| Alta varianza (p50 bajo, p99 alto) | Encolamiento / serialización | Advisory locks, spin-locks, mutex |
+| Todos los spans rápidos pero total lento | Red / infra | CDN, WAF, latencia de API gateway |
+| Throughput << objetivo, sin errores | Workers saturados | Aumentar workers o corregir llamadas bloqueantes |
+| Éxitos caen bajo carga | Agotamiento del pool | `max_connections`, configuración del pool |
 
-### Database Lock Analysis (PostgreSQL)
+### Análisis de Bloqueos de Base de Datos (PostgreSQL)
 
-If bottleneck is DB-related, check:
+Si el cuello de botella está relacionado con la DB, verificar:
 
 ```sql
--- Active advisory locks
+-- Advisory locks activos
 SELECT pid, locktype, classid, objid, granted FROM pg_locks WHERE locktype = 'advisory';
 
--- Row-level lock contention
+-- Contención de bloqueos a nivel de fila
 SELECT relation::regclass, mode, granted, COUNT(*) FROM pg_locks WHERE NOT granted GROUP BY 1,2,3;
 
--- Long-running transactions
+-- Transacciones de larga duración
 SELECT pid, now() - xact_start AS duration, query FROM pg_stat_activity
 WHERE state = 'active' AND now() - xact_start > interval '1 second' ORDER BY duration DESC;
 ```
 
-**Common SP anti-patterns:**
+**Anti-patrones comunes en SPs:**
 
-| Anti-pattern | Fix |
+| Anti-patrón | Corrección |
 |-------------|-----|
-| `SELECT ... FOR UPDATE` without LIMIT | Add LIMIT or remove if result unused |
-| Advisory lock not released on all RETURN paths | Ensure `pg_advisory_unlock` before every RETURN |
-| Spin-lock with `pg_sleep` polling `pg_locks` | Use `pg_advisory_lock` (blocking) |
-| Multiple COUNT(*) on same table | Consolidate with `COUNT(*) FILTER (WHERE ...)` |
-| Token generation inside hot path | Pre-load tokens before peak demand |
+| `SELECT ... FOR UPDATE` sin LIMIT | Agregar LIMIT o eliminar si el resultado no se usa |
+| Advisory lock no liberado en todos los caminos de RETURN | Asegurar `pg_advisory_unlock` antes de cada RETURN |
+| Spin-lock con `pg_sleep` consultando `pg_locks` | Usar `pg_advisory_lock` (bloqueante) |
+| Múltiples COUNT(*) en la misma tabla | Consolidar con `COUNT(*) FILTER (WHERE ...)` |
+| Generación de tokens dentro del hot path | Pre-cargar tokens antes del pico de demanda |
 
-## Phase 4 — Report
+## Fase 4 — Reporte
 
-### Comparison (before/after)
+### Comparación (antes/después)
 
-When previous results exist:
+Cuando existen resultados previos:
 
-1. Detect the most recent result for the same profile
-2. Ask: "Encontre un resultado previo de {fecha}. Quieres que compare?"
-3. If yes — generate side-by-side charts with both runs
-4. Add "Anterior" column in the executive summary table
+1. Detectar el resultado más reciente para el mismo perfil
+2. Preguntar: "Encontre un resultado previo de {fecha}. Quieres que compare?"
+3. Si sí — generar charts lado a lado con ambas ejecuciones
+4. Agregar columna "Anterior" en la tabla de resumen ejecutivo
 
 ### Charts
 
-The framework may provide them natively:
-- **Locust** — HTML report with `--html report.html` (has built-in charts)
-- **k6** — HTML report with k6-reporter or web dashboard `--out web-dashboard`
-- **Vegeta** — no native charts; generate with matplotlib (see `reference/vegeta.md`)
+El framework puede proporcionarlos nativamente:
+- **Locust** — reporte HTML con `--html report.html` (tiene charts integrados)
+- **k6** — reporte HTML con k6-reporter o web dashboard `--out web-dashboard`
+- **Vegeta** — sin charts nativos; generar con matplotlib (ver `reference/vegeta.md`)
 
-### Required Visualizations
+### Visualizaciones Requeridas
 
-Regardless of framework, the report must include:
+Independientemente del framework, el reporte debe incluir:
 
-1. **Throughput comparison** — completed vs expected, rate real vs target
-2. **Completions per second** — second-by-second bar chart (most impactful for teams)
-3. **Latency by percentile** — p50, p90, p95, p99, max
-4. **Bottleneck breakdown** — time per component (if APM data available)
+1. **Comparación de throughput** — completadas vs esperadas, rate real vs objetivo
+2. **Completaciones por segundo** — gráfico de barras segundo a segundo (el más impactante para los equipos)
+3. **Latencia por percentil** — p50, p90, p95, p99, max
+4. **Desglose de cuello de botella** — tiempo por componente (si hay datos APM disponibles)
 5. **Timeline** — sent/s, completed/s, mean latency/s
 
-### Output Formats
+### Formatos de Salida
 
-| Formato | Cuando | Como |
+| Formato | Cuándo | Cómo |
 |---------|--------|------|
-| **Markdown** (siempre) | Dia a dia, GitHub, PRs | Generado automaticamente con `![](charts/...)` |
+| **Markdown** (siempre) | Día a día, GitHub, PRs | Generado automáticamente con `![](charts/...)` |
 | **HTML** (si lo pide) | Compartir sin acceso al repo | Locust/k6 nativo. Vegeta: generar desde md |
 | **PDF** (si lo pide) | Presentaciones, stakeholders | `pandoc report.md -o report.pdf --pdf-engine=wkhtmltopdf` |
 
-If PDF requested, verify tools:
+Si se solicita PDF, verificar herramientas:
 ```bash
 which pandoc && which wkhtmltopdf
-# If missing: brew install pandoc wkhtmltopdf
+# Si faltan: brew install pandoc wkhtmltopdf
 ```
 
-### Report Structure
+### Estructura del Reporte
 
 ```markdown
 # Informe de Performance — <endpoint>
 
 ## Resumen Ejecutivo
 | Metrica | Actual | Anterior | Target |
-(comparative table if previous data exists)
+(tabla comparativa si existen datos previos)
 
 ![Throughput](charts/chart-throughput.png)
 
 ## Pruebas Realizadas
-(parameters per test)
+(parámetros por prueba)
 
 ![Latencies](charts/chart-latency.png)
 
@@ -241,46 +241,46 @@ which pandoc && which wkhtmltopdf
 ![Timeline](charts/chart-timeline.png)
 
 ## Causa Raiz
-(if bottleneck found)
+(si se encontró cuello de botella)
 
 ![Breakdown](charts/chart-breakdown.png)
 
 ## Plan de Remediacion
-(phased fixes with SQL if applicable)
+(correcciones por fases con SQL si aplica)
 
 ## Anexo — Todos los Graficos
-(all charts for quick reference)
+(todos los charts para referencia rápida)
 ```
 
-**Report rules:**
-- Always embed images with `![desc](relative-path.png)` — never just list filenames
-- Relative paths so it renders in GitHub, VS Code, any markdown viewer
-- Completions-per-second chart is the most impactful — always prominent
-- If comparing runs, put them side by side in the same chart
-- Report narrative always in Spanish
+**Reglas del reporte:**
+- Siempre embeber imágenes con `![desc](relative-path.png)` — nunca solo listar nombres de archivos
+- Rutas relativas para que se renderice en GitHub, VS Code, cualquier visor de markdown
+- El chart de completaciones por segundo es el más impactante — siempre destacado
+- Si se comparan ejecuciones, ponerlas lado a lado en el mismo chart
+- La narrativa del reporte siempre en español
 
-## Workflow Summary
+## Resumen del Flujo de Trabajo
 
-1. **Discovery** — detect existing setup, ask missing info, ask framework preference, ask where to store, ask output format
-2. **Setup** — load framework reference, create project structure per user's choice
-3. **Pre-flight** — verify endpoint, check state, confirm environment
-4. **Execute** — run load test, save results with descriptive name
-5. **Analyze** — metrics, timeline, bottleneck identification
-6. **Chart** — generate visuals (native or matplotlib)
-7. **Report** — markdown with embedded images + additional formats if requested
-8. **Compare** — if previous results exist, ask and chart both runs
-9. **Export** — HTML or PDF if requested
+1. **Descubrimiento** — detectar configuración existente, preguntar info faltante, preguntar preferencia de framework, preguntar dónde almacenar, preguntar formato de salida
+2. **Configuración** — cargar referencia del framework, crear estructura del proyecto según elección del usuario
+3. **Pre-vuelo** — verificar endpoint, revisar estado, confirmar ambiente
+4. **Ejecutar** — correr prueba de carga, guardar resultados con nombre descriptivo
+5. **Analizar** — métricas, timeline, identificación de cuello de botella
+6. **Charts** — generar visualizaciones (nativas o matplotlib)
+7. **Reporte** — markdown con imágenes embebidas + formatos adicionales si se solicitan
+8. **Comparar** — si existen resultados previos, preguntar y graficar ambas ejecuciones
+9. **Exportar** — HTML o PDF si se solicita
 
-## Rules
+## Reglas
 
-- **Communicate in Spanish** — all questions, status updates, and report narratives in Spanish. Technical terms (endpoint, headers, throughput, p50) stay in English
-- **Never choose the framework** — always ask the user/team which tool they prefer. Present options with trade-offs
-- **Never choose the project structure** — always ask: inside repo, dedicated repo, or hybrid
-- **Always ask discovery questions** if no existing setup — never guess endpoint/headers
-- **Never run against production** without explicit user confirmation
-- **Always save raw results** — enables re-analysis and comparison
-- **Charts are mandatory** — reports without visuals are incomplete
-- **Name results with date** — `{YYYY-MM-DD}-{profile}-{rate}rps.{ext}`
-- **Compare before/after** — if previous results exist, ask and chart both runs
-- **Pre-check state** — for stateful endpoints, verify data before and after
-- **Include SQL** — if DB bottlenecks found, include production-ready SQL with guards and rollback
+- **Comunicar en español** — todas las preguntas, actualizaciones de estado y narrativas de reportes en español. Los términos técnicos (endpoint, headers, throughput, p50) se mantienen en inglés
+- **Nunca elegir el framework** — siempre preguntar al usuario/equipo qué herramienta prefieren. Presentar opciones con trade-offs
+- **Nunca elegir la estructura del proyecto** — siempre preguntar: dentro del repo, repo dedicado o híbrido
+- **Siempre hacer preguntas de descubrimiento** si no hay configuración existente — nunca adivinar endpoint/headers
+- **Nunca ejecutar contra producción** sin confirmación explícita del usuario
+- **Siempre guardar resultados raw** — permite re-análisis y comparación
+- **Los charts son obligatorios** — los reportes sin visualizaciones están incompletos
+- **Nombrar resultados con fecha** — `{YYYY-MM-DD}-{profile}-{rate}rps.{ext}`
+- **Comparar antes/después** — si existen resultados previos, preguntar y graficar ambas ejecuciones
+- **Verificar estado previo** — para endpoints con estado, verificar datos antes y después
+- **Incluir SQL** — si se encuentran cuellos de botella en DB, incluir SQL listo para producción con guards y rollback

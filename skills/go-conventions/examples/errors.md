@@ -1,6 +1,6 @@
-# Error Handling Examples
+# Ejemplos de Manejo de Errores
 
-## Good: Error Handling with Context
+## Bien: Manejo de Errores con Contexto
 
 ```go
 // Wrap errors with operation context — callers can still use errors.Is/As
@@ -20,11 +20,11 @@ func (r *pgUserRepo) GetByID(ctx context.Context, id uuid.UUID) (*User, error) {
 }
 ```
 
-**Why:** Every error includes what operation failed. `%w` preserves the chain for `errors.Is` upstream.
+**Por qué:** Cada error incluye qué operación falló. `%w` preserva la cadena para `errors.Is` en capas superiores.
 
 ---
 
-## Bad: Panic in Library Code
+## Mal: Panic en Código de Librería
 
 ```go
 // BAD — crashes the entire application
@@ -56,7 +56,7 @@ func ParseConfig(path string) (Config, error) {
 
 ---
 
-## Bad: Bare Error Returns
+## Mal: Retornos de Error Desnudos
 
 ```go
 // BAD — no context about what failed
@@ -91,7 +91,7 @@ func (s *OrderService) PlaceOrder(ctx context.Context, req OrderReq) error {
 
 ---
 
-## Bad: Ignoring Errors
+## Mal: Ignorar Errores
 
 ```go
 // BAD — silently discarding errors

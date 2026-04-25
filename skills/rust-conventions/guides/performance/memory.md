@@ -1,6 +1,6 @@
-# Memory & Performance Patterns
+# Patrones de Memoria y Performance
 
-## Zero-Copy Parsing
+## Parsing Sin Copia (Zero-Copy)
 
 ```rust
 // WRONG — allocating during parse
@@ -25,7 +25,7 @@ fn parse_frame(buf: &mut BytesMut) -> Option<Bytes> {
 }
 ```
 
-## Cow (Conditional Ownership)
+## Cow (Ownership Condicional)
 
 ```rust
 use std::borrow::Cow;
@@ -49,7 +49,7 @@ fn normalize(input: &str) -> Cow<'_, str> {
 }
 ```
 
-## Arena Allocation
+## Asignación por Arena
 
 ```rust
 use bumpalo::Bump;
@@ -82,7 +82,7 @@ fn get_tags(item: &Item) -> Tags {
 }
 ```
 
-## Unsafe Guidelines
+## Lineamientos para Unsafe
 
 ```rust
 // WRONG — large unsafe block, no comment
@@ -105,12 +105,12 @@ let slice = unsafe { slice::from_raw_parts_mut(ptr.add(HEADER_SIZE), len) };
 slice.copy_from_slice(data);  // safe — outside unsafe
 ```
 
-## Key Crates
+## Crates Clave
 
-- `bytes` 1.x — zero-copy byte buffers
-- `bumpalo` 3.x — arena allocator
-- `smallvec` 1.x — stack-allocated small vectors
-- `arrayvec` 0.7.x — fixed-capacity stack vectors
-- `memmap2` 0.9.x — memory-mapped files
-- `zerocopy` 0.8.x — zero-copy structured data
+- `bytes` 1.x — buffers de bytes sin copia
+- `bumpalo` 3.x — asignador por arena
+- `smallvec` 1.x — vectores pequeños asignados en stack
+- `arrayvec` 0.7.x — vectores con capacidad fija en stack
+- `memmap2` 0.9.x — archivos mapeados en memoria
+- `zerocopy` 0.8.x — datos estructurados sin copia
 - `criterion` 0.5.x — benchmarking

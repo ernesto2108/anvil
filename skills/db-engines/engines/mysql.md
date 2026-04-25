@@ -1,33 +1,33 @@
 # MySQL
 
-## Types & Conventions
-- No native `UUID` — use `CHAR(36)` or `BINARY(16)` with app-level conversion
-- Use `DATETIME` not `TIMESTAMP` (TIMESTAMP has 2038 problem and auto-updates)
-- Use `VARCHAR(n)` with explicit lengths — MySQL enforces them
-- `BOOLEAN` is alias for `TINYINT(1)` — 0/1, not true/false
-- `TEXT` / `LONGTEXT` for large strings — `VARCHAR` max is 65,535 bytes
+## Tipos y Convenciones
+- Sin `UUID` nativo — usa `CHAR(36)` o `BINARY(16)` con conversión a nivel de aplicación
+- Usa `DATETIME` no `TIMESTAMP` (TIMESTAMP tiene el problema del año 2038 y se auto-actualiza)
+- Usa `VARCHAR(n)` con longitudes explícitas — MySQL las aplica
+- `BOOLEAN` es alias de `TINYINT(1)` — 0/1, no true/false
+- `TEXT` / `LONGTEXT` para strings largas — el máximo de `VARCHAR` es 65,535 bytes
 
-## Migration Patterns
-- `ALTER TABLE ... ALGORITHM=INPLACE` when possible (avoids table copy)
-- No `CREATE INDEX CONCURRENTLY` — index creation locks the table
-- `IF NOT EXISTS` / `IF EXISTS` supported
-- `ALTER TABLE ... ADD COLUMN` supports `AFTER <column>` for column ordering
-- Online DDL: for large tables, consider `pt-online-schema-change` or `gh-ost`
+## Patrones de Migración
+- `ALTER TABLE ... ALGORITHM=INPLACE` cuando sea posible (evita copiar la tabla)
+- Sin `CREATE INDEX CONCURRENTLY` — la creación de índices bloquea la tabla
+- `IF NOT EXISTS` / `IF EXISTS` soportado
+- `ALTER TABLE ... ADD COLUMN` soporta `AFTER <column>` para ordenar columnas
+- DDL Online: para tablas grandes, considera `pt-online-schema-change` o `gh-ost`
 
-## Performance Tuning
-- InnoDB is the default and correct engine — never use MyISAM
-- `innodb_buffer_pool_size` = 70-80% of available RAM for dedicated DB servers
-- `EXPLAIN FORMAT=JSON` for detailed query analysis
-- Covering indexes with `INCLUDE` not supported — put all needed columns in the index itself
-- `FORCE INDEX(idx_name)` as last resort for wrong index selection
+## Ajuste de Rendimiento
+- InnoDB es el motor por defecto y correcto — nunca usar MyISAM
+- `innodb_buffer_pool_size` = 70-80% de la RAM disponible para servidores DB dedicados
+- `EXPLAIN FORMAT=JSON` para análisis detallado de consultas
+- Índices de cobertura con `INCLUDE` no soportados — pon todas las columnas necesarias en el índice mismo
+- `FORCE INDEX(idx_name)` como último recurso para selección de índice incorrecta
 
 ## Multi-Tenant
-- No native RLS — enforce tenant isolation at application/query level
-- Compound indexes: `(tenant_id, ...)` for all tenant-scoped queries
-- Consider schema-per-tenant for strong isolation (adds operational complexity)
+- Sin RLS nativo — aplica aislamiento de tenant a nivel de aplicación/consulta
+- Índices compuestos: `(tenant_id, ...)` para todas las consultas con scope de tenant
+- Considera schema-por-tenant para aislamiento fuerte (agrega complejidad operativa)
 
-## Go Drivers
-- `github.com/go-sql-driver/mysql` — standard `database/sql` driver
+## Drivers de Go
+- `github.com/go-sql-driver/mysql` — driver estándar `database/sql`
 - Connection string: `user:pass@tcp(host:port)/dbname?parseTime=true&multiStatements=true`
-- `parseTime=true` is MANDATORY — without it, `DATETIME` columns return `[]byte` instead of `time.Time`
-- Error translation: `*mysql.MySQLError` with error numbers (1062 = duplicate, 1452 = FK violation)
+- `parseTime=true` es OBLIGATORIO — sin él, las columnas `DATETIME` devuelven `[]byte` en lugar de `time.Time`
+- Traducción de errores: `*mysql.MySQLError` con números de error (1062 = duplicado, 1452 = violación FK)

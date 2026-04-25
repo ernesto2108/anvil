@@ -1,54 +1,54 @@
-# Structured Logging Guide
+# Guía de Logging Estructurado
 
-## Principles (apply to ANY logger: slog, logrus, zerolog, zap)
+## Principios (aplicables a CUALQUIER logger: slog, logrus, zerolog, zap)
 
-These principles apply regardless of which logging library the project uses:
+Estos principios aplican sin importar qué librería de logging use el proyecto:
 
-1. **Structured key-value pairs** — never concatenate strings into log messages
-2. **Logger via DI** — pass logger through constructors, never use package-level globals
-3. **Never log sensitive data** — passwords, tokens, PII, credit cards
-4. **Consistent key naming** — use snake_case for all log keys across the project
-5. **Context-aware** — propagate request_id and trace_id through all logs
-6. **Right level** — Debug (development only), Info (normal ops), Warn (recoverable), Error (action needed)
+1. **Pares clave-valor estructurados** — nunca concatenes strings en los mensajes de log
+2. **Logger vía DI** — pasa el logger a través de constructores, nunca uses globals a nivel de package
+3. **Nunca registres datos sensibles** — contraseñas, tokens, PII, tarjetas de crédito
+4. **Nomenclatura consistente de claves** — usa snake_case para todas las claves de log en el proyecto
+5. **Context-aware** — propaga request_id y trace_id a través de todos los logs
+6. **Nivel correcto** — Debug (solo desarrollo), Info (operación normal), Warn (recuperable), Error (requiere acción)
 
-## slog (recommended for new projects — Go 1.21+ stdlib)
+## slog (recomendado para proyectos nuevos — stdlib Go 1.21+)
 
-### Setup
+### Configuración
 
 ```go
-// Production — JSON output for machine parsing (Datadog, Elastic, Grafana)
+// Producción — salida JSON para parseo por máquinas (Datadog, Elastic, Grafana)
 logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
     Level: slog.LevelInfo,
 }))
 
-// Development — human-readable text output
+// Desarrollo — salida de texto legible por humanos
 logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
     Level: slog.LevelDebug,
 }))
 ```
 
-### Usage patterns
+### Patrones de uso
 
 ```go
-// Basic structured logging with typed helpers
+// Logging estructurado básico con helpers tipados
 logger.Info("user created",
     slog.String("user_id", u.ID),
     slog.String("email", u.Email),
     slog.Duration("latency", elapsed),
 )
-// JSON output: {"time":"...","level":"INFO","msg":"user created","user_id":"123","email":"john@example.com","latency":"45ms"}
+// Salida JSON: {"time":"...","level":"INFO","msg":"user created","user_id":"123","email":"john@example.com","latency":"45ms"}
 
-// Error logging with error value
+// Logging de errores con valor de error
 logger.Error("failed to create user",
     slog.String("email", email),
     slog.Any("error", err),
 )
 
-// Context-aware logging — propagates request_id, trace_id
+// Logging context-aware — propaga request_id, trace_id
 logger.InfoContext(ctx, "processing order", slog.String("order_id", id))
 ```
 
-### Inject logger via constructor
+### Inyecta el logger vía constructor
 
 ```go
 type UserService struct {
@@ -64,24 +64,24 @@ func NewUserService(repo UserRepository, logger *slog.Logger) *UserService {
 }
 ```
 
-### LogValuer — control what gets logged, redact sensitive fields
+### LogValuer — controla qué se registra, redacta campos sensibles
 
 ```go
-// Implement slog.LogValuer to control how a type appears in logs
+// Implementa slog.LogValuer para controlar cómo aparece un tipo en los logs
 func (u User) LogValue() slog.Value {
     return slog.GroupValue(
         slog.String("id", u.ID),
         slog.String("email", u.Email),
-        // password, token deliberately omitted
+        // password, token deliberadamente omitidos
     )
 }
 
-// Now you can safely log the whole user
+// Ahora puedes registrar el usuario completo de forma segura
 logger.Info("user authenticated", slog.Any("user", user))
-// Output includes id and email but NOT password
+// La salida incluye id y email pero NO el password
 ```
 
-### Add request context (middleware pattern)
+### Agrega contexto de request (patrón middleware)
 
 ```go
 func RequestIDMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
@@ -91,7 +91,7 @@ func RequestIDMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
             if requestID == "" {
                 requestID = uuid.NewString()
             }
-            // Create child logger with request_id baked in
+            // Crea un logger hijo con request_id incorporado
             reqLogger := logger.With(slog.String("request_id", requestID))
             ctx := context.WithValue(r.Context(), loggerKey, reqLogger)
             next.ServeHTTP(w, r.WithContext(ctx))
@@ -100,12 +100,12 @@ func RequestIDMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 }
 ```
 
-## logrus / zerolog / zap (existing projects)
+## logrus / zerolog / zap (proyectos existentes)
 
-If the project already uses a logger, follow the same principles:
+Si el proyecto ya usa un logger, sigue los mismos principios:
 
 ```go
-// logrus — structured fields
+// logrus — campos estructurados
 logger.WithFields(logrus.Fields{
     "user_id": userID,
     "email":   email,
@@ -120,14 +120,14 @@ log.Info().
     Msg("user created")
 ```
 
-Check the project's `go.mod` to determine which logger is in use. Follow the project's existing patterns — don't introduce slog into a project that already uses logrus unless migrating.
+Revisa el `go.mod` del proyecto para determinar qué logger está en uso. Sigue los patrones existentes del proyecto — no introduzcas slog en un proyecto que ya usa logrus a menos que estés migrando.
 
-## Anti-patterns
+## Anti-patrones
 
-| Pattern | Problem | Fix |
+| Patrón | Problema | Solución |
 |---|---|---|
-| `log.Println("user: " + userID)` | Unstructured, unparseable | Use key-value pairs |
-| `slog.SetDefault(logger)` as only setup | Global state | Pass via constructor |
-| `logger.Debug(...)` in hot loops | Performance hit even if disabled | Check `logger.Enabled()` first |
-| Logging password, token, or card number | Security breach via logs | Implement LogValuer, redact fields |
-| Different key names for same concept | Impossible to correlate | Standardize: `user_id` not `userId`/`uid`/`user` |
+| `log.Println("user: " + userID)` | No estructurado, no parseable | Usa pares clave-valor |
+| `slog.SetDefault(logger)` como única configuración | Estado global | Pasa vía constructor |
+| `logger.Debug(...)` en hot loops | Impacto en rendimiento incluso si está deshabilitado | Verifica `logger.Enabled()` primero |
+| Registrar password, token o número de tarjeta | Brecha de seguridad vía logs | Implementa LogValuer, redacta campos |
+| Nombres de clave distintos para el mismo concepto | Imposible correlacionar | Estandariza: `user_id` no `userId`/`uid`/`user` |

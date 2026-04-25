@@ -1,49 +1,49 @@
-# Terraform Best Practices
+# Mejores Prácticas de Terraform
 
-## Module Structure
-- Standard files: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `versions.tf`
-- Group resources logically: `network.tf`, `compute.tf`, `database.tf`
-- Root modules: direct `terraform apply` targets, contain provider config
-- Child modules: reusable blocks, never contain provider config
-- Templates in `templates/*.tftpl`; scripts in `scripts/`
+## Estructura de Módulos
+- Archivos estándar: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `versions.tf`
+- Agrupa recursos lógicamente: `network.tf`, `compute.tf`, `database.tf`
+- Módulos raíz: objetivos directos de `terraform apply`, contienen config de provider
+- Módulos hijo: bloques reutilizables, nunca contienen config de provider
+- Templates en `templates/*.tftpl`; scripts en `scripts/`
 
-## Naming
-- Underscores for all names (matches HCL convention)
-- Single-type resources named `main`; use `primary`/`secondary` to differentiate
-- Don't repeat type in name: `aws_instance.web` not `aws_instance.web_instance`
-- Booleans named positively: `enable_external_access`
-- Numerics suffixed with units: `ram_size_gb`
+## Nomenclatura
+- Guiones bajos para todos los nombres (coincide con la convención HCL)
+- Recursos de tipo único llamados `main`; usa `primary`/`secondary` para diferenciar
+- No repitas el tipo en el nombre: `aws_instance.web` no `aws_instance.web_instance`
+- Booleanos con nombre positivo: `enable_external_access`
+- Numéricos con sufijo de unidades: `ram_size_gb`
 
-## Variables & Outputs
-- All variables in `variables.tf`; all outputs in `outputs.tf`
-- Always include `description` and explicit `type`
-- Defaults only for environment-independent values
-- Outputs reference resource attributes, not input variables
+## Variables y Outputs
+- Todas las variables en `variables.tf`; todos los outputs en `outputs.tf`
+- Siempre incluye `description` y `type` explícito
+- Defaults solo para valores independientes del entorno
+- Los outputs referencian atributos de recursos, no variables de input
 
-## State Management
-- Always remote state with locking (S3+DynamoDB, GCS, Terraform Cloud)
-- Never commit `.tfstate` to version control
-- One state per environment; shared infra in own state
-- Use `terraform_remote_state` sparingly; prefer explicit outputs
+## Gestión de Estado
+- Siempre estado remoto con locking (S3+DynamoDB, GCS, Terraform Cloud)
+- Nunca commitees `.tfstate` al control de versiones
+- Un estado por entorno; infra compartida en su propio estado
+- Usa `terraform_remote_state` con moderación; prefiere outputs explícitos
 
-## Plan/Apply Workflow
-- `terraform fmt` + `terraform validate` in pre-commit hooks
-- `terraform plan` on every PR; post output as PR comment
-- `terraform apply` only from CI/CD after approval, never locally for production
-- Avoid `-target` in regular workflow
+## Flujo de Plan/Apply
+- `terraform fmt` + `terraform validate` en hooks de pre-commit
+- `terraform plan` en cada PR; publica el output como comentario del PR
+- `terraform apply` solo desde CI/CD después de aprobación, nunca localmente para producción
+- Evita `-target` en el flujo de trabajo regular
 
-## Versioning
-- Pin providers: `~> 5.0` (pessimistic constraint)
-- Pin modules to exact or narrow range
-- Set `required_version` for CLI version
-- Repo naming: `terraform-<provider>-<purpose>`
+## Versionado
+- Fija providers: `~> 5.0` (restricción pesimista)
+- Fija módulos a rango exacto o estrecho
+- Establece `required_version` para la versión del CLI
+- Nombres de repos: `terraform-<provider>-<purpose>`
 
-## Drift Detection
-- Schedule periodic `terraform plan` runs
-- Alert on any diff between state and actual
-- Never manually modify Terraform-managed resources
+## Detección de Drift
+- Programa ejecuciones periódicas de `terraform plan`
+- Alerta ante cualquier diferencia entre el estado y la realidad
+- Nunca modifiques manualmente recursos gestionados por Terraform
 
-## Project Template
+## Plantilla de Proyecto
 
 ```
 infrastructure/

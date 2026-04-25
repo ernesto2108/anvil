@@ -1,111 +1,111 @@
 ---
 name: go-conventions
-description: Go backend conventions and coding standards. Use when writing Go code, reviewing Go patterns, or user mentions "go conventions", "idiomatic Go", "error handling in Go", "Go best practices", "Go testing patterns", or working with .go files.
+description: Convenciones y estándares de código para backend en Go. Usar cuando se escriba código Go, se revisen patrones Go, o el usuario mencione "go conventions", "idiomatic Go", "error handling in Go", "Go best practices", "Go testing patterns", o cuando se trabaje con archivos .go.
 ---
 
 # Go Conventions
 
-> **IMPORTANT:** This file is a lightweight dispatcher. Do NOT load all referenced files at once. Read the routing table below, identify which files are relevant to the current task, and load ONLY those using the Read tool. Each file is ~3-5KB. Loading unnecessary files wastes context tokens.
+> **IMPORTANTE:** Este archivo es un despachador ligero. NO cargues todos los archivos referenciados a la vez. Lee la tabla de enrutamiento abajo, identifica qué archivos son relevantes para la tarea actual, y carga SOLO esos usando la herramienta Read. Cada archivo pesa ~3-5KB. Cargar archivos innecesarios desperdicia tokens de contexto.
 
-## Stack & Philosophy
+## Stack y Filosofía
 
-- **Go stdlib first** — only add dependencies when stdlib is genuinely insufficient
-- **Simplicity over cleverness** — if it needs a comment to explain, simplify it
-- **Explicit over implicit** — no magic, no init() side effects, no global state
-- **Errors are values** — handle them, don't hide them
-- **Composition over inheritance** — embed, don't extend
+- **Go stdlib primero** — agrega dependencias solo cuando la stdlib es genuinamente insuficiente
+- **Simplicidad sobre inteligencia** — si necesita un comentario para explicarse, simplificarlo
+- **Explícito sobre implícito** — sin magia, sin efectos secundarios en `init()`, sin estado global
+- **Los errores son valores** — manéjalos, no los ocultes
+- **Composición sobre herencia** — embeber, no extender
 
-## Red Flags (always stop work)
+## Señales de Alerta (siempre detener el trabajo)
 
-- `panic()` outside `main()` → error
-- `init()` doing real work → error
-- Ignored errors (`_ = f()`) → error
-- Global mutable state → error
-- Resource leaks (unclosed tickers, deferred in loops) → error
+- `panic()` fuera de `main()` → error
+- `init()` haciendo trabajo real → error
+- Errores ignorados (`_ = f()`) → error
+- Estado global mutable → error
+- Fugas de recursos (tickers sin cerrar, deferred en loops) → error
 
-## Anti-Pattern Detection
+## Detección de Anti-Patrones
 
-**Passive detection:** When reviewing Go code, load `detection/anti-patterns.md` and scan for `error` and `warning` patterns. Report as `[file:line] [severity] [category] anti-pattern-name`.
+**Detección pasiva:** Al revisar código Go, carga `detection/anti-patterns.md` y escanea los patrones `error` y `warning`. Reporta como `[file:line] [severity] [category] anti-pattern-name`.
 
-**Active detection:** When user asks to "improve", "refactor", "optimize", or "clean" — also report `suggestion` level patterns and propose fixes referencing the relevant rule or guide.
+**Detección activa:** Cuando el usuario pide "improve", "refactor", "optimize" o "clean" — reporta también patrones de nivel `suggestion` y propone correcciones referenciando la regla o guía relevante.
 
-## What to Load
+## Qué Cargar
 
-Load **only** the files relevant to the current task:
+Carga **solo** los archivos relevantes para la tarea actual:
 
-### Rules (quick reference, ~2-3KB each)
+### Reglas (referencia rápida, ~2-3KB cada una)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| Error handling, naming, context, concurrency basics | `rules/coding.md` |
-| Imports, DTOs, validation, DI | `rules/architecture.md` |
-| SQL, transactions, repositories | `rules/database.md` |
-| Kafka/RabbitMQ critical rules | `rules/messaging.md` |
-| Functional options, constructors, guard clauses | `rules/patterns.md` |
+| Manejo de errores, naming, context, concurrencia básica | `rules/coding.md` |
+| Imports, DTOs, validación, DI | `rules/architecture.md` |
+| SQL, transacciones, repositories | `rules/database.md` |
+| Reglas críticas de Kafka/RabbitMQ | `rules/messaging.md` |
+| Functional options, constructores, guard clauses | `rules/patterns.md` |
 
-### Guides (detailed patterns with code, ~3-5KB each)
+### Guías (patrones detallados con código, ~3-5KB cada una)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| Which concurrency primitive to use | `guides/concurrency/decision-matrix.md` |
-| Fan-out/fan-in pattern | `guides/concurrency/fan-out-fan-in.md` |
-| Worker pools, bounded concurrency | `guides/concurrency/worker-pools.md` |
-| Pipeline stages | `guides/concurrency/pipelines.md` |
-| Timeouts, context cancellation | `guides/concurrency/timeout-cancellation.md` |
+| Qué primitiva de concurrencia usar | `guides/concurrency/decision-matrix.md` |
+| Patrón fan-out/fan-in | `guides/concurrency/fan-out-fan-in.md` |
+| Worker pools, concurrencia acotada | `guides/concurrency/worker-pools.md` |
+| Etapas de pipeline | `guides/concurrency/pipelines.md` |
+| Timeouts, cancelación de context | `guides/concurrency/timeout-cancellation.md` |
 | Rate limiting | `guides/concurrency/rate-limiting.md` |
 | Graceful shutdown (HTTP, workers) | `guides/concurrency/graceful-shutdown.md` |
-| Concurrent map access | `guides/concurrency/concurrent-map.md` |
+| Acceso concurrente a map | `guides/concurrency/concurrent-map.md` |
 | Pub/sub event broadcasting | `guides/concurrency/pub-sub.md` |
-| Concurrency anti-patterns + checklist | `guides/concurrency/anti-patterns.md` |
-| HTTP client, DB, Redis, gRPC context | `guides/cleanup/context-propagation.md` |
-| Multi-level timeout design | `guides/cleanup/timeout-architecture.md` |
-| Rows, transactions, HTTP body, tickers | `guides/cleanup/resource-cleanup.md` |
-| sql.DB pool config, monitoring | `guides/cleanup/connection-pools.md` |
-| Resource checklist, linters, production detection | `guides/cleanup/detection-checklist.md` |
-| Test structure, table-driven tests | `guides/testing/structure-tables.md` |
-| Test helpers, mocking with interfaces | `guides/testing/helpers-mocking.md` |
-| Testing HTTP handlers (Gin) | `guides/testing/http-handlers.md` |
-| Testing repositories (mock rows) | `guides/testing/repositories.md` |
-| Fixtures, testdata, integration tests | `guides/testing/fixtures-integration.md` |
-| Coverage, benchmarks | `guides/testing/coverage-benchmarks.md` |
-| Kafka overview, library selection | `guides/kafka/overview.md` |
-| Kafka producer patterns | `guides/kafka/producer.md` |
-| Kafka consumer, groups, ordering | `guides/kafka/consumer.md` |
-| Kafka DLQ, retry, poison messages | `guides/kafka/dlq-retry.md` |
-| Kafka circuit breaker, idempotency, backpressure | `guides/kafka/resilience.md` |
-| Kafka shutdown, tracing, schema, anti-patterns | `guides/kafka/operations.md` |
-| RabbitMQ overview, exchanges, durability | `guides/rabbitmq/overview.md` |
-| RabbitMQ connection, auto-reconnect | `guides/rabbitmq/connection.md` |
-| RabbitMQ producer, confirms | `guides/rabbitmq/producer.md` |
-| RabbitMQ consumer, QoS, ack/nack | `guides/rabbitmq/consumer.md` |
-| RabbitMQ DLX/DLQ, TTL retry chains | `guides/rabbitmq/dlq-retry.md` |
-| RabbitMQ backpressure, shutdown, anti-patterns | `guides/rabbitmq/operations.md` |
-| Structured logging (slog) | `guides/slog.md` |
+| Anti-patrones de concurrencia + checklist | `guides/concurrency/anti-patterns.md` |
+| Context en HTTP client, DB, Redis, gRPC | `guides/cleanup/context-propagation.md` |
+| Diseño de timeout multi-nivel | `guides/cleanup/timeout-architecture.md` |
+| Rows, transacciones, HTTP body, tickers | `guides/cleanup/resource-cleanup.md` |
+| Configuración del pool sql.DB, monitoreo | `guides/cleanup/connection-pools.md` |
+| Checklist de recursos, linters, detección en producción | `guides/cleanup/detection-checklist.md` |
+| Estructura de tests, tests basados en tabla | `guides/testing/structure-tables.md` |
+| Test helpers, mocking con interfaces | `guides/testing/helpers-mocking.md` |
+| Testing de HTTP handlers (Gin) | `guides/testing/http-handlers.md` |
+| Testing de repositories (mock rows) | `guides/testing/repositories.md` |
+| Fixtures, testdata, tests de integración | `guides/testing/fixtures-integration.md` |
+| Cobertura, benchmarks | `guides/testing/coverage-benchmarks.md` |
+| Kafka overview, selección de librería | `guides/kafka/overview.md` |
+| Patrones de productor Kafka | `guides/kafka/producer.md` |
+| Consumer Kafka, grupos, ordenamiento | `guides/kafka/consumer.md` |
+| Kafka DLQ, retry, mensajes envenenados | `guides/kafka/dlq-retry.md` |
+| Kafka circuit breaker, idempotencia, backpressure | `guides/kafka/resilience.md` |
+| Kafka shutdown, tracing, schema, anti-patrones | `guides/kafka/operations.md` |
+| RabbitMQ overview, exchanges, durabilidad | `guides/rabbitmq/overview.md` |
+| Conexión RabbitMQ, auto-reconexión | `guides/rabbitmq/connection.md` |
+| Productor RabbitMQ, confirms | `guides/rabbitmq/producer.md` |
+| Consumer RabbitMQ, QoS, ack/nack | `guides/rabbitmq/consumer.md` |
+| RabbitMQ DLX/DLQ, cadenas de retry con TTL | `guides/rabbitmq/dlq-retry.md` |
+| Backpressure RabbitMQ, shutdown, anti-patrones | `guides/rabbitmq/operations.md` |
+| Logging estructurado (slog) | `guides/slog.md` |
 | Health checks, Prometheus, OpenTelemetry | `guides/observability.md` |
-| HTTP middleware composition | `guides/middleware.md` |
-| SQL injection, crypto, input validation | `guides/security.md` |
-| `//go:embed` rules, build tags, Wails desktop builds, CGO_LDFLAGS | `guides/embed-and-desktop-builds.md` |
+| Composición de middleware HTTP | `guides/middleware.md` |
+| SQL injection, crypto, validación de input | `guides/security.md` |
+| Reglas `//go:embed`, build tags, builds de desktop con Wails, CGO_LDFLAGS | `guides/embed-and-desktop-builds.md` |
 
-### Detection & Checklists
+### Detección y Checklists
 
-| When... | Load |
+| Cuándo... | Cargar |
 |---|---|
-| Code review | `detection/anti-patterns.md` |
-| Before writing Go code | `checklists/pre.md` |
-| After writing Go code | `checklists/post.md` |
+| Revisión de código | `detection/anti-patterns.md` |
+| Antes de escribir código Go | `checklists/pre.md` |
+| Después de escribir código Go | `checklists/post.md` |
 
-### Examples (good + bad patterns by domain, ~2-3KB each)
+### Ejemplos (patrones buenos y malos por dominio, ~2-3KB cada uno)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| Error handling patterns | `examples/errors.md` |
-| Architecture, interfaces, DI | `examples/architecture.md` |
-| Testing patterns | `examples/testing.md` |
-| Database, repositories, DTOs | `examples/database.md` |
-| Entity validation | `examples/validation.md` |
-| Concurrency, shutdown | `examples/concurrency.md` |
-| Handler → Service → Repo full flow, error wrapping rules | `examples/service-contracts.md` |
+| Patrones de manejo de errores | `examples/errors.md` |
+| Arquitectura, interfaces, DI | `examples/architecture.md` |
+| Patrones de testing | `examples/testing.md` |
+| Base de datos, repositories, DTOs | `examples/database.md` |
+| Validación de entidades | `examples/validation.md` |
+| Concurrencia, shutdown | `examples/concurrency.md` |
+| Flujo completo Handler → Service → Repo, reglas de wrapping de errores | `examples/service-contracts.md` |
 
-## Post-Implementation Gate
+## Gate Post-Implementación
 
-After ANY code change to `.go` files, invoke the `/lint` skill before considering the task done.
+Después de CUALQUIER cambio de código en archivos `.go`, invoca la skill `/lint` antes de considerar la tarea terminada.

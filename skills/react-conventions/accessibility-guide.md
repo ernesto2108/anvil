@@ -1,31 +1,31 @@
-# React Accessibility Guide
+# Guía de Accesibilidad en React
 
-Target: **WCAG 2.2 AA** compliance (mandatory in EU since June 2025).
+Objetivo: cumplimiento **WCAG 2.2 AA** (obligatorio en la UE desde junio de 2025).
 
-## Principles
+## Principios
 
-1. **Semantic HTML first** — ARIA only when native semantics are insufficient
-2. **Keyboard accessible** — every interactive element reachable and operable via keyboard
-3. **Screen reader friendly** — content meaningful when read aloud
-4. **Sufficient contrast** — 4.5:1 for text, 3:1 for large text and UI components
+1. **HTML semántico primero** — ARIA solo cuando la semántica nativa es insuficiente
+2. **Accesible con teclado** — cada elemento interactivo alcanzable y operable mediante teclado
+3. **Amigable para lectores de pantalla** — contenido significativo al leerlo en voz alta
+4. **Contraste suficiente** — 4.5:1 para texto, 3:1 para texto grande y componentes de UI
 
 ---
 
-## Tooling
+## Herramientas
 
-| Tool | When | What |
+| Herramienta | Cuándo | Qué hace |
 |---|---|---|
-| `eslint-plugin-jsx-a11y` | Development | Lint-time a11y checks |
-| `axe-core` / `jest-axe` | Tests | Automated a11y assertions |
-| React DevTools Accessibility tab | Development | Inspect accessible tree |
-| Playwright + axe | CI | E2E accessibility checks |
-| **React Aria** (Adobe) | Components | Headless accessible primitives |
-| **Radix UI** | Components | Accessible component primitives |
-| **ARIAKit** | Components | Accessible component primitives |
+| `eslint-plugin-jsx-a11y` | Desarrollo | Verificaciones a11y en tiempo de lint |
+| `axe-core` / `jest-axe` | Tests | Aserciones a11y automatizadas |
+| Pestaña Accessibility de React DevTools | Desarrollo | Inspeccionar árbol accesible |
+| Playwright + axe | CI | Verificaciones de accesibilidad E2E |
+| **React Aria** (Adobe) | Componentes | Primitivos accesibles sin estilos |
+| **Radix UI** | Componentes | Primitivos de componentes accesibles |
+| **ARIAKit** | Componentes | Primitivos de componentes accesibles |
 
 ---
 
-## Semantic HTML
+## HTML Semántico
 
 ```tsx
 // bad: div soup
@@ -43,23 +43,23 @@ Target: **WCAG 2.2 AA** compliance (mandatory in EU since June 2025).
 </ul>
 ```
 
-### Common Semantic Elements
+### Elementos Semánticos Comunes
 
-| Need | Element | Not |
+| Necesidad | Elemento | En lugar de |
 |---|---|---|
-| Clickable action | `<button>` | `<div onClick>` |
-| Navigation link | `<a href>` | `<span onClick>` |
-| Page section | `<section>`, `<article>`, `<nav>`, `<aside>` | `<div>` |
-| Page heading | `<h1>`–`<h6>` (in order) | `<div className="title">` |
-| List of items | `<ul>`/`<ol>` + `<li>` | Nested `<div>`s |
-| Form input | `<input>` + `<label>` | `<input placeholder="Email">` |
-| Table data | `<table>` + `<thead>` + `<tbody>` | Grid of `<div>`s |
+| Acción clickeable | `<button>` | `<div onClick>` |
+| Enlace de navegación | `<a href>` | `<span onClick>` |
+| Sección de página | `<section>`, `<article>`, `<nav>`, `<aside>` | `<div>` |
+| Encabezado de página | `<h1>`–`<h6>` (en orden) | `<div className="title">` |
+| Lista de ítems | `<ul>`/`<ol>` + `<li>` | `<div>`s anidados |
+| Input de formulario | `<input>` + `<label>` | `<input placeholder="Email">` |
+| Datos tabulares | `<table>` + `<thead>` + `<tbody>` | Grid de `<div>`s |
 
 ---
 
-## ARIA Patterns
+## Patrones ARIA
 
-### Live Regions (Dynamic Content)
+### Regiones Live (Contenido Dinámico)
 
 ```tsx
 // announce content changes to screen readers
@@ -107,9 +107,9 @@ Target: **WCAG 2.2 AA** compliance (mandatory in EU since June 2025).
 
 ---
 
-## Keyboard Navigation
+## Navegación con Teclado
 
-### Focus Management
+### Gestión del Foco
 
 ```tsx
 // manage focus after client-side navigation
@@ -124,7 +124,7 @@ function Page() {
 }
 ```
 
-### Focus Trap (Modals)
+### Focus Trap (Modales)
 
 ```tsx
 // use a library for focus trapping
@@ -156,7 +156,7 @@ function Modal({ isOpen, children }: ModalProps) {
 
 ---
 
-## Images
+## Imágenes
 
 ```tsx
 // informative image — describe the content
@@ -174,16 +174,16 @@ function Modal({ isOpen, children }: ModalProps) {
 </figure>
 ```
 
-### Rules
+### Reglas
 
-- Always include `alt` on `<img>` tags
-- Avoid generic words: "image", "photo", "icon", "picture"
-- Decorative images: `alt=""`
-- Complex images: `aria-describedby` pointing to detailed description
+- Siempre incluir `alt` en etiquetas `<img>`
+- Evitar palabras genéricas: "image", "photo", "icon", "picture"
+- Imágenes decorativas: `alt=""`
+- Imágenes complejas: `aria-describedby` apuntando a descripción detallada
 
 ---
 
-## Forms
+## Formularios
 
 ```tsx
 // good: every input has a label
@@ -215,12 +215,12 @@ function Modal({ isOpen, children }: ModalProps) {
 
 ---
 
-## Color and Contrast
+## Color y Contraste
 
-- **Text contrast**: minimum 4.5:1 ratio (AA)
-- **Large text** (18pt+): minimum 3:1 ratio
-- **UI components**: minimum 3:1 ratio against adjacent colors
-- **Never use color alone** to convey information — add icons, patterns, or text
+- **Contraste de texto**: ratio mínimo 4.5:1 (AA)
+- **Texto grande** (18pt+): ratio mínimo 3:1
+- **Componentes de UI**: ratio mínimo 3:1 contra colores adyacentes
+- **Nunca usar solo color** para transmitir información — agregar íconos, patrones o texto
 
 ```tsx
 // bad: only color indicates error
@@ -241,9 +241,9 @@ function Modal({ isOpen, children }: ModalProps) {
 
 ---
 
-## Testing Accessibility
+## Testing de Accesibilidad
 
-### In Component Tests
+### En Tests de Componentes
 
 ```tsx
 import { axe, toHaveNoViolations } from 'jest-axe'
@@ -256,7 +256,7 @@ it('LoginForm has no a11y violations', async () => {
 })
 ```
 
-### In E2E Tests
+### En Tests E2E
 
 ```tsx
 import { test, expect } from '@playwright/test'
@@ -271,14 +271,14 @@ test('home page is accessible', async ({ page }) => {
 
 ---
 
-## Anti-Patterns
+## Anti-Patrones
 
-| Anti-Pattern | Fix |
+| Anti-Patrón | Corrección |
 |---|---|
-| `<div onClick>` for buttons | Use `<button>` |
-| Missing `alt` on images | Add descriptive `alt` or `alt=""` for decorative |
-| `tabIndex > 0` | Use `tabIndex={0}` or `tabIndex={-1}` only |
-| `accessKey` attribute | Remove — conflicts with assistive technology |
-| Color-only error indication | Add icon + text alongside color |
-| No focus management after navigation | Focus heading on page change |
-| Autoplaying media | Add controls, no autoplay, or `prefers-reduced-motion` |
+| `<div onClick>` para botones | Usar `<button>` |
+| `alt` faltante en imágenes | Agregar `alt` descriptivo o `alt=""` para decorativas |
+| `tabIndex > 0` | Usar solo `tabIndex={0}` o `tabIndex={-1}` |
+| Atributo `accessKey` | Eliminar — entra en conflicto con tecnología asistiva |
+| Indicación de error solo por color | Agregar ícono + texto junto al color |
+| Sin gestión de foco después de navegación | Enfocar encabezado al cambiar de página |
+| Medios con autoplay | Agregar controles, sin autoplay, o `prefers-reduced-motion` |

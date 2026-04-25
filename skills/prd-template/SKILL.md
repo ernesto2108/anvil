@@ -1,63 +1,63 @@
 ---
 name: prd-template
-description: PRD writing guide with discovery questionnaire, template, and acceptance criteria format. Used by the PM agent to create consistent, complete PRDs. Use when writing a PRD or when user says "create PRD", "write requirements", "new feature".
+description: Guía para redactar PRDs con cuestionario de descubrimiento, template y formato de criterios de aceptación. Usado por el agente PM para crear PRDs consistentes y completos. Usar al escribir un PRD o cuando el usuario diga "crear PRD", "escribir requerimientos", "nueva funcionalidad".
 ---
 
-# PRD Guide
+# Guía de PRD
 
-A PRD defines **what** to build and **why**. Never **how** — that belongs to the architect and developer.
+Un PRD define **qué** construir y **por qué**. Nunca el **cómo** — eso corresponde al arquitecto y al desarrollador.
 
-## Discovery Questionnaire (Spanish)
+## Cuestionario de Descubrimiento (Español)
 
-**Agent mode:** Skip this section entirely. The orchestrator already gathered answers from the user and included them in the prompt. Go directly to the PRD Template section.
+**Modo agente:** Omitir esta sección completamente. El orquestador ya recopiló las respuestas del usuario y las incluyó en el prompt. Ir directamente a la sección de Template de PRD.
 
-**Interactive mode:** Ask ONE topic at a time. Wait for the user's response before moving to the next topic. This is a conversation, not a form — let the user be specific and go deep on each area.
+**Modo interactivo:** Preguntar UN tema a la vez. Esperar la respuesta del usuario antes de pasar al siguiente tema. Es una conversación, no un formulario — dejar que el usuario sea específico y profundice en cada área.
 
-**Conversation flow:**
-1. Ask the first topic (Problema)
-2. Wait for the user's answer
-3. If the answer is vague or incomplete, ask a follow-up to clarify
-4. Only then move to the next topic
-5. Skip topics the user already answered in previous messages
-6. Stop when you have enough to write the PRD — not every topic is needed for every task
+**Flujo de conversación:**
+1. Preguntar el primer tema (Problema)
+2. Esperar la respuesta del usuario
+3. Si la respuesta es vaga o incompleta, hacer una pregunta de seguimiento para aclarar
+4. Solo entonces pasar al siguiente tema
+5. Omitir temas que el usuario ya respondió en mensajes anteriores
+6. Detenerse cuando se tenga suficiente para escribir el PRD — no todos los temas son necesarios para cada tarea
 
-### Topic 1: Problema
+### Tema 1: Problema
 - Que problema resuelve? Describilo sin mencionar soluciones
-- (follow-up if needed) Como lo resuelven hoy? Que pasa si no lo hacemos?
+- (seguimiento si es necesario) Como lo resuelven hoy? Que pasa si no lo hacemos?
 
-### Topic 2: Usuario
+### Tema 2: Usuario
 - Quien es el usuario principal? En que contexto lo usa?
-- (follow-up if needed) Hay otros usuarios afectados?
+- (seguimiento si es necesario) Hay otros usuarios afectados?
 
-### Topic 3: Exito
+### Tema 3: Exito
 - Como sabemos que funciono? Que metrica se mueve?
-- (follow-up if needed) Cual es el baseline? Que NO debe empeorar?
+- (seguimiento si es necesario) Cual es el baseline? Que NO debe empeorar?
 
-### Topic 4: Alcance
+### Tema 4: Alcance
 - Cual es la version minima que entrega valor? (MVP)
-- (follow-up if needed) Hay deadline? Que NO deberia incluir?
+- (seguimiento si es necesario) Hay deadline? Que NO deberia incluir?
 
-### Topic 5: Plataforma
+### Tema 5: Plataforma
 - Para que plataforma es? Web, mobile, o ambos?
-- (follow-up if mobile) iOS, Android, o ambos? Flutter o nativo?
-- (follow-up if ambos) Se comparte el design system o son independientes?
+- (seguimiento si es mobile) iOS, Android, o ambos? Flutter o nativo?
+- (seguimiento si es ambos) Se comparte el design system o son independientes?
 
-### Topic 6: User Journeys
+### Tema 6: User Journeys
 - Cual es el flujo principal del usuario? (paso a paso)
-- (follow-up if needed) Que pasa si algo sale mal? Hay estados vacios o edge cases?
+- (seguimiento si es necesario) Que pasa si algo sale mal? Hay estados vacios o edge cases?
 
-### Topic 7: Riesgos
+### Tema 7: Riesgos
 - Que estamos asumiendo que no hemos validado?
-- (follow-up if needed) Que puede salir mal en produccion? Que mitigacion hay?
+- (seguimiento si es necesario) Que puede salir mal en produccion? Que mitigacion hay?
 
-### Topic 8: Dependencias
+### Tema 8: Dependencias
 - Depende de otro equipo, API externa, o servicio compartido?
 
-After gathering enough answers: confirm with a brief summary in Spanish, get approval before writing.
+Después de recopilar suficientes respuestas: confirmar con un breve resumen en español, obtener aprobación antes de escribir.
 
-## PRD Template
+## Template de PRD
 
-Create at: `<docs>/03-tasks/<TASK-ID>/prd.md`
+Crear en: `<docs>/03-tasks/<TASK-ID>/prd.md`
 
 ```markdown
 # <TASK-ID>: <Titulo>
@@ -85,8 +85,8 @@ Que problema existe, para quien, y por que ahora. Incluir datos de soporte (tick
 ## Scope
 - **Type:** new | visual-improvement | functional-improvement | both
 - **Platform:** web | mobile | both
-- **Milestone:** <milestone name> (e.g., MVP, v1.0, v2.0, Sprint Q2)
-- **Existing assets:** [list of files, components, screens that already exist]
+- **Milestone:** <nombre del milestone> (ej. MVP, v1.0, v2.0, Sprint Q2)
+- **Existing assets:** [lista de archivos, componentes, pantallas que ya existen]
 - **Design status:** none | exists-no-changes | exists-needs-update | new-needed
 
 ## Alcance
@@ -159,28 +159,28 @@ Usar formato Dado/Cuando/Entonces. Un comportamiento por escenario.
 
 ## Reglas
 
-- **Criterios de aceptacion deben usar Dado/Cuando/Entonces** — nada vago como "deberia funcionar bien"
+- **Los criterios de aceptación deben usar Dado/Cuando/Entonces** — nada vago como "debería funcionar bien"
 - **Incluir al menos 1 escenario de error y 1 caso borde** por feature
-- **Sin detalles de implementacion** — sin schemas de DB, sin contratos de API, sin decisiones de arquitectura
-- **Requerimientos funcionales deben tener prioridad** (P0/P1/P2)
-- **Metricas de exito deben tener baseline** — "reducir X de 68% a 50%", no solo "reducir X"
-- **Una pagina maximo** — si es muy grande, dividir en multiples tareas
-- **Preguntas abiertas es obligatorio** — si todo esta decidido, escribir "Ninguna"
+- **Sin detalles de implementación** — sin schemas de DB, sin contratos de API, sin decisiones de arquitectura
+- **Los requerimientos funcionales deben tener prioridad** (P0/P1/P2)
+- **Las métricas de éxito deben tener baseline** — "reducir X de 68% a 50%", no solo "reducir X"
+- **Máximo una página** — si es muy grande, dividir en múltiples tareas
+- **Las preguntas abiertas son obligatorias** — si todo está decidido, escribir "Ninguna"
 
-## Task decomposition output format
+## Formato de salida para descomposición de tareas
 
-When the PM breaks a PRD into tasks (via `/backlog-management`), every task file MUST include **Dataview frontmatter** so that Obsidian Kanban and Dataview queries work.
+Cuando el PM descompone un PRD en tareas (vía `/backlog-management`), cada archivo de tarea DEBE incluir **frontmatter de Dataview** para que funcionen el Kanban de Obsidian y las queries de Dataview.
 
-**Template:** Read `vault-template/03-tasks/task-template.md` for the exact format. Copy it as the starting point for every new task file.
+**Template:** Leer `vault-template/03-tasks/task-template.md` para el formato exacto. Copiarlo como punto de partida para cada nuevo archivo de tarea.
 
-**Common mistake:** Creating task.md files as plain markdown without frontmatter. This breaks the Kanban board and dashboard. Every task.md needs the `---` YAML block at the top.
+**Error común:** Crear archivos task.md como markdown plano sin frontmatter. Esto rompe el tablero Kanban y el dashboard. Cada task.md necesita el bloque YAML `---` al inicio.
 
-## Que NO va en un PRD
+## Qué NO va en un PRD
 
 | Contenido | Donde pertenece |
 |---|---|
-| Schema de DB, contratos de API, arquitectura | Documento de diseno tecnico (architect) |
-| Herramientas, lenguajes, frameworks especificos | Documento de diseno tecnico |
-| Disenos de UI pixel-perfect | Figma / herramienta de diseno (designer) |
-| Asignaciones de tareas, cronogramas detallados | Backlog / gestion de proyecto |
-| Lenguaje vago ("rapido", "amigable") | Reescribir como criterio medible |
+| Schema de DB, contratos de API, arquitectura | Documento de diseño técnico (architect) |
+| Herramientas, lenguajes, frameworks específicos | Documento de diseño técnico |
+| Diseños de UI pixel-perfect | Figma / herramienta de diseño (designer) |
+| Asignaciones de tareas, cronogramas detallados | Backlog / gestión de proyecto |
+| Lenguaje vago ("rápido", "amigable") | Reescribir como criterio medible |

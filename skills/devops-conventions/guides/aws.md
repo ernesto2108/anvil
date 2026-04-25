@@ -1,43 +1,43 @@
-# AWS Services Guide
+# Guía de Servicios de AWS
 
 ## ECS / Fargate
-- Use Fargate for serverless containers; EC2 only for GPU or custom AMIs
-- Set `enable_ecs_managed_tags = true` and `propagate_tags = "SERVICE"` for cost tracking
-- Task CPU/memory at task definition level; container limits must sum to task limits
-- Use Secrets Manager or SSM Parameter Store for env vars, never plain-text
-- Enable deployment circuit breaker with rollback
-- ECS Exec for debugging only, disable in production
+- Usa Fargate para contenedores serverless; EC2 solo para GPU o AMIs personalizadas
+- Establece `enable_ecs_managed_tags = true` y `propagate_tags = "SERVICE"` para seguimiento de costos
+- CPU/memoria de la tarea a nivel de task definition; los límites del contenedor deben sumar los límites de la tarea
+- Usa Secrets Manager o SSM Parameter Store para variables de entorno, nunca texto plano
+- Habilita el circuit breaker de deployment con rollback
+- ECS Exec solo para debugging, desactívalo en producción
 
 ## ECR
-- Enable image scanning on push
-- Enforce immutable tags for production images
-- Lifecycle policies to expire untagged/old images
-- Pull-through cache for public images (avoid Docker Hub rate limits)
+- Habilita escaneo de imágenes en el push
+- Aplica tags inmutables para imágenes de producción
+- Políticas de ciclo de vida para expirar imágenes sin tag/antiguas
+- Pull-through cache para imágenes públicas (evita los rate limits de Docker Hub)
 
 ## RDS
-- Multi-AZ for production; read replicas for read-heavy workloads
-- Automated backups with retention; test restores periodically
-- IAM database authentication where possible; rotate via Secrets Manager
-- Private subnets only; access through security groups, never public
+- Multi-AZ para producción; read replicas para cargas de trabajo con muchas lecturas
+- Backups automatizados con retención; prueba los restores periódicamente
+- Autenticación IAM de base de datos donde sea posible; rota via Secrets Manager
+- Solo subnets privadas; acceso mediante security groups, nunca público
 
 ## S3
-- Block public access at account level; bucket policies for exceptions
-- Enable versioning + lifecycle rules for cost management
-- Server-side encryption (SSE-S3 or SSE-KMS); enforce `ssl-only` in policy
-- Event notifications or EventBridge for event-driven patterns
+- Bloquea el acceso público a nivel de cuenta; políticas de bucket para excepciones
+- Habilita versionado + reglas de ciclo de vida para gestión de costos
+- Cifrado del lado del servidor (SSE-S3 o SSE-KMS); aplica `ssl-only` en la política
+- Notificaciones de eventos o EventBridge para patrones event-driven
 
 ## CloudFront
-- Origin Access Control (OAC) for S3 origins, not legacy OAI
-- WAF integration; cache policies per path pattern
-- Managed cache policies where possible
+- Origin Access Control (OAC) para orígenes S3, no el OAI legacy
+- Integración WAF; políticas de caché por patrón de ruta
+- Políticas de caché gestionadas donde sea posible
 
 ## Lambda
-- Memory/timeout conservative; use AWS Power Tuning to right-size
-- Layers for shared deps; container images for large deps
-- Reserved concurrency to protect downstream; provisioned for latency-sensitive
-- Env vars from SSM/Secrets Manager, never hardcoded
+- Memoria/timeout conservadores; usa AWS Power Tuning para dimensionar correctamente
+- Layers para deps compartidas; imágenes de contenedor para deps grandes
+- Concurrencia reservada para proteger el downstream; provisionada para latencia sensible
+- Variables de entorno desde SSM/Secrets Manager, nunca hardcodeadas
 
-## Common Terraform Patterns
+## Patrones Comunes de Terraform
 
 ```hcl
 # ECS Service with Fargate

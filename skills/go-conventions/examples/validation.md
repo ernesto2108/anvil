@@ -1,8 +1,8 @@
-# Validation Examples
+# Ejemplos de Validación
 
-## Good: Entity Validation Pattern
+## Bien: Patrón de Validación en la Entidad
 
-Validation belongs in the entity, not in the service. Each input entity has a `Validate()` method that cleans and validates its own fields.
+La validación pertenece a la entidad, no al servicio. Cada entidad de input tiene un método `Validate()` que limpia y valida sus propios campos.
 
 ```go
 // domain/entities/workflow.go
@@ -33,7 +33,7 @@ func (c *CreateWorkflow) Validate() error {
 }
 ```
 
-The service is clean — only business logic:
+El servicio queda limpio — solo lógica de negocio:
 
 ```go
 // application/create_workflow.go
@@ -54,7 +54,7 @@ func (s svc) CreateWorkflow(ctx context.Context, req entities.CreateWorkflow) er
 }
 ```
 
-For GET endpoints with raw string parameters, create a filter entity:
+Para endpoints GET con parámetros de string crudos, crear una entidad filter:
 
 ```go
 // domain/entities/filters.go
@@ -78,15 +78,15 @@ func (f *GetByIDFilter) Validate() error {
 }
 ```
 
-**Flow:** Handler (binding tags) → DTO.ToBusiness() → Entity.Validate() → Service (business logic only)
+**Flujo:** Handler (binding tags) → DTO.ToBusiness() → Entity.Validate() → Service (solo lógica de negocio)
 
-**Why:** Validation is centralized, testable in isolation, reusable across services. The service has one responsibility: orchestrating business logic.
+**Por qué:** La validación está centralizada, es testeable de forma aislada y reutilizable entre servicios. El servicio tiene una sola responsabilidad: orquestar la lógica de negocio.
 
 ---
 
-## Bad: Validation in Service Layer
+## Mal: Validación en la Capa de Servicio
 
-Scattering `strings.TrimSpace` + `== ""` checks across service methods is a common mistake. It duplicates validation, makes it untestable in isolation, and leaks input concerns into business logic.
+Dispersar `strings.TrimSpace` + verificaciones `== ""` en los métodos del servicio es un error común. Duplica la validación, la hace inestable de forma aislada y filtra preocupaciones de input en la lógica de negocio.
 
 ```go
 // BAD — validation scattered in every service method
@@ -110,10 +110,10 @@ func (s svc) GetByID(ctx context.Context, id, tenantID string) (*Entity, error) 
 }
 ```
 
-Why it's wrong:
-- Duplicated in every method — same TenantID check in 10+ places
-- Can't unit test validation without calling the service
-- Service has two responsibilities: validation + business logic
-- Easy to forget in new methods — inconsistent coverage
+Por qué está mal:
+- Duplicado en cada método — la misma verificación de TenantID en más de 10 lugares
+- No se puede hacer unit test de la validación sin llamar al servicio
+- El servicio tiene dos responsabilidades: validación + lógica de negocio
+- Fácil de olvidar en nuevos métodos — cobertura inconsistente
 
-See `examples/validation.md` → "Good: Entity Validation Pattern" for the correct approach.
+Ver `examples/validation.md` → "Bien: Patrón de Validación en la Entidad" para el enfoque correcto.

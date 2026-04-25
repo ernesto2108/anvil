@@ -1,124 +1,124 @@
 ---
 name: db-optimize
-description: Identify slow queries and suggest schema, index, or query optimizations. Use when user says "slow query", "optimize SQL", "add index", "query performance", "EXPLAIN", or investigating database bottlenecks.
+description: Identifica queries lentas y sugiere optimizaciones de schema, índices o queries. Usar cuando el usuario diga "slow query", "optimize SQL", "add index", "query performance", "EXPLAIN", o al investigar cuellos de botella en la base de datos.
 ---
 
-# Database Optimization
+# Optimización de Base de Datos
 
-> Analyze query performance and suggest schema, index, or query improvements.
+> Analiza el rendimiento de queries y sugiere mejoras de schema, índices o queries.
 
-## Prerequisite
+## Prerequisito
 
-Run `/db-schema-scan` first (or receive schema context inline from orchestrator) to understand current tables, indexes, and relationships.
+Ejecutar `/db-schema-scan` primero (o recibir contexto del schema en línea del orquestador) para entender las tablas, índices y relaciones actuales.
 
-## When to Use
+## Cuándo Usar
 
-- User reports slow queries or timeouts
-- After adding a new query to a repository
-- During QA review of data-heavy features
-- Proactive audit of query patterns
+- El usuario reporta queries lentas o timeouts
+- Después de agregar una nueva query a un repositorio
+- Durante la revisión QA de features con mucha carga de datos
+- Auditoría proactiva de patrones de queries
 
 ## Workflow
 
-### Step 1 — Identify Target Queries
+### Paso 1 — Identificar Queries Objetivo
 
-Find queries to analyze:
-- Read repository files (`queries/`, `*_psql.go`, `*_repository.go`)
-- Look for: full table scans, missing WHERE clauses, JOINs without indexes, N+1 patterns
-- If user pointed to a specific query, start there
+Encontrar queries para analizar:
+- Leer archivos de repositorio (`queries/`, `*_psql.go`, `*_repository.go`)
+- Buscar: full table scans, cláusulas WHERE faltantes, JOINs sin índices, patrones N+1
+- Si el usuario señaló una query específica, comenzar por ahí
 
-### Step 2 — Analyze Each Query
+### Paso 2 — Analizar Cada Query
 
-For each query, evaluate:
+Para cada query, evaluar:
 
-| Check | What to Look For | Fix |
+| Verificación | Qué buscar | Corrección |
 |-------|-----------------|-----|
-| **Missing index on WHERE/JOIN** | Column in WHERE or JOIN ON has no index | Create index |
-| **Full table scan** | SELECT without WHERE on large table | Add filtering or pagination |
-| **N+1 queries** | Loop calling single-row query N times | Batch query with IN clause or JOIN |
-| **SELECT *** | Fetching all columns when only 2-3 needed | List specific columns |
-| **Missing LIMIT** | List queries without pagination | Add LIMIT + OFFSET or cursor |
-| **Unindexed ORDER BY** | Sorting on non-indexed column | Add index or compound index |
-| **Implicit type cast** | WHERE varchar_col = 123 (no quotes) | Fix type to avoid cast |
-| **OR in WHERE** | Multiple OR conditions prevent index use | UNION or restructure |
-| **COUNT(*)** on large table | Full scan for count | Approximate count or cached counter |
-| **Tenant isolation** | Multi-tenant query without tenant_id filter | Add tenant_id to WHERE + compound index |
+| **Índice faltante en WHERE/JOIN** | Columna en WHERE o JOIN ON sin índice | Crear índice |
+| **Full table scan** | SELECT sin WHERE en tabla grande | Agregar filtrado o paginación |
+| **Queries N+1** | Loop llamando query de fila única N veces | Query en batch con cláusula IN o JOIN |
+| **SELECT *** | Obtener todas las columnas cuando solo se necesitan 2-3 | Listar columnas específicas |
+| **LIMIT faltante** | Queries de lista sin paginación | Agregar LIMIT + OFFSET o cursor |
+| **ORDER BY sin índice** | Ordenar en columna sin índice | Agregar índice o índice compuesto |
+| **Cast de tipo implícito** | WHERE varchar_col = 123 (sin comillas) | Corregir tipo para evitar cast |
+| **OR en WHERE** | Múltiples condiciones OR impiden uso de índice | UNION o reestructurar |
+| **COUNT(*)** en tabla grande | Full scan para contar | Conteo aproximado o contador cacheado |
+| **Aislamiento de tenant** | Query multi-tenant sin filtro tenant_id | Agregar tenant_id al WHERE + índice compuesto |
 
-### Step 3 — Index Recommendations
+### Paso 3 — Recomendaciones de Índices
 
-When suggesting indexes:
+Al sugerir índices:
 
 ```markdown
-## Index Recommendations
+## Recomendaciones de Índices
 
-| Table | Suggested Index | Columns | Type | Rationale |
+| Tabla | Índice Sugerido | Columnas | Tipo | Justificación |
 |-------|----------------|---------|------|-----------|
-| instances | idx_instances_tenant_status | (tenant_id, status) | btree | Query filters by tenant + status, currently full scan |
-| events | idx_events_instance_created | (instance_id, created_at DESC) | btree | Timeline query sorts by date per instance |
+| instances | idx_instances_tenant_status | (tenant_id, status) | btree | La query filtra por tenant + status, actualmente full scan |
+| events | idx_events_instance_created | (instance_id, created_at DESC) | btree | La query de timeline ordena por fecha por instancia |
 
-### Index Trade-offs
-- Each index slows INSERT/UPDATE by ~5-10%
-- Only add indexes for queries that run frequently
-- Compound indexes: put high-cardinality column first (unless tenant_id for isolation)
-- Partial indexes for filtered subsets: `WHERE deleted_at IS NULL`
+### Trade-offs de Índices
+- Cada índice ralentiza INSERT/UPDATE ~5-10%
+- Solo agregar índices para queries que se ejecutan frecuentemente
+- Índices compuestos: poner columna de alta cardinalidad primero (excepto tenant_id para aislamiento)
+- Índices parciales para subconjuntos filtrados: `WHERE deleted_at IS NULL`
 ```
 
-### Step 4 — Query Rewrite Suggestions
+### Paso 4 — Sugerencias de Reescritura de Queries
 
-If the query itself can be improved:
+Si la query misma puede mejorarse:
 
 ```markdown
-## Query Rewrites
+## Reescrituras de Queries
 
-### Before (N+1 pattern)
+### Antes (patrón N+1)
 for each workflow_id:
   SELECT * FROM instances WHERE workflow_id = $1
 
-### After (batch)
+### Después (batch)
 SELECT * FROM instances WHERE workflow_id = ANY($1::uuid[])
 
-### Impact: N queries → 1 query
+### Impacto: N queries → 1 query
 ```
 
-## PostgreSQL-Specific Optimizations
+## Optimizaciones Específicas de PostgreSQL
 
-| Technique | When | How |
+| Técnica | Cuándo | Cómo |
 |-----------|------|-----|
-| `EXPLAIN ANALYZE` | Verify index usage | Prefix query with EXPLAIN ANALYZE |
-| `CREATE INDEX CONCURRENTLY` | Large tables in production | Avoids table lock |
-| Partial index | Column has many NULLs you filter out | `CREATE INDEX ... WHERE deleted_at IS NULL` |
-| Covering index | Avoid heap lookup | `INCLUDE (col)` in index |
-| `GROUPING SETS` | Multiple aggregations in one pass | Replace multiple GROUP BY queries |
-| Connection pool tuning | Pool exhaustion errors | `max_open_conns`, `max_idle_conns`, `conn_max_lifetime` |
+| `EXPLAIN ANALYZE` | Verificar uso de índices | Prefixar la query con EXPLAIN ANALYZE |
+| `CREATE INDEX CONCURRENTLY` | Tablas grandes en producción | Evita bloqueo de tabla |
+| Índice parcial | Columna tiene muchos NULLs que se filtran | `CREATE INDEX ... WHERE deleted_at IS NULL` |
+| Covering index | Evitar heap lookup | `INCLUDE (col)` en el índice |
+| `GROUPING SETS` | Múltiples agregaciones en un paso | Reemplazar múltiples queries GROUP BY |
+| Ajuste del pool de conexiones | Errores de agotamiento del pool | `max_open_conns`, `max_idle_conns`, `conn_max_lifetime` |
 
-## Output
+## Salida
 
 ```markdown
-## Query Performance Report — <project>
+## Reporte de Rendimiento de Queries — <project>
 
-### Queries Analyzed: <N>
-### Issues Found: <N>
+### Queries Analizadas: <N>
+### Problemas Encontrados: <N>
 
-### Critical (fix now)
-1. **[file:line]** — <description> → <fix>
+### Críticos (corregir ahora)
+1. **[file:line]** — <descripción> → <corrección>
 
-### Recommended (improve performance)
-1. **[file:line]** — <description> → <fix>
+### Recomendados (mejorar rendimiento)
+1. **[file:line]** — <descripción> → <corrección>
 
-### Index Changes
-| Action | SQL |
+### Cambios de Índices
+| Acción | SQL |
 |--------|-----|
-| Add | `CREATE INDEX CONCURRENTLY idx_x ON table (col1, col2)` |
-| Drop (unused) | `DROP INDEX idx_y` |
+| Agregar | `CREATE INDEX CONCURRENTLY idx_x ON table (col1, col2)` |
+| Eliminar (sin uso) | `DROP INDEX idx_y` |
 
-### Estimated Impact
-- Query X: ~500ms → ~5ms (index on WHERE columns)
-- Query Y: N+1 eliminated, ~N*10ms → ~15ms
+### Impacto Estimado
+- Query X: ~500ms → ~5ms (índice en columnas WHERE)
+- Query Y: N+1 eliminado, ~N*10ms → ~15ms
 ```
 
-## Rules
+## Reglas
 
-- **Read-only** — suggest changes, don't execute them. DBA agent creates migrations
-- **Measure before optimizing** — don't add indexes speculatively. Identify the actual slow query first
-- **Compound indexes > multiple single indexes** — one (tenant_id, status, created_at) beats three separate indexes
-- **Don't over-index** — every index costs write performance. Only index what's queried frequently
+- **Solo lectura** — sugerir cambios, no ejecutarlos. El agente DBA crea las migraciones
+- **Medir antes de optimizar** — no agregar índices especulativamente. Identificar la query lenta real primero
+- **Índices compuestos > múltiples índices individuales** — uno (tenant_id, status, created_at) supera a tres índices separados
+- **No sobre-indexar** — cada índice tiene un costo en rendimiento de escritura. Solo indexar lo que se consulta frecuentemente

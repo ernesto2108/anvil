@@ -1,6 +1,6 @@
-# Test Fixtures & Integration Tests
+# Fixtures de Test y Tests de Integración
 
-## Test Fixtures and testdata/
+## Fixtures de Test y testdata/
 
 ```
 mypackage/
@@ -12,7 +12,7 @@ mypackage/
 ```
 
 ```go
-// Load fixture
+// Cargar fixture
 func loadFixture(t *testing.T, name string) []byte {
     t.Helper()
     data, err := os.ReadFile(filepath.Join("testdata", name))
@@ -25,9 +25,9 @@ func loadFixture(t *testing.T, name string) []byte {
 
 ---
 
-## Integration Tests
+## Tests de Integración
 
-Use build tags to separate integration tests:
+Usar build tags para separar los tests de integración:
 
 ```go
 //go:build integration
@@ -73,4 +73,4 @@ func Test_UserRepo_Integration(t *testing.T) {
 }
 ```
 
-Run: `go test ./... -tags integration`
+Ejecutar: `go test ./... -tags integration`

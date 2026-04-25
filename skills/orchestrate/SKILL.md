@@ -1,38 +1,31 @@
 ---
 name: orchestrate
-description: Smart orchestration — triages task complexity and runs only the agents needed. Use when user says "orchestrate", "new feature", "full workflow", "run the pipeline", or for any non-trivial task. Also auto-triggered by hook on complex requests.
+description: Orquestación inteligente — clasifica complejidad y ejecuta solo los agentes necesarios. Usar cuando el usuario dice "orquesta", "pipeline", "usa agentes", o para tareas no triviales.
 disable-model-invocation: true
 ---
 
-# Orchestration Workflow
+# Flujo de Orquestación
 
-The system acts as **Orchestrator**. This skill is activated ONLY when the user explicitly requests it.
-
----
-
-## Rule #0 — User activates the orchestrator
-
-This skill runs ONLY when the user says "orquesta", "pipeline", "usa agentes", or passes `-c`. The orchestrator NEVER self-activates. If the user said "hazlo directo", this skill does not apply — work directly without agents.
-
-## Rule #1 — Human gates between agents (MANDATORY)
-
-After each agent completes:
-1. Show the user a concise summary of what the agent produced
-2. Ask (in Spanish): "¿Paso al siguiente agente (X)?" or "¿Quieres revisar primero?"
-3. Continue ONLY with explicit user confirmation ("sí", "dale", "siguiente")
-
-The user may at any point:
-- Skip an agent: "salta el tester"
-- Stop the pipeline: "hasta aquí"
-- Switch to direct mode: "el resto hazlo directo"
+El sistema actúa como **Orquestador**. Esta skill se activa SOLO cuando el usuario lo pide explícitamente.
 
 ---
 
-## STOP checkpoints — emit these blocks and WAIT (no exceptions)
+## Regla #0 — El usuario activa el orquestador
 
-These replace inner reasoning. The orchestrator MUST output the block, then stop. No "el contexto es claro", no "sigo adelante" on the user's behalf.
+Se ejecuta SOLO cuando el usuario dice "orquesta", "pipeline", "usa agentes", o pasa `-c`. Nunca se auto-activa. "hazlo directo" → esta skill no aplica.
 
-**After PM → before Architect**
+## Regla #1 — Gates humanos entre agentes (OBLIGATORIO)
+
+Después de cada agente: mostrar resumen → preguntar "¿Paso al siguiente agente (X)?" → continuar SOLO con confirmación explícita.
+El usuario puede siempre: saltar ("salta el tester") · parar ("hasta aquí") · cambiar ("el resto hazlo directo").
+
+---
+
+## STOP checkpoints — emitir estos bloques y ESPERAR (sin excepciones)
+
+Reemplazan razonamiento interno. El orquestador DEBE emitir el bloque y parar.
+
+**Después de PM → antes de Architect**
 ```
 ✅ PM terminó — [TASK-ID]
 • [bullet 1 del PRD]
@@ -42,19 +35,26 @@ PRD: <docs>/03-tasks/<TASK-ID>/prd.md
 ¿Paso al Architect? (sí / ajusta / hasta aquí)
 ```
 
-**After Architect → before Developer (Medium+ tasks)**
+**Después de Architect → antes de Developer (tareas Medium+)**
+
+Checkpoint en dos fases. **Fase 1** — el architect devuelve resumen de decisiones ANTES de escribir docs completos:
+```
+✅ Architect — decisiones propuestas — [TASK-ID]
+• [decisión clave 1]  • [decisión clave 2]
+Riesgos: [bullets]
+¿Apruebas para que escriba los docs? (sí / ajusta / hasta aquí)
+```
+Si se rechaza → el architect reescribe decisiones sin haber gastado tokens en docs completos.
+
+**Fase 2** — después de docs escritos, mostrar secciones del SPEC para aprobación:
 ```
 ✅ Architect terminó — [TASK-ID]
-• [decisión clave 1]  • [decisión clave 2]
-
-📄 SPEC para aprobación:
-[pegar secciones: Objetivo, Non-goals, Acceptance Criteria, Boundaries de spec.md]
-
+📄 SPEC: [pegar: Contexto y objetivo, No-objetivos, Criterios de aceptación, Límites de implementación]
 ¿Apruebas y paso al Developer? (sí / ajusta / hasta aquí)
 ```
-Architecture check (bounced back if missing): `architecture-backend.md` + `architecture-db.md` + `architecture-frontend.md` — un solo `architecture.md` NO es válido para Medium+.
+Verificación de arquitectura: al menos una vista de dominio debe existir (cuáles depende del scope de la tarea). Un solo `architecture.md` NO es válido para Medium+.
 
-**After Developer → before Tester (Medium+ tasks)**
+**Después de Developer → antes de Tester (tareas Medium+)**
 ```
 ✅ Developer terminó — [TASK-ID]
 Verificando handoff:
@@ -65,161 +65,138 @@ Verificando handoff:
 
 ¿Paso al Tester? (sí / revisa / hasta aquí)
 ```
-Any ❌ → re-invoke Developer with the specific gap before asking the user.
+Cualquier ❌ → re-invocar Developer con el gap específico antes de preguntar al usuario.
 
 ---
 
-## Step -1 — In-flight snapshot (before triage)
+## Paso -2 — Verificar pipeline previo
 
-Run `git status --short`. If non-empty, capture the list as **"Archivos ya modificados en esta sesión"** and pass it inline in every developer invocation. Skip only when `git status` is empty.
+Antes de iniciar: `load_orchestration(run_id="last")`.
+- `running`/`paused` con `pending_roles` → preguntar: "Hay un pipeline {status} ({run_id}) con N pasos pendientes. ¿Retomamos o nuevo?" Retomar = usar `run_id` existente + pasar outputs previos. Nuevo = `complete_orchestration(run_id, "failed")` + `start_orchestration(...)`.
+- `success`/`failed` o sin pendientes → flujo normal.
+
+Al finalizar cada pipeline: `complete_orchestration(run_id, "success"|"failed"|"paused")`.
 
 ---
 
-## Step 0 — Triage
+## Paso -1 — Snapshot en vuelo (antes de triage)
 
-### User-specified complexity (`-c` / `--complexity`)
+Ejecutar `git status --short`. Si no está vacío, capturar la lista como **"Archivos ya modificados en esta sesión"** y pasarla inline en cada invocación del developer. Saltar solo cuando `git status` está vacío.
 
-**Accepted values:** `medium` (developer → tester) | `complex` (pm → architect → developer → tester → qa) | `max` (full pipeline).
+---
 
-When `-c` is present: use that classification, apply modifiers, confirm pipeline before launching.
+## Paso 0 — Triage
 
-### When user does NOT specify `-c`
+**Valores de `-c`:** `medium` (dev → tester) | `complex` (pm → arch → dev → tester → qa) | `max` (completo). Aplicar modificadores, confirmar antes de lanzar.
 
-Present a recommended pipeline to the user using this reference table. **Do NOT auto-execute — always ask for confirmation.**
+**Sin `-c`** — recomendar de esta tabla. **Nunca auto-ejecutar — preguntar primero.**
 
-| Signal | Recommended pipeline |
-|--------|---------------------|
-| 3-5 files, known pattern, no design decisions | developer → tester |
-| New feature, new endpoint, design decisions needed | pm → architect → developer → tester → qa? |
-| Cross-cutting, UI+backend, multi-service | scanner → pm → designer → architect → developer → tester → security → qa |
-| Bug fix (clear repro) | developer → tester |
-| Bug fix (unclear) | pm → developer → tester → qa? |
-| DB migration | architect → dba → qa |
+| Señal | Pipeline |
+|---|---|
+| Patrón conocido, 3-5 archivos | developer → tester |
+| Feature / endpoint nuevo | pm → architect → developer → tester → qa? |
+| Cross-cutting, multi-servicio | scanner → pm → designer → architect → developer → tester → security → qa |
+| Bug fix (claro / no claro) | developer → tester / pm → developer → tester → qa? |
+| Migración DB | architect → dba → qa (architect produce `architecture-db.md`; spec.md solo si Medium+) |
 | Infra / CI | devops → security |
-| Security audit | security |
-| Docs only | tech-writer |
 | Refactor | architect → developer → tester → qa |
-| LinkedIn post / social content | mkt-content |
-| Unclear scope | pm first — always |
+| Solo docs / auditoría security / marketing | tech-writer / security / mkt-content |
+| Scope no claro | pm primero — siempre |
 
-**Modifiers:** UI → designer; DB schema → dba; infra/CI → devops; auth/sensitive data → security; context.md stale → scanner; marketing → mkt-content.
+**Modificadores:** UI → +designer · DB → +dba · infra → +devops · auth/sensible → +security · contexto stale → +scanner.
 
-Ask the user (in Spanish): "Recomiendo este pipeline: [lista]. ¿Apruebas o quieres ajustar?"
+### Routing por scope (desde PRD)
 
-### Scope-based routing (read from PRD)
-
-| PRD Scope | Designer | Architect | design-to-code |
+| Scope del PRD | Designer | Architect | design-to-code |
 |---|---|---|---|
-| `new` / `both` | yes | yes | yes (if design file exists) |
-| `visual-improvement` | yes | skip | yes |
-| `functional-improvement` | skip | yes | skip |
-
-UI work + design file (.pen / Figma) → use `/design-to-code`, pass architecture-frontend.md + dtd.md. No file → developer.
+| `new` / `both` | sí | sí | sí (si existe .pen/Figma) |
+| `visual-improvement` | sí | saltar | sí |
+| `functional-improvement` | saltar | sí | saltar |
 
 ---
 
-## Boundary rule (orchestration mode only)
+## Regla de límites (solo modo orquestación)
 
-These boundaries apply when running agents. In direct mode (user's choice), the orchestrator reads and writes code freely.
+En modo directo, el orquestador lee/escribe libremente. En modo agente:
 
-| | MAY | MUST NOT |
+| | PUEDE | NO DEBE |
 |---|---|---|
-| Read | Vault docs, task docs, handoffs, project-registry.md | Source: `.go .ts .tsx .jsx .vue .svelte .py .rs .dart .astro .kt .swift .sql .css .scss` · Design files: `.pen .fig .sketch` |
-| Write | Vault docs (copy-paste), sprint-current.md | Technical plans, task.md w/ synthesis, code files |
+| Leer | Docs del vault, docs de tareas, handoffs, project-registry.md | Código fuente (`.go .ts .tsx .py .rs .dart` etc.) · Archivos de diseño (`.pen .fig .sketch`) |
+| Escribir | Docs del vault, sprint-current.md | Planes técnicos, task.md con síntesis, archivos de código |
 
-`Glob` and `Bash` (build/test) always allowed. *Full detail + examples: `anti-patterns.md`.*
-
-**Design file reads delegated:** the orchestrator NEVER calls `mcp__pencil__*`, Figma MCP, or similar. `.pen` / Figma / Sketch reads belong to the downstream agent that consumes them (designer → architect → developer). If the orchestrator needs a fact from a design file, it asks the first pipeline agent that can legitimately read it — never peeks itself.
+`Glob` y `Bash` (build/test) siempre permitidos. Lecturas de archivos de diseño → delegar al agente downstream. Detalle: `anti-patterns.md`.
 
 ---
 
-## Agent skip rules
+## Reglas de saltar agentes
 
-| Agent | Skip when |
-|-------|-----------|
-| scanner | context.md exists and was updated this session |
-| pm | requirements are already clear and specific (bug with repro steps, user gave exact spec) |
-| designer | no UI changes |
-| architect | no design decisions (pattern already exists, just extending) |
-| dba | no DB changes |
-| devops | no infra changes |
-| security | no auth, no sensitive data, no external APIs |
-| qa | see QA gating rules below — NOT always run |
-| reporter | **SKIP BY DEFAULT** — see reporter gating below |
-| tester | no testable code (docs, config, infra) |
-| mkt-content | no marketing content needed |
-
-**Never skip without asking:** developer (code to write), tester (testable code). The user may override ("salta el tester").
-**Always run (no user override):** lint + run-tests before ship.
-
-### QA gating rules
-
-**Run QA when ANY of:** complexity Large/Maximum (≥8 pts) — touches auth/permissions/sessions/tokens — touches DB schema/migrations — touches payment/billing — touches public DTOs/API contracts — touches crypto/secrets/input-sanitization/SQL-construction/file-paths — touches concurrency with shared state — user explicitly requests QA — refactor of critical subsystem (store, event bus, middleware, pipeline, migration runner) — previous task in series had QA score < 8.
-
-**Skip QA when ALL:** Medium (3-5 pts) + none of the critical paths above + user did not request + no prior QA warning.
-
-**Quality floor when skipped:** Self-QA checklist (developer.md) + lint + run-tests + enriched tester handoff.
-
-**Include QA recommendation in triage proposal.** User decides. **When in doubt: recommend QA.**
-
-### Reporter gating
-
-**Run ONLY when:** cross-service run · incident/postmortem · release/tag · user explicitly asks. **Skip by default** for single tasks.
-
----
-
-## Additional gates (not covered by STOP checkpoints above)
-
-- **Design execution gate:** after designer produces dtd.md → PAUSE for user to execute in Pencil/Figma
-- **QA gate:** score < 7 → STOP, fix before continuing
-- **Security gate:** CVE critical/high → STOP, fix before continuing
-- **PM backlog gate:** after PRD → verify tasks in sprint-current.md
-- **Cross-repo sync gate:** backend DTO/endpoint/auth changes → developer lists affected frontend files
-
----
-
-## Orchestration rules
-
-- Resolve `<docs>` from `~/.claude/project-registry.md` before any agent; pass docs path + TASK-ID to every agent
-- Specify convention skill for Developer; specify stack for Tester
-- **One writer at a time.** Max tasks per run: 2 (preferred: 1). Scope change → re-run PM.
-- All docs in Spanish. Code, keys, paths → English. Questions to user → Spanish.
-- After all agents finish: update `sprint-current.md` (Done row), `board.md` (Done column), task frontmatter (`status: done`).
-
-## Context passing
-
-- Content already in context → pass inline. Content NOT in context → tell agent the path.
-- Agent output feeds next agent → pass inline. Never read source code to relay it (anti-pattern #5).
-- Each agent: MAX 1 document per invocation. Multiple docs → run agent twice.
-
-### Developer routing (Medium+ tasks — SPEC is primary input)
-
-| Stack | Pass |
+| Agente | Saltar cuando |
 |---|---|
-| Go | `spec.md` (primary) + `architecture-backend.md` + `architecture-db.md` (ref) |
-| React | `spec.md` (primary) + `architecture-frontend.md` (ref) |
-| Flutter | `spec.md` (primary) + `architecture-frontend.md` mobile section (ref) |
+| scanner | context.md existe y está actual |
+| pm | requisitos ya claros (bug con repro, spec exacto) |
+| designer | sin cambios de UI |
+| architect | sin decisiones de diseño (patrón existente, solo extender) |
+| dba | sin cambios de DB |
+| devops | sin cambios de infra |
+| security | sin auth, sin datos sensibles, sin APIs externas |
+| qa | ver reglas de QA abajo |
+| reporter | **SALTAR POR DEFECTO** (ejecutar solo: cross-service, incidente, release, usuario pide) |
+| tester | sin código testeable |
+| mkt-content | sin contenido de marketing |
+
+**Nunca saltar sin preguntar:** developer, tester. **Siempre ejecutar:** lint + run-tests.
+
+### Reglas de QA
+
+**Ejecutar cuando CUALQUIERA de:** ≥8 pts — auth/permisos/tokens — migraciones DB — pagos/billing — contratos API públicos — crypto/secrets/SQL/file-paths — concurrencia con estado compartido — usuario pide — refactor de subsistema crítico — score QA previo < 8.
+**Saltar cuando TODOS:** Medium (3-5 pts) + ninguno de arriba + usuario no pidió.
+**Piso cuando se salta:** Self-QA checklist + lint + run-tests + handoff enriquecido al tester.
+**En la duda: recomendar QA.** El usuario decide.
+
+## Gates adicionales
+
+- **Ejecución de diseño:** después de designer → dtd.md → PAUSE para que el usuario ejecute en Pencil/Figma
+- **QA:** score < 7 → STOP, arreglar antes de continuar
+- **Security:** CVE critical/high → STOP, arreglar antes de continuar
+- **Backlog PM:** después de PRD → verificar tareas en sprint-current.md
+- **Sync cross-repo:** cambios en DTO/endpoint/auth backend → developer lista archivos frontend afectados
+
+---
+
+## Reglas de orquestación
+
+- Resolver `<docs>` desde `~/.claude/project-registry.md` antes de cualquier agente; pasar docs path + TASK-ID a cada agente
+- Especificar paths de archivos de convención para el Architect (reglas de arquitectura + coding del stack objetivo)
+- Especificar skill de convención para Developer; especificar stack para Tester
+- El architect puede auto-resolver contexto del codebase (Paso 0) cuando no corrió scanner — NO bloquear por falta de context.md
+- **Un escritor a la vez.** Máx tareas por run: 2 (preferido: 1). Cambio de scope → re-ejecutar PM.
+- Todos los docs en español. Código, keys, paths → inglés. Preguntas al usuario → español.
+- Al terminar todos los agentes: actualizar `sprint-current.md` (fila Done), `board.md` (columna Done), frontmatter de la tarea (`status: done`).
+
+## Paso de contexto
+
+- Contenido en contexto → inline. No en contexto → pasar path. Output de agente → inline al siguiente.
+- Nunca leer código fuente para relayarlo (anti-pattern #5). Máx 1 doc por invocación de agente.
+
+### Routing del Developer (Medium+ — SPEC es input principal)
+
+| Stack | Pasar |
+|---|---|
+| Go | `spec.md` + `architecture-backend.md` + `architecture-db.md` |
+| React | `spec.md` + `architecture-frontend.md` |
+| Flutter | `spec.md` + `architecture-frontend.md` (mobile) |
 | DBA | `architecture-db.md` |
-| Full-stack | `spec.md` (primary) + all generated views (ref) |
+| Full-stack | `spec.md` + todas las vistas generadas |
 
-Small tasks (no SPEC): pass `architecture.md` + relevant views.
-QA/Tester (Medium+): pass `spec.md` alongside handoff/changed files.
+Small (sin SPEC): `architecture.md` + vistas. QA/Tester: `spec.md` + handoff.
 
 ---
 
-## Sub-files — load on trigger
+## Sub-archivos — cargar por trigger
 
-Path: `/Users/ernestodiaz/projects/anvil/skills/orchestrate/<sub-file>.md`.
-
-| Trigger | Load |
+| Trigger | Cargar |
 |---|---|
-| Invoking developer (Flow 0/A/B) | `plan-approval.md` |
-| Re-invoking developer after QA/security | `qa-fix.md` |
-| Session start — registry/context stale | `vault-setup.md` |
-| Boundary doubt | `anti-patterns.md` |
-
----
-
-## Size budget
-
-SKILL.md ≤ 200 lines · sub-files ≤ 150. `wc -l skills/orchestrate/*.md`
+| Invocar developer | `plan-approval.md` |
+| Re-invocar después de QA/security | `qa-fix.md` |
+| Registry/contexto stale | `vault-setup.md` |
+| Duda de límites | `anti-patterns.md` |

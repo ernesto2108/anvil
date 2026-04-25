@@ -1,8 +1,8 @@
-# Handoff Template
+# Plantilla de Handoff
 
-Use this template when creating a new handoff file at `.handoff/<TASK-ID or slug>.md`. Fill in the sections as you work — do not leave placeholder comments in the final file.
+Usar esta plantilla al crear un nuevo archivo de handoff en `.handoff/<TASK-ID o slug>.md`. Llenar las secciones mientras trabajas — no dejar comentarios de placeholder en el archivo final.
 
-**Cross-stack rule:** if the task touches more than one stack (e.g., Go + React), use the `## Phases` section with one phase per stack and include the `## Contract bridge` section. If single-stack, collapse phases into the flat `## Estado actual` checklist and omit the contract bridge.
+**Regla cross-stack:** si la tarea toca más de un stack (ej., Go + React), usar la sección `## Fases` con una fase por stack e incluir la sección `## Puente de contratos`. Si es single-stack, colapsar las fases en el checklist plano `## Estado actual` y omitir el puente de contratos.
 
 ---
 
@@ -25,10 +25,10 @@ Use this template when creating a new handoff file at `.handoff/<TASK-ID or slug
 
 ## Estado actual
 
-<!-- SINGLE-STACK tasks: flat checklist -->
-- [ ] Step 1: description
-- [ ] Step 2: description
-- [ ] Step 3: description
+<!-- Tareas SINGLE-STACK: checklist plano -->
+- [ ] Paso 1: descripción
+- [ ] Paso 2: descripción
+- [ ] Paso 3: descripción
 
 ## Fases
 
@@ -43,7 +43,7 @@ Use this template when creating a new handoff file at `.handoff/<TASK-ID or slug
 - [ ] Paso 1: descripción
 - [ ] Paso 2: descripción
 
-<!-- Agregar más fases si es necesario (e.g., Fase 3 — Mobile) -->
+<!-- Agregar más fases si es necesario (ej., Fase 3 — Mobile) -->
 
 ## Puente de contratos
 
@@ -94,44 +94,44 @@ async function getMetrics(): Promise<MetricsDTO>
 <!-- ¿Esto rompe consumidores existentes? ¿Plan de migración? -->
 
 ## Archivos modificados
-<!-- path — what was done and why -->
+<!-- path — qué se hizo y por qué -->
 
 ## Decisiones tomadas
-<!-- decision — reasoning -->
+<!-- decisión — razonamiento -->
 
 ## Siguiente paso
-<!-- Exactly what to do next to resume work -->
+<!-- Exactamente qué hacer a continuación para retomar el trabajo -->
 
 ## Notas
-<!-- Non-obvious context: workarounds, bugs found, blockers -->
+<!-- Contexto no obvio: workarounds, bugs encontrados, blockers -->
 
 ## Handoff for tester
 <!--
-MANDATORY for the developer to fill BEFORE finishing. The tester reads THIS section
-instead of re-reading production files, so it must be complete and precise.
-If this section is empty or incomplete when the developer reports done, the
-orchestrator will bounce the task back to the developer.
+OBLIGATORIO que el desarrollador llene ANTES de terminar. El tester lee ESTA sección
+en lugar de re-leer los archivos de producción, por lo que debe ser completa y precisa.
+Si esta sección está vacía o incompleta cuando el desarrollador reporta done, el
+orchestrator devolverá la tarea al desarrollador.
 -->
 
 ### Archivos de producción tocados
-<!-- one line per file: path — role (store query / handler / DTO / custom component / etc.) -->
+<!-- una línea por archivo: path — rol (store query / handler / DTO / custom component / etc.) -->
 
 ### Public interfaces / contracts
 <!--
-Exact signatures of what was added or modified. Copy-paste from the code.
-- New types/structs with all fields and tags
-- New functions/methods with full signatures (params, return types, error behavior)
-- New DTOs with JSON tags
+Firmas exactas de lo que se agregó o modificó. Copiar-pegar del código.
+- Nuevos tipos/structs con todos los campos y tags
+- Nuevas funciones/métodos con firmas completas (params, tipos de retorno, comportamiento de error)
+- Nuevos DTOs con JSON tags
 -->
 
 ### Patrones aplicados
-<!-- which patterns from the convention skill the developer followed -->
+<!-- qué patrones del convention skill siguió el desarrollador -->
 
 ### Edge cases descubiertos
-<!-- NULL handling, empty states, error paths, race conditions considered, unusual inputs -->
+<!-- manejo de NULL, estados vacíos, caminos de error, condiciones de carrera consideradas, entradas inusuales -->
 
 ### Build tags / constraints
-<!-- //go:build tags, embed.FS layout, Wails bindings, Rust cfg, any quirk that affects how tests must be written -->
+<!-- //go:build tags, layout de embed.FS, Wails bindings, Rust cfg, cualquier peculiaridad que afecte cómo deben escribirse los tests -->
 
 ### Tests requeridos — por stack
 
@@ -156,7 +156,7 @@ Exact signatures of what was added or modified. Copy-paste from the code.
 <!-- Agregar más grupos según necesidad: Flutter, Python, Rust -->
 
 ### Validación ya ejecutada
-<!-- go build, go vet, npm run build, lint — exact commands and their exit status. Tester does NOT repeat build checks. -->
+<!-- go build, go vet, npm run build, lint — comandos exactos y su estado de salida. El tester NO repite los checks de build. -->
 
 ## Output entregado
 <!-- Llenar ANTES de terminar. Es el recibo de entrega — lo que el orchestrator y el siguiente agente pueden verificar. -->

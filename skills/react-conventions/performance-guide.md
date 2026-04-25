@@ -1,21 +1,21 @@
-# React Performance Guide
+# Guía de Performance en React
 
 ## React Compiler (React 19.2+)
 
-The React Compiler performs compile-time memoization automatically — it analyzes your code and applies fine-grained `useMemo`/`React.memo`/`useCallback` where needed. Delivers 30-60% reduction in unnecessary re-renders.
+El React Compiler realiza memoización en tiempo de compilación automáticamente — analiza tu código y aplica `useMemo`/`React.memo`/`useCallback` con granularidad fina donde se necesite. Entrega una reducción del 30-60% en re-renders innecesarios.
 
-**When the compiler is active:** write straightforward code and let the compiler optimize. Don't manually memoize unless profiling proves a bottleneck.
+**Cuando el compilador está activo:** escribe código directo y deja que el compilador optimice. No memorices manualmente a menos que el profiling demuestre un cuello de botella.
 
-**When to still manually memoize:**
-- Expensive computations confirmed by profiling
-- Projects not yet using the React Compiler
-- Third-party libraries that can't be compiled
+**Cuándo seguir memoizando manualmente:**
+- Computaciones costosas confirmadas por profiling
+- Proyectos que aún no usan el React Compiler
+- Librerías de terceros que no pueden compilarse
 
 ---
 
-## Performance Checklist (Priority Order)
+## Checklist de Performance (Orden de Prioridad)
 
-### 1. Route-Based Code Splitting (Highest ROI)
+### 1. Code Splitting por Ruta (Mayor ROI)
 
 ```tsx
 import { lazy, Suspense } from 'react'
@@ -35,16 +35,16 @@ function App() {
 }
 ```
 
-### 2. Profile Before Optimizing
+### 2. Perfilar Antes de Optimizar
 
-Use React DevTools Profiler, not guesswork:
-- Highlight renders to find unnecessary re-renders
-- Flame graph to find slow components
-- Only optimize what the profiler flags
+Usar React DevTools Profiler, no suposiciones:
+- Resaltar renders para encontrar re-renders innecesarios
+- Flame graph para encontrar componentes lentos
+- Solo optimizar lo que el profiler marque
 
 ### 3. Server Components (Next.js)
 
-Keep heavy dependencies off the client bundle entirely:
+Mantener dependencias pesadas completamente fuera del bundle del cliente:
 
 ```tsx
 // This component renders on the server — markdown lib never ships to client
@@ -56,7 +56,7 @@ async function BlogPost({ slug }: { slug: string }) {
 }
 ```
 
-### 4. Image Optimization
+### 4. Optimización de Imágenes
 
 ```tsx
 // Next.js: automatic optimization
@@ -72,13 +72,13 @@ import Image from 'next/image'
 />
 ```
 
-For non-Next.js: responsive images with `srcset`, lazy loading with `loading="lazy"`.
+Para proyectos sin Next.js: imágenes responsivas con `srcset`, lazy loading con `loading="lazy"`.
 
-### 5. State Architecture
+### 5. Arquitectura de Estado
 
-- **Keep state local** — lift only when needed
-- **Avoid "everything in global store"** — most state is server state (TanStack Query)
-- **Selectors in Zustand** — only subscribe to what you need
+- **Mantener el estado local** — elevar solo cuando sea necesario
+- **Evitar "todo en el store global"** — la mayor parte del estado es server state (TanStack Query)
+- **Selectores en Zustand** — suscribirse solo a lo que necesitas
 
 ```tsx
 // bad: subscribes to entire store, re-renders on any change
@@ -88,9 +88,9 @@ const store = useCartStore()
 const items = useCartStore(state => state.items)
 ```
 
-### 6. Skeleton Loading States
+### 6. Estados de Carga con Skeleton
 
-Match content structure to prevent Cumulative Layout Shift (CLS):
+Hacer coincidir la estructura del contenido para prevenir Cumulative Layout Shift (CLS):
 
 ```tsx
 function UserCardSkeleton() {
@@ -106,44 +106,44 @@ function UserCardSkeleton() {
 
 ---
 
-## Industry Patterns
+## Patrones de la Industria
 
 ### Netflix — Server-Driven UI
 
-UI structure comes from the server, enabling rapid A/B testing without client deploys:
-- Micro-frontend architecture — independent sections for home, search, profile
-- Route-based code splitting with dynamic `import()`
-- SSR via Node.js for pre-rendered React components
+La estructura de UI viene del servidor, habilitando A/B testing rápido sin deploys del cliente:
+- Arquitectura micro-frontend — secciones independientes para home, búsqueda, perfil
+- Code splitting por ruta con `import()` dinámico
+- SSR vía Node.js para componentes React pre-renderizados
 
 ### Spotify — Design System of Systems (Encore)
 
-- Not one monolithic design system but a family of subsystems
-- **Design tokens** at the foundation (type, color, motion, spacing)
-- Multiple layers: tokens → primitive components → composed components → product components
-- ~400+ engineers touching frontend — "system of systems" prevents bottlenecks
+- No un design system monolítico sino una familia de subsistemas
+- **Design tokens** en la base (tipo, color, movimiento, espaciado)
+- Múltiples capas: tokens → componentes primitivos → componentes compuestos → componentes de producto
+- ~400+ ingenieros tocando el frontend — "sistema de sistemas" previene cuellos de botella
 
 ### Shopify — Web Components
 
-- Polaris moved from React components to **Web Components** (framework-agnostic)
-- Lesson: at scale, framework-agnostic component libraries reduce long-term maintenance
+- Polaris migró de componentes React a **Web Components** (agnóstico al framework)
+- Lección: a escala, las librerías de componentes agnósticas al framework reducen el mantenimiento a largo plazo
 
 ---
 
-## Common Bottlenecks and Fixes
+## Cuellos de Botella Comunes y Correcciones
 
-| Bottleneck | Symptom | Fix |
+| Cuello de botella | Síntoma | Corrección |
 |---|---|---|
-| Large bundle | Slow initial load | Code splitting, tree shaking, remove barrel exports |
-| Unnecessary re-renders | Sluggish UI | Selectors, `memo` (or React Compiler), split contexts |
-| Heavy computation in render | Janky scrolling | `useMemo`, Web Workers, virtualization |
-| Large lists | High memory, slow scroll | `react-window` or `@tanstack/virtual` for virtualization |
-| Unoptimized images | Slow LCP | `next/image`, responsive images, lazy loading |
-| Layout shifts | Poor CLS score | Skeleton loading, explicit dimensions, `priority` on hero images |
-| Waterfall data fetching | Slow page loads | Parallel queries, prefetching, Server Components |
+| Bundle grande | Carga inicial lenta | Code splitting, tree shaking, eliminar barrel exports |
+| Re-renders innecesarios | UI lenta | Selectores, `memo` (o React Compiler), separar contexts |
+| Computación pesada en render | Scroll entrecortado | `useMemo`, Web Workers, virtualización |
+| Listas grandes | Alta memoria, scroll lento | `react-window` o `@tanstack/virtual` para virtualización |
+| Imágenes no optimizadas | LCP lento | `next/image`, imágenes responsivas, lazy loading |
+| Layout shifts | Mala puntuación CLS | Skeleton loading, dimensiones explícitas, `priority` en imágenes hero |
+| Fetching de datos en cascada | Cargas de página lentas | Queries paralelos, prefetching, Server Components |
 
 ---
 
-## Memoization Rules (Without React Compiler)
+## Reglas de Memoización (Sin React Compiler)
 
 ```tsx
 // useMemo: expensive computation
@@ -163,9 +163,9 @@ const ExpensiveList = memo(function ExpensiveList({ items }: { items: Item[] }) 
 })
 ```
 
-### When NOT to Memoize
+### Cuándo NO Memoizar
 
-- Simple computations (string concatenation, basic math)
-- Components that always re-render anyway (new props every render)
-- One-off values that don't need stability
-- When React Compiler is active — it handles this automatically
+- Computaciones simples (concatenación de strings, matemáticas básicas)
+- Componentes que siempre se re-renderizan de todos modos (nuevas props en cada render)
+- Valores únicos que no necesitan estabilidad
+- Cuando el React Compiler está activo — lo maneja automáticamente

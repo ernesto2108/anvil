@@ -1,6 +1,6 @@
-# Scoring Rubric
+# Rúbrica de Puntuación
 
-## Scale (1-10)
+## Escala (1-10)
 
 | Score | Nivel | Significado |
 |---|---|---|

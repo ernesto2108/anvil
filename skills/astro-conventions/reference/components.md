@@ -1,8 +1,8 @@
-# Astro Component Model
+# Modelo de Componentes Astro
 
-## .astro File Structure
+## Estructura del Archivo .astro
 
-Two-part structure separated by `---` fences:
+Estructura de dos partes separadas por delimitadores `---`:
 
 ```astro
 ---
@@ -28,12 +28,12 @@ const { title, description = "Default", class: className } = Astro.props;
 
 ## Props
 
-- Always define `interface Props` for type safety
-- Destructure with defaults: `const { title, show = true } = Astro.props`
-- Accept `class` prop for styling: `const { class: className } = Astro.props`
-- Access all props: `Astro.props` object
+- Siempre define `interface Props` para seguridad de tipos
+- Desestructura con valores por defecto: `const { title, show = true } = Astro.props`
+- Acepta prop `class` para estilos: `const { class: className } = Astro.props`
+- Accede a todas las props: objeto `Astro.props`
 
-## Slots (Content Projection)
+## Slots (Proyección de Contenido)
 
 ```astro
 <!-- Component definition -->
@@ -53,12 +53,12 @@ const { title, description = "Default", class: className } = Astro.props;
 </Card>
 ```
 
-- Default slot: `<slot />` accepts unnamed children
-- Named slots: `<slot name="x" />`, inject with `slot="x"` attribute
-- Fallback: place default markup inside `<slot>...</slot>`
-- `<Fragment slot="name">` passes multiple elements without wrapper
+- Slot por defecto: `<slot />` acepta hijos sin nombre
+- Slots nombrados: `<slot name="x" />`, inyectar con atributo `slot="x"`
+- Fallback: coloca markup por defecto dentro de `<slot>...</slot>`
+- `<Fragment slot="name">` pasa múltiples elementos sin wrapper
 
-## Template Expressions
+## Expresiones en la Plantilla
 
 ```astro
 ---
@@ -84,7 +84,7 @@ const isActive = true;
 <div set:html={rawHtml} />
 ```
 
-## Component Composition
+## Composición de Componentes
 
 ```astro
 ---
@@ -102,15 +102,15 @@ import SearchBar from '../components/islands/SearchBar.tsx';
 </main>
 ```
 
-## Key Differences from React/JSX
+## Diferencias Clave con React/JSX
 
 | Astro | React |
 |---|---|
-| `class` attribute | `className` |
-| `class:list={[...]}` | `classnames(...)` library |
+| Atributo `class` | `className` |
+| `class:list={[...]}` | Librería `classnames(...)` |
 | `<slot />` | `{children}` |
-| `<slot name="x" />` | Named prop or render prop |
+| `<slot name="x" />` | Named prop o render prop |
 | `set:html={raw}` | `dangerouslySetInnerHTML` |
-| No virtual DOM | Virtual DOM diffing |
-| Server-only by default | Client-side by default |
-| `Astro.props` | Function params / `props` |
+| Sin virtual DOM | Virtual DOM diffing |
+| Solo servidor por defecto | Client-side por defecto |
+| `Astro.props` | Parámetros de función / `props` |

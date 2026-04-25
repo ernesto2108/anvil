@@ -1,149 +1,149 @@
 ---
 name: design-review
-description: Review existing designs for quality, visual hierarchy, and anti-AI patterns. Works with Pencil (.pen files) and Figma. Use when user says "review this design", "does this look good", "improve the design", "design feedback", "design QA", or after completing visual design execution.
+description: Revisar diseños existentes para evaluar calidad, jerarquía visual y patrones anti-IA. Funciona con Pencil (archivos .pen) y Figma. Usar cuando el usuario diga "revisa este diseño", "¿esto se ve bien?", "mejora el diseño", "feedback de diseño", "QA de diseño", o después de completar la ejecución del diseño visual.
 ---
 
 # Design Review
 
-> Analyze an existing design for quality, propose improvements, and execute approved changes. Tool-agnostic — works with Pencil and Figma.
+> Analiza un diseño existente para evaluar su calidad, proponer mejoras y ejecutar los cambios aprobados. Independiente de la herramienta — funciona con Pencil y Figma.
 
-## When to Use
+## Cuándo Usar
 
-- After completing design execution (post Design Execution GATE)
-- When the user asks for design feedback or improvements
-- Before design-to-code translation (quality gate)
-- When designs "look AI-generated" and need humanizing
+- Después de completar la ejecución del diseño (post GATE de Ejecución de Diseño)
+- Cuando el usuario solicita retroalimentación o mejoras de diseño
+- Antes de la traducción de diseño a código (gate de calidad)
+- Cuando los diseños "parecen generados por IA" y necesitan humanizarse
 
-## Workflow
+## Flujo de trabajo
 
-### Step 1 — Detect Tool & Capture Current State
+### Paso 1 — Detectar Herramienta y Capturar Estado Actual
 
-Detect the design tool and capture what exists:
+Detecta la herramienta de diseño y captura lo que existe:
 
-**Pencil (.pen file):**
-1. `get_editor_state` — get active file and selection
-2. `batch_get` with `patterns: [{ type: "frame" }]` — list all top-level frames (screens)
-3. `get_screenshot` for each screen — capture visual state
-4. `get_variables` — read current design tokens
+**Pencil (archivo .pen):**
+1. `get_editor_state` — obtener el archivo activo y la selección
+2. `batch_get` con `patterns: [{ type: "frame" }]` — listar todos los frames de nivel superior (pantallas)
+3. `get_screenshot` para cada pantalla — capturar el estado visual
+4. `get_variables` — leer los tokens de diseño actuales
 
 **Figma:**
-1. Ask user for Figma file URL or screenshots of screens to review
-2. If `use_figma` is available, inspect node structure programmatically
-3. If not, work from screenshots the user provides
+1. Pedir al usuario la URL del archivo de Figma o capturas de pantalla de las pantallas a revisar
+2. Si `use_figma` está disponible, inspeccionar la estructura de nodos de forma programática
+3. Si no, trabajar con las capturas de pantalla que proporcione el usuario
 
-### Step 2 — Analyze Against Quality Checklist
+### Paso 2 — Analizar Contra el Checklist de Calidad
 
-Review each screen against these criteria. Score each 1-5:
+Revisa cada pantalla contra estos criterios. Puntúa cada uno del 1 al 5:
 
-#### Visual Hierarchy (weight: 25%)
-- [ ] One dominant region per screen — no equal-weight competing sections
-- [ ] Clear focal point — eye knows where to go first
-- [ ] Action hierarchy — primary CTA is visually dominant, secondary actions reduced
-- [ ] Typography hierarchy — clear size jumps between heading levels
+#### Jerarquía Visual (peso: 25%)
+- [ ] Una región dominante por pantalla — sin secciones de igual peso compitiendo entre sí
+- [ ] Punto focal claro — el ojo sabe a dónde ir primero
+- [ ] Jerarquía de acciones — el CTA primario es visualmente dominante, las acciones secundarias están reducidas
+- [ ] Jerarquía tipográfica — saltos de tamaño claros entre niveles de encabezado
 
-#### Spacing & Rhythm (weight: 20%)
-- [ ] Consistent spacing scale (not arbitrary pixel values)
-- [ ] Tighter gaps within related content, generous whitespace between sections
-- [ ] Vertical rhythm — sections have intentional, varied breathing room
-- [ ] No cramped areas next to empty areas (unless intentional)
+#### Espaciado y Ritmo (peso: 20%)
+- [ ] Escala de espaciado consistente (sin valores de píxeles arbitrarios)
+- [ ] Espacios más estrechos dentro del contenido relacionado, espacio en blanco generoso entre secciones
+- [ ] Ritmo vertical — las secciones tienen espaciado intencional y variado
+- [ ] Sin áreas comprimidas junto a áreas vacías (a menos que sea intencional)
 
-#### Color & Contrast (weight: 15%)
-- [ ] Uses design token variables, not hardcoded hex values
-- [ ] Sufficient contrast for text readability (WCAG AA: 4.5:1 text, 3:1 large)
-- [ ] Accent color reserved for actions — not diluted across decorative elements
-- [ ] Semantic colors used correctly (error for errors, success for success)
+#### Color y Contraste (peso: 15%)
+- [ ] Usa variables de tokens de diseño, no valores hex codificados
+- [ ] Contraste suficiente para la legibilidad del texto (WCAG AA: 4.5:1 texto, 3:1 texto grande)
+- [ ] Color de acento reservado para acciones — no diluido en elementos decorativos
+- [ ] Colores semánticos usados correctamente (error para errores, success para éxito)
 
-#### Anti-AI Patterns (weight: 20%)
-- [ ] Intentional asymmetry — not everything is perfectly centered/mirrored
-- [ ] Varied density between sections — not uniform spacing everywhere
-- [ ] Real content — no "Lorem ipsum", "Item 1", "User Name" placeholders
-- [ ] Progressive disclosure — complex features revealed gradually, not all at once
-- [ ] Layout variation — not every section is the same card grid pattern
+#### Patrones Anti-IA (peso: 20%)
+- [ ] Asimetría intencional — no todo está perfectamente centrado/reflejado
+- [ ] Densidad variada entre secciones — no el mismo espaciado en todos lados
+- [ ] Contenido real — sin placeholders de "Lorem ipsum", "Item 1", "User Name"
+- [ ] Divulgación progresiva — características complejas reveladas gradualmente, no todas a la vez
+- [ ] Variación de layout — no todas las secciones siguen el mismo patrón de cuadrícula de tarjetas
 
-#### Completeness (weight: 20%)
-- [ ] All interactive states designed (dropdowns open, modals visible, menus expanded)
-- [ ] Loading, empty, error states exist (not just happy path)
-- [ ] Mobile version exists (if responsive/both platform)
-- [ ] Dark mode exists (if required)
-- [ ] Every CTA has a destination screen
+#### Completitud (peso: 20%)
+- [ ] Todos los estados interactivos diseñados (dropdowns abiertos, modales visibles, menús expandidos)
+- [ ] Estados de carga, vacío y error existen (no solo el flujo feliz)
+- [ ] Existe versión móvil (si es responsive/ambas plataformas)
+- [ ] Existe modo oscuro (si es requerido)
+- [ ] Cada CTA tiene una pantalla de destino
 
-### Step 3 — Generate Report
+### Paso 3 — Generar Reporte
 
-Produce a structured review:
+Produce una revisión estructurada:
 
 ```markdown
-## Design Review — <file/project name>
+## Design Review — <nombre del archivo/proyecto>
 
-### Overall Score: X/10
+### Puntuación General: X/10
 
-### Screen-by-Screen Analysis
+### Análisis Pantalla por Pantalla
 
-#### <Screen Name>
-- **Score:** X/10
-- **Strengths:** [what works well]
-- **Issues:**
-  1. [issue] — severity: high/medium/low — fix: [specific action]
-  2. [issue] — severity: high/medium/low — fix: [specific action]
+#### <Nombre de la Pantalla>
+- **Puntuación:** X/10
+- **Fortalezas:** [qué funciona bien]
+- **Problemas:**
+  1. [problema] — severidad: alta/media/baja — corrección: [acción específica]
+  2. [problema] — severidad: alta/media/baja — corrección: [acción específica]
 
-### Summary of Improvements
-| # | Screen | Issue | Severity | Proposed Fix |
+### Resumen de Mejoras
+| # | Pantalla | Problema | Severidad | Corrección Propuesta |
 |---|--------|-------|----------|-------------|
-| 1 | Dashboard | Equal-weight card grid | medium | Make first metric card 2x width |
-| 2 | Login | Generic placeholder text | high | Use domain-specific labels |
-| 3 | All screens | Uniform 24px gap everywhere | medium | Vary: 16px within sections, 32px between |
+| 1 | Dashboard | Cuadrícula de tarjetas de igual peso | media | Hacer la primera tarjeta de métrica 2x de ancho |
+| 2 | Login | Texto placeholder genérico | alta | Usar etiquetas específicas del dominio |
+| 3 | Todas las pantallas | Gap uniforme de 24px en todos lados | media | Variar: 16px dentro de secciones, 32px entre secciones |
 
-### Recommended Priority
-1. [High severity fixes first]
-2. [Medium fixes]
-3. [Polish items]
+### Prioridad Recomendada
+1. [Correcciones de alta severidad primero]
+2. [Correcciones medias]
+3. [Elementos de pulido]
 ```
 
-### Step 4 — Propose & Confirm
+### Paso 4 — Proponer y Confirmar
 
-Present the review to the user. Ask which improvements to apply:
-- "All" — apply everything
-- "High only" — only high-severity fixes
-- User picks specific items
+Presenta la revisión al usuario. Pregunta qué mejoras aplicar:
+- "Todas" — aplicar todo
+- "Solo alta" — solo las correcciones de alta severidad
+- El usuario elige elementos específicos
 
-**NEVER apply changes without user confirmation.**
+**NUNCA aplicar cambios sin confirmación del usuario.**
 
-### Step 5 — Execute Approved Changes
+### Paso 5 — Ejecutar Cambios Aprobados
 
 **Pencil:**
-- Use `batch_design` to apply changes (U for updates, R for replacements)
-- Verify each change with `get_screenshot`
-- Max 25 operations per batch call
+- Usa `batch_design` para aplicar cambios (U para actualizaciones, R para reemplazos)
+- Verifica cada cambio con `get_screenshot`
+- Máximo 25 operaciones por llamada a batch
 
 **Figma:**
-- Load `/figma-use` skill before any `use_figma` call
-- Apply changes programmatically
-- Ask user to verify visually (no screenshot tool available)
+- Carga la skill `/figma-use` antes de cualquier llamada a `use_figma`
+- Aplica cambios de forma programática
+- Pide al usuario que verifique visualmente (no hay herramienta de captura de pantalla disponible)
 
-After all changes:
-- Take final screenshots (Pencil) or ask user to verify (Figma)
-- Compare before/after
-- Report what changed
+Después de todos los cambios:
+- Toma capturas de pantalla finales (Pencil) o pide al usuario que verifique (Figma)
+- Compara antes/después
+- Reporta qué cambió
 
-## Pencil-Specific Checks
+## Verificaciones Específicas de Pencil
 
-When reviewing a Pencil file, also check:
-- Load `get_guidelines("guide", "<project type>")` and verify the design follows those principles
-- Check if a Pencil style was applied — if not, suggest one that fits the domain
-- Verify all visual properties use `$variables`, not hardcoded values
-- Check component usage — raw frames where components exist is a smell
+Al revisar un archivo de Pencil, también verificar:
+- Carga `get_guidelines("guide", "<tipo de proyecto>")` y verifica que el diseño sigue esos principios
+- Comprueba si se aplicó un estilo de Pencil — si no, sugiere uno que se adapte al dominio
+- Verifica que todas las propiedades visuales usen `$variables`, no valores codificados
+- Comprueba el uso de componentes — los frames crudos donde existen componentes son una señal de alerta
 
-## Figma-Specific Checks
+## Verificaciones Específicas de Figma
 
-When reviewing a Figma file:
-- Check for auto-layout usage (manual positioning = fragile)
-- Verify component instances vs detached copies
-- Check for design token usage via styles/variables
-- Verify responsive constraints
+Al revisar un archivo de Figma:
+- Comprobar el uso de auto-layout (el posicionamiento manual = frágil)
+- Verificar instancias de componentes vs. copias desvinculadas
+- Comprobar el uso de tokens de diseño mediante estilos/variables
+- Verificar las restricciones responsive
 
-## Rules
+## Reglas
 
-- **Propose, don't impose** — always show the user what you'll change and get approval
-- **Surgical edits** — fix specific issues, don't rebuild screens
-- **Preserve intent** — improve quality without changing the design direction
-- **Screenshot after each change** (Pencil) — verify no side effects
-- **Score honestly** — a 10/10 means nothing needs improvement. Most designs are 6-8
+- **Proponer, no imponer** — siempre muestra al usuario qué vas a cambiar y obtén aprobación
+- **Ediciones quirúrgicas** — corrige problemas específicos, no reconstruyas pantallas
+- **Preserva la intención** — mejora la calidad sin cambiar la dirección del diseño
+- **Captura de pantalla después de cada cambio** (Pencil) — verifica que no haya efectos secundarios
+- **Puntúa honestamente** — un 10/10 significa que nada necesita mejora. La mayoría de los diseños están entre 6-8

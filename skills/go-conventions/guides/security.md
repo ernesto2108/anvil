@@ -1,22 +1,22 @@
-# Security Patterns Guide
+# Guía de Patrones de Seguridad
 
-## SQL Injection Prevention
+## Prevención de SQL Injection
 
-The most critical security pattern. Always use parameterized queries.
+El patrón de seguridad más crítico. Siempre usa consultas parametrizadas.
 
 ```go
-// VULNERABLE — user input interpolated into SQL
+// VULNERABLE — input del usuario interpolado en el SQL
 email := r.FormValue("email")
 query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", email)
-// Attack: email = "'; DROP TABLE users; --"
-// Result: SELECT * FROM users WHERE email = ''; DROP TABLE users; --'
+// Ataque: email = "'; DROP TABLE users; --"
+// Resultado: SELECT * FROM users WHERE email = ''; DROP TABLE users; --'
 
-// SECURE — parameterized query, driver escapes automatically
+// SEGURO — consulta parametrizada, el driver escapa automáticamente
 query := "SELECT * FROM users WHERE email = $1"
 row := db.QueryRowContext(ctx, query, email)
-// The driver treats email as DATA, never as SQL code
+// El driver trata el email como DATO, nunca como código SQL
 
-// SECURE — with query builder (strings.Builder pattern)
+// SEGURO — con query builder (patrón strings.Builder)
 var b strings.Builder
 var args []any
 b.WriteString("SELECT id, name FROM users WHERE 1=1")
@@ -31,21 +31,21 @@ if status != "" {
 rows, err := db.QueryContext(ctx, b.String(), args...)
 ```
 
-**Rules:**
-- NEVER use `fmt.Sprintf` or string concatenation for SQL with user input
-- Always use `$1, $2, $N` placeholders (PostgreSQL) or `?` (MySQL)
-- Query builder functions should return `(string, []any, error)` — see database patterns in SKILL.md
-- Use `sqlc` or similar code generators for compile-time SQL validation when possible
+**Reglas:**
+- NUNCA uses `fmt.Sprintf` o concatenación de strings para SQL con input de usuario
+- Siempre usa placeholders `$1, $2, $N` (PostgreSQL) o `?` (MySQL)
+- Las funciones de query builder deben retornar `(string, []any, error)` — ver patrones de base de datos en SKILL.md
+- Usa `sqlc` o generadores de código similares para validación de SQL en tiempo de compilación cuando sea posible
 
-## Cryptographic Randomness
+## Aleatoriedad Criptográfica
 
 ```go
-// INSECURE — math/rand is deterministic, predictable
+// INSEGURO — math/rand es determinístico, predecible
 import "math/rand"
 token := fmt.Sprintf("%d", rand.Int63())
-// An attacker can predict the sequence if they know the seed
+// Un atacante puede predecir la secuencia si conoce el seed
 
-// SECURE — crypto/rand uses OS entropy, unpredictable
+// SEGURO — crypto/rand usa entropía del SO, impredecible
 import "crypto/rand"
 
 // Go 1.24+
@@ -56,21 +56,21 @@ b := make([]byte, 32)
 if _, err := crypto_rand.Read(b); err != nil {
     return fmt.Errorf("generate token: %w", err)
 }
-token := hex.EncodeToString(b) // 64-char hex string
+token := hex.EncodeToString(b) // string hex de 64 chars
 ```
 
-**Use crypto/rand for:** session tokens, API keys, password reset tokens, CSRF tokens, nonces, any value an attacker would benefit from predicting.
+**Usa crypto/rand para:** tokens de sesión, API keys, tokens de reset de contraseña, tokens CSRF, nonces, cualquier valor que un atacante se beneficiaría de predecir.
 
-## Input Validation
+## Validación de Input
 
 ```go
-// BAD — blacklist (you always miss something)
+// MALO — blacklist (siempre te olvidas de algo)
 if strings.Contains(input, "<script>") {
     return errors.New("invalid input")
 }
-// Bypassed with: <SCRIPT>, <img onerror=...>, %3Cscript%3E, etc.
+// Evadido con: <SCRIPT>, <img onerror=...>, %3Cscript%3E, etc.
 
-// GOOD — whitelist (only allow known-valid values)
+// BUENO — whitelist (solo permite valores conocidos como válidos)
 func ValidateStatus(s string) error {
     valid := map[string]bool{
         "active":   true,
@@ -83,7 +83,7 @@ func ValidateStatus(s string) error {
     return nil
 }
 
-// GOOD — validate format with regex for free-form fields
+// BUENO — valida formato con regex para campos de forma libre
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 func ValidateEmail(email string) error {
@@ -93,51 +93,51 @@ func ValidateEmail(email string) error {
     return nil
 }
 
-// GOOD — validate numeric ranges
+// BUENO — valida rangos numéricos
 func ValidateAmount(amount int64) error {
-    if amount < 0 || amount > 10_000_000 { // max 100,000.00 in cents
+    if amount < 0 || amount > 10_000_000 { // máximo 100,000.00 en centavos
         return fmt.Errorf("amount %d out of range", amount)
     }
     return nil
 }
 ```
 
-**Rules:**
-- Validate at system boundaries (HTTP handlers, message consumers) — trust internal code
-- Whitelist > blacklist — define what's allowed, reject everything else
-- Validate type, format, range, and length
-- Return clear error messages (what was wrong, what was expected)
+**Reglas:**
+- Valida en los límites del sistema (handlers HTTP, consumers de mensajes) — confía en el código interno
+- Whitelist > blacklist — define qué está permitido, rechaza todo lo demás
+- Valida tipo, formato, rango y longitud
+- Retorna mensajes de error claros (qué estaba mal, qué se esperaba)
 
-## Request Body Limits
+## Límites de Tamaño del Body de la Request
 
 ```go
-// WITHOUT limit — attacker sends 10GB, server runs out of memory
-body, _ := io.ReadAll(r.Body) // potential OOM → server crash (DoS)
+// SIN límite — el atacante envía 10GB, el servidor se queda sin memoria
+body, _ := io.ReadAll(r.Body) // OOM potencial → crash del servidor (DoS)
 
-// WITH limit — max 1MB, returns error if exceeded
+// CON límite — máximo 1MB, retorna error si se supera
 r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1MB
 var input CreateUserRequest
 if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-    // MaxBytesReader returns specific error if body exceeds limit
+    // MaxBytesReader retorna un error específico si el body supera el límite
     http.Error(w, "request too large", http.StatusRequestEntityTooLarge)
     return
 }
 ```
 
-**Apply in middleware for global limit, or per-handler for different limits** (file upload = 10MB, JSON API = 1MB).
+**Aplica en middleware para límite global, o por handler para límites distintos** (subida de archivos = 10MB, JSON API = 1MB).
 
 ## Security Headers
 
 ```go
 func SecurityHeadersMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        // Prevent MIME type sniffing
+        // Previene sniffing del tipo MIME
         w.Header().Set("X-Content-Type-Options", "nosniff")
-        // Prevent clickjacking via iframes
+        // Previene clickjacking vía iframes
         w.Header().Set("X-Frame-Options", "DENY")
-        // Only allow resources from same origin
+        // Solo permite recursos del mismo origen
         w.Header().Set("Content-Security-Policy", "default-src 'self'")
-        // Force HTTPS
+        // Fuerza HTTPS
         w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 
         next.ServeHTTP(w, r)
@@ -145,42 +145,42 @@ func SecurityHeadersMiddleware(next http.Handler) http.Handler {
 }
 ```
 
-## Dependency Vulnerability Scanning
+## Escaneo de Vulnerabilidades en Dependencias
 
 ```bash
-# Install govulncheck
+# Instala govulncheck
 go install golang.org/x/vuln/cmd/govulncheck@latest
 
-# Scan all packages against Go vulnerability database
+# Escanea todos los packages contra la base de datos de vulnerabilidades de Go
 govulncheck ./...
 
-# Run in CI — fail build on known vulnerabilities
-# Add to GitHub Actions or pre-commit hook
+# Ejecuta en CI — falla el build ante vulnerabilidades conocidas
+# Agrega a GitHub Actions o pre-commit hook
 ```
 
-**Rules:**
-- Run `govulncheck` in CI on every PR
-- Update vulnerable dependencies immediately for critical/high CVEs
-- Audit `go.sum` changes in code reviews — new dependencies = new attack surface
+**Reglas:**
+- Ejecuta `govulncheck` en CI en cada PR
+- Actualiza las dependencias vulnerables de inmediato para CVEs críticos/altos
+- Audita los cambios en `go.sum` en los code reviews — nuevas dependencias = nueva superficie de ataque
 
-## Secrets Management
+## Gestión de Secretos
 
 ```go
-// NEVER hardcode secrets
-const apiKey = "sk-1234567890" // NO — ends up in git history forever
+// NUNCA hardcodees secretos
+const apiKey = "sk-1234567890" // NO — queda en el historial de git para siempre
 
-// NEVER log secrets
-logger.Info("auth", slog.String("token", token)) // NO — appears in log aggregators
+// NUNCA registres secretos en logs
+logger.Info("auth", slog.String("token", token)) // NO — aparece en los agregadores de logs
 
-// Load from environment, validate at startup
+// Carga desde el entorno, valida al arrancar
 apiKey := os.Getenv("API_KEY")
 if apiKey == "" {
     log.Fatal("API_KEY environment variable is required")
 }
 ```
 
-**Rules:**
-- Secrets via environment variables or secret managers (AWS SSM, Vault, GCP Secret Manager)
-- Never commit `.env` files with real secrets — use `.env.example` with placeholders
-- Rotate secrets periodically — design for rotation (no hardcoded expiration)
-- Limit secret scope — each service gets only the secrets it needs
+**Reglas:**
+- Secretos vía variables de entorno o secret managers (AWS SSM, Vault, GCP Secret Manager)
+- Nunca commités archivos `.env` con secretos reales — usa `.env.example` con placeholders
+- Rota secretos periódicamente — diseña para rotación (sin expiración hardcodeada)
+- Limita el alcance de los secretos — cada servicio obtiene solo los secretos que necesita

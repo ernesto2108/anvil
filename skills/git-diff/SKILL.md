@@ -1,47 +1,47 @@
 ---
 name: git-diff
-description: Inspect and summarize repository changes using git diff. Use when user says "what changed", "show diff", "review changes", "summarize modifications", or before creating a commit or pull request.
+description: Inspeccionar y resumir cambios del repositorio usando git diff. Usar cuando el usuario diga "qué cambió", "muestra el diff", "revisa cambios", "resume modificaciones", o antes de crear un commit o pull request.
 ---
 
-Inspect only the changes made in the repository using git diff.
+Inspecciona solo los cambios realizados en el repositorio usando git diff.
 
-Why:
-- review minimal changes
-- avoid re-reading full files
-- enable safe code review
-- detect unintended edits
-- reduce tokens and noise
+Por qué:
+- revisar cambios mínimos
+- evitar re-leer archivos completos
+- habilitar revisión de código segura
+- detectar ediciones no intencionadas
+- reducir tokens y ruido
 
-Typical commands:
-- `git diff` — current working changes
-- `git diff --staged` — staged only
-- `git diff path/to/file.go` — file specific
-- `git diff main...feature-branch` — branch compare
+Comandos típicos:
+- `git diff` — cambios actuales en el working directory
+- `git diff --staged` — solo staged
+- `git diff path/to/file.go` — específico de archivo
+- `git diff main...feature-branch` — comparación de ramas
 
-Usage rules:
-- ALWAYS prefer git diff before reading full files
-- review only changed lines
-- ignore whitespace-only changes
-- summarize large diffs
-- highlight: logic changes, new conditions, removed checks, schema changes, concurrency risks
+Reglas de uso:
+- SIEMPRE preferir git diff antes de leer archivos completos
+- revisar solo las líneas modificadas
+- ignorar cambios de solo espacios en blanco
+- resumir diffs grandes
+- destacar: cambios de lógica, nuevas condiciones, verificaciones eliminadas, cambios de esquema, riesgos de concurrencia
 
-Output format per file:
+Formato de output por archivo:
 
-File: <path>
+File: <ruta>
 Change type: modified | added | deleted
-Summary: <one line>
+Summary: <una línea>
 
 Diff:
-<relevant lines only>
+<solo las líneas relevantes>
 
-Best practices:
-- small diffs (< 200 lines)
-- one concern per change
-- avoid unrelated refactors
-- split large changes
+Buenas prácticas:
+- diffs pequeños (< 200 líneas)
+- una preocupación por cambio
+- evitar refactorizaciones no relacionadas
+- dividir cambios grandes
 
-Never:
-- read entire repo when diff exists
-- approve changes without diff
-- hide changes
-- auto-merge blindly
+Nunca:
+- leer el repositorio completo cuando existe un diff
+- aprobar cambios sin diff
+- ocultar cambios
+- hacer merge automático a ciegas

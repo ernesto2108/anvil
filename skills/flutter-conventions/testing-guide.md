@@ -1,21 +1,21 @@
-# Flutter Testing Guide
+# Guía de Testing Flutter
 
-## Testing Pyramid
+## Pirámide de Testing
 
-| Layer | What to Test | Speed |
+| Capa | Qué testear | Velocidad |
 |---|---|---|
-| **Unit Tests** | Business logic, ViewModels, Repositories, BLoCs | Fast |
-| **Widget Tests** | Individual widget behavior and interaction | Medium |
-| **Golden Tests** | Visual regression (pixel comparison) | Medium |
-| **Integration Tests** | Full app flows, platform interaction | Slow |
+| **Unit Tests** | Lógica de negocio, ViewModels, Repositories, BLoCs | Rápido |
+| **Widget Tests** | Comportamiento e interacción de widgets individuales | Medio |
+| **Golden Tests** | Regresión visual (comparación de píxeles) | Medio |
+| **Integration Tests** | Flujos completos de la app, interacción con plataforma | Lento |
 
 ---
 
 ## Unit Tests
 
-Test business logic, BLoCs, Cubits, and repositories.
+Testear lógica de negocio, BLoCs, Cubits y repositorios.
 
-### BLoC Test
+### Test de BLoC
 
 ```dart
 import 'package:bloc_test/bloc_test.dart';
@@ -58,7 +58,7 @@ void main() {
 }
 ```
 
-### Repository Test
+### Test de Repositorio
 
 ```dart
 void main() {
@@ -91,20 +91,20 @@ void main() {
 }
 ```
 
-### Rules
+### Reglas
 
-- Use `mocktail` for mocking (no code generation needed)
-- Test Result pattern — both `Ok` and `Error` paths
-- Group related tests with `group()`
-- `setUp`/`tearDown` for consistent initialization
+- Usar `mocktail` para mocking (sin necesidad de generación de código)
+- Testear el patrón Result — tanto rutas `Ok` como `Error`
+- Agrupar tests relacionados con `group()`
+- `setUp`/`tearDown` para inicialización consistente
 
 ---
 
 ## Widget Tests
 
-Test individual widget behavior and user interaction.
+Testear el comportamiento individual de widgets e interacciones del usuario.
 
-### Basic Widget Test
+### Test Básico de Widget
 
 ```dart
 void main() {
@@ -134,7 +134,7 @@ void main() {
 }
 ```
 
-### Widget Test with BLoC
+### Test de Widget con BLoC
 
 ```dart
 testWidgets('shows user name when loaded', (tester) async {
@@ -155,20 +155,20 @@ testWidgets('shows user name when loaded', (tester) async {
 });
 ```
 
-### Rules
+### Reglas
 
-- Always call `pumpAndSettle()` after interactions (tap, enter text)
-- Use `find.byKey` for specific elements, `find.byType` for widget types
-- Wrap in `MaterialApp` for theme/navigation context
-- Mock BLoCs/providers — don't test state management in widget tests
+- Siempre llamar `pumpAndSettle()` después de interacciones (tap, enterText)
+- Usar `find.byKey` para elementos específicos, `find.byType` para tipos de widget
+- Envolver en `MaterialApp` para contexto de tema/navegación
+- Mockear BLoCs/providers — no testear gestión de estado en tests de widget
 
 ---
 
 ## Golden Tests
 
-Pixel-by-pixel comparison against baseline images. Catches visual regressions.
+Comparación píxel a píxel contra imágenes de referencia. Detecta regresiones visuales.
 
-### Basic Golden Test
+### Test Golden Básico
 
 ```dart
 testWidgets('UserCard matches golden', (tester) async {
@@ -187,7 +187,7 @@ testWidgets('UserCard matches golden', (tester) async {
 });
 ```
 
-### Advanced Golden Tests with Alchemist
+### Golden Tests Avanzados con Alchemist
 
 ```dart
 void main() {
@@ -214,18 +214,18 @@ void main() {
 }
 ```
 
-### Rules
+### Reglas
 
-- Run in controlled CI environment (deterministic fonts, locale, DPR)
-- Update goldens with `flutter test --update-goldens`
-- Commit golden files to version control
-- Only golden-test visual components, not logic
+- Ejecutar en entorno CI controlado (fuentes, locale y DPR deterministas)
+- Actualizar goldens con `flutter test --update-goldens`
+- Commitear los archivos golden al control de versiones
+- Solo golden-testear componentes visuales, no lógica
 
 ---
 
 ## Integration Tests
 
-Full app flows with platform interaction.
+Flujos completos de la app con interacción de plataforma.
 
 ```dart
 import 'package:integration_test/integration_test.dart';
@@ -255,16 +255,16 @@ void main() {
 }
 ```
 
-### Rules
+### Reglas
 
-- Test 3-5 critical user journeys (login, checkout, onboarding)
-- Run on real devices/emulators
-- Don't duplicate what widget tests cover
-- Use `Key` widgets for stable element finding
+- Testear 3-5 journeys críticos de usuario (login, checkout, onboarding)
+- Ejecutar en dispositivos/emuladores reales
+- No duplicar lo que cubren los widget tests
+- Usar widgets `Key` para encontrar elementos de forma estable
 
 ---
 
-## Test File Organization
+## Organización de Archivos de Test
 
 ```
 test/
@@ -290,7 +290,7 @@ integration_test/
 └── app_test.dart
 ```
 
-### Shared Test Helpers
+### Helpers Compartidos de Test
 
 ```dart
 // test/helpers/pump_app.dart
@@ -311,13 +311,13 @@ final testUsers = [testUser, User(id: '2', name: 'Jane', email: 'jane@test.com')
 
 ---
 
-## Anti-Patterns
+## Anti-Patrones
 
-| Anti-Pattern | Fix |
+| Anti-patrón | Corrección |
 |---|---|
-| Testing implementation (state internals) | Test widget output and behavior |
-| Missing `pumpAndSettle` after interactions | Always pump after tap/enterText |
-| No mocking of external dependencies | Use `mocktail` for repos/services |
-| Snapshot/golden tests for logic | Golden tests are visual only |
-| Integration tests for everything | Unit → Widget → Golden → Integration (pyramid) |
-| Flaky tests from timing issues | Use `pumpAndSettle`, not `pump` with arbitrary durations |
+| Testear la implementación (internos del estado) | Testear la salida y comportamiento del widget |
+| Falta `pumpAndSettle` después de interacciones | Siempre hacer pump después de tap/enterText |
+| Sin mockear dependencias externas | Usar `mocktail` para repos/services |
+| Tests de snapshot/golden para lógica | Los golden tests son solo visuales |
+| Integration tests para todo | Unit → Widget → Golden → Integration (pirámide) |
+| Tests inestables por problemas de timing | Usar `pumpAndSettle`, no `pump` con duraciones arbitrarias |

@@ -1,81 +1,81 @@
-# Coding Rules
+# Reglas de Codificación
 
-## Edition 2024 (Rust 1.85+)
+## Edición 2024 (Rust 1.85+)
 
-1. **`unsafe_op_in_unsafe_fn` warns** — unsafe ops inside `unsafe fn` require explicit `unsafe {}` block
-2. **`static mut` denied** — use `AtomicXxx`, `Mutex`, or `LazyLock` instead
-3. **`unsafe extern` required** — FFI blocks must be `unsafe extern "C"` with safe/unsafe annotations
-4. **`gen` is reserved** — use `r#gen` if you need it as an identifier
-5. **`set_var`/`remove_var` are unsafe** — env mutation is now `unsafe` due to thread safety
-6. **Resolver v3 default** — `resolver = "3"` in workspace Cargo.toml
-7. **RPIT captures all lifetimes** — use `+ use<>` to opt out of implicit lifetime capture
+1. **`unsafe_op_in_unsafe_fn` advierte** — las operaciones `unsafe` dentro de `unsafe fn` requieren un bloque `unsafe {}` explícito
+2. **`static mut` prohibido** — usa `AtomicXxx`, `Mutex`, o `LazyLock` en su lugar
+3. **`unsafe extern` requerido** — los bloques FFI deben ser `unsafe extern "C"` con anotaciones safe/unsafe
+4. **`gen` está reservado** — usa `r#gen` si lo necesitas como identificador
+5. **`set_var`/`remove_var` son unsafe** — la mutación de variables de entorno es ahora `unsafe` por seguridad en hilos
+6. **Resolver v3 por defecto** — `resolver = "3"` en el `Cargo.toml` del workspace
+7. **RPIT captura todos los lifetimes** — usa `+ use<>` para desactivar la captura implícita de lifetimes
 
 ```rust
-// WRONG — static mut
+// INCORRECTO — static mut
 static mut COUNTER: u64 = 0;
 
-// RIGHT — atomic
+// CORRECTO — atómico
 use std::sync::atomic::{AtomicU64, Ordering};
 static COUNTER: AtomicU64 = AtomicU64::new(0);
 
-// RIGHT — LazyLock for complex init (1.80+)
+// CORRECTO — LazyLock para init complejo (1.80+)
 use std::sync::LazyLock;
 static CONFIG: LazyLock<Config> = LazyLock::new(|| Config::load());
 ```
 
-## Error Handling
+## Manejo de Errores
 
-8. **thiserror for libraries** — derive Error for domain types, never expose anyhow
-9. **anyhow for applications** — ergonomic `Result<T>`, `.context()` for wrapping
-10. **miette for CLIs** — rich diagnostic errors with source spans and help text
-11. **Never panic in library code** — return `Result`, no `.unwrap()`, no `panic!()`
-12. **Context on every `?`** — `.context("what failed")` or `.with_context(|| format!(...))`
+8. **thiserror para librerías** — deriva `Error` para tipos de dominio, nunca expongas `anyhow`
+9. **anyhow para aplicaciones** — `Result<T>` ergonómico, `.context()` para envolver errores
+10. **miette para CLIs** — errores de diagnóstico enriquecidos con spans de código y texto de ayuda
+11. **Nunca hacer panic en código de librería** — retorna `Result`, sin `.unwrap()`, sin `panic!()`
+12. **Contexto en cada `?`** — `.context("qué falló")` o `.with_context(|| format!(...))`
 
 ```rust
-// WRONG — bare ? with no context
+// INCORRECTO — ? sin contexto
 let data = std::fs::read_to_string(path)?;
 
-// RIGHT — context wrapping
+// CORRECTO — envuelto con contexto
 let data = std::fs::read_to_string(path)
     .with_context(|| format!("failed to read {path}"))?;
 ```
 
-## Ownership & Borrowing
+## Ownership y Borrowing
 
-13. **`&str` over `String` in params** — accept borrows, return owned only when needed
-14. **`Cow<'_, str>`** for conditional ownership — avoids allocation when not needed
-15. **`impl AsRef<T>` for flexible APIs** — accept both owned and borrowed
-16. **Clone only when necessary** — prefer borrows, use `Arc` for shared ownership in async
+13. **`&str` sobre `String` en parámetros** — acepta referencias, retorna owned solo cuando sea necesario
+14. **`Cow<'_, str>`** para ownership condicional — evita allocations cuando no son necesarias
+15. **`impl AsRef<T>` para APIs flexibles** — acepta tanto owned como borrowed
+16. **Clonar solo cuando sea necesario** — prefiere referencias, usa `Arc` para ownership compartido en async
 
 ```rust
-// WRONG — takes ownership unnecessarily
+// INCORRECTO — toma ownership innecesariamente
 fn process(data: String) -> String { data.to_uppercase() }
 
-// RIGHT — borrows input
+// CORRECTO — toma prestada la entrada
 fn process(data: &str) -> String { data.to_uppercase() }
 ```
 
-## Naming
+## Nomenclatura
 
-17. **snake_case** for functions, methods, variables, modules, crates
-18. **PascalCase** for types, traits, enums, structs
-19. **SCREAMING_SNAKE** for constants and statics
-20. **`is_`, `has_`, `can_`** prefix for bool-returning methods
-21. **`into_`, `as_`, `to_`** for conversions (ownership-taking, borrowing, expensive respectively)
-22. **`try_`** prefix for fallible operations that return `Result`
+17. **snake_case** para funciones, métodos, variables, módulos, crates
+18. **PascalCase** para tipos, traits, enums, structs
+19. **SCREAMING_SNAKE** para constantes y estáticos
+20. **`is_`, `has_`, `can_`** como prefijo para métodos que retornan bool
+21. **`into_`, `as_`, `to_`** para conversiones (toma ownership, borrowing, costosa respectivamente)
+22. **`try_`** como prefijo para operaciones fallidas que retornan `Result`
 
 ## Async Traits (1.75+)
 
-23. **Native async fn in traits** — no more `#[async_trait]` proc macro needed
-24. **`-> impl Future + Send`** when you need Send bound for trait objects
-25. **`Pin<Box<dyn Future + Send>>`** when you need dyn dispatch
+23. **`async fn` nativo en traits** — ya no se necesita el proc macro `#[async_trait]`
+24. **`-> impl Future + Send`** cuando necesitas el bound Send para trait objects
+25. **`Pin<Box<dyn Future + Send>>`** cuando necesitas dyn dispatch
 
 ```rust
-// WRONG — async-trait crate (legacy)
+// INCORRECTO — crate async-trait (legado)
 #[async_trait]
 trait Repo { async fn find(&self, id: Uuid) -> Result<Entity>; }
 
-// RIGHT — native (1.75+)
+// CORRECTO — nativo (1.75+)
 trait Repo: Send + Sync {
     async fn find(&self, id: Uuid) -> Result<Entity>;
 }

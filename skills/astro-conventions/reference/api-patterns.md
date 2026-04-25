@@ -1,10 +1,10 @@
-# API Consumption Patterns
+# Patrones de Consumo de APIs
 
-Patterns for Astro projects that consume external APIs — structure, data transformation, error handling, and testing.
+Patrones para proyectos Astro que consumen APIs externas — estructura, transformación de datos, manejo de errores y testing.
 
-## Pods Architecture
+## Arquitectura de Pods
 
-When a project fetches data from external APIs, organize by **feature (pod)** instead of by file type. Each pod groups everything related to a single domain concept:
+Cuando un proyecto obtiene datos de APIs externas, organiza por **feature (pod)** en lugar de por tipo de archivo. Cada pod agrupa todo lo relacionado con un concepto de dominio:
 
 ```
 src/
@@ -35,26 +35,26 @@ src/
 └── styles/
 ```
 
-**Rules:**
-- One pod per domain concept — never mix hero data with speakers logic
-- Pages import from pods, pods never import from pages
-- Components remain in `components/` — pods handle data, not UI
-- Shared API utilities (base URL, headers, auth) go in `src/lib/api.ts`
+**Reglas:**
+- Un pod por concepto de dominio — nunca mezcles datos de hero con lógica de speakers
+- Las páginas importan desde pods, los pods nunca importan desde páginas
+- Los componentes permanecen en `components/` — los pods manejan datos, no UI
+- Las utilidades de API compartidas (base URL, headers, auth) van en `src/lib/api.ts`
 
-**When to use Pods vs standard structure:**
+**Cuándo usar Pods vs estructura estándar:**
 
-| Use Pods | Use standard structure |
+| Usar Pods | Usar estructura estándar |
 |---|---|
-| Project consumes external APIs | Content-driven with markdown/MDX |
-| Multiple domain entities from API | Using Content Collections |
-| Team needs clear data boundaries | Simple static site |
-| API responses need transformation | Data comes pre-formatted |
+| El proyecto consume APIs externas | Basado en contenido con markdown/MDX |
+| Múltiples entidades de dominio desde la API | Usando Content Collections |
+| El equipo necesita límites claros de datos | Sitio estático simple |
+| Las respuestas de la API necesitan transformación | Los datos vienen pre-formateados |
 
 ## Mappers (API → ViewModel)
 
-Mappers decouple raw API responses from what the UI needs. The API can change shape without breaking components.
+Los mappers desacoplan las respuestas crudas de la API de lo que necesita la UI. La API puede cambiar de forma sin romper los componentes.
 
-### Types
+### Tipos
 
 ```typescript
 // src/pods/speakers/speakers.model.ts
@@ -84,7 +84,7 @@ export interface SpeakerVm {
 }
 ```
 
-### Mapper implementation
+### Implementación del mapper
 
 ```typescript
 // src/pods/speakers/speakers.mapper.ts
@@ -115,18 +115,18 @@ export function mapSpeakersFromApiToVm(
 }
 ```
 
-**Rules:**
-- One mapper file per pod — `{pod}.mapper.ts`
-- Pure functions only — no side effects, no fetch calls
-- Handle every nullable field with a sensible default
-- Never pass raw API types to components — always map first
-- Mapper names follow `map{Entity}FromApiToVm` convention
+**Reglas:**
+- Un archivo mapper por pod — `{pod}.mapper.ts`
+- Solo funciones puras — sin efectos secundarios, sin fetch calls
+- Maneja cada campo nullable con un valor por defecto sensato
+- Nunca pases tipos crudos de la API a los componentes — siempre mapea primero
+- Los nombres de mappers siguen la convención `map{Entity}FromApiToVm`
 
-## Defensive Fetching
+## Fetch Defensivo
 
-API calls in frontmatter must handle failures gracefully. A broken API should not crash the entire page.
+Las llamadas a la API en el frontmatter deben manejar fallos con gracia. Una API rota no debe crashear toda la página.
 
-### Pattern
+### Patrón
 
 ```typescript
 // src/pods/hero/hero.api.ts
@@ -151,7 +151,7 @@ export async function getHero(): Promise<HeroApiModel | null> {
 }
 ```
 
-### Using in frontmatter
+### Uso en frontmatter
 
 ```astro
 ---
@@ -174,17 +174,17 @@ const hero = heroApi ? mapHeroFromApiToVm(heroApi) : null;
 )}
 ```
 
-**Rules:**
-- Every fetch wrapped in `try/catch` — no unhandled rejections in frontmatter
-- Return `null` on failure, never throw from API functions
-- Check `response.ok` before parsing JSON
-- Log errors with context (which endpoint, what status)
-- Pages must render a valid fallback when data is `null`
-- Use `import.meta.env` for API base URLs — never hardcode
+**Reglas:**
+- Cada fetch envuelto en `try/catch` — sin rechazos sin manejar en el frontmatter
+- Retorna `null` en caso de fallo, nunca lances desde funciones de API
+- Verifica `response.ok` antes de parsear JSON
+- Loguea errores con contexto (qué endpoint, qué status)
+- Las páginas deben renderizar un fallback válido cuando los datos son `null`
+- Usa `import.meta.env` para las URLs base de la API — nunca las hardcodees
 
-## Path Aliases for Pods
+## Path Aliases para Pods
 
-Configure clean imports to avoid deep relative paths:
+Configura imports limpios para evitar rutas relativas profundas:
 
 ```json
 // tsconfig.json
@@ -214,9 +214,9 @@ import SpeakerCard from "@components/features/SpeakerCard.astro";
 ---
 ```
 
-## Testing Mappers
+## Testing de Mappers
 
-Mappers are pure functions — ideal for unit tests. Focus on edge cases: null fields, missing arrays, unexpected types.
+Los mappers son funciones puras — ideales para tests unitarios. Enfócate en casos límite: campos null, arrays vacíos, tipos inesperados.
 
 ```typescript
 // src/pods/speakers/speakers.test.ts
@@ -272,8 +272,8 @@ describe("speakers mapper", () => {
 });
 ```
 
-**Rules:**
-- Test every nullable field with `null` and `undefined`
-- Test empty arrays and missing nested properties
-- Use a complete base object and override one field per test
-- Mapper tests must run without network — no API calls
+**Reglas:**
+- Testea cada campo nullable con `null` y `undefined`
+- Testea arrays vacíos y propiedades anidadas faltantes
+- Usa un objeto base completo y sobreescribe un campo por test
+- Los tests de mappers deben correr sin red — sin llamadas a la API

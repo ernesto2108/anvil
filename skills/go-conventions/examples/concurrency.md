@@ -1,6 +1,6 @@
-# Concurrency Examples
+# Ejemplos de Concurrencia
 
-## Good: Graceful Shutdown with errgroup
+## Bien: Shutdown Graceful con errgroup
 
 ```go
 func main() {
@@ -29,4 +29,4 @@ func main() {
 }
 ```
 
-**Why:** Clean shutdown, proper error propagation, no goroutine leaks.
+**Por qué:** Shutdown limpio, propagación correcta de errores, sin goroutine leaks.

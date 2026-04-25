@@ -1,6 +1,6 @@
-# RabbitMQ Producer Patterns
+# Patrones de Producer RabbitMQ
 
-## Direct Queue Publishing
+## Publicación Directa a Cola
 
 ```go
 func (p *Producer) SendMessage(ctx context.Context, queue string, message any) error {
@@ -20,15 +20,15 @@ func (p *Producer) SendMessage(ctx context.Context, queue string, message any) e
     confirms := p.ch.NotifyPublish(make(chan amqp.Confirmation, 1))
 
     err = p.ch.PublishWithContext(ctx,
-        "",    // default exchange
-        queue, // routing key = queue name
+        "",    // exchange por defecto
+        queue, // routing key = nombre de la cola
         false, // mandatory
         false, // immediate
         amqp.Publishing{
             ContentType:  "application/json",
             Body:         body,
             DeliveryMode: amqp.Persistent,
-            MessageId:    uuid.New().String(), // for idempotency
+            MessageId:    uuid.New().String(), // para idempotencia
         },
     )
     if err != nil {
@@ -48,7 +48,7 @@ func (p *Producer) SendMessage(ctx context.Context, queue string, message any) e
 }
 ```
 
-## Topic Exchange Publishing
+## Publicación con Topic Exchange
 
 ```go
 func (p *Producer) SendWithRouting(ctx context.Context, exchange, routingKey string, message any) error {
@@ -95,10 +95,10 @@ func (p *Producer) SendWithRouting(ctx context.Context, exchange, routingKey str
 }
 ```
 
-## Producer Rules
+## Reglas del Producer
 
-- **Always enable publisher confirms** (`ch.Confirm(false)`) — know when the broker accepted the message
-- **Always wait for confirmation** — `select` on confirm channel with timeout
-- **Always `DeliveryMode: amqp.Persistent`** for production messages
-- **Set `MessageId`** for idempotency tracking
-- **Use `PublishWithContext`** (not `Publish`) — supports context cancellation
+- **Siempre habilita publisher confirms** (`ch.Confirm(false)`) — saber cuándo el broker aceptó el mensaje
+- **Siempre espera la confirmación** — `select` en el canal de confirmación con timeout
+- **Siempre `DeliveryMode: amqp.Persistent`** para mensajes en producción
+- **Configura `MessageId`** para rastreo de idempotencia
+- **Usa `PublishWithContext`** (no `Publish`) — soporta cancelación de contexto

@@ -1,15 +1,15 @@
 ---
 name: post-review
-description: "Post-development review skill with stack-specific checklists for Go, React, React Native, Terraform, and PostgreSQL"
+description: "Skill de revisión post-desarrollo con checklists específicos por stack para Go, React, React Native, Terraform y PostgreSQL"
 ---
 
 # Post-Review Skill — Dispatcher
 
-## Purpose
+## Propósito
 
-Provide stack-specific review checklists for the Reviewer agent. This file routes to the correct checklist based on detected stack.
+Proporcionar checklists de revisión específicos por stack para el agente Reviewer. Este archivo enruta al checklist correcto según el stack detectado.
 
-## Routing Table
+## Tabla de Enrutamiento
 
 | Stack detectado | Checklist a cargar |
 |---|---|
@@ -19,33 +19,33 @@ Provide stack-specific review checklists for the Reviewer agent. This file route
 | Terraform | `skills/post-review/checklists/terraform.md` |
 | PostgreSQL | `skills/post-review/checklists/postgres.md` |
 
-## Multi-Stack Reviews
+## Revisiones Multi-Stack
 
-When a diff contains files from multiple stacks, load ALL relevant checklists. Apply each checklist only to its corresponding files.
+Cuando un diff contiene archivos de múltiples stacks, cargar TODOS los checklists relevantes. Aplicar cada checklist únicamente a sus archivos correspondientes.
 
-## Lint Detection Table
+## Tabla de Detección de Lint
 
-| Stack | Config files | Linter | Install |
+| Stack | Archivos de configuración | Linter | Instalación |
 |---|---|---|---|
 | Go | `.golangci.yml`, `.golangci.yaml` | golangci-lint | `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest` |
-| React/TS | `.eslintrc.*`, `eslint.config.*`, `eslint` in package.json | ESLint | `npm install -D eslint` / `pnpm add -D eslint` |
-| React Native | Same as React | ESLint | Same as React |
+| React/TS | `.eslintrc.*`, `eslint.config.*`, `eslint` en package.json | ESLint | `npm install -D eslint` / `pnpm add -D eslint` |
+| React Native | Igual que React | ESLint | Igual que React |
 | Terraform | `.tflint.hcl` | TFLint | `brew install tflint` / `curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \| bash` |
 | PostgreSQL | N/A | N/A | — |
 
-## Supporting Files
+## Archivos de Soporte
 
-| File | Purpose |
+| Archivo | Propósito |
 |---|---|
-| `rubric.md` | Universal scoring criteria (1-10 scale) |
-| `report-format.md` | Console output format specification |
+| `rubric.md` | Criterios de puntuación universales (escala 1-10) |
+| `report-format.md` | Especificación del formato de salida en consola |
 
-## Usage
+## Uso
 
-1. Reviewer agent detects stacks from file extensions
-2. Verify lint configuration exists per stack (see Lint Detection Table)
-3. Run linter if config exists; flag absence as CRITICO if not
-4. Load matching checklists from the routing table
-5. Load `rubric.md` and `report-format.md`
-6. Execute review per checklist
-7. Aggregate score (including lint findings) and print report
+1. El agente Reviewer detecta los stacks a partir de las extensiones de archivo
+2. Verificar que existe configuración de lint por stack (ver Tabla de Detección de Lint)
+3. Ejecutar el linter si existe configuración; señalar ausencia como CRÍTICO si no
+4. Cargar los checklists correspondientes de la tabla de enrutamiento
+5. Cargar `rubric.md` y `report-format.md`
+6. Ejecutar la revisión según el checklist
+7. Agregar puntuación (incluyendo hallazgos de lint) e imprimir el reporte

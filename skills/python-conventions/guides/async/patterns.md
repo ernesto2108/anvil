@@ -1,6 +1,6 @@
-# Async Patterns
+# Patrones Async
 
-## TaskGroup (Structured Concurrency, Python 3.11+)
+## TaskGroup (Concurrencia Estructurada, Python 3.11+)
 
 ```python
 # WRONG — gather leaks tasks on failure
@@ -35,7 +35,7 @@ async with asyncio.timeout_at(deadline):
         result = cached_result
 ```
 
-## Async Context Managers
+## Manejadores de Contexto Async
 
 ```python
 from contextlib import asynccontextmanager
@@ -52,7 +52,7 @@ async with db_pool("postgres://...") as pool:
     await pool.execute("SELECT 1")
 ```
 
-## Async Iterators for Streaming
+## Iteradores Async para Streaming
 
 ```python
 from collections.abc import AsyncIterator
@@ -67,12 +67,12 @@ async def stream_embeddings(
         for emb in embeddings:
             yield emb
 
-# Usage
+# Uso
 async for embedding in stream_embeddings(texts):
     store(embedding)
 ```
 
-## Semaphore for Rate Limiting
+## Semáforo para Limitación de Velocidad
 
 ```python
 async def fetch_all_limited(urls: list[str], max_concurrent: int = 10) -> list[str]:
@@ -87,10 +87,10 @@ async def fetch_all_limited(urls: list[str], max_concurrent: int = 10) -> list[s
     return [t.result() for t in tasks]
 ```
 
-## Key Rules
+## Reglas Clave
 
-- **TaskGroup over gather** — structured concurrency, automatic cleanup
-- **`asyncio.timeout()` over `wait_for`** — cleaner, composable
-- **Never `time.sleep()` in async** — use `await asyncio.sleep()`
-- **Never `requests.get()` in async** — use `aiohttp` or `httpx`
-- **Async context managers for resources** — guaranteed cleanup
+- **TaskGroup sobre gather** — concurrencia estructurada, limpieza automática
+- **`asyncio.timeout()` sobre `wait_for`** — más limpio y composable
+- **Nunca `time.sleep()` en async** — usar `await asyncio.sleep()`
+- **Nunca `requests.get()` en async** — usar `aiohttp` o `httpx`
+- **Manejadores de contexto async para recursos** — limpieza garantizada

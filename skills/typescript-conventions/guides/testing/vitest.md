@@ -1,8 +1,8 @@
-# Vitest Testing Guide
+# Guía de Testing con Vitest
 
-## Setup
+## Configuración
 
-Vitest is the standard test runner. It is native ESM, requires no Babel transform, and shares Vite configuration.
+Vitest es el test runner estándar. Es ESM nativo, no requiere transformación con Babel y comparte la configuración de Vite.
 
 ```typescript
 // vitest.config.ts
@@ -12,8 +12,8 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
-    globals: false,          // prefer explicit imports — no global `describe`/`it`
-    environment: "node",     // use "jsdom" for DOM tests
+    globals: false,          // preferir imports explícitos — sin `describe`/`it` globales
+    environment: "node",     // usar "jsdom" para tests de DOM
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
@@ -21,7 +21,7 @@ export default defineConfig({
       exclude: ["src/**/*.test.ts", "src/**/*.d.ts"],
     },
     typecheck: {
-      enabled: true,         // run tsc alongside tests
+      enabled: true,         // ejecutar tsc junto con los tests
       tsconfig: "./tsconfig.json",
     },
   },
@@ -29,7 +29,7 @@ export default defineConfig({
 ```
 
 ```json
-// package.json scripts
+// scripts de package.json
 {
   "test": "vitest run",
   "test:watch": "vitest",
@@ -39,7 +39,7 @@ export default defineConfig({
 }
 ```
 
-## Test File Structure
+## Estructura de Archivos de Test
 
 ```typescript
 // user.service.test.ts
@@ -52,7 +52,7 @@ describe("UserService", () => {
   let repo: UserRepository;
 
   beforeEach(() => {
-    // Fresh mock per test — never share state between tests
+    // Mock fresco por test — nunca compartir estado entre tests
     repo = {
       findById: vi.fn(),
       save: vi.fn(),
@@ -83,9 +83,9 @@ describe("UserService", () => {
 });
 ```
 
-## `expectTypeOf` — Type-Level Tests
+## `expectTypeOf` — Tests a Nivel de Tipos
 
-Use `expectTypeOf` to assert TypeScript types in tests. This runs through `tsc`, not at runtime.
+Usar `expectTypeOf` para afirmar tipos de TypeScript en los tests. Esto se ejecuta a través de `tsc`, no en tiempo de ejecución.
 
 ```typescript
 import { expectTypeOf, describe, it } from "vitest";
@@ -109,9 +109,9 @@ describe("type assertions", () => {
 });
 ```
 
-## Mocking Strategies
+## Estrategias de Mocking
 
-### Mock functions with `vi.fn()`
+### Funciones mock con `vi.fn()`
 
 ```typescript
 import { vi, expect } from "vitest";
@@ -119,27 +119,27 @@ import { vi, expect } from "vitest";
 const mockFetch = vi.fn<typeof fetch>();
 mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ id: 1 })));
 
-// Type-safe mock return values
+// Valores de retorno de mock type-safe
 const mockSend = vi.fn<(msg: string) => Promise<void>>();
 mockSend.mockResolvedValue(undefined);
 ```
 
-### Mock modules with `vi.mock()`
+### Mock de módulos con `vi.mock()`
 
 ```typescript
-// Must be at the top level, hoisted automatically
+// Debe estar en el nivel superior, se eleva automáticamente
 vi.mock("../db.js", () => ({
   db: {
     query: vi.fn().mockResolvedValue({ rows: [] }),
   },
 }));
 
-// Access the mock in tests
+// Acceder al mock en los tests
 import { db } from "../db.js";
 vi.mocked(db.query).mockResolvedValueOnce({ rows: [{ id: 1 }] });
 ```
 
-### Mock timers
+### Mock de timers
 
 ```typescript
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
@@ -161,22 +161,22 @@ describe("debounce", () => {
 });
 ```
 
-## Testing Async Code
+## Testing de Código Asíncrono
 
 ```typescript
-// WRONG: testing promise without await — test passes regardless
+// INCORRECTO: testear promise sin await — el test pasa independientemente
 it("saves user", () => {
-  service.save(user); // fire and forget — assertions never run
+  service.save(user); // fire and forget — las aserciones nunca se ejecutan
   expect(repo.save).toHaveBeenCalled();
 });
 
-// RIGHT: always await async operations
+// CORRECTO: siempre await las operaciones asíncronas
 it("saves user", async () => {
   await service.save(user);
   expect(repo.save).toHaveBeenCalledOnce();
 });
 
-// Testing rejections — use rejects matcher
+// Testear rechazos — usar el matcher rejects
 it("throws on duplicate email", async () => {
   vi.mocked(repo.findByEmail).mockResolvedValueOnce(existingUser);
 
@@ -189,7 +189,7 @@ it("throws on duplicate email", async () => {
 
 ## Snapshot Testing
 
-Use snapshots sparingly — only for serialized output (API responses, rendered HTML strings). Avoid snapshots for internal data structures.
+Usar snapshots con moderación — solo para output serializado (respuestas de API, strings HTML renderizados). Evitar snapshots para estructuras de datos internas.
 
 ```typescript
 it("serializes error response correctly", async () => {
@@ -204,6 +204,6 @@ it("serializes error response correctly", async () => {
     }
   `);
 });
-// Prefer inline snapshots (toMatchInlineSnapshot) over external .snap files
-// — they are visible in the test file and reviewed in PRs
+// Preferir inline snapshots (toMatchInlineSnapshot) sobre archivos .snap externos
+// — son visibles en el archivo de test y se revisan en PRs
 ```

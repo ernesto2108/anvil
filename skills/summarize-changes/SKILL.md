@@ -1,27 +1,27 @@
 ---
 name: summarize-changes
 disable-model-invocation: true
-description: Create a human-readable summary of what changed and why, writing last-run.md to the vault. Use when user says "summarize what we did", "write a report", "what did we change", or at the end of a work session to document progress.
+description: Crea un resumen legible para humanos de qué cambió y por qué, escribiendo last-run.md al vault. Úsalo cuando el usuario diga "resume lo que hicimos", "escribe un reporte", "qué cambiamos", o al final de una sesión de trabajo para documentar el progreso.
 ---
 
-Create a human-readable summary of what changed and why.
+Crea un resumen legible para humanos de qué cambió y por qué.
 
-## Prerequisite
+## Prerrequisito
 
-Invoke `/git-diff` first to gather the raw diff and change summary. Use its output as the base for the report.
+Invocar `/git-diff` primero para recopilar el diff crudo y el resumen de cambios. Usar su salida como base para el reporte.
 
-## Inputs
+## Entradas
 
-- Output from `/git-diff` (changed files, diff stats)
+- Salida de `/git-diff` (archivos cambiados, estadísticas del diff)
 - `<vault>/02-backlog/sprint-current.md`
 - `<vault>/03-tasks/<TASK-ID>/prd.md`
 - `<vault>/01-project/context.md`
 
-## Actions
+## Acciones
 
-- Use git-diff output to identify changed files
-- Group by feature
-- Infer intent from tasks
-- Explain reasons
+- Usar la salida de git-diff para identificar los archivos cambiados
+- Agrupar por feature
+- Inferir la intención a partir de las tareas
+- Explicar las razones
 
-Output: `<vault>/06-reports/last-run.md` (overwrite if exists)
+Salida: `<vault>/06-reports/last-run.md` (sobreescribir si existe)

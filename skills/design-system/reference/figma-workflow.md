@@ -1,29 +1,29 @@
-# Figma — Design System Workflow
+# Figma — Flujo de Trabajo del Design System
 
-How to create a complete design system in Figma using MCP tools (`use_figma` via figma-use skill).
+Cómo crear un design system completo en Figma usando herramientas MCP (`use_figma` via skill figma-use).
 
-## Order of Operations
+## Orden de Operaciones
 
 ```
-1. Create Variable Collections    →  Primitives, Semantic (with modes), Component
-2. Build Components               →  With properties, variants, and variable bindings
-3. Assemble Screens               →  From component instances, switching modes per frame
-4. Mark Ready for Dev             →  Dev Mode picks up variables as code tokens
+1. Crear Variable Collections    →  Primitivos, Semántico (con modos), Componente
+2. Construir Componentes         →  Con propiedades, variantes y bindings de variables
+3. Ensamblar Pantallas           →  Desde instancias de componentes, cambiando modos por frame
+4. Marcar Listo para Dev         →  Dev Mode recoge variables como code tokens
 ```
 
-## Prerequisites
+## Prerequisitos
 
-- Load `/figma:figma-use` skill BEFORE every `use_figma` call
-- Load `/figma:figma-generate-library` for full library creation workflow
-- For writing to Figma canvas, always use `use_figma` tool (never direct file edits)
+- Carga el skill `/figma:figma-use` ANTES de cada llamada a `use_figma`
+- Carga `/figma:figma-generate-library` para el flujo completo de creación de librería
+- Para escribir en el canvas de Figma, siempre usa la herramienta `use_figma` (nunca ediciones directas de archivo)
 
-## Step 1: Create Variable Collections
+## Paso 1: Crear Variable Collections
 
-Figma organizes variables into **Collections**. Each collection can have **Modes**.
+Figma organiza las variables en **Collections**. Cada collection puede tener **Modes**.
 
-### Collection: Primitives (no modes)
+### Collection: Primitivos (sin modos)
 
-Raw values. Never used directly in components or screens.
+Valores crudos. Nunca se usan directamente en componentes o pantallas.
 
 ```javascript
 // Create "Primitives" collection with color scales
@@ -78,9 +78,9 @@ createVariable("Primitives", "line-height/normal",  "FLOAT", 1.5)
 createVariable("Primitives", "line-height/relaxed", "FLOAT", 1.625)
 ```
 
-### Collection: Semantic (with modes: light, dark)
+### Collection: Semántico (con modos: light, dark)
 
-Purpose-based aliases. Values change per mode via aliasing to primitives.
+Aliases basados en propósito. Los valores cambian por modo via aliasing a primitivos.
 
 ```javascript
 // Create "Semantic" collection with 2 modes: "light" and "dark"
@@ -119,9 +119,9 @@ createVariable("Semantic", "space/page-padding",  "FLOAT", alias("Primitives/spa
 createVariable("Semantic", "space/input-padding",  "FLOAT", alias("Primitives/spacing/3"))
 ```
 
-### Variable Scoping
+### Scoping de Variables
 
-Restrict where variables can be applied to prevent misuse:
+Restringe dónde se pueden aplicar las variables para prevenir uso incorrecto:
 
 ```javascript
 // Color variables → scoped to fills, strokes
@@ -137,11 +137,11 @@ setVariableScoping("Primitives/radius/md", ["CORNER_RADIUS"])
 setVariableScoping("Primitives/font/size/base", ["FONT_SIZE"])
 ```
 
-## Step 2: Build Components
+## Paso 2: Construir Componentes
 
-### Component with Properties and Variants
+### Componente con Propiedades y Variantes
 
-**Button example** — one component handles all button types:
+**Ejemplo de Button** — un componente maneja todos los tipos de botón:
 
 ```javascript
 // Create component set "Button" with:
@@ -160,56 +160,56 @@ setVariableScoping("Primitives/font/size/base", ["FONT_SIZE"])
 // Font weight: bound to Primitives/font/weight/semibold
 ```
 
-### Component Properties Cheat Sheet
+### Tabla Rápida de Propiedades de Componentes
 
-| Property type | Use for | Example |
+| Tipo de propiedad | Usar para | Ejemplo |
 |---|---|---|
-| **Boolean** | Show/hide optional elements | `hasIcon`: toggles icon visibility |
-| **Text** | Editable text strings | `label`: "Submit", "Cancel", "Save" |
-| **Instance swap** | Swappable nested components | `leadingIcon`: swap between 20+ icon components |
-| **Variant** | Mutually exclusive states | `state`: default / hover / disabled |
+| **Boolean** | Mostrar/ocultar elementos opcionales | `hasIcon`: toggle de visibilidad del ícono |
+| **Text** | Strings de texto editables | `label`: "Submit", "Cancel", "Save" |
+| **Instance swap** | Componentes anidados intercambiables | `leadingIcon`: intercambiar entre 20+ componentes de ícono |
+| **Variant** | Estados mutuamente excluyentes | `state`: default / hover / disabled |
 
-### Key principle: Properties reduce variant explosion
+### Principio clave: Las propiedades reducen la explosión de variantes
 
 ```
-WITHOUT properties: Button/Primary/Large/WithIcon/Hover = 1 variant (of 24+)
-WITH properties:    Button → type:primary, size:lg, hasIcon:true, state:hover = same component
+SIN propiedades: Button/Primary/Large/WithIcon/Hover = 1 variante (de 24+)
+CON propiedades: Button → type:primary, size:lg, hasIcon:true, state:hover = mismo componente
 ```
 
-### Component Library Page
+### Página de la Librería de Componentes
 
-Create a dedicated page "Component Library" organized in labeled sections — not a flat dump:
+Crea una página dedicada "Component Library" organizada en secciones con etiquetas — no un volcado plano:
 
 ```
 Component Library
-├── Typography        → Heading (h1-h4), Body, Caption, Label with size samples
-├── Colors            → Swatches of all semantic colors (primary, accent, success, etc.) with names
-├── Icons             → All project icons at standard sizes (16, 20, 24px) with names
-│                       Document the icon set (Lucide, Heroicons, Phosphor) so devs install the right package
-├── Primitives        → Buttons (primary/secondary/ghost), Badges, Links, Inputs, Dividers
+├── Typography        → Heading (h1-h4), Body, Caption, Label con muestras de tamaño
+├── Colors            → Swatches de todos los colores semánticos (primary, accent, success, etc.) con nombres
+├── Icons             → Todos los iconos del proyecto en tamaños estándar (16, 20, 24px) con nombres
+│                       Documenta el set de iconos (Lucide, Heroicons, Phosphor) para que los devs instalen el correcto
+├── Primitives        → Botones (primary/secondary/ghost), Badges, Links, Inputs, Dividers
 ├── Cards             → Job/Card, Project/Card, Stat/Card, etc.
 ├── Navigation        → Navbar, tabs, breadcrumbs
 └── Feedback          → Alert, toast, empty state
 ```
 
-Each section has a visible label frame. This is the developer's reference — they should be able to look at the library and understand every visual element available.
+Cada sección tiene un frame de etiqueta visible. Esta es la referencia del desarrollador — deben poder ver la librería y entender cada elemento visual disponible.
 
-#### Icons for Web
+#### Iconos para Web
 
-Figma uses vector networks for icons. For web handoff, document which icon package to use:
+Figma usa redes vectoriales para iconos. Para handoff web, documenta qué paquete de iconos usar:
 
-| Figma icon source | Web package |
+| Fuente de icono Figma | Paquete web |
 |---|---|
-| Lucide icons plugin | `lucide-react` / `lucide-vue` |
-| Heroicons plugin | `@heroicons/react` |
-| Phosphor plugin | `@phosphor-icons/react` |
+| Plugin Lucide icons | `lucide-react` / `lucide-vue` |
+| Plugin Heroicons | `@heroicons/react` |
+| Plugin Phosphor | `@phosphor-icons/react` |
 | Material Symbols | `@mui/icons-material` |
 
-Name each icon in the library so the developer can find it in the package (e.g., `ArrowRight`, `Mail`, `Github`).
+Nombra cada icono en la librería para que el desarrollador pueda encontrarlo en el paquete (ej., `ArrowRight`, `Mail`, `Github`).
 
-## Step 3: Assemble Screens
+## Paso 3: Ensamblar Pantallas
 
-### Using Component Instances
+### Usando Instancias de Componentes
 
 ```javascript
 // Insert button instance
@@ -231,7 +231,7 @@ emailInput.setProperties({
 })
 ```
 
-### Applying Modes to Frames
+### Aplicando Modos a Frames
 
 ```javascript
 // Set entire screen to dark mode
@@ -243,53 +243,53 @@ const sidebar = loginScreen.findChild(n => n.name === "Sidebar")
 sidebar.setExplicitVariableModeForCollection(semanticCollectionId, darkModeId)
 ```
 
-This is the killer feature: **one design, multiple themes** — no duplication.
+Esta es la característica killer: **un diseño, múltiples temas** — sin duplicación.
 
-## Step 4: Dev Mode Handoff
+## Paso 4: Handoff a Dev Mode
 
-When the design is complete:
+Cuando el diseño esté completo:
 
-1. **Mark frames as "Ready for Dev"**
-2. Dev Mode shows variables as code tokens:
-   - `fill: var(--color-primary)` instead of `fill: #2563EB`
-   - `padding: var(--space-card-padding)` instead of `padding: 24px`
-   - `font-family: var(--font-family-body)` instead of `font-family: Inter`
-3. **Code Connect** maps components to actual React/Swift/Kotlin code snippets
-4. Developers see the full alias chain: `color-primary → brand-600 → #2563EB`
+1. **Marca los frames como "Ready for Dev"**
+2. Dev Mode muestra variables como code tokens:
+   - `fill: var(--color-primary)` en lugar de `fill: #2563EB`
+   - `padding: var(--space-card-padding)` en lugar de `padding: 24px`
+   - `font-family: var(--font-family-body)` en lugar de `font-family: Inter`
+3. **Code Connect** mapea componentes a snippets reales de código React/Swift/Kotlin
+4. Los desarrolladores ven la cadena completa de aliases: `color-primary → brand-600 → #2563EB`
 
-## Common Patterns
+## Patrones Comunes
 
-### Multi-brand with Modes
+### Multi-marca con Modos
 
-Collection "Semantic" with modes: `brand-a-light`, `brand-a-dark`, `brand-b-light`, `brand-b-dark`
+Collection "Semantic" con modos: `brand-a-light`, `brand-a-dark`, `brand-b-light`, `brand-b-dark`
 
-Each variable resolves to brand-specific primitives per mode. One design file serves multiple brands.
+Cada variable resuelve a primitivos específicos de marca por modo. Un archivo de diseño sirve múltiples marcas.
 
-### Responsive with Modes
+### Responsivo con Modos
 
-Collection "Sizing" with modes: `mobile`, `tablet`, `desktop`
+Collection "Sizing" con modos: `mobile`, `tablet`, `desktop`
 
 ```
 space/page-padding:  mobile=16, tablet=24, desktop=48
 font/size/display:   mobile=30, tablet=36, desktop=48
 ```
 
-Apply mode to frame → entire layout adjusts.
+Aplica modo al frame → todo el layout se ajusta.
 
-### Nested Modes
+### Modos Anidados
 
-A page in `dark` mode can have a child frame in `light` mode (e.g., a light modal on a dark page). Modes cascade down but can be overridden at any frame level.
+Una página en modo `dark` puede tener un frame hijo en modo `light` (ej., un modal claro sobre una página oscura). Los modos se cascadean hacia abajo pero pueden sobreescribirse en cualquier nivel de frame.
 
-## Common Mistakes
+## Errores Comunes
 
-| Mistake | Correct approach |
+| Error | Enfoque correcto |
 |---|---|
-| Creating variables without collections | Group into Primitives / Semantic / Component collections |
-| All variables in one mode | Use modes for light/dark at minimum |
-| No aliasing (semantic = raw hex) | Semantic variables alias primitive variables |
-| No scoping | Scope color vars to fills, spacing to gaps/padding |
-| Separate components for each state | Use variant property for state axis |
-| Separate component for icon/no-icon | Use boolean property `hasIcon` |
-| Hardcoded text in component | Use text property for editable strings |
-| Duplicating screens for dark mode | Apply dark mode to frame, same screen |
-| Variables not showing in Dev Mode | Ensure variables are bound to node properties, not just defined |
+| Crear variables sin collections | Agrupar en collections Primitives / Semantic / Component |
+| Todas las variables en un modo | Usa modos para light/dark como mínimo |
+| Sin aliasing (semántico = hex crudo) | Las variables semánticas hacen alias a variables primitivas |
+| Sin scoping | Aplica scope a vars de color para fills, spacing para gaps/padding |
+| Componentes separados para cada estado | Usa variant property para el eje de estado |
+| Componente separado para icono/sin-icono | Usa boolean property `hasIcon` |
+| Texto hardcodeado en componente | Usa text property para strings editables |
+| Duplicar pantallas para modo oscuro | Aplica dark mode al frame, misma pantalla |
+| Variables no aparecen en Dev Mode | Asegura que las variables estén vinculadas a propiedades del nodo, no solo definidas |

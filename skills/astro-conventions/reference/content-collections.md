@@ -1,6 +1,6 @@
 # Content Collections
 
-## Definition
+## Definición
 
 ```typescript
 // src/content/config.ts
@@ -47,13 +47,13 @@ export const collections = { blog, projects, authors };
 
 ## Loaders
 
-| Loader | Source | Use for |
+| Loader | Fuente | Usar para |
 |---|---|---|
-| `glob()` | Markdown/MDX files from disk | Blog posts, docs, projects |
-| `file()` | Single JSON/YAML file | Authors, config, navigation |
-| Custom | API, CMS, database | Headless CMS content |
+| `glob()` | Archivos Markdown/MDX del disco | Posts de blog, docs, proyectos |
+| `file()` | Archivo JSON/YAML único | Autores, config, navegación |
+| Custom | API, CMS, base de datos | Contenido de CMS headless |
 
-## Querying
+## Consultas
 
 ```typescript
 import { getCollection, getEntry, render } from 'astro:content';
@@ -71,7 +71,7 @@ const post = await getEntry('blog', 'my-first-post');
 const { Content, headings } = await render(post);
 ```
 
-## Dynamic Routes
+## Rutas Dinámicas
 
 ```astro
 ---
@@ -97,7 +97,7 @@ const { Content } = await render(post);
 </BlogLayout>
 ```
 
-## Typed Props
+## Props Tipadas
 
 ```typescript
 import type { CollectionEntry } from 'astro:content';
@@ -107,12 +107,12 @@ interface Props {
 }
 ```
 
-## Rules
+## Reglas
 
-- Always define Zod schemas — catches errors at dev time
-- `z.coerce.date()` for dates — handles string→Date
-- `reference('collection')` for cross-collection links
-- Sort manually — query order is non-deterministic
-- Filter early with `getCollection()` callbacks
-- Collections live outside `src/pages/` — create routes via `getStaticPaths()`
-- `strictNullChecks: true` required for proper typing
+- Siempre define esquemas Zod — detecta errores en tiempo de desarrollo
+- `z.coerce.date()` para fechas — maneja string→Date
+- `reference('collection')` para links entre colecciones
+- Ordena manualmente — el orden de consulta es no determinista
+- Filtra temprano con callbacks de `getCollection()`
+- Las colecciones viven fuera de `src/pages/` — crea rutas vía `getStaticPaths()`
+- `strictNullChecks: true` requerido para tipado correcto

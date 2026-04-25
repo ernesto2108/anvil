@@ -1,11 +1,11 @@
-# Pre-Implementation Checklist
+# Checklist Pre-Implementación
 
-Before writing Python code, verify:
+Antes de escribir código Python, verificar:
 
-- [ ] Python version target — using 3.12+ features? (`type`, `X | Y`, `batched`)
-- [ ] Type hints planned — return types, parameters, Protocol for interfaces
-- [ ] Pydantic model for any external input — API, config, file data
-- [ ] Test strategy — what fixtures, what to mock (boundary only)
-- [ ] Dependencies — is there a stdlib solution? (`itertools.batched`, `tomllib`, `asyncio.TaskGroup`)
-- [ ] For ML/data — dtype explicit (`float32`), batch size defined, memory strategy for large data
-- [ ] For async — using TaskGroup? Timeouts defined? Concurrency limits?
+- [ ] Versión objetivo de Python — ¿usando features de 3.12+? (`type`, `X | Y`, `batched`)
+- [ ] Type hints planeados — tipos de retorno, parámetros, Protocol para interfaces
+- [ ] Modelo Pydantic para cualquier input externo — API, config, datos de archivo
+- [ ] Estrategia de test — qué fixtures, qué mockear (solo límites)
+- [ ] Dependencias — ¿hay una solución stdlib? (`itertools.batched`, `tomllib`, `asyncio.TaskGroup`)
+- [ ] Para ML/data — dtype explícito (`float32`), batch size definido, estrategia de memoria para datos grandes
+- [ ] Para async — ¿usando TaskGroup? ¿Timeouts definidos? ¿Límites de concurrencia?

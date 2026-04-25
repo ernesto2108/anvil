@@ -1,52 +1,52 @@
-# Service Pipeline — Go Backend
+# Pipeline de Servicio — Go Backend
 
-## Architecture detection
+## Detección de arquitectura
 
-| Root contains | Pattern | Skeleton |
+| Raíz contiene | Patrón | Esqueleto |
 |---|---|---|
-| `internal/` (NO `domain/`) | MVC | `service-skeleton-mvc.md` |
+| `internal/` (SIN `domain/`) | MVC | `service-skeleton-mvc.md` |
 | `domain/` + `usecase/` | Clean | `service-skeleton-clean.md` |
-| `internal/` with `business/` | Hex | `service-skeleton-clean.md` (note deviations) |
+| `internal/` con `business/` | Hex | `service-skeleton-clean.md` (notar desviaciones) |
 
-## Output pattern
+## Patrón de salida
 
 ```
 <docs>/04-architecture/<project>/
-├── context-summary.md      # Technical summary
-├── context-endpoints.md    # Flows per endpoint
-├── context-risks.md        # Risk areas with code snippets
-├── overview.md             # C4, components, ERD, sequence diagrams
-├── security-audit.md       # OWASP audit with score
+├── context-summary.md      # Resumen técnico
+├── context-endpoints.md    # Flujos por endpoint
+├── context-risks.md        # Áreas de riesgo con fragmentos de código
+├── overview.md             # C4, componentes, ERD, diagramas de secuencia
+├── security-audit.md       # Auditoría OWASP con puntaje
 └── endpoints/
-    └── <endpoint-name>.md  # One per endpoint with sequence diagram
+    └── <endpoint-name>.md  # Uno por endpoint con diagrama de secuencia
 ```
 
-## Skeleton reference
+## Referencia de esqueleto
 
 ### MVC (`service-skeleton-mvc.md`)
-- Structure: `internal/{domain}/handlers|services|repositories`
-- Middleware: MiddlewareError + MiddlewareTracking (separate)
+- Estructura: `internal/{domain}/handlers|services|repositories`
+- Middleware: MiddlewareError + MiddlewareTracking (separados)
 - Config: JSON local -> SSM fallback
-- SQL: raw queries in `queries/*.go`
+- SQL: queries crudas en `queries/*.go`
 
 ### Clean (`service-skeleton-clean.md`)
-- Structure: `domain/` + `usecase/` + `interface/` + `infrastructure/`
-- Middleware: trackRequestAndResponse + authorizationMiddleware (fused)
+- Estructura: `domain/` + `usecase/` + `interface/` + `infrastructure/`
+- Middleware: trackRequestAndResponse + authorizationMiddleware (fusionados)
 - Config: YAML local -> SSM fallback
 - SQL: squirrel + scany
-- Multi-mode: HTTP, gRPC, SQS, Lambda
+- Multi-modo: HTTP, gRPC, SQS, Lambda
 
-## Scanner instructions
+## Instrucciones para el Scanner
 
-"The skeleton describes patterns common to services of this type. Do NOT re-explore these patterns. Focus on what DIFFERS: domains, endpoints, business logic, schema, integrations, extra libraries. In context-summary.md, reference the skeleton and only detail differences. In context-risks.md, include CODE SNIPPETS (5-10 lines) for: (a) auth/authorization, (b) input validation, (c) SQL risks, (d) data exposure, (e) CONCURRENCY — Redis locks, errgroup, goroutines, os.Exit, (f) INTEGRATION — Kafka/SQS config, gRPC interceptors, (g) ERROR HANDLING — ignored errors, silenced rollbacks, fmt.Errorf with external strings. Reference inherited systemic issues by ID."
+"El esqueleto describe patrones comunes en servicios de este tipo. NO re-explorar estos patrones. Enfocarse en lo que DIFIERE: dominios, endpoints, lógica de negocio, esquema, integraciones, librerías extra. En context-summary.md, referenciar el esqueleto y detallar solo las diferencias. En context-risks.md, incluir FRAGMENTOS DE CÓDIGO (5-10 líneas) para: (a) auth/autorización, (b) validación de inputs, (c) riesgos SQL, (d) exposición de datos, (e) CONCURRENCIA — Redis locks, errgroup, goroutines, os.Exit, (f) INTEGRACIÓN — config Kafka/SQS, interceptores gRPC, (g) MANEJO DE ERRORES — errores ignorados, rollbacks silenciados, fmt.Errorf con strings externas. Referenciar issues sistémicos heredados por ID."
 
-Output: `context-summary.md`, `context-endpoints.md`, `context-risks.md`
+Salida: `context-summary.md`, `context-endpoints.md`, `context-risks.md`
 
-## Architect — Overview
+## Arquitecto — Overview
 
-Inject: context-summary.md INLINE. Do NOT inject endpoints or risks.
+Inyectar: context-summary.md INLINE. NO inyectar endpoints ni risks.
 
-Output `overview.md` (+ optional `state-machine.md`) with:
+Generar `overview.md` (+ opcional `state-machine.md`) con:
 1. Descripcion del servicio
 2. Diagrama de Contexto (C4)
 3. Componentes internos
@@ -55,34 +55,34 @@ Output `overview.md` (+ optional `state-machine.md`) with:
 6. Dependencias externas (tabla)
 7. Notas tecnicas
 
-## Architect — Detail (endpoints)
+## Arquitecto — Detalle (endpoints)
 
-Before launching, read `<docs>/07-references/template-endpoint.md`.
+Antes de lanzar, leer `<docs>/07-references/template-endpoint.md`.
 
-Inject: template-endpoint.md + context-endpoints.md INLINE. Do NOT inject summary or risks.
+Inyectar: template-endpoint.md + context-endpoints.md INLINE. NO inyectar summary ni risks.
 
-Instructions: "Use the template as the EXACT format reference. Do NOT read example files."
+Instrucciones: "Usar el template como referencia de formato EXACTA. NO leer archivos de ejemplo."
 
-Output: `endpoints/*.md` (one per endpoint)
+Salida: `endpoints/*.md` (uno por endpoint)
 
-## Security instructions (backend)
+## Instrucciones de Seguridad (backend)
 
-"Systemic issues documented in `known-systemic-issues.md` are PRE-VALIDATED. Include with their ID prefix and note 'inherited from ecosystem'. Do NOT spend tool calls confirming them. For service-specific risks, context-risks.md has COMPREHENSIVE CODE SNIPPETS covering auth, input, SQL, data exposure, concurrency, integrations, and error handling. Do NOT re-read infrastructure/ or usecase/ files. Only Read to trace cross-file call chains not covered by snippets."
+"Los issues sistémicos documentados en `known-systemic-issues.md` están PRE-VALIDADOS. Incluirlos con su prefijo de ID y anotar 'inherited from ecosystem'. NO gastar tool calls confirmándolos. Para riesgos específicos del servicio, context-risks.md tiene FRAGMENTOS DE CÓDIGO COMPLETOS cubriendo auth, input, SQL, exposición de datos, concurrencia, integraciones y manejo de errores. NO re-leer archivos en infrastructure/ ni usecase/. Solo usar Read para rastrear cadenas de llamadas entre archivos no cubiertas por los fragmentos."
 
-Output: `security-audit.md`, bug files in `<docs>/05-bugs/`, backlog entries in sprint-current.md
+Salida: `security-audit.md`, archivos de bugs en `<docs>/05-bugs/`, entradas en sprint-current.md
 
-## Systemic issues reference
+## Referencia de issues sistémicos
 
-File: `<docs>/07-references/known-systemic-issues.md`
-- Systemic issues confirmed across audited services
-- Frequent issues found in subset of services
-- Score reference from ecosystem audit
+Archivo: `<docs>/07-references/known-systemic-issues.md`
+- Issues sistémicos confirmados en servicios auditados
+- Issues frecuentes encontrados en subconjunto de servicios
+- Referencia de puntaje del audit del ecosistema
 
-## Injection cheat sheet
+## Tabla de inyección rápida
 
-| Agent | Inject INLINE | Do NOT inject |
+| Agente | Inyectar INLINE | NO inyectar |
 |---|---|---|
-| Scanner | skeleton (resolved by pattern) | — |
-| Architect (overview) | context-summary.md | endpoints, risks |
-| Architect (endpoints) | template-endpoint.md + context-endpoints.md | summary, risks |
-| Security | known-systemic-issues.md + context-risks.md + overview summary | full endpoints |
+| Scanner | skeleton (resuelto por patrón) | — |
+| Arquitecto (overview) | context-summary.md | endpoints, risks |
+| Arquitecto (endpoints) | template-endpoint.md + context-endpoints.md | summary, risks |
+| Seguridad | known-systemic-issues.md + context-risks.md + overview summary | full endpoints |

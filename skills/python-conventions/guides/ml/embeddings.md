@@ -1,6 +1,6 @@
-# Embeddings & ML Patterns
+# Patrones de Embeddings y ML
 
-## Batch Embedding Computation
+## Cómputo de Embeddings por Lotes
 
 ```python
 from itertools import batched
@@ -23,7 +23,7 @@ def compute_embeddings(
     return result
 ```
 
-## Cosine Similarity (Vectorized)
+## Similitud Coseno (Vectorizada)
 
 ```python
 def cosine_similarity(
@@ -36,7 +36,7 @@ def cosine_similarity(
     return corpus @ query / (corpus_norms * query_norm + 1e-12)
 ```
 
-## Normalization
+## Normalización
 
 ```python
 def normalize(vectors: NDArray[np.float32]) -> NDArray[np.float32]:
@@ -45,7 +45,7 @@ def normalize(vectors: NDArray[np.float32]) -> NDArray[np.float32]:
     return vectors / np.maximum(norms, 1e-12)
 ```
 
-## Top-K Retrieval
+## Recuperación Top-K
 
 ```python
 def top_k(
@@ -61,7 +61,7 @@ def top_k(
     return top_indices, scores[top_indices]
 ```
 
-## Memory-Mapped Storage
+## Almacenamiento Mapeado en Memoria
 
 ```python
 def create_store(path: str, n: int, dim: int) -> np.memmap:
@@ -73,7 +73,7 @@ def load_store(path: str, n: int, dim: int) -> np.memmap:
     return np.memmap(path, dtype="float32", mode="r", shape=(n, dim))
 ```
 
-## Async Batch Processing
+## Procesamiento Async por Lotes
 
 ```python
 async def embed_async(
@@ -97,11 +97,11 @@ async def embed_async(
     return np.vstack([results[i] for i in sorted(results)])
 ```
 
-## Key Rules
+## Reglas Clave
 
-- **Always `float32`** — float64 doubles memory for zero benefit in similarity search
-- **Preallocate with `np.empty`** — never grow lists
-- **`argpartition` for top-k** — O(n) vs O(n log n) for full sort
-- **Batch API calls** — 32-256 items per batch, never one-by-one
-- **Semaphore for concurrency** — limit parallel API calls to avoid rate limits
-- **Memory-map for large stores** — datasets that don't fit in RAM
+- **Siempre `float32`** — float64 duplica la memoria sin beneficio en búsqueda por similitud
+- **Preasignar con `np.empty`** — nunca crecer listas
+- **`argpartition` para top-k** — O(n) vs O(n log n) para ordenamiento completo
+- **Llamadas a API por lotes** — 32-256 ítems por lote, nunca uno a uno
+- **Semáforo para concurrencia** — limitar llamadas paralelas a la API para evitar rate limits
+- **Memory-map para almacenes grandes** — datasets que no caben en RAM

@@ -1,6 +1,6 @@
-# Multi-Level Timeout Architecture
+# Arquitectura de Timeouts Multi-Nivel
 
-Timeouts should be layered: overall request → per-operation → per-attempt.
+Los timeouts deben ser por capas: presupuesto total de request → por operación → por intento.
 
 ```go
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -20,14 +20,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-## Recommended Defaults
+## Valores por Defecto Recomendados
 
-| Call Type | Timeout | Notes |
+| Tipo de llamada | Timeout | Notas |
 |-----------|---------|-------|
-| HTTP client (safety net) | 15-30s | `http.Client{Timeout: ...}` |
-| Database query (simple) | 5s | `context.WithTimeout(ctx, 5*time.Second)` |
-| Database query (report) | 30-60s | Complex aggregations, batch operations |
-| Redis | 1-3s | If Redis is slow, something is broken |
-| gRPC | 5-10s | Deadlines propagate automatically |
-| Overall HTTP request | 30-60s | Handler-level context |
-| Background job step | 5-30s | Per-step, not per-job |
+| HTTP client (red de seguridad) | 15-30s | `http.Client{Timeout: ...}` |
+| Query de BD (simple) | 5s | `context.WithTimeout(ctx, 5*time.Second)` |
+| Query de BD (reporte) | 30-60s | Agregaciones complejas, operaciones en batch |
+| Redis | 1-3s | Si Redis es lento, algo está mal |
+| gRPC | 5-10s | Los deadlines se propagan automáticamente |
+| Request HTTP total | 30-60s | Contexto a nivel de handler |
+| Paso de job en background | 5-30s | Por paso, no por job completo |

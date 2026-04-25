@@ -1,4 +1,4 @@
-# Advanced Astro Patterns
+# Patrones Avanzados de Astro
 
 ## TypeScript
 
@@ -9,14 +9,14 @@
 }
 ```
 
-- Use `strict` or `strictest` — never `base` for production
-- `Props` interface in every `.astro` component
-- Run `astro check` in CI: `"build": "astro check && astro build"`
-- `import type` for type-only imports
-- Type utilities: `HTMLAttributes<"div">`, `ComponentProps`, `InferGetStaticParamsType`
-- `src/env.d.ts` for global type extensions (`Astro.locals`, window properties)
+- Usa `strict` o `strictest` — nunca `base` para producción
+- Interfaz `Props` en cada componente `.astro`
+- Ejecuta `astro check` en CI: `"build": "astro check && astro build"`
+- `import type` para imports solo de tipos
+- Utilidades de tipos: `HTMLAttributes<"div">`, `ComponentProps`, `InferGetStaticParamsType`
+- `src/env.d.ts` para extensiones de tipos globales (`Astro.locals`, propiedades de window)
 
-## Image Optimization
+## Optimización de Imágenes
 
 ```astro
 ---
@@ -33,12 +33,12 @@ import heroImg from '../images/hero.jpg';
 <Image src="https://example.com/photo.jpg" width={800} height={400} alt="Remote" />
 ```
 
-**Rules:**
-- `src/` images → optimized at build (recommended)
-- `public/` images → served as-is (only for unprocessed assets)
-- Remote → needs `image.domains` in `astro.config.mjs`
-- `alt` is mandatory — enforced by Astro
-- Use `image()` helper in Content Collection schemas for typed image refs
+**Reglas:**
+- Imágenes en `src/` → optimizadas en build (recomendado)
+- Imágenes en `public/` → servidas tal cual (solo para assets sin procesar)
+- Remotas → necesita `image.domains` en `astro.config.mjs`
+- `alt` es obligatorio — aplicado por Astro
+- Usa el helper `image()` en esquemas de Content Collection para referencias de imágenes tipadas
 
 ## View Transitions
 
@@ -57,13 +57,13 @@ import { ViewTransitions } from 'astro:transitions';
 </html>
 ```
 
-- Add once in base layout → site-wide SPA-like navigation
-- Built-in: `fade`, `slide`, `none`
-- `transition:name="hero"` → persist element across pages
-- `transition:animate="slide"` → per-element animation
-- Preserves MPA (each page has its own URL, crawlable)
+- Agrégalo una vez en el layout base → navegación tipo SPA en todo el sitio
+- Incorporados: `fade`, `slide`, `none`
+- `transition:name="hero"` → persiste elemento entre páginas
+- `transition:animate="slide"` → animación por elemento
+- Preserva MPA (cada página tiene su propia URL, indexable)
 
-## SSR / Hybrid Rendering
+## SSR / Renderizado Híbrido
 
 ```javascript
 // astro.config.mjs
@@ -76,7 +76,7 @@ export default defineConfig({
 });
 ```
 
-Per-page opt-in/out:
+Opt-in/out por página:
 
 ```astro
 ---
@@ -85,11 +85,11 @@ export const prerender = false;
 ---
 ```
 
-| Mode | Default | Override |
+| Modo | Por defecto | Override |
 |---|---|---|
-| `static` (default) | All pages prerendered | N/A |
-| `hybrid` | All prerendered | `prerender = false` for SSR pages |
-| `server` | All SSR | `prerender = true` for static pages |
+| `static` (por defecto) | Todas las páginas pre-renderizadas | N/A |
+| `hybrid` | Todas pre-renderizadas | `prerender = false` para páginas SSR |
+| `server` | Todo SSR | `prerender = true` para páginas estáticas |
 
 ## Middleware
 
@@ -116,14 +116,14 @@ const logging = defineMiddleware(async (context, next) => {
 export const onRequest = sequence(auth, logging);
 ```
 
-- `context.locals` → share data between middleware and pages
-- `sequence()` → chain multiple middleware
-- `context.rewrite()` → show different content without redirect
-- Only runs for SSR pages (not static)
+- `context.locals` → comparte datos entre middleware y páginas
+- `sequence()` → encadena múltiples middleware
+- `context.rewrite()` → muestra contenido diferente sin redireccionar
+- Solo corre para páginas SSR (no estáticas)
 
 ## Testing
 
-**Unit (Vitest + Container API):**
+**Unitario (Vitest + Container API):**
 
 ```typescript
 // src/components/__tests__/Card.test.ts
@@ -164,7 +164,7 @@ test('blog page loads', async ({ page }) => {
 });
 ```
 
-## API Endpoints (SSR only)
+## API Endpoints (Solo SSR)
 
 ```typescript
 // src/pages/api/posts.ts

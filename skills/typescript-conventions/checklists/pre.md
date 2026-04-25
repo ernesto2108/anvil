@@ -1,49 +1,49 @@
-# Pre-Implementation Checklist
+# Checklist Pre-Implementación
 
-Before writing TypeScript code, verify:
+Antes de escribir código TypeScript, verifica:
 
-## Types & Strict Mode
+## Tipos y Modo Estricto
 
-- [ ] `tsconfig.json` has `"strict": true`, `noUncheckedIndexedAccess`, and `exactOptionalPropertyTypes`
-- [ ] `verbatimModuleSyntax` is enabled — use `import type` for type-only imports
-- [ ] No planned use of `any` — use `unknown` and narrow it
-- [ ] No planned use of `enum` — use `as const` + union type
-- [ ] Discriminated unions planned for variant types (not boolean flags)
-- [ ] Branded types planned for IDs and domain-specific primitives
+- [ ] `tsconfig.json` tiene `"strict": true`, `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes`
+- [ ] `verbatimModuleSyntax` está habilitado — usa `import type` para imports solo de tipos
+- [ ] Sin uso planificado de `any` — usa `unknown` y nárrowea
+- [ ] Sin uso planificado de `enum` — usa `as const` + union type
+- [ ] Discriminated unions planificadas para tipos variantes (no flags booleanos)
+- [ ] Branded types planificados para IDs y primitivos específicos del dominio
 
-## Architecture
+## Arquitectura
 
-- [ ] Project has `"type": "module"` in `package.json`
-- [ ] New imports use `.js` extensions (required for ESM)
-- [ ] No barrel `index.ts` files planned — direct imports only
-- [ ] Path aliases (`@app/*`) configured in both tsconfig and bundler config
-- [ ] Zod schemas defined at all external boundaries (API, env, form input)
-- [ ] Dependencies injected via constructor/parameter — no singleton imports in services
+- [ ] El proyecto tiene `"type": "module"` en `package.json`
+- [ ] Los nuevos imports usan extensiones `.js` (requerido para ESM)
+- [ ] Sin archivos barrel `index.ts` planificados — solo imports directos
+- [ ] Path aliases (`@app/*`) configurados tanto en tsconfig como en la config del bundler
+- [ ] Schemas Zod definidos en todas las fronteras externas (API, env, input de formularios)
+- [ ] Dependencias inyectadas vía constructor/parámetro — sin imports de singleton en servicios
 
-## Error Handling
+## Manejo de Errores
 
-- [ ] Library/service code returns `Result<T>` — does not throw
-- [ ] Application code catches `unknown` and narrows before using
-- [ ] No `throw "string"` planned — only `throw new Error(...)`
+- [ ] El código de librería/servicio retorna `Result<T>` — no lanza excepciones
+- [ ] El código de aplicación captura `unknown` y lo nárrowea antes de usarlo
+- [ ] Sin `throw "string"` planificado — solo `throw new Error(...)`
 
 ## Async
 
-- [ ] Long-running operations accept `AbortSignal`
-- [ ] Large array concurrent operations use a concurrency-limited helper (not unbounded `Promise.all`)
-- [ ] `Promise.allSettled` used when partial success is acceptable
+- [ ] Las operaciones de larga duración aceptan `AbortSignal`
+- [ ] Las operaciones concurrentes sobre arrays grandes usan un helper con límite de concurrencia (no `Promise.all` ilimitado)
+- [ ] Se usa `Promise.allSettled` cuando el éxito parcial es aceptable
 
-## React (when applicable)
+## React (cuando aplique)
 
-- [ ] All components are function components
-- [ ] Props typed with `interface` (not `type`)
-- [ ] Data-fetching extracted to custom hook with AbortController cleanup
-- [ ] Forms use `react-hook-form` + `zodResolver` — no manual validation
-- [ ] Async Server Components wrapped in `<Suspense>` with fallback
-- [ ] Error boundaries present around async sections
+- [ ] Todos los componentes son function components
+- [ ] Props tipadas con `interface` (no `type`)
+- [ ] El data-fetching está extraído en un custom hook con cleanup de AbortController
+- [ ] Los formularios usan `react-hook-form` + `zodResolver` — sin validación manual
+- [ ] Los async Server Components envueltos en `<Suspense>` con fallback
+- [ ] Error boundaries presentes alrededor de secciones async
 
-## Security
+## Seguridad
 
-- [ ] No `innerHTML` / `dangerouslySetInnerHTML` with untrusted content planned
-- [ ] User-facing string output uses `textContent` or React JSX (auto-escaped)
-- [ ] `crypto.getRandomValues()` planned for any token/secret generation (not `Math.random()`)
-- [ ] Auth tokens planned for httpOnly cookies (not localStorage)
+- [ ] Sin `innerHTML` / `dangerouslySetInnerHTML` con contenido no confiable planificado
+- [ ] El output de strings orientado al usuario usa `textContent` o React JSX (auto-escapado)
+- [ ] `crypto.getRandomValues()` planificado para cualquier generación de token/secreto (no `Math.random()`)
+- [ ] Los tokens de autenticación planificados para cookies httpOnly (no localStorage)

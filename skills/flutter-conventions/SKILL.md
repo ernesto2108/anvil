@@ -1,89 +1,89 @@
 ---
 name: flutter-conventions
-description: Flutter/Dart mobile conventions and coding standards. Use when writing Flutter widgets, reviewing Dart code, or user mentions "Flutter patterns", "BLoC", "Riverpod", "widget composition", "freezed", or working with .dart files.
+description: Convenciones y estándares de código para Flutter/Dart móvil. Usar cuando se escriban widgets de Flutter, se revise código Dart, o el usuario mencione "Flutter patterns", "BLoC", "Riverpod", "widget composition", "freezed", o cuando se trabaje con archivos .dart.
 ---
 
 # Flutter Conventions
 
-## Philosophy
+## Filosofía
 
-- **Widgets are cheap, rebuilds are not** — compose small widgets, but control when they rebuild
-- **Type safety is your first test** — if the compiler can catch it, don't leave it to runtime
-- **State belongs outside the UI** — widgets render, BLoCs/Notifiers decide
-- **Unidirectional data flow** — state flows down, events flow up
+- **Los widgets son baratos, los rebuilds no** — compón widgets pequeños, pero controla cuándo se reconstruyen
+- **El tipado seguro es tu primera prueba** — si el compilador puede detectarlo, no lo dejes para runtime
+- **El estado pertenece fuera de la UI** — los widgets renderizan, los BLoCs/Notifiers deciden
+- **Flujo de datos unidireccional** — el estado fluye hacia abajo, los eventos fluyen hacia arriba
 
 ## Stack
 
-- Flutter + Dart (null safety enforced)
-- State management: BLoC or Riverpod (check project preference)
-- Code generation: freezed + json_serializable + build_runner
-- DI: get_it + injectable (or Riverpod providers)
-- Navigation: GoRouter
+- Flutter + Dart (null safety obligatorio)
+- Gestión de estado: BLoC o Riverpod (verificar preferencia del proyecto)
+- Generación de código: freezed + json_serializable + build_runner
+- DI: get_it + injectable (o providers de Riverpod)
+- Navegación: GoRouter
 
-## Coding Rules
+## Reglas de Código
 
-- Null safety — no `dynamic` types unless absolutely necessary
-- Immutable state objects (use `freezed` or `@immutable`)
-- Widget composition — small, focused widgets with single responsibility
-- Separate UI widgets from logic (BLoC/Cubit/Notifier)
-- `const` constructors everywhere possible — up to 30% rendering improvement
-- Material 3 as design baseline
-- Extract widgets to separate classes, never `Widget _buildX()` helper methods
+- Null safety — sin tipos `dynamic` a menos que sea absolutamente necesario
+- Objetos de estado inmutables (usar `freezed` o `@immutable`)
+- Composición de widgets — widgets pequeños y enfocados con responsabilidad única
+- Separar widgets UI de la lógica (BLoC/Cubit/Notifier)
+- Constructores `const` en todos lados donde sea posible — hasta 30% de mejora en renderizado
+- Material 3 como línea base de diseño
+- Extraer widgets a clases separadas, nunca métodos helper `Widget _buildX()`
 
-## Architecture Rules
+## Reglas de Arquitectura
 
-1. **MVVM + Clean Architecture** — UI Layer → Domain Layer → Data Layer (imports directional inward)
-2. **Feature-first folder structure** — `lib/src/features/{name}/{presentation,application,domain,data}`
-3. **Repository pattern** — never call APIs from widgets or ViewModels directly
-4. **Result pattern for errors** — repositories return `Result<T>`, never throw. ViewModels switch, never try/catch
-5. **Two DTO layers** — domain entities (`freezed`) separate from DTOs (`json_serializable`) with `toDomain()` mappers
-6. **DI via constructors** — get_it + injectable, or Riverpod providers
-7. **Repositories never call each other** — combine data in ViewModels or domain use cases
+1. **MVVM + Clean Architecture** — UI Layer → Domain Layer → Data Layer (imports en dirección hacia adentro)
+2. **Estructura de carpetas feature-first** — `lib/src/features/{name}/{presentation,application,domain,data}`
+3. **Patrón Repository** — nunca llames APIs desde widgets o ViewModels directamente
+4. **Patrón Result para errores** — los repositories retornan `Result<T>`, nunca lanzan excepciones. Los ViewModels hacen switch, nunca try/catch
+5. **Dos capas DTO** — entidades de dominio (`freezed`) separadas de DTOs (`json_serializable`) con mappers `toDomain()`
+6. **DI via constructores** — get_it + injectable, o providers de Riverpod
+7. **Los repositories nunca se llaman entre sí** — combina datos en ViewModels o casos de uso de dominio
 
-## State Management Rules
+## Reglas de Gestión de Estado
 
-| Scope | Simple | Medium | Complex |
+| Alcance | Simple | Medio | Complejo |
 |---|---|---|---|
-| Single Widget | `setState` | `setState` | Cubit |
+| Widget único | `setState` | `setState` | Cubit |
 | Feature | `ValueNotifier` | Cubit | BLoC |
 | Cross-feature | Provider | Riverpod | BLoC |
 | Global | Riverpod | Riverpod | BLoC |
 
-Escalation: `setState` → Provider → Riverpod → BLoC. See `state-management-guide.md` for full patterns.
+Escalada: `setState` → Provider → Riverpod → BLoC. Ver `state-management-guide.md` para patrones completos.
 
-## Pre-Implementation Checklist
+## Checklist Pre-Implementación
 
-- [ ] Feature folder exists following feature-first structure
-- [ ] State management matches project convention (BLoC vs Riverpod)
-- [ ] Domain models use `freezed` or `@immutable`
-- [ ] No `dynamic` types in domain layer
-- [ ] Widget has `const` constructor if stateless
-- [ ] Streams and subscriptions have cleanup in `dispose()`
-- [ ] Error handling uses Result pattern (no try/catch in ViewModels)
-- [ ] Navigation uses GoRouter with typed parameters
-- [ ] Accessibility: Semantics, tooltips, tested with screen reader
-- [ ] Theming: uses `ColorScheme`, `textTheme`, `ThemeExtension` tokens — no hardcoded values
+- [ ] La carpeta de feature existe siguiendo la estructura feature-first
+- [ ] La gestión de estado coincide con la convención del proyecto (BLoC vs Riverpod)
+- [ ] Los modelos de dominio usan `freezed` o `@immutable`
+- [ ] Sin tipos `dynamic` en la capa de dominio
+- [ ] El widget tiene constructor `const` si es stateless
+- [ ] Los streams y suscripciones tienen limpieza en `dispose()`
+- [ ] El manejo de errores usa el patrón Result (sin try/catch en ViewModels)
+- [ ] La navegación usa GoRouter con parámetros tipados
+- [ ] Accesibilidad: Semantics, tooltips, probado con screen reader
+- [ ] Theming: usa tokens `ColorScheme`, `textTheme`, `ThemeExtension` — sin valores codificados
 
-## Anti-Pattern Detection
+## Detección de Anti-Patrones
 
-See `anti-patterns.md` for the full detection reference with severity levels.
+Ver `anti-patterns.md` para la referencia completa de detección con niveles de severidad.
 
-**Passive detection:** When reviewing Flutter/Dart code, automatically scan for `error` and `warning` patterns. Report as `[file:line] [severity] [category] anti-pattern-name`.
+**Detección pasiva:** Al revisar código Flutter/Dart, escanea automáticamente los patrones `error` y `warning`. Reporta como `[file:line] [severity] [category] anti-pattern-name`.
 
-**Active detection:** When user asks to "improve", "refactor", "optimize" — also report `suggestion` level and propose fixes.
+**Detección activa:** Cuando el usuario pide "improve", "refactor", "optimize" — reporta también el nivel `suggestion` y propone correcciones.
 
-Red flags that should always stop work:
-- `setState` after dispose without `mounted` check → setState-after-dispose (error)
-- `Timer`/`StreamSubscription` without `cancel()` in `dispose()` → resource-leak (error)
-- `dynamic` in domain models → untyped-domain (error)
-- `BuildContext` across async gaps → context-across-async (error)
-- `try/catch` in ViewModel/BLoC → error-swallowing (error)
+Señales de alerta que siempre deben detener el trabajo:
+- `setState` después de dispose sin verificación `mounted` → setState-after-dispose (error)
+- `Timer`/`StreamSubscription` sin `cancel()` en `dispose()` → resource-leak (error)
+- `dynamic` en modelos de dominio → untyped-domain (error)
+- `BuildContext` a través de gaps async → context-across-async (error)
+- `try/catch` en ViewModel/BLoC → error-swallowing (error)
 
-## Support Files
+## Archivos de Soporte
 
-- `architecture-guide.md` — Architecture (MVVM, Clean Arch, Result pattern, code generation, DI, GoRouter, platform-specific code, company patterns)
-- `state-management-guide.md` — State management (BLoC, Riverpod, Provider, Cubit, setState, ValueNotifier)
-- `testing-guide.md` — Testing pyramid (unit, widget, golden, integration tests)
-- `performance-guide.md` — Performance optimization (const, ListView.builder, RepaintBoundary, granular rebuilds, Alibaba/ByteDance patterns)
-- `theming-guide.md` — Theming (Material 3, ColorScheme.fromSeed, ThemeExtension tokens, responsive layouts)
-- `anti-patterns.md` — Anti-pattern detection table with severity levels and fix mapping
+- `architecture-guide.md` — Arquitectura (MVVM, Clean Arch, patrón Result, generación de código, DI, GoRouter, código específico de plataforma, patrones de empresa)
+- `state-management-guide.md` — Gestión de estado (BLoC, Riverpod, Provider, Cubit, setState, ValueNotifier)
+- `testing-guide.md` — Pirámide de testing (pruebas unitarias, de widget, golden, de integración)
+- `performance-guide.md` — Optimización de rendimiento (const, ListView.builder, RepaintBoundary, rebuilds granulares, patrones Alibaba/ByteDance)
+- `theming-guide.md` — Theming (Material 3, ColorScheme.fromSeed, tokens ThemeExtension, layouts responsive)
+- `anti-patterns.md` — Tabla de detección de anti-patrones con niveles de severidad y mapeo de correcciones

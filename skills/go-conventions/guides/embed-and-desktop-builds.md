@@ -1,14 +1,14 @@
-# //go:embed, Build Tags, and Desktop Builds (Wails)
+# //go:embed, Build Tags y Builds de Escritorio (Wails)
 
-Go patterns for embedding assets into binaries, using build tags to gate platform-specific code, and compiling desktop apps without the framework's own build tool.
+Patrones de Go para incrustar assets en binarios, usar build tags para condicionar código por plataforma, y compilar apps de escritorio sin la propia herramienta de build del framework.
 
-## `//go:embed` — core rules
+## `//go:embed` — reglas fundamentales
 
-### Rule 1: No `../` in embed patterns
+### Regla 1: Sin `../` en los patrones de embed
 
-`//go:embed` patterns are rooted at the **package directory** where the directive appears. You cannot escape that directory with `../`. This is enforced by the Go toolchain at compile time.
+Los patrones de `//go:embed` están enraizados en el **directorio del package** donde aparece la directiva. No puedes escapar ese directorio con `../`. Esto es aplicado por el toolchain de Go en tiempo de compilación.
 
-**Wrong (does not compile):**
+**Incorrecto (no compila):**
 ```go
 // internal/dashboard/assets.go
 package dashboard
@@ -19,9 +19,9 @@ import "embed"
 var assets embed.FS
 ```
 
-**Right — move the embed to a package whose directory contains the target:**
+**Correcto — mueve el embed a un package cuyo directorio contenga el objetivo:**
 ```go
-// frontendfs.go (at module root, same directory as frontend/)
+// frontendfs.go (en el root del módulo, mismo directorio que frontend/)
 package myapp
 
 import "embed"
@@ -30,18 +30,18 @@ import "embed"
 var DashboardFS embed.FS
 ```
 
-### Rule 2: Use `all:` prefix to include dotfiles
+### Regla 2: Usa el prefijo `all:` para incluir dotfiles
 
-By default, `//go:embed` skips files and directories whose names begin with `.` or `_`. For asset bundles (Vite, webpack) that may emit `.hidden` files, prefix the pattern with `all:`:
+Por defecto, `//go:embed` omite archivos y directorios cuyos nombres comienzan con `.` o `_`. Para bundles de assets (Vite, webpack) que pueden emitir archivos `.hidden`, prefija el patrón con `all:`:
 
 ```go
 //go:embed all:frontend/dist
 var assets embed.FS
 ```
 
-### Rule 3: Wiring embedded assets across packages
+### Regla 3: Conectar assets embebidos entre packages
 
-When the embed lives in a root package but the consumer is in `internal/`, do not re-export by reading files — pass the `embed.FS` as a parameter. If the consumer is registered via `init()` (common for CLI commands), a package-level var set by the root package's `init()` is acceptable:
+Cuando el embed vive en un package raíz pero el consumidor está en `internal/`, no re-exportes leyendo archivos — pasa el `embed.FS` como parámetro. Si el consumidor se registra vía `init()` (común en comandos CLI), una var a nivel de package definida por el `init()` del package raíz es aceptable:
 
 ```go
 // internal/cli/dashboard.go
@@ -49,7 +49,7 @@ package cli
 
 import "embed"
 
-// DashboardAssets is set by cmd/anvil/embed_dashboard.go at init time.
+// DashboardAssets es definida por cmd/anvil/embed_dashboard.go en tiempo de init.
 var DashboardAssets embed.FS
 ```
 
@@ -69,22 +69,22 @@ func init() {
 }
 ```
 
-This is the **only acceptable use of `init()` with side effects** in this codebase: bridging `//go:embed` directives across package boundaries when the embed path forces a specific package location. Document it inline.
+Este es el **único uso aceptable de `init()` con efectos secundarios** en esta codebase: hacer de puente para directivas `//go:embed` entre límites de packages cuando la ruta del embed fuerza una ubicación específica de package. Documéntalo inline.
 
 ---
 
-## Build tags for optional features
+## Build tags para features opcionales
 
-### Pattern: feature under a build tag
+### Patrón: feature bajo un build tag
 
-When a feature (dashboard, debug tools, profiling) pulls in heavy dependencies or CGO, gate it with a build tag so the default build stays lean:
+Cuando una feature (dashboard, debug tools, profiling) trae dependencias pesadas o CGO, condiciónala con un build tag para que el build por defecto sea ligero:
 
 ```go
 // internal/dashboard/app.go
 //go:build dashboard
 
 package dashboard
-// ... uses github.com/wailsapp/wails/v2, CGO, etc.
+// ... usa github.com/wailsapp/wails/v2, CGO, etc.
 ```
 
 ```go
@@ -101,48 +101,48 @@ func cmdDashboard(_ *config.App) {
 }
 ```
 
-**Invariants:**
-- Both files with complementary tags (`dashboard` and `!dashboard`) must export the same identifiers so the CLI wiring compiles in both modes.
-- Tests for tagged code must also use the tag: `go test -tags dashboard ./...`.
-- `go vet` must pass for both tag sets: `go vet ./...` AND `go vet -tags dashboard ./...`.
+**Invariantes:**
+- Ambos archivos con tags complementarios (`dashboard` y `!dashboard`) deben exportar los mismos identificadores para que el wiring del CLI compile en ambos modos.
+- Los tests para código con tag también deben usar el tag: `go test -tags dashboard ./...`.
+- `go vet` debe pasar para ambos conjuntos de tags: `go vet ./...` Y `go vet -tags dashboard ./...`.
 
-### Anti-pattern: orphan package without build constraints
+### Anti-patrón: package huérfano sin build constraints
 
-If a package has ONLY files guarded by a build tag, `go build ./...` without the tag will skip the package gracefully — BUT some tooling (`wails build`, `go list -json ./...`) will fail with `build constraints exclude all Go files in /path`.
+Si un package tiene SOLO archivos protegidos por un build tag, `go build ./...` sin el tag omitirá el package silenciosamente — PERO algunas herramientas (`wails build`, `go list -json ./...`) fallarán con `build constraints exclude all Go files in /path`.
 
-**Fix:** add at least one file without build constraints to the package (e.g., a `doc.go` declaring the package), OR accept that tooling requiring the package must pass the tag.
+**Fix:** agrega al menos un archivo sin build constraints al package (p.ej. un `doc.go` declarando el package), O acepta que las herramientas que requieran el package deben pasar el tag.
 
 ---
 
-## Wails v2 desktop builds (case study)
+## Builds de escritorio Wails v2 (caso de estudio)
 
-Wails v2 is a Go framework for building desktop apps with a web frontend. Its build tool (`wails build`) assumes a specific project layout:
+Wails v2 es un framework de Go para construir apps de escritorio con un frontend web. Su herramienta de build (`wails build`) asume un layout específico del proyecto:
 
-- `main` package at the **module root**
-- `frontend/` directory at the module root
-- `wails.json` at the module root
+- Package `main` en la **raíz del módulo**
+- Directorio `frontend/` en la raíz del módulo
+- `wails.json` en la raíz del módulo
 
-If your project has `main` in `cmd/<app>/` (standard Go layout for multi-command modules), `wails build` will not work. You must build with plain `go build` and set the right tags and linker flags manually.
+Si tu proyecto tiene `main` en `cmd/<app>/` (layout estándar de Go para módulos multi-comando), `wails build` no funcionará. Debes compilar con `go build` plano y configurar manualmente los tags y flags del linker correctos.
 
-### Required build tags
+### Build tags requeridos
 
-Wails v2 uses internal build tags to select runtime mode. Without them, it compiles a stub that returns an error at startup:
+Wails v2 usa build tags internos para seleccionar el modo de runtime. Sin ellos, compila un stub que retorna un error al arrancar:
 
 ```
 Wails applications will not build without the correct build tags.
 ```
 
-Build with:
+Compilar con:
 ```bash
 go build -tags "your_feature_tag production" ./cmd/app/
 ```
 
-- `production` — selects the production runtime (alternative: `dev`)
-- `your_feature_tag` — your own tag that guards the dashboard package (e.g., `dashboard`)
+- `production` — selecciona el runtime de producción (alternativa: `dev`)
+- `your_feature_tag` — tu propio tag que protege el package del dashboard (p.ej. `dashboard`)
 
-### Required CGO linker flags (macOS)
+### Flags CGO del linker requeridos (macOS)
 
-Wails v2 uses `UIType` APIs from `UniformTypeIdentifiers.framework` in its Objective-C code, but does NOT declare the framework in `#cgo LDFLAGS` directives. `wails build` injects it via `CGO_LDFLAGS` env var; plain `go build` requires you to set it manually:
+Wails v2 usa APIs `UIType` de `UniformTypeIdentifiers.framework` en su código Objective-C, pero NO declara el framework en directivas `#cgo LDFLAGS`. `wails build` lo inyecta vía la variable de entorno `CGO_LDFLAGS`; `go build` plano requiere que lo configures manualmente:
 
 ```bash
 CGO_ENABLED=1 \
@@ -150,18 +150,18 @@ CGO_LDFLAGS="-framework UniformTypeIdentifiers" \
 go build -tags "dashboard production" -o app-full ./cmd/app/
 ```
 
-Without this, the linker fails with:
+Sin esto, el linker falla con:
 ```
 Undefined symbols for architecture arm64:
   "_OBJC_CLASS_$_UTType", referenced from: ...
 ```
 
-### Embedded assets layout for Wails
+### Layout de assets embebidos para Wails
 
-Wails expects the frontend assets as an `embed.FS` passed to `wails.Run()`:
+Wails espera los assets del frontend como un `embed.FS` pasado a `wails.Run()`:
 
 ```go
-// at module root — frontendfs.go
+// en el root del módulo — frontendfs.go
 //go:build dashboard
 
 package myapp
@@ -172,9 +172,9 @@ import "embed"
 var DashboardFS embed.FS
 ```
 
-The package at module root does NOT need to be `main`. It can be any package name (commonly the module name). The `embed` directive only requires that the target path exists relative to the file.
+El package en el root del módulo NO necesita ser `main`. Puede tener cualquier nombre de package (comúnmente el nombre del módulo). La directiva `embed` solo requiere que la ruta objetivo exista relativa al archivo.
 
-### Full Makefile target example
+### Ejemplo completo de target en Makefile
 
 ```make
 DASHBOARD_BINARY := app-full
@@ -188,25 +188,25 @@ dashboard-build: dashboard-frontend
 	go build -tags "dashboard production" -o $(DASHBOARD_BINARY) ./cmd/app/
 ```
 
-### When to use `wails build` vs plain `go build`
+### Cuándo usar `wails build` vs `go build` plano
 
-| Scenario | Tool |
+| Escenario | Herramienta |
 |---|---|
-| `main` at module root, new project | `wails build` |
-| `main` in `cmd/<app>/`, multi-command module | plain `go build` with tags + CGO_LDFLAGS |
-| Production distribution on macOS with `.app` bundle | `wails build` (handles bundle, Info.plist, codesign) |
-| Dev iteration, single binary, cross-compile | plain `go build` |
+| `main` en el root del módulo, proyecto nuevo | `wails build` |
+| `main` en `cmd/<app>/`, módulo multi-comando | `go build` plano con tags + CGO_LDFLAGS |
+| Distribución en producción en macOS con bundle `.app` | `wails build` (maneja bundle, Info.plist, codesign) |
+| Iteración en dev, binario único, cross-compile | `go build` plano |
 
 ---
 
-## Checklist before shipping a desktop feature
+## Checklist antes de entregar una feature de escritorio
 
-- [ ] Feature is gated by a build tag (e.g., `dashboard`)
-- [ ] Stub file with `//go:build !dashboard` exists for the fallback message
-- [ ] `go build ./...` (no tag) compiles and does not pull CGO or framework deps
-- [ ] `go build -tags "<feature> production" ./...` compiles
-- [ ] `go vet` passes for both tag sets
-- [ ] Tests for tagged code run with the tag set
-- [ ] CGO_LDFLAGS documented in Makefile target (not expected from env)
-- [ ] `//go:embed` directive is at a package level where the target path resolves without `../`
-- [ ] Binary smoke test on the target platform (native window opens, bindings work)
+- [ ] La feature está condicionada por un build tag (p.ej. `dashboard`)
+- [ ] Existe un archivo stub con `//go:build !dashboard` para el mensaje de fallback
+- [ ] `go build ./...` (sin tag) compila y no trae CGO ni dependencias del framework
+- [ ] `go build -tags "<feature> production" ./...` compila
+- [ ] `go vet` pasa para ambos conjuntos de tags
+- [ ] Los tests para código con tag se ejecutan con el tag activo
+- [ ] CGO_LDFLAGS documentado en el target del Makefile (no se espera del entorno)
+- [ ] La directiva `//go:embed` está en un nivel de package donde la ruta objetivo se resuelve sin `../`
+- [ ] Smoke test del binario en la plataforma objetivo (la ventana nativa abre, los bindings funcionan)

@@ -1,27 +1,27 @@
 ---
 name: design-project
-description: Quick entry point for resuming or starting design projects. Auto-detects the design tool (.pen → Pencil, Figma URL → Figma), opens the file, loads context (variables, components, screens), and prepares the workspace. Use when user says "open design", "resume design", "design project", "pencil project", "figma project", or wants to start designing.
+description: Punto de entrada rápido para retomar o iniciar proyectos de diseño. Auto-detecta la herramienta de diseño (.pen → Pencil, URL de Figma → Figma), abre el archivo, carga el contexto (variables, componentes, pantallas) y prepara el workspace. Usar cuando el usuario diga "open design", "resume design", "design project", "pencil project", "figma project", o quiera comenzar a diseñar.
 ---
 
 # Design Project — Quick Start
 
-> Entry point only. Opens the workspace and hands off to `/design-system` or direct design work.
+> Solo punto de entrada. Abre el workspace y deriva a `/design-system` o trabajo de diseño directo.
 
-## Step 1: Detect design files
+## Paso 1: Detectar archivos de diseño
 
-Scan `~/projects/` for design files:
+Escanear `~/projects/` en busca de archivos de diseño:
 
 ```bash
-# Pencil files
+# Archivos Pencil
 find ~/projects -name "*.pen" -type f 2>/dev/null
 
-# Figma references (check for .figma URLs in project docs or config)
+# Referencias de Figma (verificar URLs .figma en docs del proyecto o config)
 grep -r "figma.com" ~/projects/*/README.md ~/projects/*/.env 2>/dev/null
 ```
 
-## Step 2: Present options (in Spanish)
+## Paso 2: Presentar opciones (en español)
 
-Show the user a numbered list:
+Mostrar al usuario una lista numerada:
 
 ```
 Proyectos de diseno encontrados:
@@ -33,43 +33,43 @@ N. [Crear nuevo] — crear un archivo de diseno en un repo existente
 Cual quieres abrir?
 ```
 
-For each file found, show:
-- Path or URL
-- Design tool detected (Pencil / Figma)
-- Associated repo name
+Para cada archivo encontrado, mostrar:
+- Ruta o URL
+- Herramienta de diseño detectada (Pencil / Figma)
+- Nombre del repo asociado
 
-If NO design files exist, skip to Step 3 and ask which repo needs a new design.
+Si NO existen archivos de diseño, saltar al Paso 3 y preguntar qué repo necesita un nuevo diseño.
 
-## Step 3: Handle "Create new"
+## Paso 3: Manejar "Crear nuevo"
 
-If the user picks an existing repo without a design file:
+Si el usuario elige un repo existente sin archivo de diseño:
 
-1. Ask: "Que herramienta de diseno? (Pencil / Figma)"
-2. Ask: "Donde quieres guardar el archivo? (ej. `design/`, `src/design/`, raiz del repo?)"
-3. Ask: "Que tipo de producto es? Web, mobile, ambos?"
-4. Create the file:
+1. Preguntar: "Que herramienta de diseno? (Pencil / Figma)"
+2. Preguntar: "Donde quieres guardar el archivo? (ej. `design/`, `src/design/`, raiz del repo?)"
+3. Preguntar: "Que tipo de producto es? Web, mobile, ambos?"
+4. Crear el archivo:
    - **Pencil**: `open_document("new")`
-   - **Figma**: guide user to create a Figma file and share the URL
+   - **Figma**: guiar al usuario a crear un archivo de Figma y compartir la URL
 
-## Step 4: Open and load context
+## Paso 4: Abrir y cargar contexto
 
-### If Pencil (.pen file):
+### Si es Pencil (archivo .pen):
 
 1. `open_document(filePath)`
-2. `get_editor_state()` — current canvas, selection, active page
+2. `get_editor_state()` — canvas actual, selección, página activa
 3. `get_variables()` — design tokens
-4. `batch_get({ patterns: [{ reusable: true }] })` — reusable components
-5. `batch_get({ patterns: [{ type: "frame", depth: 0 }] })` — top-level frames (screens)
+4. `batch_get({ patterns: [{ reusable: true }] })` — componentes reutilizables
+5. `batch_get({ patterns: [{ type: "frame", depth: 0 }] })` — frames de nivel superior (pantallas)
 
-### If Figma:
+### Si es Figma:
 
-1. Load `/figma-use` skill (mandatory before any Figma tool call)
-2. Read the Figma file structure
-3. List pages, frames, and components
+1. Cargar el skill `/figma-use` (obligatorio antes de cualquier llamada a herramientas de Figma)
+2. Leer la estructura del archivo Figma
+3. Listar páginas, frames y componentes
 
-## Step 5: Present project status (in Spanish)
+## Paso 5: Presentar el estado del proyecto (en español)
 
-Summarize what you found:
+Resumir lo que encontraste:
 
 ```
 Proyecto: my-project
@@ -87,26 +87,26 @@ Listo para trabajar. Usa /design-system para modificar tokens/componentes
 o dime que pantalla quieres disenar.
 ```
 
-If the file is empty (new), say so and suggest starting with `/design-system`.
+Si el archivo está vacío (nuevo), indicarlo y sugerir comenzar con `/design-system`.
 
-## Step 6: Verify canvas organization (Pencil only)
+## Paso 6: Verificar organización del canvas (solo Pencil)
 
-After presenting the project status, check if the canvas is organized:
+Después de presentar el estado del proyecto, verificar si el canvas está organizado:
 
-1. `snapshot_layout(maxDepth: 0)` — read all top-level frame positions
-2. Check if frames follow the organization rules:
-   - Row 1: Library + Component States
-   - Row 2+: Screens in chronological order (v1, v2, etc.)
-   - Last rows: Mobile screens
-   - ~200px gaps between rows and between horizontal frames
-3. If frames are disorganized, ask: "El canvas esta un poco desordenado, quieres que lo organice?"
-4. Never reorganize without asking first
+1. `snapshot_layout(maxDepth: 0)` — leer posiciones de todos los frames de nivel superior
+2. Verificar si los frames siguen las reglas de organización:
+   - Fila 1: Library + Component States
+   - Fila 2+: Pantallas en orden cronológico (v1, v2, etc.)
+   - Últimas filas: Pantallas mobile
+   - ~200px de separación entre filas y entre frames horizontales
+3. Si los frames están desorganizados, preguntar: "El canvas esta un poco desordenado, quieres que lo organice?"
+4. Nunca reorganizar sin preguntar primero
 
-## Rules
+## Reglas
 
-- **Always speak Spanish** with the user
-- **Never assume which project** — always ask, even if there's only one design file (confirm it)
-- **Auto-detect the tool** — don't ask "Pencil or Figma?" if the file extension makes it obvious
-- **Read-only on open** — this skill only opens and reads. No modifications to the design file
-- **Hand off, don't overlap** — this skill does NOT create variables, components, or screens. That's `/design-system`'s job
-- **Show repo name** — always show which repo the design belongs to so the user can correlate design ↔ code
+- **Hablar siempre en español** con el usuario
+- **Nunca asumir qué proyecto** — siempre preguntar, incluso si solo hay un archivo de diseño (confirmar)
+- **Auto-detectar la herramienta** — no preguntar "¿Pencil o Figma?" si la extensión del archivo lo hace obvio
+- **Solo lectura al abrir** — este skill solo abre y lee. Sin modificaciones al archivo de diseño
+- **Delegar, no solapar** — este skill NO crea variables, componentes ni pantallas. Eso es responsabilidad de `/design-system`
+- **Mostrar el nombre del repo** — siempre mostrar a qué repo pertenece el diseño para que el usuario pueda correlacionar diseño ↔ código

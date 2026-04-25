@@ -1,6 +1,6 @@
-# RabbitMQ Connection Management
+# Gestión de Conexiones RabbitMQ
 
-## Connection + Channel Setup
+## Configuración de Connection + Channel
 
 ```go
 func NewConnection(cnf RabbitMQConfig) (*amqp.Connection, *amqp.Channel, error) {
@@ -23,9 +23,9 @@ func NewConnection(cnf RabbitMQConfig) (*amqp.Connection, *amqp.Channel, error) 
 }
 ```
 
-## Auto-Reconnect Pattern
+## Patrón de Auto-Reconexión
 
-RabbitMQ's Go client does NOT reconnect automatically. Always implement reconnection.
+El cliente Go de RabbitMQ NO reconecta automáticamente. Siempre implementa reconexión.
 
 ```go
 type Client struct {
@@ -40,7 +40,7 @@ func (c *Client) monitorConnection(cnf RabbitMQConfig) {
     for {
         reason, ok := <-c.notifyClose
         if !ok {
-            return // connection closed normally
+            return // conexión cerrada normalmente
         }
 
         slog.Error("RabbitMQ connection lost", "reason", reason)
@@ -69,7 +69,7 @@ func (c *Client) attemptReconnect(cnf RabbitMQConfig) error {
     const maxRetries = 10
 
     for i := 0; i < maxRetries; i++ {
-        time.Sleep(time.Duration(i+1) * time.Second) // linear backoff
+        time.Sleep(time.Duration(i+1) * time.Second) // backoff lineal
 
         conn, ch, err := NewConnection(cnf)
         if err != nil {
@@ -92,10 +92,10 @@ func (c *Client) attemptReconnect(cnf RabbitMQConfig) error {
 }
 ```
 
-## Connection Rules
+## Reglas de Conexión
 
-- **Separate connections** for producers and consumers
-- **Reuse channels** — do NOT create per-message
-- **Use `NotifyClose`** to detect connection loss
-- **Enable publisher confirms** for reliable publishing
-- **Set QoS/prefetch** on consumer channels
+- **Conexiones separadas** para producers y consumers
+- **Reutiliza channels** — NO crees uno por mensaje
+- **Usa `NotifyClose`** para detectar pérdida de conexión
+- **Habilita publisher confirms** para publicación confiable
+- **Configura QoS/prefetch** en los channels de consumer

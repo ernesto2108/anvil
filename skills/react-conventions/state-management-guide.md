@@ -1,40 +1,40 @@
-# React State Management Guide
+# Guía de Gestión de Estado en React
 
-## State Categorization
+## Categorización del Estado
 
-> ~90% of traditional state management concerns disappear when you properly categorize state.
+> ~90% de las preocupaciones tradicionales de gestión de estado desaparecen cuando categorizas correctamente el estado.
 
-| State Type | Tool | Rationale |
+| Tipo de estado | Herramienta | Justificación |
 |---|---|---|
-| Server/remote data | **TanStack Query** (or SWR) | Caching, deduplication, retries, pagination, optimistic updates |
-| URL state | **nuqs** | Type-safe URL query parameter sync |
-| Client shared state | **Zustand** | Minimal API, no provider needed, granular subscriptions |
-| Complex interdependent state | **Jotai** | Atomic model, computed state graphs |
-| Form state | **React Hook Form + Zod** | Uncontrolled inputs for performance, schema validation |
-| Low-velocity global (theme, auth) | **React Context** | Built-in, sufficient for rarely-changing data |
+| Datos del servidor/remotos | **TanStack Query** (o SWR) | Caché, deduplicación, reintentos, paginación, actualizaciones optimistas |
+| Estado de URL | **nuqs** | Sincronización type-safe de query params en URL |
+| Estado compartido del cliente | **Zustand** | API mínima, sin provider necesario, suscripciones granulares |
+| Estado interdependiente complejo | **Jotai** | Modelo atómico, grafos de estado computado |
+| Estado de formulario | **React Hook Form + Zod** | Inputs no controlados para performance, validación por esquema |
+| Global de baja velocidad (theme, auth) | **React Context** | Incorporado, suficiente para datos que cambian raramente |
 
 ---
 
-## Escalation Path
+## Ruta de Escalamiento
 
 ```
 Context API → (need more features?) → Zustand → (need time-travel / complex middleware?) → Redux
 ```
 
-| Scope | Simple | Medium | Complex |
+| Alcance | Simple | Medio | Complejo |
 |---|---|---|---|
-| Single Component | Context | Context | Zustand |
-| Few Components | Context | Zustand | Zustand |
-| Many Components | Zustand | Zustand | Redux |
-| Global (App-wide) | Zustand | Zustand | Redux |
+| Componente único | Context | Context | Zustand |
+| Pocos componentes | Context | Zustand | Zustand |
+| Muchos componentes | Zustand | Zustand | Redux |
+| Global (toda la app) | Zustand | Zustand | Redux |
 
 ---
 
-## TanStack Query — Server State (Preferred)
+## TanStack Query — Server State (Preferido)
 
-Handles caching, deduplication, retries, pagination, and optimistic updates. Eliminates most manual loading/error state.
+Maneja caché, deduplicación, reintentos, paginación y actualizaciones optimistas. Elimina la mayor parte del estado manual de loading/error.
 
-### Basic Query
+### Query Básico
 
 ```tsx
 function useUser(id: string) {
@@ -54,7 +54,7 @@ function UserProfile({ id }: { id: string }) {
 }
 ```
 
-### Mutations with Optimistic Updates
+### Mutations con Actualizaciones Optimistas
 
 ```tsx
 function useUpdateUser() {
@@ -81,7 +81,7 @@ function useUpdateUser() {
 }
 ```
 
-### Infinite Queries (Pagination)
+### Infinite Queries (Paginación)
 
 ```tsx
 function useInfiniteUsers() {
@@ -94,20 +94,20 @@ function useInfiniteUsers() {
 }
 ```
 
-### Rules
+### Reglas
 
-- Query keys must be deterministic and unique per resource
-- Use `staleTime` to control refetch frequency (default 0 = always stale)
-- Prefetch on hover for instant navigation: `queryClient.prefetchQuery()`
-- Keep mutations close to the component that triggers them
+- Las query keys deben ser deterministas y únicas por recurso
+- Usar `staleTime` para controlar la frecuencia de refetch (por defecto 0 = siempre stale)
+- Prefetch al hover para navegación instantánea: `queryClient.prefetchQuery()`
+- Mantener las mutations cerca del componente que las dispara
 
 ---
 
-## Zustand — Client Shared State (Preferred)
+## Zustand — Estado Compartido del Cliente (Preferido)
 
-Minimal API, no provider needed, granular subscriptions via selectors.
+API mínima, sin provider necesario, suscripciones granulares vía selectores.
 
-### Basic Store
+### Store Básico
 
 ```tsx
 import { create } from 'zustand'
@@ -129,7 +129,7 @@ const useCartStore = create<CartStore>((set, get) => ({
 }))
 ```
 
-### Consuming with Selectors
+### Consumo con Selectores
 
 ```tsx
 // good: only re-renders when items change
@@ -160,7 +160,7 @@ const useCartStore = create<CartStore>()(
 )
 ```
 
-### Slices Pattern (Large Stores)
+### Patrón de Slices (Stores Grandes)
 
 ```tsx
 interface AuthSlice {
@@ -194,18 +194,18 @@ const useStore = create<AuthSlice & CartSlice>()((...a) => ({
 }))
 ```
 
-### Rules
+### Reglas
 
-- Always use selectors — never destructure the entire store
-- Name actions in devtools for debugging (`set({...}, false, 'actionName')`)
-- Use `persist` middleware for data that survives refresh (cart, preferences)
-- Split into slices when store exceeds ~10 properties
+- Usar selectores siempre — nunca desestructurar el store completo
+- Nombrar acciones en devtools para depuración (`set({...}, false, 'actionName')`)
+- Usar middleware `persist` para datos que sobreviven al refresh (carrito, preferencias)
+- Dividir en slices cuando el store supere ~10 propiedades
 
 ---
 
-## React Context — Low-Velocity Global State
+## React Context — Estado Global de Baja Velocidad
 
-Only for data that changes infrequently (theme, locale, auth status).
+Solo para datos que cambian con poca frecuencia (theme, locale, estado de auth).
 
 ```tsx
 interface ThemeContextValue {
@@ -233,17 +233,17 @@ function ThemeProvider({ children }: { children: ReactNode }) {
 }
 ```
 
-### Rules
+### Reglas
 
-- Context created with `createContext<Type | null>(null)` — always null check in hook
-- `useMemo` the value object to prevent unnecessary re-renders
-- Max 3 values in a single context — split if more
-- Never use Context for frequently-changing data (use Zustand instead)
-- Render providers as deep as possible in the tree
+- Context creado con `createContext<Type | null>(null)` — siempre verificar null en el hook
+- `useMemo` en el objeto value para prevenir re-renders innecesarios
+- Máximo 3 valores en un solo context — separar si hay más
+- Nunca usar Context para datos que cambian frecuentemente (usar Zustand en su lugar)
+- Renderizar providers lo más profundo posible en el árbol
 
 ---
 
-## React Hook Form + Zod — Form State
+## React Hook Form + Zod — Estado de Formulario
 
 ```tsx
 import { useForm } from 'react-hook-form'
@@ -281,18 +281,18 @@ function LoginForm() {
 }
 ```
 
-### Rules
+### Reglas
 
-- Zod schema is the single source of truth for validation
-- `z.infer<typeof schema>` generates the TypeScript type
-- Uncontrolled inputs by default (performance) — use `watch()` only when needed
-- Share schemas between frontend and backend
+- El esquema Zod es la única fuente de verdad para validación
+- `z.infer<typeof schema>` genera el tipo TypeScript
+- Inputs no controlados por defecto (performance) — usar `watch()` solo cuando sea necesario
+- Compartir esquemas entre frontend y backend
 
 ---
 
-## Redux Toolkit — Complex Enterprise State
+## Redux Toolkit — Estado Empresarial Complejo
 
-Only when you need time-travel debugging, complex middleware, or audit trails.
+Solo cuando necesitas depuración con viaje en el tiempo, middleware complejo o auditorías.
 
 ```tsx
 import { createSlice, createAsyncThunk, configureStore } from '@reduxjs/toolkit'
@@ -321,9 +321,9 @@ const useAppSelector: TypedUseSelectorHook<RootState> = useSelector
 const useAppDispatch: () => AppDispatch = useDispatch
 ```
 
-### Rules
+### Reglas
 
-- Always use RTK (Redux Toolkit) — never raw Redux
-- Always use typed hooks (`useAppSelector`, `useAppDispatch`)
-- RTK Query for server state (similar to TanStack Query)
-- Wrap with facade hooks — components never import `useAppSelector` directly
+- Siempre usar RTK (Redux Toolkit) — nunca Redux plano
+- Siempre usar hooks tipados (`useAppSelector`, `useAppDispatch`)
+- RTK Query para server state (similar a TanStack Query)
+- Envolver con facade hooks — los componentes nunca importan `useAppSelector` directamente

@@ -1,6 +1,6 @@
-# Testing Patterns
+# Patrones de Testing
 
-## Unit Tests
+## Tests Unitarios
 
 ```rust
 #[cfg(test)]
@@ -27,7 +27,7 @@ mod tests {
 }
 ```
 
-## Integration Tests
+## Tests de Integración
 
 ```
 tests/
@@ -50,7 +50,7 @@ async fn test_api() {
 }
 ```
 
-## Trait-Based Mocking
+## Mocking Basado en Traits
 
 ```rust
 // RIGHT — trait at boundary, mock in tests
@@ -72,7 +72,7 @@ impl HttpClient for MockClient {
 }
 ```
 
-## Property-Based Testing (proptest)
+## Testing Basado en Propiedades (proptest)
 
 ```rust
 use proptest::prelude::*;
@@ -126,12 +126,12 @@ fn test_json() {
 }
 ```
 
-## Key Crates
+## Crates Clave
 
-- `proptest` 1.x — property-based testing
+- `proptest` 1.x — testing basado en propiedades
 - `criterion` 0.5.x — benchmarking
 - `insta` 1.x — snapshot testing
-- `wiremock` 0.6.x — HTTP mock server
-- `rstest` 0.22.x — fixtures and parametrize
-- `fake` 3.x — fake data generation
-- `assert_cmd` 2.x + `predicates` 3.x — CLI testing
+- `wiremock` 0.6.x — servidor HTTP mock
+- `rstest` 0.22.x — fixtures y parametrize
+- `fake` 3.x — generación de datos falsos
+- `assert_cmd` 2.x + `predicates` 3.x — testing de CLI

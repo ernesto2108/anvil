@@ -1,341 +1,341 @@
 ---
 name: design-system
-description: Create and maintain design system foundations — variables, collections, modes, color palettes, typography, spacing, reusable components with variants, and theming. Use when user says "design system", "design tokens", "color palette", "typography scale", "spacing scale", "create variables", "define colors", "theme setup", "dark mode", "component library", or when the designer agent needs to establish visual foundations before designing screens.
+description: Crear y mantener fundamentos del sistema de diseño — variables, colecciones, modos, paletas de colores, tipografía, espaciado, componentes reutilizables con variantes y temas. Usar cuando el usuario diga "design system", "design tokens", "paleta de colores", "escala tipográfica", "escala de espaciado", "crear variables", "definir colores", "configuración de temas", "modo oscuro", "librería de componentes", o cuando el agente diseñador necesite establecer fundamentos visuales antes de diseñar pantallas.
 ---
 
 # Design System
 
-> **IMPORTANT:** Dispatcher only. Load reference files on demand. See routing table below.
+> **IMPORTANTE:** Solo despachador. Carga los archivos de referencia bajo demanda. Ver tabla de enrutamiento abajo.
 
-## Philosophy
+## Filosofía
 
-- **Understand → Plan → Approve → Build** — first understand WHAT you're designing (web? app? document?), then propose visuals, get approval, then build. Never skip steps
-- **Collections → Components → Screens** — organize variables into collections, build components from those variables, assemble screens from component instances. Never skip layers
-- **Iterate, never rebuild** — when the user requests a change, modify only what changed. Never delete existing work to start over
-- **Modes are first-class** — light/dark, brand variants are not afterthoughts. Design for modes from day one
-- **Semantic over literal** — name tokens by purpose (`color-primary`), not value (`blue-500`)
-- **Components are configurable, not duplicated** — properties and variants, not 20 separate components
+- **Entender → Planificar → Aprobar → Construir** — primero entiende QUÉ estás diseñando (¿web? ¿app? ¿documento?), luego propón los visuales, obtén aprobación, luego construye. Nunca saltarse pasos
+- **Colecciones → Componentes → Pantallas** — organiza las variables en colecciones, construye componentes a partir de esas variables, ensambla pantallas desde instancias de componentes. Nunca saltarse capas
+- **Iterar, nunca reconstruir** — cuando el usuario solicita un cambio, modifica solo lo que cambió. Nunca borres el trabajo existente para comenzar desde cero
+- **Los modos son de primera clase** — claro/oscuro, variantes de marca no son aspectos secundarios. Diseña para modos desde el primer día
+- **Semántico sobre literal** — nombra los tokens por propósito (`color-primary`), no por valor (`blue-500`)
+- **Los componentes son configurables, no duplicados** — propiedades y variantes, no 20 componentes separados
 
-## Workflow
+## Flujo de trabajo
 
-### 0. Understand the Deliverable (MANDATORY)
+### 0. Entender el Entregable (OBLIGATORIO)
 
-**Gate:** Before proposing visuals, understand WHAT you're designing.
+**Gate:** Antes de proponer visuales, entender QUÉ estás diseñando.
 
-Ask (in Spanish): "Que tipo de producto es? Pagina web estatica? App web? App movil? Landing page? Dashboard? Documento?"
+Preguntar (en español): "¿Que tipo de producto es? ¿Pagina web estatica? ¿App web? ¿App movil? ¿Landing page? ¿Dashboard? ¿Documento?"
 
-This determines layout patterns, navigation, density, and component needs. A web portfolio is NOT a PDF resume. A dashboard is NOT a landing page.
+Esto determina los patrones de layout, navegación, densidad y necesidades de componentes. Un portafolio web NO es un CV en PDF. Un dashboard NO es una landing page.
 
-#### Platform Detection
+#### Detección de Plataforma
 
-Read the PRD's **Scope → Platform** field. If missing, ask: "Para qué plataforma? Web, mobile, o ambos?"
+Lee el campo **Scope → Platform** del PRD. Si no existe, pregunta: "¿Para qué plataforma? ¿Web, mobile, o ambos?"
 
-- `web` → standard web tokens
-- `mobile` → load `reference/platform-guide.md`. Use iOS/Android type scales, touch targets (44pt+), platform-native font sizes
-- `both` → load `reference/platform-guide.md`. Generate BOTH web and mobile token sets. Document the mapping (abstract → web CSS → iOS Swift → Android Compose) as shown in the platform guide
+- `web` → tokens web estándar
+- `mobile` → carga `reference/platform-guide.md`. Usa escalas tipográficas iOS/Android, objetivos táctiles (44pt+), tamaños de fuente nativos de la plataforma
+- `both` → carga `reference/platform-guide.md`. Genera AMBOS conjuntos de tokens web y móvil. Documenta el mapeo (abstracto → CSS web → iOS Swift → Android Compose) como se muestra en la guía de plataforma
 
-### 1. Research & Inspiration (MANDATORY)
+### 1. Investigación e Inspiración (OBLIGATORIO)
 
-**Gate:** Before proposing visuals, research what works in the domain. Never design from scratch.
+**Gate:** Antes de proponer visuales, investiga qué funciona en el dominio. Nunca diseñes desde cero.
 
-1. **Inspiration sites** — search for references on:
-   - **Dribbble** / **Behance** — UI components and full case studies
-   - **Awwwards** — award-winning web design
-   - **Mobbin** / **Screenlane** — real mobile app patterns (essential if platform is `mobile` or `both`)
-   - **Collectui** / **Landbook** — categorized UI inspiration
-2. **Domain-specific search** — search "{project domain} UI design" (e.g., "healthcare SaaS dashboard design", "B2B workflow app mobile"). Find 3-5 real products in the same domain
-3. **Font research** — search Google Fonts for fonts matching the project tone. Propose 2-3 pairings (heading + body). Consider:
-   - Readability at small sizes (critical for mobile)
-   - Variable font availability (better performance)
-   - Language support (if i18n is needed)
-   - If platform is `both`: verify the font works on web AND has a good mobile equivalent (or use the same)
-4. **Color palette research** — search palette tools (Coolors, ColorHunt, Realtime Colors) for palettes matching the domain
+1. **Sitios de inspiración** — busca referencias en:
+   - **Dribbble** / **Behance** — componentes de UI y casos de estudio completos
+   - **Awwwards** — diseño web galardonado
+   - **Mobbin** / **Screenlane** — patrones reales de apps móviles (esencial si la plataforma es `mobile` o `both`)
+   - **Collectui** / **Landbook** — inspiración de UI por categorías
+2. **Búsqueda específica del dominio** — busca "{dominio del proyecto} UI design" (ej., "healthcare SaaS dashboard design", "B2B workflow app mobile"). Encuentra 3-5 productos reales en el mismo dominio
+3. **Investigación de fuentes** — busca en Google Fonts fuentes que coincidan con el tono del proyecto. Propone 2-3 combinaciones (encabezado + cuerpo). Considera:
+   - Legibilidad en tamaños pequeños (crítico para móvil)
+   - Disponibilidad de fuente variable (mejor rendimiento)
+   - Soporte de idioma (si se necesita i18n)
+   - Si la plataforma es `both`: verificar que la fuente funciona en web Y tiene un buen equivalente móvil (o usar la misma)
+4. **Investigación de paleta de colores** — busca herramientas de paletas (Coolors, ColorHunt, Realtime Colors) para paletas que coincidan con el dominio
 
-Document all findings — they feed into the visual proposal.
+Documenta todos los hallazgos — alimentarán la propuesta visual.
 
-### 1.5. Present Visual Proposal (MANDATORY)
+### 1.5. Presentar Propuesta Visual (OBLIGATORIO)
 
-**Gate:** Before ANY canvas work, present a proposal and get explicit approval.
+**Gate:** Antes de CUALQUIER trabajo en el canvas, presenta una propuesta y obtén aprobación explícita.
 
-Include:
-- **References found** (3-5 links with what you liked about each)
-- **Color direction** (2-3 options matching the domain context, with full scale preview 50→950)
-- **Typography** (specific Google Fonts with links, not just "sans-serif". Show the pairing rationale)
-- **Tone** (density, corners, mood, reference site)
-- **Layout** (structure, navigation, mobile approach)
-- **Modes** — if user wants dark+light, show both in the proposal
-- **Platform considerations** — if `both`, explain how web and mobile layouts will differ
+Incluir:
+- **Referencias encontradas** (3-5 enlaces con lo que te gustó de cada una)
+- **Dirección de color** (2-3 opciones que coincidan con el contexto del dominio, con vista previa completa de la escala 50→950)
+- **Tipografía** (fuentes específicas de Google Fonts con enlaces, no solo "sans-serif". Muestra la razón de la combinación)
+- **Tono** (densidad, esquinas, ambiente, sitio de referencia)
+- **Layout** (estructura, navegación, enfoque móvil)
+- **Modos** — si el usuario quiere oscuro+claro, muestra ambos en la propuesta
+- **Consideraciones de plataforma** — si es `both`, explica cómo diferirán los layouts web y móvil
 
-Format in Spanish. Wait for explicit approval. Iterate if needed.
+Formato en español. Espera aprobación explícita. Itera si es necesario.
 
-### 2. Check Existing System
+### 2. Verificar Sistema Existente
 
-Read `<docs>/01-project/design-system.md`. If exists → skip to step 7.
+Lee `<docs>/01-project/design-system.md`. Si existe → salta al paso 7.
 
-### 3. Create Variable Collections
+### 3. Crear Colecciones de Variables
 
-See `reference/primitives.md` for complete scales. See `reference/semantic-tokens.md` for mapping.
+Ver `reference/primitives.md` para escalas completas. Ver `reference/semantic-tokens.md` para el mapeo.
 
-**Collection 1: Primitives** — raw values, no semantic meaning, never consumed directly
-**Collection 2: Semantic** (with modes) — purpose-based names that alias primitives, values change per mode
-**Collection 3: Component** (optional) — scoped to specific UI elements
+**Colección 1: Primitives** — valores brutos, sin significado semántico, nunca consumidos directamente
+**Colección 2: Semantic** (con modos) — nombres basados en propósito que aliasan los primitivos, los valores cambian por modo
+**Colección 3: Component** (opcional) — con alcance a elementos específicos de UI
 
-#### Color Scale (MANDATORY — full 11-step ramp)
+#### Escala de Color (OBLIGATORIO — rampa completa de 11 pasos)
 
-Every hue family MUST have the complete scale: **50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950**. This applies to:
-- **Brand primary** — the main brand color ramp
-- **Brand secondary** — if the project uses a secondary color
-- **Neutral/Gray** — the gray family chosen for the project
-- **Status colors** — red (danger), amber (warning), green (success), blue (info)
+Cada familia de tono DEBE tener la escala completa: **50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950**. Esto aplica a:
+- **Brand primary** — la rampa del color principal de la marca
+- **Brand secondary** — si el proyecto usa un color secundario
+- **Neutral/Gray** — la familia gris elegida para el proyecto
+- **Status colors** — rojo (danger), ámbar (warning), verde (success), azul (info)
 
-Never define just "primary color" as a single hex. The full ramp is required for hover states, subtle backgrounds, borders, dark mode mapping, and accessible contrast.
+Nunca definas solo "color primario" como un hex único. La rampa completa es necesaria para estados hover, fondos sutiles, bordes, mapeo de modo oscuro y contraste accesible.
 
-#### Font Selection (MANDATORY — specific font, not system stack)
+#### Selección de Fuente (OBLIGATORIO — fuente específica, no pila del sistema)
 
-Choose a specific font from **Google Fonts** (or the project's brand font if provided). The system font stack is a fallback, not a choice.
+Elige una fuente específica de **Google Fonts** (o la fuente de marca del proyecto si se proporciona). La pila de fuentes del sistema es un fallback, no una elección.
 
-1. Select 2-3 font candidates based on the research from Step 1
-2. Define the full weight set used: 300 (light), 400 (normal), 500 (medium), 600 (semibold), 700 (bold)
-3. Define the full type scale: **display, 3xl, 2xl, xl, lg, base, sm, xs** — with pixel values from `reference/primitives.md`
-4. If platform is `both`: define web sizes (px/rem) AND mobile sizes (pt for iOS, sp for Android) using `reference/platform-guide.md`
+1. Selecciona 2-3 candidatos de fuente basándote en la investigación del Paso 1
+2. Define el conjunto completo de pesos usados: 300 (light), 400 (normal), 500 (medium), 600 (semibold), 700 (bold)
+3. Define la escala tipográfica completa: **display, 3xl, 2xl, xl, lg, base, sm, xs** — con valores en píxeles de `reference/primitives.md`
+4. Si la plataforma es `both`: define tamaños web (px/rem) Y tamaños móviles (pt para iOS, sp para Android) usando `reference/platform-guide.md`
 
-#### Platform-Specific Tokens
+#### Tokens Específicos de Plataforma
 
-If the PRD `Platform` is `mobile` or `both`:
-- Load `reference/platform-guide.md`
-- Add mobile-specific tokens: touch target minimums (44pt iOS, 48dp Android), safe area awareness, platform font sizes
-- Document the abstract → platform mapping table
+Si el `Platform` del PRD es `mobile` o `both`:
+- Carga `reference/platform-guide.md`
+- Agrega tokens específicos de móvil: mínimos de objetivo táctil (44pt iOS, 48dp Android), conciencia de área segura, tamaños de fuente de la plataforma
+- Documenta la tabla de mapeo abstracto → plataforma
 
-Tool-specific implementation: load `reference/pencil-workflow.md` or `reference/figma-workflow.md`.
+Implementación específica de la herramienta: carga `reference/pencil-workflow.md` o `reference/figma-workflow.md`.
 
-### 4. Build Component Library (MANDATORY)
+### 4. Construir Librería de Componentes (OBLIGATORIO)
 
-**Gate:** Components MUST exist BEFORE any screen design.
+**Gate:** Los componentes DEBEN existir ANTES de cualquier diseño de pantalla.
 
-#### Pre-check: Verify Design System Exists (BLOCKING)
+#### Pre-verificación: Verificar que el Sistema de Diseño Existe (BLOQUEANTE)
 
-Before creating ANY component, run `get_variables()` and verify:
+Antes de crear CUALQUIER componente, ejecuta `get_variables()` y verifica:
 
-1. **Color variables exist** — at least one hue family with full 50→950 ramp
-2. **Typography variables exist** — font-family, font-size scale (display→xs), font-weight set
-3. **Spacing variables exist** — at least 4 spacing tokens
+1. **Las variables de color existen** — al menos una familia de tono con rampa completa 50→950
+2. **Las variables de tipografía existen** — font-family, escala de font-size (display→xs), conjunto de font-weight
+3. **Las variables de espaciado existen** — al menos 4 tokens de espaciado
 
-If ANY of these checks fail → **STOP. Do NOT proceed.** Go back to Step 3 and create the missing variables first. Creating components without variables leads to hardcoded values that must be rebuilt later.
+Si CUALQUIERA de estas verificaciones falla → **DETENTE. NO continúes.** Regresa al Paso 3 y crea primero las variables que faltan. Crear componentes sin variables lleva a valores codificados que deben reconstruirse después.
 
 ```
-# Verification pseudocode
+# Pseudocódigo de verificación
 variables = get_variables()
 has_colors = any variable with type "color" and name matching scale pattern (e.g., *-500, *-600)
 has_typography = any variable with name matching font-size pattern (e.g., fs-*, font-*)
 has_spacing = any variable with name matching spacing pattern (e.g., sp-*, space-*)
 
 if not (has_colors and has_typography and has_spacing):
-    STOP → "Design system variables incomplete. Create variables before components."
+    DETENTE → "Variables del sistema de diseño incompletas. Crea variables antes que componentes."
 ```
 
-#### Pre-check: Deduplicate Before Creating (BLOCKING)
+#### Pre-verificación: Deduplicar Antes de Crear (BLOQUEANTE)
 
-Before creating ANY new component, search for existing ones:
+Antes de crear CUALQUIER componente nuevo, busca los existentes:
 
-1. Run `batch_get({ patterns: [{ reusable: true }] })` to list ALL existing reusable components
-2. For each component you plan to create, check if a similar one already exists by name or structure
-3. If a match exists → **use the existing component** (create instances with `ref`, override via `descendants`)
-4. Only create a new component if NO existing component serves the same purpose
+1. Ejecuta `batch_get({ patterns: [{ reusable: true }] })` para listar TODOS los componentes reutilizables existentes
+2. Para cada componente que planeas crear, verifica si ya existe uno similar por nombre o estructura
+3. Si existe una coincidencia → **usa el componente existente** (crea instancias con `ref`, sobreescribe via `descendants`)
+4. Solo crea un nuevo componente si NINGÚN componente existente sirve al mismo propósito
 
 ```
-# Deduplication pseudocode
+# Pseudocódigo de deduplicación
 existing = batch_get({ patterns: [{ reusable: true }] })
 for each planned_component:
     match = find in existing where name or structure is similar
     if match:
-        USE match (ref + descendants) → do NOT create new
+        USA match (ref + descendants) → NO crear nuevo
     else:
-        CREATE new component
+        CREA nuevo componente
 ```
 
-**Anti-pattern:** Creating "CardA" and "CardB" when they differ only in content = 1 component + 2 instances with different `descendants`. If you catch yourself creating two components with the same layout but different text/images, you are duplicating.
+**Anti-patrón:** Crear "CardA" y "CardB" cuando solo difieren en contenido = 1 componente + 2 instancias con diferentes `descendants`. Si te encuentras creando dos componentes con el mismo layout pero diferente texto/imágenes, estás duplicando.
 
-Each component needs: **properties** (boolean, text, instance swap), **variants** (state, size, type), and **all values from variables**.
+Cada componente necesita: **propiedades** (boolean, text, instance swap), **variantes** (estado, tamaño, tipo), y **todos los valores de variables**.
 
-#### Library Structure
+#### Estructura de la Librería
 
-Split into **2 separate frames** positioned to the RIGHT of screens:
+Dividida en **2 frames separados** posicionados a la DERECHA de las pantallas:
 
-**Frame 1: "Design Tokens"** — visual reference, not reusable components. Uses columns.
+**Frame 1: "Design Tokens"** — referencia visual, no componentes reutilizables. Usa columnas.
 
 ```
 Design Tokens
 ├── Typography                          ├── Colors                    ├── Icons
-│   Type Scale (descending)             │   Grouped by family:        │   All project icons
-│   ├── fs-hero / 48  Hero Display      │   ├── Neutrals (50→950)     │   at 24px with name
-│   ├── fs-3xl / 30   Heading 3XL       │   ├── Brand                 │   below each one.
-│   ├── fs-2xl / 24   Heading 2XL       │   ├── Status                │   Split into rows
-│   ├── ...down to...                   │   Each swatch shows:        │   if they don't fit.
-│   └── fs-xs / 11    Caption           │   ○ circle + name + hex     │   Document icon set
-│   ─────────────                       │   Light row + Dark row      │   name for devs.
-│   Weights                             │   side by side per family   │
-│   ├── 700 bold  "Quick brown fox"     │                             │
-│   ├── 600 semi  "Quick brown fox"     │                             │
-│   ├── 500 med   "Quick brown fox"     │                             │
-│   └── 400 norm  "Quick brown fox"     │                             │
+│   Type Scale (descendente)            │   Agrupado por familia:      │   Todos los íconos del proyecto
+│   ├── fs-hero / 48  Hero Display      │   ├── Neutrals (50→950)      │   a 24px con nombre
+│   ├── fs-3xl / 30   Heading 3XL       │   ├── Brand                  │   debajo de cada uno.
+│   ├── fs-2xl / 24   Heading 2XL       │   ├── Status                 │   Dividir en filas
+│   ├── ...hacia abajo...               │   Cada swatch muestra:       │   si no caben.
+│   └── fs-xs / 11    Caption           │   ○ círculo + nombre + hex   │   Documentar nombre del
+│   ─────────────                       │   Fila Claro + Fila Oscuro   │   conjunto de íconos para devs.
+│   Weights                             │   lado a lado por familia    │
+│   ├── 700 bold  "Quick brown fox"     │                              │
+│   ├── 600 semi  "Quick brown fox"     │                              │
+│   ├── 500 med   "Quick brown fox"     │                              │
+│   └── 400 norm  "Quick brown fox"     │                              │
 ```
 
-**Frame 2: "Components"** — reusable components grouped by category.
+**Frame 2: "Components"** — componentes reutilizables agrupados por categoría.
 
 ```
 Components
 ├── Primitives (column)        ├── Cards (column)
 │   Text/Heading               │   Job/Card
-│   Text/Body                  │   ├── default state
-│   Text/Caption               │   ├── (hover if applicable)
+│   Text/Body                  │   ├── estado default
+│   Text/Caption               │   ├── (hover si aplica)
 │   Text/Label                 │   Project/Card
 │   Section/Header             │   Stat/Card
 │   Skill/Badge                │
 │   Contact/Link               │
 │   Divider                    │
-├── Navigation (full width, below columns)
+├── Navigation (ancho completo, debajo de columnas)
 │   Navbar (full width)
 │   Footer
 ```
 
-#### Typography Presentation
+#### Presentación de Tipografía
 
-- Show the **full type scale descending** — every font-size variable from largest to smallest
-- Each line: `variable-name / px-value` (mono, muted) + sample text at that size
-- Below the scale, show **weights** — same phrase in bold/semibold/medium/normal
-- Show font family names (heading, body, mono) at the top
+- Muestra la **escala tipográfica completa en orden descendente** — cada variable font-size de mayor a menor
+- Cada línea: `nombre-variable / valor-px` (mono, apagado) + texto de muestra en ese tamaño
+- Debajo de la escala, muestra los **pesos** — la misma frase en bold/semibold/medium/normal
+- Muestra los nombres de la familia de fuentes (heading, body, mono) en la parte superior
 
-#### Color Presentation
+#### Presentación de Color
 
-- Group by **family**: Neutrals, Brand, Status (success/warning/danger), Accent
-- For each family: show swatches with **name + hex value** below each circle
-- For variables with **modes**: show Light row and Dark row side by side (use frame-level theme switching)
-- If the project uses a full scale (50→950), show the entire ramp per hue
-- If minimal palette, show only the semantic colors used but still grouped by purpose
+- Agrupa por **familia**: Neutrals, Brand, Status (success/warning/danger), Accent
+- Para cada familia: muestra swatches con **nombre + valor hex** debajo de cada círculo
+- Para variables con **modos**: muestra la fila Claro y la fila Oscuro lado a lado (usa cambio de tema a nivel de frame)
+- Si el proyecto usa escala completa (50→950), muestra toda la rampa por tono
+- Si paleta mínima, muestra solo los colores semánticos usados pero igualmente agrupados por propósito
 
-#### Icons
+#### Íconos
 
-- Show every icon used in the project at standard size (24px) with **name** below
-- Split into rows if they don't fit in one line — never let icons overflow the frame
-- Document the **icon set name** (Lucide, Heroicons, Phosphor) so devs install the correct npm package
-- All modern icon sets use `currentColor` — icons inherit parent text color, adapting to themes automatically
-- Prefer sets with **size-specific variants** (Heroicons 24/20/16px are redrawn, not scaled)
+- Muestra cada ícono usado en el proyecto a tamaño estándar (24px) con **nombre** debajo
+- Divide en filas si no caben en una línea — nunca dejes que los íconos desborden el frame
+- Documenta el **nombre del conjunto de íconos** (Lucide, Heroicons, Phosphor) para que los devs instalen el paquete npm correcto
+- Todos los conjuntos de íconos modernos usan `currentColor` — los íconos heredan el color de texto del padre, adaptándose a los temas automáticamente
+- Prefiere conjuntos con **variantes de tamaño específicas** (Heroicons 24/20/16px están redibujados, no escalados)
 
-#### Component Presentation
+#### Presentación de Componentes
 
-- Each component shows its **variants side by side** where applicable (default, hover, disabled)
-- Each component shows its **sizes** if it has size variants (sm, md, lg)
-- Group by category with clear **labels and separators**
-- Reusable text style components (Heading, Body, Caption, Label) belong in Primitives, not Typography
+- Cada componente muestra sus **variantes lado a lado** cuando aplica (default, hover, disabled)
+- Cada componente muestra sus **tamaños** si tiene variantes de tamaño (sm, md, lg)
+- Agrupa por categoría con **etiquetas y separadores** claros
+- Los componentes de estilo de texto reutilizables (Heading, Body, Caption, Label) pertenecen a Primitives, no a Typography
 
-#### Minimum Components
+#### Componentes Mínimos
 
-Text styles, Button (primary/secondary), Input, Card, Section Header, Badge, Divider. Additional per project needs.
+Estilos de texto, Button (primary/secondary), Input, Card, Section Header, Badge, Divider. Adicionales según las necesidades del proyecto.
 
-#### Library Documentation is NOT Optional (MANDATORY)
+#### La Documentación de la Librería NO es Opcional (OBLIGATORIO)
 
-The "Design Tokens" frame MUST be fully populated before any screen design begins. An empty or partial token documentation frame is a blocking error.
+El frame "Design Tokens" DEBE estar completamente poblado antes de que comience el diseño de cualquier pantalla. Un frame de documentación de tokens vacío o parcial es un error bloqueante.
 
-Minimum required documentation:
-- **Color palette**: All hue families with swatches showing variable name + hex value
-- **Typography scale**: All sizes from Display to XS with live text samples
-- **Font families**: Character set samples for each family (primary + monospace)
-- **Icon inventory**: Every icon used in the project at 24px with name label
-- **Spacing scale**: Visual bars showing each spacing value
-- **Border radius**: Sample boxes showing each radius level
+Documentación mínima requerida:
+- **Paleta de colores**: Todas las familias de tonos con swatches que muestren nombre de variable + valor hex
+- **Escala tipográfica**: Todos los tamaños desde Display hasta XS con muestras de texto en vivo
+- **Familias de fuentes**: Muestras del conjunto de caracteres para cada familia (principal + monoespaciada)
+- **Inventario de íconos**: Cada ícono usado en el proyecto a 24px con etiqueta de nombre
+- **Escala de espaciado**: Barras visuales que muestren cada valor de espaciado
+- **Border radius**: Cajas de muestra que muestren cada nivel de radio
 
-Without this documentation, developers cannot implement the design system correctly and will hardcode values instead of using tokens.
+Sin esta documentación, los desarrolladores no pueden implementar el sistema de diseño correctamente y codificarán valores en lugar de usar tokens.
 
-#### Placement & Sizing
+#### Posicionamiento y Dimensionamiento
 
-- **Always to the RIGHT** of screens, never below or behind
-- **Wrap Design Tokens + Components in a parent vertical auto-layout frame** ("Library") with gap. This prevents overlap automatically — never use fixed y-positions between library frames
-- **Width must accommodate content** — calculate based on number of columns and largest component
-- **Check for overflow** after building — if anything is clipped, widen the frame
-- Use `snapshot_layout` to verify after building
+- **Siempre a la DERECHA** de las pantallas, nunca abajo ni detrás
+- **Envuelve Design Tokens + Components en un frame padre de auto-layout vertical** ("Library") con gap. Esto previene superposición automáticamente — nunca uses posiciones y fijas entre frames de librería
+- **El ancho debe acomodar el contenido** — calcula basándote en el número de columnas y el componente más grande
+- **Verifica overflow** después de construir — si algo está recortado, amplía el frame
+- Usa `snapshot_layout` para verificar después de construir
 
-### 5. Define Modes & Verify Contrast
+### 5. Definir Modos y Verificar Contraste
 
-At minimum plan light/dark. Dark mode is NOT inversion — elevated surfaces get lighter.
-Verify WCAG AA (4.5:1 text, 3:1 large text) for ALL modes.
+Como mínimo planifica claro/oscuro. El modo oscuro NO es inversión — las superficies elevadas se vuelven más claras.
+Verifica WCAG AA (4.5:1 texto, 3:1 texto grande) para TODOS los modos.
 
-### 6. Assemble Screens from Components
+### 6. Ensamblar Pantallas desde Componentes
 
-Use component instances (`ref` in Pencil, instances in Figma). Override content via `descendants`, never via `U()` on the component mother.
+Usa instancias de componentes (`ref` en Pencil, instancias en Figma). Sobreescribe el contenido via `descendants`, nunca via `U()` en el componente madre.
 
-**If user requests both dark and light:** design one, copy the frame, change only the theme/mode. Show both.
+**Si el usuario solicita oscuro y claro:** diseña uno, copia el frame, cambia solo el tema/modo. Muestra ambos.
 
-### 7. Validate / Extend Existing System
+### 7. Validar / Extender Sistema Existente
 
-Check categories, verify gaps, propose additions (don't modify without approval), flag inconsistencies.
+Verifica categorías, identifica brechas, propone adiciones (no modifiques sin aprobación), señala inconsistencias.
 
-### 8. Produce Output
+### 8. Producir Output
 
-Create `<docs>/01-project/design-system.md`. See `reference/output-template.md`.
+Crea `<docs>/01-project/design-system.md`. Ver `reference/output-template.md`.
 
-## Iteration Rules (CRITICAL)
+## Reglas de Iteración (CRÍTICO)
 
-- **NEVER delete work to apply a change** — identify what changed, modify only that
-- **Component change** → edit the component mother → all instances update automatically
-- **Variable change** → update the variable value → all nodes update automatically
-- **Layout change** → modify the section structure, keep everything else
-- **If a change requires restructuring** → explain the scope to the user first, get approval before touching anything
+- **NUNCA borres trabajo para aplicar un cambio** — identifica qué cambió, modifica solo eso
+- **Cambio de componente** → edita el componente madre → todas las instancias se actualizan automáticamente
+- **Cambio de variable** → actualiza el valor de la variable → todos los nodos se actualizan automáticamente
+- **Cambio de layout** → modifica la estructura de la sección, mantén todo lo demás
+- **Si un cambio requiere reestructuración** → explica el alcance al usuario primero, obtén aprobación antes de tocar cualquier cosa
 
-## Rules
+## Reglas
 
-- **Understand first** — know what you're designing before proposing colors
-- **Plan before pixels** — visual proposal approved before any canvas work
-- **Collections always** — primitives, semantic, component. Never flat dumps
-- **Variables for everything** — fonts, weights, sizes, colors, spacing, radius. All
-- **Components before screens** — with properties/variants, not raw nodes
-- **Color matches context** — professional = slate/navy, playful = vibrant, tech = cool neutral
-- **Iterate, don't rebuild** — change requests = surgical edits, not delete-and-redo
-- **Component Library visible** — always to the right of screens, never hidden
-- **Contrast mandatory** — verify all modes
-- **Reuse, never recreate** — 4 cards = 1 component + 4 instances
+- **Entender primero** — saber qué estás diseñando antes de proponer colores
+- **Planificar antes de píxeles** — propuesta visual aprobada antes de cualquier trabajo en el canvas
+- **Colecciones siempre** — primitivos, semánticos, de componente. Nunca volcados planos
+- **Variables para todo** — fuentes, pesos, tamaños, colores, espaciado, radio. Todo
+- **Componentes antes de pantallas** — con propiedades/variantes, no nodos crudos
+- **El color coincide con el contexto** — profesional = slate/navy, lúdico = vibrante, tech = neutro frío
+- **Iterar, no reconstruir** — solicitudes de cambio = ediciones quirúrgicas, no borrar-y-rehacer
+- **Librería de componentes visible** — siempre a la derecha de las pantallas, nunca oculta
+- **Contraste obligatorio** — verifica todos los modos
+- **Reutilizar, nunca recrear** — 4 tarjetas = 1 componente + 4 instancias
 
-## Anti-Pattern Detection
+## Detección de Anti-Patrones
 
-| Anti-Pattern | Severity | Fix |
+| Anti-Patrón | Severidad | Corrección |
 |---|---|---|
-| Designing without understanding the deliverable type | error | Ask what it is first |
-| Jumping to canvas without proposal | error | Present visual proposal |
-| Deleting work to apply a change | error | Edit only what changed |
-| `fontFamily:"Inter"` hardcoded | error | Use `$font-body` variable |
-| `fontWeight:"600"` hardcoded | error | Use `$fw-semibold` variable |
-| `fill:"#22C55E"` or any hardcoded hex | error | Use `$color-link` or appropriate variable |
-| 4 cards built manually | error | 1 component + 4 `ref` instances |
-| `U()` on component mother from instance | error | Use `descendants` on the `ref` |
-| Component Library behind/under screens | error | Position to the right, always visible |
-| Red accent for professional CV | error | Match colors to domain |
-| Only showing dark, user asked for both | warning | Show dark AND light side by side |
-| No contrast check | error | Verify WCAG AA 4.5:1 |
-| Writing code before design is approved | error | Design → approve → code. Never skip |
-| Mocked/invented data (fake repos, fake stats) | error | Only show real data. Better 2 real items than 4 fake ones |
-| Color scale with only 1-3 values per hue (e.g., just `primary: #2563eb`) | error | Full 11-step ramp required (50→950) for every hue family |
-| Using system font stack without selecting a specific font | error | Choose a specific font from Google Fonts. System stack is fallback only |
-| Type scale missing sizes (e.g., only base and heading) | error | Full scale required: display, 3xl, 2xl, xl, lg, base, sm, xs |
-| Designing screens before variables + component library exist | error | Variables → Components → Screens. Never skip layers |
-| No design research/inspiration before proposing visuals | error | Research references in Dribbble/Behance/Mobbin before proposing |
-| No mobile tokens when PRD Platform is `both` or `mobile` | error | Load `reference/platform-guide.md` and define platform-specific tokens |
-| Mobile components without 44pt+ touch targets | error | All interactive elements must meet minimum touch target size |
+| Diseñar sin entender el tipo de entregable | error | Preguntar primero qué es |
+| Saltar al canvas sin propuesta | error | Presentar propuesta visual |
+| Borrar trabajo para aplicar un cambio | error | Editar solo lo que cambió |
+| `fontFamily:"Inter"` codificado | error | Usar variable `$font-body` |
+| `fontWeight:"600"` codificado | error | Usar variable `$fw-semibold` |
+| `fill:"#22C55E"` o cualquier hex codificado | error | Usar `$color-link` o variable apropiada |
+| 4 tarjetas construidas manualmente | error | 1 componente + 4 instancias `ref` |
+| `U()` en componente madre desde instancia | error | Usar `descendants` en el `ref` |
+| Librería de componentes detrás/debajo de pantallas | error | Posicionar a la derecha, siempre visible |
+| Acento rojo para CV profesional | error | Coincidir colores con el dominio |
+| Solo mostrando oscuro, usuario pidió ambos | warning | Mostrar oscuro Y claro lado a lado |
+| Sin verificación de contraste | error | Verificar WCAG AA 4.5:1 |
+| Escribir código antes de que el diseño sea aprobado | error | Diseño → aprobar → código. Nunca saltarse |
+| Datos simulados/inventados (repos falsos, stats falsos) | error | Solo mostrar datos reales. Mejor 2 reales que 4 falsos |
+| Escala de color con solo 1-3 valores por tono (ej., solo `primary: #2563eb`) | error | Rampa completa de 11 pasos requerida (50→950) para cada familia de tono |
+| Usar pila de fuentes del sistema sin seleccionar una fuente específica | error | Elegir una fuente específica de Google Fonts. La pila del sistema es solo fallback |
+| Escala tipográfica sin tamaños (ej., solo base y heading) | error | Escala completa requerida: display, 3xl, 2xl, xl, lg, base, sm, xs |
+| Diseñar pantallas antes de que existan variables + librería de componentes | error | Variables → Componentes → Pantallas. Nunca saltarse capas |
+| Sin investigación/inspiración de diseño antes de proponer visuales | error | Investigar referencias en Dribbble/Behance/Mobbin antes de proponer |
+| Sin tokens móviles cuando el Platform del PRD es `both` o `mobile` | error | Cargar `reference/platform-guide.md` y definir tokens específicos de plataforma |
+| Componentes móviles sin objetivos táctiles de 44pt+ | error | Todos los elementos interactivos deben cumplir el tamaño mínimo de objetivo táctil |
 
-## Tool Limitations (Pencil)
+## Limitaciones de Herramienta (Pencil)
 
-- **Variable types are immutable** — plan types (color/string/number) before creating. If you need to change type, use a new variable name
-- **`fontWeight` requires string type** — create weight variables as `{"type": "string", "value": "600"}`, not number
-- **Font family warnings** — string variables for `fontFamily` show "invalid" in Pencil. This is cosmetic, not an error
-- **No native aliasing** — semantic and primitive variables are independent. Update both when changing values
+- **Los tipos de variable son inmutables** — planifica los tipos (color/string/number) antes de crear. Si necesitas cambiar el tipo, usa un nombre de variable nuevo
+- **`fontWeight` requiere tipo string** — crea variables de peso como `{"type": "string", "value": "600"}`, no número
+- **Advertencias de family de fuentes** — las variables de string para `fontFamily` muestran "invalid" en Pencil. Esto es cosmético, no un error
+- **Sin aliasing nativo** — las variables semánticas y primitivas son independientes. Actualiza ambas al cambiar valores
 
-For text wrapping, grid harmony, i18n limitations, and other Pencil-specific guardrails, see `reference/pencil-workflow.md`.
+Para wrapping de texto, armonía de grilla, limitaciones de i18n y otras restricciones específicas de Pencil, ver `reference/pencil-workflow.md`.
 
-## Reference Files
+## Archivos de Referencia
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| Raw value scales (color, type, spacing, radius, shadow) | `reference/primitives.md` |
-| Semantic token mapping | `reference/semantic-tokens.md` |
-| Output template for design-system.md | `reference/output-template.md` |
-| Platform guidance (web vs mobile vs both) | `reference/platform-guide.md` |
-| **Pencil** — variables, components, instances | `reference/pencil-workflow.md` |
-| **Figma** — collections, modes, variants, Dev Mode | `reference/figma-workflow.md` |
+| Escalas de valores brutos (color, tipo, espaciado, radio, sombra) | `reference/primitives.md` |
+| Mapeo de tokens semánticos | `reference/semantic-tokens.md` |
+| Plantilla de output para design-system.md | `reference/output-template.md` |
+| Guía de plataforma (web vs mobile vs both) | `reference/platform-guide.md` |
+| **Pencil** — variables, componentes, instancias | `reference/pencil-workflow.md` |
+| **Figma** — colecciones, modos, variantes, Dev Mode | `reference/figma-workflow.md` |

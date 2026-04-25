@@ -1,57 +1,57 @@
 ---
 name: lint
-description: Run linters and formatters. Auto-detects stack (Go, React, Flutter). Use when user says "lint", "check code style", "format code", "run eslint", "run prettier", "golangci-lint", "dart analyze", or after writing code that should be validated. MANDATORY after any code modification — invoke before considering any code task done.
+description: Ejecutar linters y formateadores. Auto-detecta el stack (Go, React, Flutter). Usar cuando el usuario diga "lint", "revisar estilo de código", "formatear código", "ejecutar eslint", "ejecutar prettier", "golangci-lint", "dart analyze", o después de escribir código que debe validarse. OBLIGATORIO después de cualquier modificación de código — invocar antes de considerar cualquier tarea de código como terminada.
 ---
 
 # Lint
 
-## Mandatory Post-Code Gate
+## Gate Obligatorio Post-Código
 
-This skill MUST be invoked after any code modification (Write, Edit on source files) before a task is considered done. This is not optional.
+Este skill DEBE invocarse después de cualquier modificación de código (Write, Edit en archivos fuente) antes de considerar una tarea como terminada. No es opcional.
 
-1. Run the linter for the detected stack
-2. Run the formatter for the detected stack
-3. If new lint errors → fix immediately, do not leave for a separate task
-4. Zero new violations is the bar — never increase the lint error count
+1. Ejecutar el linter para el stack detectado
+2. Ejecutar el formateador para el stack detectado
+3. Si hay nuevos errores de lint → corregir inmediatamente, no dejar para una tarea separada
+4. Cero nuevas violaciones es el estándar — nunca aumentar el conteo de errores de lint
 
-This skill handles **code style and static analysis only**. For running tests, use `/run-tests`.
+Este skill maneja **únicamente estilo de código y análisis estático**. Para ejecutar tests, usar `/run-tests`.
 
-This applies to all agents (developer, tester) and direct edits. Never ship code without passing this gate.
+Aplica a todos los agentes (desarrollador, tester) y ediciones directas. Nunca enviar código sin pasar este gate.
 
-## Auto-Detection
+## Auto-Detección
 
-Detect stack by checking for marker files:
+Detectar el stack verificando los archivos marcadores:
 
-| File | Stack | Linter | Formatter |
+| Archivo | Stack | Linter | Formateador |
 |------|-------|--------|-----------|
 | `go.mod` | Go | `golangci-lint run ./...` | `gofmt` (built-in) |
 | `package.json` | React/Node | `<pm> exec eslint .` | `<pm> exec prettier --check .` |
 | `pubspec.yaml` | Flutter | `dart analyze` | `dart format --set-exit-if-changed .` |
 
-If multiple stacks detected, lint each separately.
+Si se detectan múltiples stacks, lintear cada uno por separado.
 
-## Execution
+## Ejecución
 
 ### Go
 
 ```bash
-# If .golangci.yml or .golangci.yaml exists, it will be used automatically
+# Si existe .golangci.yml o .golangci.yaml, se usará automáticamente
 golangci-lint run ./...
 ```
 
-If `golangci-lint` is not installed:
+Si `golangci-lint` no está instalado:
 ```bash
 go vet ./...
 ```
 
-Auto-fix: `golangci-lint run --fix ./...` — then report what couldn't be fixed.
+Auto-fix: `golangci-lint run --fix ./...` — luego reportar qué no se pudo corregir.
 
 ### React/Node
 
-**Package manager:** detect from lockfile per CLAUDE.md rule (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm, none → default pnpm). Use `pnpm exec` / `npx` / `yarn exec` to run binaries from `node_modules/.bin`.
+**Package manager:** detectar desde el lockfile según la regla de CLAUDE.md (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm, ninguno → pnpm por defecto). Usar `pnpm exec` / `npx` / `yarn exec` para ejecutar binarios desde `node_modules/.bin`.
 
 ```bash
-# pnpm (preferred)
+# pnpm (preferido)
 pnpm exec eslint . --ext .ts,.tsx,.js,.jsx
 pnpm exec prettier --check "src/**/*.{ts,tsx,js,jsx}"
 
@@ -59,21 +59,21 @@ pnpm exec prettier --check "src/**/*.{ts,tsx,js,jsx}"
 pnpm exec eslint . --ext .ts,.tsx,.js,.jsx --fix
 pnpm exec prettier --write "src/**/*.{ts,tsx,js,jsx}"
 
-# npm equivalent: swap `pnpm exec` → `npx`
-# yarn equivalent: swap `pnpm exec` → `yarn exec`
+# npm equivalente: cambiar `pnpm exec` → `npx`
+# yarn equivalente: cambiar `pnpm exec` → `yarn exec`
 ```
 
-Check `package.json` scripts first — if the project defines `lint` / `format` scripts, prefer `<pm> lint` (pnpm) / `npm run lint` / `yarn lint` over calling the binaries directly.
+Verificar primero los scripts de `package.json` — si el proyecto define scripts `lint` / `format`, preferir `<pm> lint` (pnpm) / `npm run lint` / `yarn lint` sobre llamar directamente a los binarios.
 
-Configuration files: `.eslintrc.*` or `eslint.config.*`, `.prettierrc`. Recommended: `eslint-config-react-app` or `@typescript-eslint`.
+Archivos de configuración: `.eslintrc.*` o `eslint.config.*`, `.prettierrc`. Recomendado: `eslint-config-react-app` o `@typescript-eslint`.
 
 ### Flutter
 
 ```bash
-# Analyze
+# Analizar
 dart analyze
 
-# Format check
+# Verificar formato
 dart format --set-exit-if-changed .
 
 # Auto-fix
@@ -81,21 +81,21 @@ dart fix --apply
 dart format .
 ```
 
-Configuration: `analysis_options.yaml`. Recommended: `flutter_lints` or `very_good_analysis`.
+Configuración: `analysis_options.yaml`. Recomendado: `flutter_lints` o `very_good_analysis`.
 
-Common auto-fixable issues: unused imports, missing `const` constructors, prefer `final` for immutable variables.
+Problemas comunes auto-corregibles: imports no utilizados, constructores `const` faltantes, preferir `final` para variables inmutables.
 
-## Workflow
+## Flujo de trabajo
 
-1. **Detect stack** — check for marker files (`go.mod`, `package.json`, `pubspec.yaml`)
-2. **Check for project-specific commands** — read `package.json` scripts or `Makefile` for custom lint commands
-3. **Auto-fix first** — run the fix command before reporting
-4. **Then check** — run the check command to find remaining issues
-5. **If errors > 0** — report errors with file:line, do NOT proceed to next task until errors are resolved
-6. **If only warnings** — report warnings, proceed unless user wants them fixed
-7. **Report counts** — `Errors: 3 | Warnings: 7 | Fixed: 12`
+1. **Detectar stack** — verificar archivos marcadores (`go.mod`, `package.json`, `pubspec.yaml`)
+2. **Verificar comandos específicos del proyecto** — leer scripts de `package.json` o `Makefile` para comandos de lint personalizados
+3. **Auto-fix primero** — ejecutar el comando de corrección antes de reportar
+4. **Luego verificar** — ejecutar el comando de verificación para encontrar problemas restantes
+5. **Si errors > 0** — reportar errores con file:line, NO proceder a la siguiente tarea hasta que los errores estén resueltos
+6. **Si solo warnings** — reportar warnings, continuar a menos que el usuario quiera corregirlos
+7. **Reportar conteos** — `Errors: 3 | Warnings: 7 | Fixed: 12`
 
-## Output Format
+## Formato de Salida
 
 ```
 Stack: Go
@@ -110,4 +110,4 @@ Remaining:
     - internal/billing/calc.go:78 — function too complex, cyclomatic complexity 15 (cyclop)
 ```
 
-If clean: `Lint passed. No issues found.`
+Si está limpio: `Lint passed. No issues found.`

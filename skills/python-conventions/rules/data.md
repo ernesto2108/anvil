@@ -1,12 +1,12 @@
-# Data Rules (NumPy, Pandas, ML)
+# Reglas de Datos (NumPy, Pandas, ML)
 
 ## NumPy
 
-1. **Explicit dtype always** — `np.float32` not default `np.float64`. Doubles memory for no benefit in embeddings
-2. **Preallocate arrays** — `np.empty((n, dim), dtype=np.float32)` then fill. Never grow lists and convert
-3. **Vectorize operations** — `np.dot`, `np.linalg.norm`, matrix multiply. Never Python loops over arrays
-4. **Type hints** — `NDArray[np.float32]` from `numpy.typing`. Makes dtype explicit in signatures
-5. **Avoid copies** — use views (`a[:, 0]`) when possible. Copies double memory on large arrays
+1. **Dtype explícito siempre** — `np.float32` no el `np.float64` por defecto. Duplica la memoria sin beneficio en embeddings
+2. **Preasignar arrays** — `np.empty((n, dim), dtype=np.float32)` y luego llenar. Nunca crecer listas y convertir
+3. **Vectorizar operaciones** — `np.dot`, `np.linalg.norm`, multiplicación matricial. Nunca loops Python sobre arrays
+4. **Type hints** — `NDArray[np.float32]` de `numpy.typing`. Hace el dtype explícito en las firmas
+5. **Evitar copias** — usar vistas (`a[:, 0]`) cuando sea posible. Las copias duplican la memoria en arrays grandes
 
 ```python
 # WRONG — Python loop, float64, list grow
@@ -24,23 +24,23 @@ for i in range(0, len(texts), batch_size):
 
 ## Pandas
 
-6. **No `iterrows()`** — vectorized operations always. `df["score"] = df["a"] * df["b"]`
-7. **`loc` for assignment** — `df.loc[mask, "col"] = value` not chained indexing
-8. **PyArrow backend** — `pd.read_parquet("data.parquet", dtype_backend="pyarrow")` for 2x performance
-9. **No inplace=True** — deprecated pattern, creates hidden copies anyway
+6. **Sin `iterrows()`** — operaciones vectorizadas siempre. `df["score"] = df["a"] * df["b"]`
+7. **`loc` para asignación** — `df.loc[mask, "col"] = value` no indexación encadenada
+8. **Backend PyArrow** — `pd.read_parquet("data.parquet", dtype_backend="pyarrow")` para rendimiento 2x
+9. **Sin inplace=True** — patrón deprecado, crea copias ocultas de todas formas
 
-## Batch Processing
+## Procesamiento por Lotes
 
-10. **`itertools.batched`** (3.12+) — stdlib, no manual chunking needed
-11. **Batch API calls** — never one-by-one. Group into batches of 32-256
-12. **Batch DB inserts** — `executemany` or `COPY`, never loop of single inserts
+10. **`itertools.batched`** (3.12+) — stdlib, no se necesita chunking manual
+11. **Llamadas a API por lotes** — nunca una a una. Agrupar en lotes de 32-256
+12. **Inserciones en DB por lotes** — `executemany` o `COPY`, nunca loop de inserciones individuales
 
-## Memory Management
+## Gestión de Memoria
 
-13. **Memory-mapped files** for datasets > RAM — `np.memmap` for read-heavy, append-friendly storage
-14. **Generator expressions** — `sum(x**2 for x in data)` not `sum([x**2 for x in data])`
-15. **Delete references** — `del large_array; gc.collect()` when done with large temporaries
-16. **Avoid closure capture** — extract only needed data into closures, not entire DataFrames
+13. **Archivos mapeados en memoria** para datasets > RAM — `np.memmap` para almacenamiento de lectura intensiva y append-friendly
+14. **Expresiones generadoras** — `sum(x**2 for x in data)` no `sum([x**2 for x in data])`
+15. **Eliminar referencias** — `del large_array; gc.collect()` cuando se termina con temporales grandes
+16. **Evitar captura en closures** — extraer solo los datos necesarios en closures, no DataFrames enteros
 
 ```python
 # WRONG — captures entire df

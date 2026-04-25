@@ -1,75 +1,75 @@
 ---
 name: wails-recipes
-description: Reusable patterns for Anvil Dashboard development with Wails v2 + Go backend + React frontend + SQLite. Use for dashboard features (DASH-FEAT-*) to skip pattern re-derivation. Covers Wails bindings, DTOs, store queries, React views, custom React Flow nodes, and the build tag layout.
+description: Patrones reutilizables para el desarrollo del Anvil Dashboard con Wails v2 + backend Go + frontend React + SQLite. Úsalo para features del dashboard (DASH-FEAT-*) para evitar re-derivar patrones. Cubre bindings Wails, DTOs, queries del store, vistas React, nodos personalizados de React Flow, y el layout de build tags.
 ---
 
 # Wails Dashboard Recipes (Anvil)
 
-Snippets and patterns proven in `DASH-FEAT-001..006`. Load this skill when the orchestrator invokes you for dashboard work — it replaces reading the whole codebase to re-derive patterns.
+Snippets y patrones probados en `DASH-FEAT-001..006`. Cargar esta skill cuando el orquestador te invoque para trabajo del dashboard — reemplaza la necesidad de leer toda la base de código para re-derivar patrones.
 
-## Repo layout (dashboard scope)
+## Layout del repositorio (scope del dashboard)
 
 ```
 internal/dashboard/
-├── app.go                   // Wails App with bindings — build tag: dashboard
-├── dtos.go                  // DTOs exposed to frontend — build tag: dashboard
-├── store.go                 // Store interface (defined in package dashboard) — build tag: dashboard
+├── app.go                   // Wails App con bindings — build tag: dashboard
+├── dtos.go                  // DTOs expuestos al frontend — build tag: dashboard
+├── store.go                 // Interfaz Store (definida en package dashboard) — build tag: dashboard
 └── store/
-    ├── store.go             // SQLiteStore struct + New / NewFS constructors — NO build tag
-    ├── read.go              // Read queries (ListRuns, ListAgentsByRun, ...) — NO build tag
-    ├── migrate.go           // Migration runner (iofs) — NO build tag
-    └── *_test.go            // Tests — NO build tag
+    ├── store.go             // Struct SQLiteStore + constructores New / NewFS — SIN build tag
+    ├── read.go              // Queries de lectura (ListRuns, ListAgentsByRun, ...) — SIN build tag
+    ├── migrate.go           // Runner de migración (iofs) — SIN build tag
+    └── *_test.go            // Tests — SIN build tag
 
 frontend/src/
-├── App.tsx                  // View switcher
+├── App.tsx                  // Selector de vistas
 ├── lib/
-│   ├── wails.ts             // Bindings + types 1:1 with dtos.go (camelCase)
+│   ├── wails.ts             // Bindings + tipos 1:1 con dtos.go (camelCase)
 │   ├── format.ts            // formatDuration, formatTokens, formatTokensFlow
-│   └── utils.ts             // cn helper
+│   └── utils.ts             // helper cn
 ├── components/
-│   ├── ui/                  // shadcn primitives (button, card, table)
+│   ├── ui/                  // Primitivos shadcn (button, card, table)
 │   ├── layout/              // app-shell, sidebar, topbar
-│   ├── status-badge.tsx     // Reusable: success|failed|running|pending
-│   └── flow/                // React Flow custom nodes
+│   ├── status-badge.tsx     // Reutilizable: success|failed|running|pending
+│   └── flow/                // Nodos personalizados de React Flow
 └── views/                   // runs-view.tsx, flow-view.tsx, ...
 
-migrations/                  // Shared with CLI — NO build tag
+migrations/                  // Compartido con CLI — SIN build tag
   000001_create_runs.up.sql
   000002_create_agents.up.sql
   000003_create_files.up.sql
   000004_create_events.up.sql
 ```
 
-## Build tag rules (memorize)
+## Reglas de build tags (memorizar)
 
-| Layer | Build tag | Reason |
+| Capa | Build tag | Razón |
 |---|---|---|
-| `internal/dashboard/app.go`, `dtos.go`, `store.go` (interface) | `//go:build dashboard` | Wails dependency only links when tag set |
-| `internal/dashboard/store/*.go` | NONE | Store is reusable by CLI for tooling; no Wails deps here |
-| `internal/dashboard/store/*_test.go` | NONE | Tests run in default build |
-| `internal/dashboard/*_test.go` (tests for app.go) | `//go:build dashboard` | They import the dashboard package |
-| `cmd/anvil/*dashboard*.go` | `//go:build dashboard` / fallback stub with `//go:build !dashboard` | CLI subcommand only active with tag |
+| `internal/dashboard/app.go`, `dtos.go`, `store.go` (interfaz) | `//go:build dashboard` | La dependencia Wails solo se linkea cuando el tag está activado |
+| `internal/dashboard/store/*.go` | NINGUNO | El store es reutilizable por el CLI para tooling; sin dependencias Wails aquí |
+| `internal/dashboard/store/*_test.go` | NINGUNO | Los tests corren en el build por defecto |
+| `internal/dashboard/*_test.go` (tests para app.go) | `//go:build dashboard` | Importan el package dashboard |
+| `cmd/anvil/*dashboard*.go` | `//go:build dashboard` / stub de fallback con `//go:build !dashboard` | Subcomando del CLI solo activo con el tag |
 
-**`go build -tags dashboard ./...` is enough to validate compilation. You do NOT need test files for build validation.** Same for `go vet -tags dashboard ./...`.
+**`go build -tags dashboard ./...` es suficiente para validar la compilación. NO necesitas archivos de test para la validación del build.** Lo mismo para `go vet -tags dashboard ./...`.
 
-## Recipe 1 — Add a new read query in the store
+## Receta 1 — Agregar una nueva query de lectura en el store
 
-**When:** new binding requires reading data not already exposed.
+**Cuándo:** un nuevo binding requiere leer datos que aún no están expuestos.
 
-**Pattern** (file: `internal/dashboard/store/read.go`, no build tag):
+**Patrón** (archivo: `internal/dashboard/store/read.go`, sin build tag):
 
 ```go
-// XRow is the projection for the X read path.
-// Fields with sql.Null* are preserved as *T pointers to distinguish "zero" from "not set".
+// XRow es la proyección para el camino de lectura de X.
+// Los campos con sql.Null* se preservan como punteros *T para distinguir "cero" de "no establecido".
 type XRow struct {
     Field1     string
-    Field2     *int64   // nullable in DB
+    Field2     *int64   // nullable en BD
     Field3     int      // not null
     Field4     *float64 // nullable
 }
 
-// ListX returns rows ordered by <column> <ASC|DESC>.
-// <param> rules: describe defaults and normalization.
+// ListX retorna filas ordenadas por <columna> <ASC|DESC>.
+// Reglas de <param>: describir defaults y normalización.
 func (s *SQLiteStore) ListX(ctx context.Context, param string) ([]XRow, error) {
     const q = `
         SELECT field1, field2, field3, field4
@@ -117,16 +117,16 @@ func (s *SQLiteStore) ListX(ctx context.Context, param string) ([]XRow, error) {
 }
 ```
 
-**Rules:**
-- Always wrap errors with `fmt.Errorf("dashboard/store: <verb> <table>: %w", err)` — consistent prefix
-- Always return non-nil empty slice on empty results (frontend expects arrays, not `null`)
-- Use `sql.Null*` in scan variables; convert to `*T` in the final struct
-- Parse timestamps with `time.Parse(time.RFC3339Nano, raw)` — the DB stores them as TEXT in that format
-- `defer rows.Close() //nolint:errcheck` is the idiom
+**Reglas:**
+- Siempre envolver errores con `fmt.Errorf("dashboard/store: <verbo> <tabla>: %w", err)` — prefijo consistente
+- Siempre retornar un slice vacío no-nil en resultados vacíos (el frontend espera arrays, no `null`)
+- Usar `sql.Null*` en variables de scan; convertir a `*T` en el struct final
+- Parsear timestamps con `time.Parse(time.RFC3339Nano, raw)` — la BD los almacena como TEXT en ese formato
+- `defer rows.Close() //nolint:errcheck` es el idioma
 
-## Recipe 2 — Add the Store interface method (package dashboard)
+## Receta 2 — Agregar el método de interfaz Store (package dashboard)
 
-**Pattern** (file: `internal/dashboard/store.go`, build tag `dashboard`):
+**Patrón** (archivo: `internal/dashboard/store.go`, build tag `dashboard`):
 
 ```go
 //go:build dashboard
@@ -139,49 +139,49 @@ import (
     "github.com/ernesto2108/anvil/internal/dashboard/store"
 )
 
-// Store is the read-only interface consumed by the Wails App.
+// Store es la interfaz de solo lectura consumida por la Wails App.
 type Store interface {
     ListRuns(ctx context.Context, limit, offset int) ([]store.RunSummary, error)
     ListAgentsByRun(ctx context.Context, runID string) ([]store.AgentRow, error)
-    // ListX(ctx context.Context, param string) ([]store.XRow, error) // NEW
+    // ListX(ctx context.Context, param string) ([]store.XRow, error) // NUEVO
 }
 ```
 
-**Rule:** the interface is defined in package `dashboard`, not in package `store`. This keeps the Wails app decoupled from the concrete SQLite store for testing (you can substitute a fake in tests without importing sqlite).
+**Regla:** la interfaz se define en el package `dashboard`, no en el package `store`. Esto mantiene la Wails app desacoplada del store SQLite concreto para pruebas (puedes sustituir un fake en los tests sin importar sqlite).
 
-## Recipe 3 — Add a DTO in `dtos.go`
+## Receta 3 — Agregar un DTO en `dtos.go`
 
-**Pattern** (file: `internal/dashboard/dtos.go`, build tag `dashboard`):
+**Patrón** (archivo: `internal/dashboard/dtos.go`, build tag `dashboard`):
 
 ```go
 //go:build dashboard
 
 package dashboard
 
-// XDTO is the DTO exposed to the frontend via Wails bindings.
-// JSON tags are camelCase (consistent with all existing dashboard DTOs and wails.ts).
+// XDTO es el DTO expuesto al frontend via bindings Wails.
+// Los JSON tags son camelCase (consistente con todos los DTOs del dashboard existentes y wails.ts).
 type XDTO struct {
     ID        string   `json:"id"`
     Name      string   `json:"name"`
-    Duration  int64    `json:"durationMs"` // 0 if not finished
+    Duration  int64    `json:"durationMs"` // 0 si no ha terminado
     Score     *float64 `json:"score"`      // nullable
     Items     []YDTO   `json:"items"`
 }
 ```
 
-**Rules:**
-- **Always camelCase** in JSON tags — not snake_case. The architecture doc may show snake_case; ignore it, follow the codebase
-- Nullable fields use `*T` pointers — never use empty strings or zero as sentinels
-- Slices must never be `nil` at the API boundary — convert with `make([]T, 0)` in the converter
+**Reglas:**
+- **Siempre camelCase** en JSON tags — no snake_case. El doc de arquitectura puede mostrar snake_case; ignorarlo, seguir la base de código
+- Los campos nullable usan punteros `*T` — nunca usar strings vacíos o cero como centinelas
+- Los slices nunca deben ser `nil` en la frontera de la API — convertir con `make([]T, 0)` en el conversor
 
-## Recipe 4 — Add a Wails binding and its conversor
+## Receta 4 — Agregar un binding Wails y su conversor
 
-**Pattern** (file: `internal/dashboard/app.go`, build tag `dashboard`):
+**Patrón** (archivo: `internal/dashboard/app.go`, build tag `dashboard`):
 
 ```go
 //go:build dashboard
 
-// GetX returns the X projection for the given param.
+// GetX retorna la proyección X para el param dado.
 func (a *App) GetX(param string) ([]XDTO, error) {
     ctx := a.ctx
     if ctx == nil {
@@ -194,7 +194,7 @@ func (a *App) GetX(param string) ([]XDTO, error) {
     return toXDTOs(rows), nil
 }
 
-// toXDTOs converts store rows to DTOs. Keeps the conversion separate for testability.
+// toXDTOs convierte filas del store a DTOs. Mantiene la conversión separada para testeabilidad.
 func toXDTOs(rows []store.XRow) []XDTO {
     out := make([]XDTO, 0, len(rows))
     for _, r := range rows {
@@ -212,7 +212,7 @@ func toXDTOs(rows []store.XRow) []XDTO {
     return out
 }
 
-// derefInt64 returns the value or 0 if the pointer is nil. Used for "not finished" semantics.
+// derefInt64 retorna el valor o 0 si el puntero es nil. Usado para semántica de "no terminado".
 func derefInt64(p *int64) int64 {
     if p == nil {
         return 0
@@ -221,18 +221,18 @@ func derefInt64(p *int64) int64 {
 }
 ```
 
-**Rules:**
-- Bindings always `return (T, error)` — Wails converts the error to `{ error: string }` in TS
-- Bindings must guard `a.ctx == nil` with `context.Background()` fallback (needed for tests that don't call `Startup`)
-- Converter is a private function named `to<DTO>s` (pluralized if list) or `to<DTO>` (if single)
-- No mutation in converters — they are pure functions
+**Reglas:**
+- Los bindings siempre `return (T, error)` — Wails convierte el error a `{ error: string }` en TS
+- Los bindings deben proteger `a.ctx == nil` con fallback `context.Background()` (necesario para tests que no llaman `Startup`)
+- El conversor es una función privada nombrada `to<DTO>s` (pluralizado si es lista) o `to<DTO>` (si es único)
+- Sin mutación en conversores — son funciones puras
 
-## Recipe 5 — Extend `wails.ts` with types and a new function
+## Receta 5 — Extender `wails.ts` con tipos y una nueva función
 
-**Pattern** (file: `frontend/src/lib/wails.ts`):
+**Patrón** (archivo: `frontend/src/lib/wails.ts`):
 
 ```ts
-// Types correspond 1:1 with internal/dashboard/dtos.go (camelCase, not snake_case)
+// Los tipos corresponden 1:1 con internal/dashboard/dtos.go (camelCase, no snake_case)
 
 export interface XDTO {
   id: string
@@ -242,7 +242,7 @@ export interface XDTO {
   items: YDTO[]
 }
 
-// Extend the window.go.dashboard.App declaration
+// Extender la declaración window.go.dashboard.App
 declare global {
   interface Window {
     go?: {
@@ -250,14 +250,14 @@ declare global {
         App?: {
           GetRuns?: (q: RunsQuery) => Promise<RunDTO[]>
           GetFlow?: (runId: string) => Promise<FlowDTO>
-          GetX?: (param: string) => Promise<XDTO[]>  // NEW
+          GetX?: (param: string) => Promise<XDTO[]>  // NUEVO
         }
       }
     }
   }
 }
 
-// getX calls the Wails binding. Falls back to [] in vite dev mode (no Wails runtime).
+// getX llama al binding Wails. Retorna [] en modo dev de vite (sin runtime Wails).
 export async function getX(param: string): Promise<XDTO[]> {
   const binding = window.go?.dashboard?.App?.GetX
   if (!binding) {
@@ -268,14 +268,14 @@ export async function getX(param: string): Promise<XDTO[]> {
 }
 ```
 
-**Rules:**
-- `nullable` fields in Go (`*T`) become `T | null` in TS
-- Always provide a fallback (`[]`, `null`, or a default object) for the dev mode where `window.go` is undefined
-- The warn message is non-fatal — intentional for vite dev
+**Reglas:**
+- Los campos `nullable` en Go (`*T`) se convierten en `T | null` en TS
+- Siempre proveer un fallback (`[]`, `null`, o un objeto por defecto) para el modo dev donde `window.go` es undefined
+- El mensaje de warn no es fatal — intencional para vite dev
 
-## Recipe 6 — Add a view
+## Receta 6 — Agregar una vista
 
-**Pattern** (file: `frontend/src/views/x-view.tsx`):
+**Patrón** (archivo: `frontend/src/views/x-view.tsx`):
 
 ```tsx
 import { useEffect, useState } from 'react'
@@ -315,33 +315,33 @@ export function XView({ param, onBack }: XViewProps) {
         <h2 className="text-base">Vista X</h2>
       </header>
       <div className="flex-1 p-6 overflow-auto">
-        {/* render data */}
+        {/* renderizar datos */}
       </div>
     </div>
   )
 }
 ```
 
-**Rules:**
-- Use the `cancelled` flag pattern in `useEffect` to avoid state updates after unmount
-- Four states: loading / error / empty / data — always all four
-- Empty state must have text (not just blank), use `text-text-muted`
-- The view accepts props, not router state — `App.tsx` is the view switcher
+**Reglas:**
+- Usar el patrón con flag `cancelled` en `useEffect` para evitar actualizaciones de estado después de desmontar
+- Cuatro estados: loading / error / empty / data — siempre los cuatro
+- El estado vacío debe tener texto (no solo en blanco), usar `text-text-muted`
+- La vista acepta props, no estado del router — `App.tsx` es el selector de vistas
 
-## Recipe 7 — Custom React Flow node (for grafos)
+## Receta 7 — Nodo personalizado de React Flow (para grafos)
 
-**Pattern** (file: `frontend/src/components/flow/x-node.tsx`):
+**Patrón** (archivo: `frontend/src/components/flow/x-node.tsx`):
 
 ```tsx
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
 import { cn } from '@/lib/utils'
 import { StatusBadge } from '@/components/status-badge'
 
-// Data MUST be a type alias (not interface) to satisfy Record<string, unknown>
+// Data DEBE ser un type alias (no interface) para satisfacer Record<string, unknown>
 export type XNodeData = {
   label: string
   status: string
-  // ... other fields
+  // ... otros campos
 }
 
 export type XNodeType = Node<XNodeData, 'xNode'>
@@ -394,65 +394,65 @@ function borderColorForStatus(status: string): string {
 }
 ```
 
-**Rules:**
-- `XNodeData` MUST be `type`, not `interface` (React Flow v12 needs `Record<string, unknown>` satisfaction, only type aliases satisfy it)
-- Handles are required even if visually hidden — React Flow uses them as connection anchors
-- A11y: `role="button"`, `tabIndex={0}`, `aria-label`, `onKeyDown` for Enter/Space
-- Reuse `StatusBadge` for the status indicator — do NOT duplicate color/icon logic
+**Reglas:**
+- `XNodeData` DEBE ser `type`, no `interface` (React Flow v12 necesita satisfacer `Record<string, unknown>`, solo los type aliases lo satisfacen)
+- Los Handles son obligatorios aunque estén visualmente ocultos — React Flow los usa como anclas de conexión
+- A11y: `role="button"`, `tabIndex={0}`, `aria-label`, `onKeyDown` para Enter/Space
+- Reutilizar `StatusBadge` para el indicador de estado — NO duplicar la lógica de color/icono
 
-## Recipe 8 — Dagre layout for React Flow
+## Receta 8 — Layout Dagre para React Flow
 
-See `frontend/src/lib/dagre-layout.ts` (from DASH-FEAT-006). The helper `layoutFlow<T>` takes `Node<T>[] + Edge[]` and returns positioned nodes with `rankdir: 'LR'`. Reuse it directly — no need to reimplement per feature.
+Ver `frontend/src/lib/dagre-layout.ts` (de DASH-FEAT-006). El helper `layoutFlow<T>` toma `Node<T>[] + Edge[]` y retorna nodos posicionados con `rankdir: 'LR'`. Reutilizarlo directamente — no es necesario reimplementar por feature.
 
-## Recipe 9 — CSS tokens (dark-only, already defined)
+## Receta 9 — Tokens CSS (solo dark, ya definidos)
 
-**Color tokens available in Tailwind classes** (see `frontend/src/index.css`):
+**Tokens de color disponibles en clases Tailwind** (ver `frontend/src/index.css`):
 
-| Purpose | Class |
+| Propósito | Clase |
 |---|---|
-| Background canvas | `bg-background` |
-| Surface (card) | `bg-card` |
-| Elevated surface | `bg-secondary` |
-| Foreground (text primary) | `text-foreground` |
-| Muted text | `text-text-muted` |
-| Secondary text | `text-text-secondary` |
-| Subtle border | `border-border` |
-| Strong border | `border-border-strong` |
-| Brand primary | `bg-brand` / `text-brand` / `border-ring` |
-| Brand subtle (active bg) | `bg-brand-subtle` |
-| Brand text (active text) | `text-brand-text` |
-| Success | `text-success` / `bg-success-bg` / `border-success-border` |
-| Fail | `text-fail` / `bg-fail-bg` / `border-fail-border` |
-| Running (in-progress) | `text-running` / `bg-running-bg` / `border-running-border` |
-| Pending | `text-pending` / `bg-pending-bg` / `border-pending-border` |
+| Canvas de fondo | `bg-background` |
+| Superficie (card) | `bg-card` |
+| Superficie elevada | `bg-secondary` |
+| Foreground (texto primario) | `text-foreground` |
+| Texto atenuado | `text-text-muted` |
+| Texto secundario | `text-text-secondary` |
+| Borde sutil | `border-border` |
+| Borde fuerte | `border-border-strong` |
+| Marca primaria | `bg-brand` / `text-brand` / `border-ring` |
+| Marca sutil (fondo activo) | `bg-brand-subtle` |
+| Texto de marca (texto activo) | `text-brand-text` |
+| Éxito | `text-success` / `bg-success-bg` / `border-success-border` |
+| Fallo | `text-fail` / `bg-fail-bg` / `border-fail-border` |
+| En ejecución (in-progress) | `text-running` / `bg-running-bg` / `border-running-border` |
+| Pendiente | `text-pending` / `bg-pending-bg` / `border-pending-border` |
 
-**Do NOT add new tokens without checking first.** All 4 statuses (success/fail/running/pending) have full bg+border+text tokens. Use `running` in code (the design uses `in-progress` but the codebase has standardized on `running` — they are semantic aliases).
+**NO agregar nuevos tokens sin verificar primero.** Los 4 estados (success/fail/running/pending) tienen tokens completos de bg+border+text. Usar `running` en el código (el diseño usa `in-progress` pero la base de código ha estandarizado en `running` — son alias semánticos).
 
-## Recipe 10 — Security & supply chain
+## Receta 10 — Seguridad y cadena de suministro
 
-- `npm install` MUST always use `--ignore-scripts` (per DASH-SEC-002)
-- Version pinning: look at existing `package.json` — pin exact versions (no `^`, no `~`) unless the package requires semver flexibility
-- Never add deps that phone home, bundle analytics, or require network at runtime (this is a local desktop dashboard)
-- **Audit immediately after install:** after any `npm install --ignore-scripts`, run `npm audit`. If it reports moderate+ vulnerabilities, fix them BEFORE committing. Do not ship a scaffold with unresolved audit findings.
-- **Vite red list:** `vite < 6.4.2` has dev-server CVEs (CORS bypass, `server.fs.deny` bypass, path traversal, WebSocket arbitrary file read). `esbuild <= 0.24.2` (pinned by vite 5.x) has a related dev-server CORS bypass. Vite 5.x CANNOT be fully patched — upgrade to **vite 6.4.2+** which uses `esbuild ^0.25.0`.
-- **Known-safe React + Vite combo** (update when newer patched versions exist):
+- `npm install` DEBE usar siempre `--ignore-scripts` (según DASH-SEC-002)
+- Fijado de versiones: revisar el `package.json` existente — fijar versiones exactas (sin `^`, sin `~`) a menos que el paquete requiera flexibilidad semver
+- Nunca agregar dependencias que hagan llamadas a casa, empaqueten analytics, o requieran red en tiempo de ejecución (este es un dashboard de escritorio local)
+- **Auditar inmediatamente después de instalar:** después de cualquier `npm install --ignore-scripts`, ejecutar `npm audit`. Si reporta vulnerabilidades moderadas o superiores, corregirlas ANTES de hacer commit. No entregar un scaffold con hallazgos de auditoría sin resolver.
+- **Lista roja de Vite:** `vite < 6.4.2` tiene CVEs en el servidor de desarrollo (bypass CORS, bypass `server.fs.deny`, path traversal, lectura arbitraria de archivos via WebSocket). `esbuild <= 0.24.2` (fijado por vite 5.x) tiene un bypass CORS relacionado en el servidor de desarrollo. Vite 5.x NO puede parchearse completamente — actualizar a **vite 6.4.2+** que usa `esbuild ^0.25.0`.
+- **Combo React + Vite conocido como seguro** (actualizar cuando existan versiones parcheadas más recientes):
   ```json
   "devDependencies": {
     "@vitejs/plugin-react": "4.3.4",
     "vite": "6.4.2"
   }
   ```
-  `@vitejs/plugin-react@4.x` supports `vite ^4 || ^5 || ^6` — do NOT jump to vite 7+ without upgrading plugin-react to 5.x+, and do NOT jump to vite 8+ without moving to plugin-react 6.x (which adds rolldown + react-compiler deps).
-- All known vite dev-server CVEs require the dev server to be running AND the user visiting a malicious site. Production builds (`vite build`) and embedded Wails bundles are NOT affected. But always fix anyway — dev server gets run during development.
+  `@vitejs/plugin-react@4.x` soporta `vite ^4 || ^5 || ^6` — NO saltar a vite 7+ sin actualizar plugin-react a 5.x+, y NO saltar a vite 8+ sin moverse a plugin-react 6.x (que agrega dependencias de rolldown + react-compiler).
+- Todos los CVEs conocidos del servidor de desarrollo de vite requieren que el servidor de desarrollo esté corriendo Y que el usuario visite un sitio malicioso. Los builds de producción (`vite build`) y los bundles Wails embebidos NO se ven afectados. Pero siempre corregir de todos modos — el servidor de desarrollo se ejecuta durante el desarrollo.
 
-## What this skill replaces
+## Qué reemplaza esta skill
 
-When you load this skill, you can skip:
-- Reading existing `app.go`, `dtos.go`, `store/read.go` to understand patterns
-- Deriving the build tag layout by searching the repo
-- Deriving the DTO naming convention (camelCase) by comparison
-- Looking up the CSS token names in `index.css`
-- Re-reading `frontend/src/lib/wails.ts` to understand the binding guard pattern
-- Re-reading existing views to understand loading/error/empty state patterns
+Cuando cargas esta skill, puedes omitir:
+- Leer `app.go`, `dtos.go`, `store/read.go` existentes para entender los patrones
+- Derivar el layout de build tags buscando en el repositorio
+- Derivar la convención de nombres de DTO (camelCase) por comparación
+- Buscar los nombres de tokens CSS en `index.css`
+- Re-leer `frontend/src/lib/wails.ts` para entender el patrón de guard del binding
+- Re-leer vistas existentes para entender los patrones de estado loading/error/empty
 
-If you need the exact content of an existing file that this skill does not cover, read ONLY that file — do not do a broad exploration.
+Si necesitas el contenido exacto de un archivo existente que esta skill no cubre, leer SOLO ese archivo — no hacer una exploración amplia.

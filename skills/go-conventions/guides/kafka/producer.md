@@ -1,19 +1,19 @@
-# Kafka Producer Patterns
+# Patrones de Producer Kafka
 
-## segmentio/kafka-go Producer
+## Producer segmentio/kafka-go
 
 ```go
 writer := &kafka.Writer{
     Addr:         kafka.TCP("broker1:9092", "broker2:9092"),
     Topic:        "events",
-    Balancer:     &kafka.Hash{},        // key-based partitioning
-    BatchSize:    100,                   // messages per batch
-    BatchBytes:   1048576,               // 1 MB max batch
-    BatchTimeout: 10 * time.Millisecond, // flush interval
-    RequiredAcks: kafka.RequireAll,      // wait for all ISR
+    Balancer:     &kafka.Hash{},        // particionamiento basado en clave
+    BatchSize:    100,                   // mensajes por batch
+    BatchBytes:   1048576,               // batch máximo de 1 MB
+    BatchTimeout: 10 * time.Millisecond, // intervalo de flush
+    RequiredAcks: kafka.RequireAll,      // espera todos los ISR
     MaxAttempts:  3,
     Compression:  kafka.Snappy,
-    Async:        false,                 // sync for reliability
+    Async:        false,                 // sync para confiabilidad
     AllowAutoTopicCreation: false,
 }
 defer writer.Close()
@@ -30,7 +30,7 @@ if err != nil {
 }
 ```
 
-## confluent-kafka-go Producer
+## Producer confluent-kafka-go
 
 ```go
 producer, err := kafka.NewProducer(&kafka.ConfigMap{
@@ -47,7 +47,7 @@ if err != nil {
 }
 defer producer.Close()
 
-// async delivery report
+// reporte de entrega asíncrono
 go func() {
     for e := range producer.Events() {
         if m, ok := e.(*kafka.Message); ok && m.TopicPartition.Error != nil {
@@ -60,11 +60,11 @@ go func() {
 }()
 ```
 
-## Producer Rules
+## Reglas del Producer
 
-- **Always set `acks=all`** — ensures all in-sync replicas acknowledge
-- **Enable idempotence** — prevents duplicate messages on retries
-- **Use snappy compression** — best balance of speed vs size for Go
-- **Set a partition key** for messages that need ordering (entity ID)
-- **Never use `fmt.Sprintf` with user input** in topic names
-- **Close producers on shutdown** — flushes pending messages
+- **Siempre configura `acks=all`** — asegura que todas las réplicas en sincronía reconozcan
+- **Habilita idempotencia** — previene mensajes duplicados en reintentos
+- **Usa compresión snappy** — mejor balance entre velocidad y tamaño para Go
+- **Establece una partition key** para mensajes que necesiten ordenamiento (ID de entidad)
+- **Nunca uses `fmt.Sprintf` con input de usuario** en nombres de topics
+- **Cierra producers en el shutdown** — vacía los mensajes pendientes

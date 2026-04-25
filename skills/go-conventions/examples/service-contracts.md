@@ -1,12 +1,12 @@
-# Service Contract Patterns
+# Patrones de Contratos de Servicio
 
-## Full flow: Handler → Service → Repository
+## Flujo completo: Handler → Service → Repository
 
-Each layer has a clear responsibility and type signature. Never leak concerns across layers.
+Cada capa tiene una responsabilidad clara y una firma de tipos definida. Nunca filtrar preocupaciones entre capas.
 
-### Layer 1: Handler (HTTP boundary)
+### Capa 1: Handler (límite HTTP)
 
-Constructs domain entity from HTTP context/request, passes to service.
+Construye la entidad de dominio a partir del contexto/request HTTP, la pasa al servicio.
 
 ```go
 func (h *Handler) GetDashboardStats(g *gin.Context) {
@@ -31,9 +31,9 @@ func (h *Handler) GetDashboardStats(g *gin.Context) {
 }
 ```
 
-### Layer 2: Service Interface (port)
+### Capa 2: Interfaz de Servicio (puerto)
 
-Receives typed entity, never raw primitives.
+Recibe entidad tipada, nunca primitivos crudos.
 
 ```go
 // GOOD — service receives entity
@@ -47,9 +47,9 @@ type DashboardServiceInterface interface {
 }
 ```
 
-### Layer 3: Service Implementation (application)
+### Capa 3: Implementación de Servicio (aplicación)
 
-Validates via entity, delegates to repo. If just a bridge — return directly.
+Valida a través de la entidad, delega al repo. Si es solo un puente — retornar directamente.
 
 ```go
 // GOOD — bridge pattern, no unnecessary wrapping
@@ -76,9 +76,9 @@ func (s *svc) GetDashboardStats(ctx context.Context, request entities.GetDashboa
 }
 ```
 
-### Layer 4: Repository (infrastructure)
+### Capa 4: Repositorio (infraestructura)
 
-Uses domain error codes, sql.Null* for scanning, context with timeout.
+Usa códigos de error de dominio, sql.Null* para scanning, contexto con timeout.
 
 ```go
 func (r repository) GetDashboardStats(ctx context.Context, tenantID string) (entities.DashboardStats, error) {
@@ -98,9 +98,9 @@ func (r repository) GetDashboardStats(ctx context.Context, tenantID string) (ent
 }
 ```
 
-### Layer 5: Persistence DTO (scan struct)
+### Capa 5: DTO de Persistencia (struct de scan)
 
-ALL fields use sql.Null* types.
+TODOS los campos usan tipos sql.Null*.
 
 ```go
 // GOOD
@@ -118,9 +118,9 @@ type DashboardStatsRow struct {
 }
 ```
 
-### Layer 6: Entity (domain)
+### Capa 6: Entidad (dominio)
 
-Request entity with Validate() that normalizes and checks fields.
+Entidad de request con Validate() que normaliza y verifica los campos.
 
 ```go
 type GetDashboardStatsRequest struct {
@@ -136,15 +136,15 @@ func (r *GetDashboardStatsRequest) Validate() error {
 }
 ```
 
-## Decision table: when to wrap vs return errors
+## Tabla de decisión: cuándo envolver vs retornar errores
 
-| Layer | Error source | Pattern |
+| Capa | Fuente del error | Patrón |
 |-------|-------------|---------|
-| Repository | DB driver error | `errors.New(errors.QueryErr, errors.WithError(err))` |
-| Repository | Row scan error | `errors.New(errors.ScanErr, errors.WithError(err))` |
+| Repository | Error del driver DB | `errors.New(errors.QueryErr, errors.WithError(err))` |
+| Repository | Error de scan de fila | `errors.New(errors.ScanErr, errors.WithError(err))` |
 | Repository | No rows found | `errors.New(errors.NotFoundErr)` |
-| Service | Validation failed | `return err` (entity.Validate already returns domain error) |
-| Service | Repo returned error | `return err` (repo already mapped to domain error) |
-| Service | Business logic error | `errors.New(errors.SomeBusinessErr)` |
-| Handler | Binding/parse error | `errors.New(errors.BadRequestErr)` |
-| Handler | Service returned error | `g.Error(err)` (middleware handles HTTP status) |
+| Service | Validación fallida | `return err` (entity.Validate ya retorna error de dominio) |
+| Service | Error retornado por repo | `return err` (repo ya mapeó a error de dominio) |
+| Service | Error de lógica de negocio | `errors.New(errors.SomeBusinessErr)` |
+| Handler | Error de binding/parse | `errors.New(errors.BadRequestErr)` |
+| Handler | Error retornado por servicio | `g.Error(err)` (middleware maneja el status HTTP) |

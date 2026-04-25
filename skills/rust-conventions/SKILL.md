@@ -1,68 +1,68 @@
 ---
 name: rust-conventions
-description: Rust conventions for systems programming, high-performance CLIs, and blockchain/crypto. Use when writing Rust code, reviewing Rust patterns, or user mentions "rust conventions", "tokio", "async rust", "clap", "solana", "substrate", "no_std", "unsafe", or working with .rs files.
+description: Convenciones Rust para programación de sistemas, CLIs de alto rendimiento y blockchain/crypto. Usar al escribir código Rust, revisar patrones Rust, o cuando el usuario mencione "rust conventions", "tokio", "async rust", "clap", "solana", "substrate", "no_std", "unsafe", o al trabajar con archivos .rs.
 ---
 
 # Rust Conventions
 
-> **IMPORTANT:** This file is a lightweight dispatcher. Do NOT load all referenced files at once. Read the routing table below, identify which files are relevant to the current task, and load ONLY those using the Read tool. Each file is ~3-5KB. Loading unnecessary files wastes context tokens.
+> **IMPORTANTE:** Este archivo es un dispatcher ligero. NO cargar todos los archivos referenciados a la vez. Leer la tabla de enrutamiento abajo, identificar qué archivos son relevantes para la tarea actual y cargar SOLO esos usando la herramienta Read. Cada archivo pesa ~3-5KB. Cargar archivos innecesarios desperdicia tokens de contexto.
 
-## Stack & Philosophy
+## Stack y Filosofía
 
-- **Edition 2024** (Rust 1.85+) — `unsafe_op_in_unsafe_fn` warns, `static mut` denied, `unsafe extern`, resolver v3
-- **Ownership over GC** — zero-copy when possible, Cow for conditional ownership, arena allocation for batches
-- **Errors are types** — thiserror for libraries, anyhow for applications, never panic in library code
-- **Async with tokio** — native async traits (1.75+), JoinSet for structured concurrency, cancellation safety
-- **No unnecessary unsafe** — `#![forbid(unsafe_code)]` at crate level, allow only in audited modules
+- **Edition 2024** (Rust 1.85+) — `unsafe_op_in_unsafe_fn` advierte, `static mut` denegado, `unsafe extern`, resolver v3
+- **Ownership sobre GC** — zero-copy cuando sea posible, Cow para ownership condicional, arena allocation para batches
+- **Los errores son tipos** — thiserror para librerías, anyhow para aplicaciones, nunca panic en código de librería
+- **Async con tokio** — async traits nativos (1.75+), JoinSet para concurrencia estructurada, seguridad de cancelación
+- **Sin unsafe innecesario** — `#![forbid(unsafe_code)]` a nivel de crate, permitir solo en módulos auditados
 
-## Red Flags (always stop work)
+## Red Flags (siempre detener el trabajo)
 
-- `.unwrap()` in library code → error (use `?` or return Result)
-- `panic!()` in library code → error
-- `unsafe` without `// SAFETY:` comment → error
-- `static mut` → error (use AtomicXxx, Mutex, or LazyLock)
+- `.unwrap()` en código de librería → error (usar `?` o retornar Result)
+- `panic!()` en código de librería → error
+- `unsafe` sin comentario `// SAFETY:` → error
+- `static mut` → error (usar AtomicXxx, Mutex o LazyLock)
 - `#[allow(warnings)]` → error
-- `dbg!()` or `todo!()` in committed code → error
-- `String` where `&str` suffices → warning (unnecessary allocation)
+- `dbg!()` o `todo!()` en código commiteado → error
+- `String` donde `&str` es suficiente → warning (asignación innecesaria)
 
-## Anti-Pattern Detection
+## Detección de Anti-Patrones
 
-**Passive detection:** When reviewing Rust code, load `detection/anti-patterns.md` and scan for `error` and `warning` patterns. Report as `[file:line] [severity] [category] anti-pattern-name`.
+**Detección pasiva:** Al revisar código Rust, cargar `detection/anti-patterns.md` y escanear en busca de patrones `error` y `warning`. Reportar como `[file:line] [severity] [category] anti-pattern-name`.
 
-**Active detection:** When user asks to "improve", "refactor", "optimize", or "clean" — also report `suggestion` level patterns.
+**Detección activa:** Cuando el usuario pide "mejorar", "refactorizar", "optimizar" o "limpiar" — también reportar patrones de nivel `suggestion`.
 
-## What to Load
+## Qué Cargar
 
-Load **only** the files relevant to the current task:
+Cargar **solo** los archivos relevantes para la tarea actual:
 
-### Rules (quick reference, ~2-3KB each)
+### Rules (referencia rápida, ~2-3KB cada uno)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| Ownership, error handling, naming, edition 2024 features | `rules/coding.md` |
-| Workspace layout, Cargo.toml, feature flags, lib vs bin | `rules/architecture.md` |
+| Ownership, manejo de errores, naming, features de edition 2024 | `rules/coding.md` |
+| Layout del workspace, Cargo.toml, feature flags, lib vs bin | `rules/architecture.md` |
 
-### Guides (detailed patterns with code, ~3-5KB each)
+### Guides (patrones detallados con código, ~3-5KB cada uno)
 
-| Working on... | Load |
+| Trabajando en... | Cargar |
 |---|---|
-| tokio runtime, async traits, JoinSet, select!, channels | `guides/async/tokio.md` |
-| Cancellation safety, graceful shutdown, timeouts | `guides/async/cancellation.md` |
+| Runtime tokio, async traits, JoinSet, select!, channels | `guides/async/tokio.md` |
+| Seguridad de cancelación, graceful shutdown, timeouts | `guides/async/cancellation.md` |
 | clap v4 derive, tracing, indicatif, cross-compilation | `guides/cli/patterns.md` |
 | Solana/Anchor, Alloy/Ethereum, crypto primitives, no_std | `guides/blockchain/patterns.md` |
 | Zero-copy, arena allocation, Cow, SmallVec, Pin/Unpin | `guides/performance/memory.md` |
-| Unsafe guidelines, cargo-audit, cargo-deny, constant-time | `guides/performance/safety.md` |
-| Unit tests, integration tests, proptest, criterion, insta | `guides/testing/patterns.md` |
-| Clippy config, rustfmt, CI pipeline, cargo-machete | `guides/tooling.md` |
+| Guías de unsafe, cargo-audit, cargo-deny, constant-time | `guides/performance/safety.md` |
+| Tests unitarios, tests de integración, proptest, criterion, insta | `guides/testing/patterns.md` |
+| Configuración de Clippy, rustfmt, pipeline CI, cargo-machete | `guides/tooling.md` |
 
-### Detection & Checklists
+### Detección y Checklists
 
-| When... | Load |
+| Cuándo... | Cargar |
 |---|---|
-| Code review | `detection/anti-patterns.md` |
-| Before writing Rust code | `checklists/pre.md` |
-| After writing Rust code | `checklists/post.md` |
+| Revisión de código | `detection/anti-patterns.md` |
+| Antes de escribir código Rust | `checklists/pre.md` |
+| Después de escribir código Rust | `checklists/post.md` |
 
-## Post-Implementation Gate
+## Gate Post-Implementación
 
-After ANY code change to `.rs` files, run `cargo fmt --check && cargo clippy -- -D warnings` before considering the task done.
+Después de CUALQUIER cambio de código en archivos `.rs`, ejecutar `cargo fmt --check && cargo clippy -- -D warnings` antes de considerar la tarea como terminada.

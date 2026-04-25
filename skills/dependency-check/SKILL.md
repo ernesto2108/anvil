@@ -1,16 +1,16 @@
 ---
 name: dependency-check
-description: Analyze project dependencies for vulnerabilities, license issues, and outdated versions. Use when user says "check dependencies", "audit packages", "outdated deps", "npm audit", "go mod tidy", "security vulnerabilities", or before upgrading libraries.
+description: Analiza las dependencias del proyecto en busca de vulnerabilidades, problemas de licencia y versiones desactualizadas. Usar cuando el usuario diga "check dependencies", "audit packages", "outdated deps", "npm audit", "go mod tidy", "security vulnerabilities", o antes de actualizar librerías.
 ---
 
-Analyze project dependencies for vulnerabilities, license issues, and updates.
+Analiza las dependencias del proyecto en busca de vulnerabilidades, problemas de licencia y actualizaciones.
 
-Actions:
-1. Run `go list -m all` to see full dependency tree
-2. Run `go mod tidy` to clean up
-3. If Node.js is detected, audit via the project's package manager (detect from lockfile per CLAUDE.md): `pnpm audit` (preferred), `npm audit`, or `yarn audit`. Do NOT read `node_modules/` directly — it's denied by `permissions.deny` and `audit` surfaces the same info.
-4. Check for known CVEs in the listed versions
+Acciones:
+1. Ejecutar `go list -m all` para ver el árbol completo de dependencias
+2. Ejecutar `go mod tidy` para limpiar
+3. Si se detecta Node.js, auditar via el gestor de paquetes del proyecto (detectar desde lockfile según CLAUDE.md): `pnpm audit` (preferido), `npm audit`, o `yarn audit`. NO leer `node_modules/` directamente — está denegado por `permissions.deny` y `audit` muestra la misma información.
+4. Verificar CVEs conocidos en las versiones listadas
 
-Rules:
-- Report only high and critical vulnerabilities unless asked otherwise
-- Propose specific version updates
+Reglas:
+- Reportar solo vulnerabilidades high y critical salvo que se indique lo contrario
+- Proponer actualizaciones de versión específicas

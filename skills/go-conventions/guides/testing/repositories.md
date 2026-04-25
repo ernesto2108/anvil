@@ -1,6 +1,6 @@
-# Testing Repositories
+# Testing de Repositorios
 
-Mock `sql.Rows` for unit-testing repository scan logic:
+Mockear `sql.Rows` para unit-testing de la lógica de scan en repositorios:
 
 ```go
 type mockRows struct {
@@ -50,7 +50,7 @@ func (m *mockRows) Scan(dest ...interface{}) error {
 func (m *mockRows) Close() error { return nil }
 func (m *mockRows) Err() error  { return m.err }
 
-// Usage — test that Scan correctly maps sql.Null* columns to persistence DTOs
+// Uso — verificar que Scan mapea correctamente las columnas sql.Null* a los DTOs de persistencia
 func Test_Repo_ScanUsers(t *testing.T) {
     rows := &mockRows{
         data: [][]interface{}{
@@ -66,7 +66,7 @@ func Test_Repo_ScanUsers(t *testing.T) {
     if len(users) != 2 {
         t.Fatalf("got %d users, want 2", len(users))
     }
-    // Verify mapper extracted values correctly
+    // Verificar que el mapper extrajo los valores correctamente
     if users[0].Name != "Alice" {
         t.Errorf("users[0].Name = %q, want %q", users[0].Name, "Alice")
     }
@@ -76,7 +76,7 @@ func Test_Repo_ScanUsers(t *testing.T) {
 }
 ```
 
-For error injection, add configurable error fields:
+Para inyección de errores, agregar campos de error configurables:
 
 ```go
 type mockRows struct {

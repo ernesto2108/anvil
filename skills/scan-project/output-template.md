@@ -1,74 +1,74 @@
-# Output Template for project.md
+# Plantilla de salida para project.md
 
-Use this template when writing ``<vault>/01-project/context.md``. Include only sections for detected stacks. Delete unused stack sections.
+Usa esta plantilla al escribir ``<vault>/01-project/context.md``. Incluye solo las secciones para los stacks detectados. Elimina las secciones de stack que no apliquen.
 
 ---
 
 ```markdown
 # <Project Name> — Project Context
 
-## Product Objective (Canonical)
-<short summary — what the product is and what problem it solves>
+## Objetivo del producto (Canónico)
+<resumen breve — qué es el producto y qué problema resuelve>
 
-## Non-negotiable rules
-- <rule from user>
+## Reglas no negociables
+- <regla del usuario>
 
-## What the AI should optimize for
-- <point from user>
+## Para qué debe optimizar la IA
+- <punto del usuario>
 
-## What NOT to suggest
-- <point from user>
+## Qué NO sugerir
+- <punto del usuario>
 
-## Repository Snapshot (Technical Context)
+## Snapshot del repositorio (Contexto técnico)
 
-### Stacks detected
+### Stacks detectados
 - <Go 1.23 | React 18 + Vite | Flutter 3.x | etc.>
 
-### Directory Tree (actual)
+### Árbol de directorios (real)
 ```text
-<REAL TREE HERE — depth 3, excluding <vault>/, .git/, vendor/, node_modules/, dist/, build/>
+<ÁRBOL REAL AQUÍ — profundidad 3, excluyendo <vault>/, .git/, vendor/, node_modules/, dist/, build/>
 ```
 
-<!-- === GO SECTION (include only if go.mod found) === -->
+<!-- === SECCIÓN GO (incluir solo si se encuentra go.mod) === -->
 ### Go
-- **Version:** <from go.mod>
-- **Module:** <module path>
-- **Key dependencies:** <top-level only, e.g., chi, sqlx, pgx, slog>
-- **Test files:** <count and example paths>
-- **Linter config:** <.golangci.yml detected / not found>
+- **Versión:** <de go.mod>
+- **Módulo:** <module path>
+- **Dependencias clave:** <solo top-level, ej., chi, sqlx, pgx, slog>
+- **Archivos de test:** <cantidad y ejemplos de rutas>
+- **Config de linter:** <.golangci.yml detectado / no encontrado>
 
-<!-- === REACT/NODE SECTION (include only if package.json found) === -->
+<!-- === SECCIÓN REACT/NODE (incluir solo si se encuentra package.json) === -->
 ### React / Node
 - **Framework:** <Next.js / Vite / CRA / none>
-- **Key dependencies:** <react, typescript, tailwind, etc.>
+- **Dependencias clave:** <react, typescript, tailwind, etc.>
 - **Test runner:** <vitest / jest / other>
-- **Test files:** <count and example paths>
-- **Lint config:** <eslint config detected / not found>
-- **TypeScript:** <tsconfig.json detected / not found>
+- **Archivos de test:** <cantidad y ejemplos de rutas>
+- **Config de lint:** <eslint config detectado / no encontrado>
+- **TypeScript:** <tsconfig.json detectado / no encontrado>
 
-<!-- === FLUTTER SECTION (include only if pubspec.yaml found) === -->
+<!-- === SECCIÓN FLUTTER (incluir solo si se encuentra pubspec.yaml) === -->
 ### Flutter
-- **Dart version:** <from environment in pubspec.yaml>
-- **Key dependencies:** <riverpod, bloc, dio, etc.>
-- **Test files:** <count and example paths>
-- **Analysis config:** <analysis_options.yaml detected / not found>
-- **Localization:** <l10n.yaml detected / not found>
+- **Versión de Dart:** <del environment en pubspec.yaml>
+- **Dependencias clave:** <riverpod, bloc, dio, etc.>
+- **Archivos de test:** <cantidad y ejemplos de rutas>
+- **Config de análisis:** <analysis_options.yaml detectado / no encontrado>
+- **Localización:** <l10n.yaml detectado / no encontrado>
 
-<!-- === OTHER STACKS (add as needed) === -->
+<!-- === OTROS STACKS (agregar según sea necesario) === -->
 
-### CI / Runtime detected
-- <Dockerfile: yes/no>
-- <docker-compose: yes/no>
-- <GitHub Actions: list workflow files>
+### CI / Runtime detectado
+- <Dockerfile: sí/no>
+- <docker-compose: sí/no>
+- <GitHub Actions: lista de archivos de workflow>
 
-### Build tools
-- <Makefile / taskfile / scripts detected>
+### Herramientas de build
+- <Makefile / taskfile / scripts detectados>
 
-### Config files
-- <any other notable config>
+### Archivos de configuración
+- <cualquier otra configuración notable>
 
-## Notes for agents
-- follow existing structure exactly
-- do not introduce new architectural patterns
-- place new code near similar existing files
+## Notas para agentes
+- seguir la estructura existente exactamente
+- no introducir nuevos patrones arquitectónicos
+- colocar el nuevo código cerca de archivos similares existentes
 ```

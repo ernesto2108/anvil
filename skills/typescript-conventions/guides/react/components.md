@@ -1,17 +1,17 @@
-# React Component Patterns Guide
+# Guía de Patrones de Componentes React
 
-## Function Components Only
+## Solo Componentes Función
 
-Never use class components. All components are functions. All lifecycle logic lives in hooks.
+Nunca usar componentes de clase. Todos los componentes son funciones. Toda la lógica de ciclo de vida vive en hooks.
 
 ```typescript
-// WRONG: class component
+// INCORRECTO: componente de clase
 class UserCard extends React.Component<Props, State> {
   state = { loading: false };
   render() { ... }
 }
 
-// RIGHT: function component
+// CORRECTO: componente función
 function UserCard({ userId, onSelect }: UserCardProps): React.ReactElement {
   const [loading, setLoading] = useState(false);
   ...
@@ -19,18 +19,18 @@ function UserCard({ userId, onSelect }: UserCardProps): React.ReactElement {
 }
 ```
 
-## Props Typing with `interface`
+## Tipado de Props con `interface`
 
-Use `interface` for props (not `type`). This gives better error messages and allows declaration merging in libraries.
+Usar `interface` para props (no `type`). Esto produce mejores mensajes de error y permite declaration merging en librerías.
 
 ```typescript
-// WRONG: type alias for props
+// INCORRECTO: type alias para props
 type ButtonProps = {
   label: string;
   onClick: () => void;
 };
 
-// RIGHT: interface
+// CORRECTO: interface
 interface ButtonProps {
   label: string;
   onClick: () => void;
@@ -40,7 +40,7 @@ interface ButtonProps {
   children?: React.ReactNode;
 }
 
-// RIGHT: extend HTML element attributes when wrapping native elements
+// CORRECTO: extender atributos de elementos HTML al envolver elementos nativos
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
@@ -59,14 +59,14 @@ function Input({ label, error, hint, ...inputProps }: InputProps): React.ReactEl
 }
 ```
 
-## Hooks Rules
+## Reglas de Hooks
 
-- Call hooks only at the top level — never inside conditions, loops, or nested functions
-- Custom hooks start with `use` and encapsulate related stateful logic
-- Extract complex `useEffect` into custom hooks — components should not contain data-fetching logic
+- Llamar hooks solo en el nivel superior — nunca dentro de condiciones, loops o funciones anidadas
+- Los custom hooks comienzan con `use` y encapsulan lógica stateful relacionada
+- Extraer `useEffect` complejos a custom hooks — los componentes no deben contener lógica de data-fetching
 
 ```typescript
-// WRONG: data fetching in component body
+// INCORRECTO: data fetching en el cuerpo del componente
 function UserProfile({ id }: { id: string }) {
   const [user, setUser] = useState<User | null>(null);
   useEffect(() => {
@@ -75,7 +75,7 @@ function UserProfile({ id }: { id: string }) {
   ...
 }
 
-// RIGHT: extract to custom hook
+// CORRECTO: extraer a custom hook
 function useUser(id: string): { user: User | null; loading: boolean; error: Error | null } {
   const [state, setState] = useState<{
     user: User | null;
@@ -115,7 +115,7 @@ function UserProfile({ id }: { id: string }) {
 
 ## Zod + react-hook-form
 
-Validate forms at the boundary with Zod. Never write manual validation in components.
+Validar formularios en la frontera con Zod. Nunca escribir validación manual en los componentes.
 
 ```typescript
 import { useForm } from "react-hook-form";
@@ -159,20 +159,20 @@ function LoginForm({ onSuccess }: LoginFormProps): React.ReactElement {
 
 ## Server Components (RSC)
 
-Server Components fetch data directly without `useEffect`. They cannot use hooks, context, or browser APIs. Mark client components explicitly with `"use client"`.
+Los Server Components obtienen datos directamente sin `useEffect`. No pueden usar hooks, context ni APIs del navegador. Marcar los componentes cliente explícitamente con `"use client"`.
 
 ```typescript
-// app/users/[id]/page.tsx — Server Component (default)
-// Can be async, fetches at render time
+// app/users/[id]/page.tsx — Server Component (por defecto)
+// Puede ser async, hace fetch en tiempo de render
 async function UserPage({ params }: { params: { id: string } }): Promise<React.ReactElement> {
-  // Direct DB/service call — no useEffect, no loading state
+  // Llamada directa a DB/servicio — sin useEffect, sin estado de carga
   const user = await userService.findById(params.id);
   if (!user) notFound();
 
   return (
     <main>
       <UserProfile user={user} />
-      <UserActions userId={user.id} /> {/* Client Component for interactivity */}
+      <UserActions userId={user.id} /> {/* Client Component para interactividad */}
     </main>
   );
 }
@@ -190,9 +190,9 @@ function UserActions({ userId }: UserActionsProps): React.ReactElement {
 }
 ```
 
-## Suspense and Error Boundaries
+## Suspense y Error Boundaries
 
-Wrap async Server Components and lazy-loaded components with `<Suspense>`. Always provide an error boundary.
+Envolver Server Components asíncronos y componentes cargados de forma lazy con `<Suspense>`. Siempre proveer un error boundary.
 
 ```typescript
 // app/layout.tsx
@@ -209,7 +209,7 @@ function RootLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Lazy loading with explicit suspense boundary
+// Lazy loading con boundary de suspense explícito
 const HeavyChart = lazy(() => import("./HeavyChart.js"));
 
 function Dashboard() {
@@ -222,7 +222,7 @@ function Dashboard() {
   );
 }
 
-// Error boundary for isolated sections
+// Error boundary para secciones aisladas
 function UserSection({ userId }: { userId: string }) {
   return (
     <ErrorBoundary

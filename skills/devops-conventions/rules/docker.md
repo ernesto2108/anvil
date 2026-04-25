@@ -1,38 +1,38 @@
-# Docker Best Practices
+# Mejores Prácticas de Docker
 
-## Base Images
-- Use official or Verified Publisher images only
-- Prefer minimal: `alpine`, `distroless`, or Chainguard variants
-- Pin to digest for production: `FROM alpine:3.21@sha256:abcd...`
-- Rebuild regularly to pick up security patches
+## Imágenes Base
+- Usa solo imágenes oficiales o de Verified Publisher
+- Prefiere mínimas: `alpine`, `distroless`, o variantes de Chainguard
+- Fija al digest para producción: `FROM alpine:3.21@sha256:abcd...`
+- Reconstruye regularmente para incorporar parches de seguridad
 
-## Multi-Stage Builds
-- Separate build stage (compilers, dev deps) from runtime stage (artifacts + minimal runtime)
-- Never ship build tools, package managers, or source in final image
-- Create reusable base stages for shared components
+## Builds Multi-Stage
+- Separa la etapa de build (compiladores, deps de dev) de la etapa de runtime (artefactos + runtime mínimo)
+- Nunca envíes herramientas de build, gestores de paquetes, o código fuente en la imagen final
+- Crea etapas base reutilizables para componentes compartidos
 
-## Layer Caching
-- Order instructions least-changing → most-changing (OS deps before app code)
-- Combine RUN: `RUN apt-get update && apt-get install -y --no-install-recommends pkg && rm -rf /var/lib/apt/lists/*`
-- Copy dependency manifests first: `COPY go.mod go.sum ./` then `RUN go mod download` before source
-- Sort multi-line arguments alphabetically
+## Caché de Capas
+- Ordena las instrucciones de menor a mayor cambio (deps de OS antes que código de app)
+- Combina RUN: `RUN apt-get update && apt-get install -y --no-install-recommends pkg && rm -rf /var/lib/apt/lists/*`
+- Copia primero los manifiestos de dependencias: `COPY go.mod go.sum ./` luego `RUN go mod download` antes del código fuente
+- Ordena argumentos multi-línea alfabéticamente
 
-## Security
-- Always run as non-root: create user with explicit UID/GID, use `USER` directive
-- Never embed secrets or keys in image layers
-- Use `.dockerignore`: exclude `.env`, `.git`, credentials, IDE files, `node_modules`
-- Use `COPY` over `ADD` unless extracting archives
-- Exec form for ENTRYPOINT: `ENTRYPOINT ["executable"]` (proper signal handling as PID 1)
-- Scan images in CI with Trivy or Grype before pushing
+## Seguridad
+- Siempre ejecuta como non-root: crea usuario con UID/GID explícitos, usa directiva `USER`
+- Nunca embebas secretos o claves en las capas de imagen
+- Usa `.dockerignore`: excluye `.env`, `.git`, credenciales, archivos de IDE, `node_modules`
+- Usa `COPY` sobre `ADD` a menos que extraigas archivos
+- Forma exec para ENTRYPOINT: `ENTRYPOINT ["executable"]` (manejo correcto de señales como PID 1)
+- Escanea imágenes en CI con Trivy o Grype antes de hacer push
 
 ## General
-- One process per container
-- Use `WORKDIR` with absolute paths, never `RUN cd`
-- Use `EXPOSE` to document ports (not security)
-- Pin package versions: `package=1.3.*`
-- Always set `HEALTHCHECK` for production images
+- Un proceso por contenedor
+- Usa `WORKDIR` con rutas absolutas, nunca `RUN cd`
+- Usa `EXPOSE` para documentar puertos (no es seguridad)
+- Fija versiones de paquetes: `package=1.3.*`
+- Siempre establece `HEALTHCHECK` para imágenes de producción
 
-## Go Dockerfile Template
+## Plantilla de Dockerfile para Go
 
 ```dockerfile
 # Build stage
@@ -52,7 +52,7 @@ EXPOSE 8080
 ENTRYPOINT ["/server"]
 ```
 
-## React/Node Dockerfile Template
+## Plantilla de Dockerfile para React/Node
 
 ```dockerfile
 # Build stage

@@ -1,37 +1,37 @@
-# Go Testing Guide
+# Guía de Testing en Go
 
-> **Dispatcher:** Load ONLY the files relevant to your test scope. Each file is ~3-5KB.
+> **Dispatcher:** Cargar SOLO los archivos relevantes para tu alcance de test. Cada archivo es ~3-5KB.
 
-## Routing Table
+## Tabla de Rutas
 
-| Scope | File |
+| Alcance | Archivo |
 |---|---|
-| Test file structure + table-driven tests | `guides/testing/structure-tables.md` |
-| HTTP handler tests | `guides/testing/http-handlers.md` |
-| Repository / DB tests | `guides/testing/repositories.md` |
-| Manual mocks + test helpers | `guides/testing/helpers-mocking.md` |
-| Fixtures + integration test setup | `guides/testing/fixtures-integration.md` |
-| Coverage targets + benchmarks | `guides/testing/coverage-benchmarks.md` |
+| Estructura de archivos de test + tests con tabla | `guides/testing/structure-tables.md` |
+| Tests de HTTP handlers | `guides/testing/http-handlers.md` |
+| Tests de Repositorio / DB | `guides/testing/repositories.md` |
+| Mocks manuales + helpers de test | `guides/testing/helpers-mocking.md` |
+| Fixtures + configuración de tests de integración | `guides/testing/fixtures-integration.md` |
+| Objetivos de cobertura + benchmarks | `guides/testing/coverage-benchmarks.md` |
 
-## Always load
+## Siempre cargar
 
-- `guides/testing/structure-tables.md` — naming, package suffix, table-driven pattern (required for ALL Go tests)
-- `guides/testing/helpers-mocking.md` — manual mocks, `t.Helper()`, no mockery/gomock
+- `guides/testing/structure-tables.md` — naming, sufijo de paquete, patrón table-driven (requerido para TODOS los tests de Go)
+- `guides/testing/helpers-mocking.md` — mocks manuales, `t.Helper()`, sin mockery/gomock
 
-## Load when relevant
+## Cargar cuando sea relevante
 
-- `guides/testing/http-handlers.md` — if testing HTTP handlers or middleware
-- `guides/testing/repositories.md` — if testing DB queries or repositories
-- `guides/testing/fixtures-integration.md` — if writing integration tests or using testdata fixtures
-- `guides/testing/coverage-benchmarks.md` — if coverage is part of the task
+- `guides/testing/http-handlers.md` — si se testean HTTP handlers o middleware
+- `guides/testing/repositories.md` — si se testean queries de DB o repositorios
+- `guides/testing/fixtures-integration.md` — si se escriben tests de integración o se usan fixtures testdata
+- `guides/testing/coverage-benchmarks.md` — si la cobertura es parte de la tarea
 
-## Key rules (summary)
+## Reglas clave (resumen)
 
-- Package: use `package foo_test` (black-box) unless testing unexported logic
-- Naming: `Test_FunctionName` or `Test_Type_Method` (underscore after `Test`)
-- Table-driven by default — any function with >1 scenario gets a `tests []struct{name string, ...}` loop
-- Assertions: stdlib (`t.Fatalf`/`t.Errorf`) OR testify (`require`/`assert`) — match what the project already uses, never mix
-- `require` (testify) / `t.Fatalf` (stdlib) for fatal checks; `assert` / `t.Errorf` for non-fatal
-- No mockery, no gomock — all mocks are written manually as structs implementing the interface
-- `t.Helper()` on every test helper function
-- Error assertions check message/type, not just `err != nil`
+- Paquete: usar `package foo_test` (caja negra) a menos que se testee lógica no exportada
+- Naming: `Test_FunctionName` o `Test_Type_Method` (guion bajo después de `Test`)
+- Table-driven por defecto — cualquier función con >1 escenario recibe un loop `tests []struct{name string, ...}`
+- Assertions: stdlib (`t.Fatalf`/`t.Errorf`) O testify (`require`/`assert`) — coincidir con lo que el proyecto ya usa, nunca mezclar
+- `require` (testify) / `t.Fatalf` (stdlib) para verificaciones fatales; `assert` / `t.Errorf` para no-fatales
+- Sin mockery, sin gomock — todos los mocks se escriben manualmente como structs que implementan la interfaz
+- `t.Helper()` en cada función helper de test
+- Las assertions de errores verifican el mensaje/tipo, no solo `err != nil`

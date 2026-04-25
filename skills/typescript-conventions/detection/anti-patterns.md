@@ -1,48 +1,48 @@
-# TypeScript Anti-Patterns — Detection Reference
+# TypeScript Anti-Patterns — Referencia de Detección
 
-## Passive Detection
+## Detección Pasiva
 
-When reviewing TypeScript code, scan for these patterns and report using the format:
-`[file:line] [severity] [category] anti-pattern-name`
+Al revisar código TypeScript, escanear estos patrones y reportar con el formato:
+`[file:line] [severidad] [categoría] nombre-del-anti-patrón`
 
-Only report `error` and `warning` by default. Report `suggestion` only when user asks to improve/refactor/optimize.
+Solo reportar `error` y `warning` por defecto. Reportar `suggestion` únicamente cuando el usuario pida mejorar/refactorizar/optimizar.
 
-## Anti-Pattern Table
+## Tabla de Anti-Patrones
 
-| Code Pattern | Anti-Pattern | Severity | Category | Fix → Pattern |
+| Patrón en el código | Anti-patrón | Severidad | Categoría | Corrección → Patrón |
 |---|---|---|---|---|
-| `any` without explicit suppression | untyped-any | error | types | Use `unknown` and narrow, or define the type — see `rules/coding.md` |
-| `// @ts-ignore` without reason | ts-ignore-no-reason | error | types | Replace with `// @ts-expect-error: reason` — must include why |
-| `enum` keyword | enum-usage | warning | types | `as const` union: `const X = ["a","b"] as const; type X = typeof X[number]` — see `guides/patterns/types.md` |
-| `x as SomeType` type assertion | unsafe-assertion | warning | types | Use type guard (`instanceof`, `in`, discriminant check) — see `guides/patterns/types.md` |
-| Non-null assertion `!` on API/user data | non-null-assertion | warning | reliability | Narrow with `if (x == null)` check instead |
-| `namespace` keyword | namespace-usage | error | types | ESM supersedes namespaces — use modules |
-| `var` declaration | var-usage | error | style | Use `const` or `let` |
-| Index signature `obj[key]` without `noUncheckedIndexedAccess` | unsafe-index-access | warning | types | Enable `noUncheckedIndexedAccess` in tsconfig — result is `T \| undefined` |
-| Barrel export `index.ts` re-exporting everything | barrel-export | warning | architecture | Direct imports — see `rules/architecture.md` |
-| `require()` in ESM project | commonjs-require | error | architecture | Use `import` — see `rules/architecture.md` |
-| `import X from "module"` for type-only import | missing-import-type | warning | performance | `import type X from "module"` — enables `verbatimModuleSyntax` |
-| `innerHTML =` with untrusted content | xss-innerHTML | error | security | Use `textContent` or DOMPurify — see `guides/security.md` |
-| `dangerouslySetInnerHTML` without sanitization | xss-dangerously-set | error | security | Sanitize with DOMPurify before rendering — see `guides/security.md` |
-| `document.write(...)` | xss-document-write | error | security | Never use `document.write` |
-| `localStorage.setItem("token", ...)` | token-in-localstorage | warning | security | Use httpOnly cookies — see `guides/security.md` |
-| `fetch(url)` without `signal` in long-lived context | missing-abort-signal | suggestion | reliability | Add `AbortController` — see `guides/async/promises.md` |
-| `new XMLHttpRequest()` / synchronous XHR | sync-xhr | error | performance | Use `fetch()` with `AbortSignal` |
-| `Promise.all(arr.map(...))` on large arrays | unbounded-concurrency | warning | performance | Use concurrency-limited helper — see `guides/async/promises.md` |
-| `catch (e: any)` | catch-any | warning | types | `catch (e: unknown)` then narrow — see `rules/coding.md` |
-| `throw "string message"` | throw-string | warning | errors | Throw `Error` instances: `throw new Error("...")` |
-| Class component extending `React.Component` | class-component | warning | react | Function component with hooks — see `guides/react/components.md` |
-| `type FooProps = {...}` for React props | props-type-alias | suggestion | react | Use `interface FooProps` — see `guides/react/components.md` |
-| `useEffect` with data-fetching inside component | effect-data-fetch | warning | react | Extract to custom hook with AbortController — see `guides/react/components.md` |
-| Missing `key` prop in list render | missing-key-prop | error | react | Add stable, unique `key` to each list element |
-| `key={index}` in dynamic list | index-as-key | warning | react | Use stable identifier (id, slug) as key |
-| `process.env.X` without Zod validation | unvalidated-env | warning | architecture | Validate all env vars at startup — see `rules/architecture.md` |
-| `import X from "./module"` without `.js` extension | missing-js-extension | warning | architecture | Add `.js` extension for ESM compatibility: `"./module.js"` |
-| Object spread to deep clone `{ ...obj }` | shallow-clone | warning | reliability | Use `structuredClone(obj)` for deep clone |
-| `Math.random()` for security tokens | insecure-random | error | security | Use `crypto.getRandomValues()` or `crypto.randomUUID()` |
-| `eval(...)` or `new Function(...)` | eval-usage | error | security | Never use `eval` — rewrite with safe alternatives |
-| Missing error boundary around async React component | missing-error-boundary | warning | react | Wrap with `<ErrorBoundary>` — see `guides/react/components.md` |
-| Mutation of function parameter object | param-mutation | warning | reliability | Clone with spread or `structuredClone`, return new object |
-| `console.log` in non-debug code | console-log | suggestion | observability | Use structured logger with log levels |
-| Type `object` or `{}` in domain code | vague-object-type | warning | types | Define a concrete `interface` or use `Record<string, unknown>` |
-| `as unknown as TargetType` double assertion | double-assertion | warning | types | Find the correct type — double assertions hide type errors |
+| `any` sin supresión explícita | untyped-any | error | types | Usar `unknown` y estrechar, o definir el tipo — ver `rules/coding.md` |
+| `// @ts-ignore` sin motivo | ts-ignore-no-reason | error | types | Reemplazar con `// @ts-expect-error: reason` — debe incluir el motivo |
+| Palabra clave `enum` | enum-usage | warning | types | Unión `as const`: `const X = ["a","b"] as const; type X = typeof X[number]` — ver `guides/patterns/types.md` |
+| Aserción de tipo `x as SomeType` | unsafe-assertion | warning | types | Usar type guard (`instanceof`, `in`, comprobación discriminante) — ver `guides/patterns/types.md` |
+| Aserción non-null `!` sobre datos de API/usuario | non-null-assertion | warning | reliability | Estrechar con verificación `if (x == null)` en su lugar |
+| Palabra clave `namespace` | namespace-usage | error | types | ESM reemplaza a los namespaces — usar módulos |
+| Declaración `var` | var-usage | error | style | Usar `const` o `let` |
+| Index signature `obj[key]` sin `noUncheckedIndexedAccess` | unsafe-index-access | warning | types | Habilitar `noUncheckedIndexedAccess` en tsconfig — el resultado es `T \| undefined` |
+| Barrel export `index.ts` que re-exporta todo | barrel-export | warning | architecture | Importaciones directas — ver `rules/architecture.md` |
+| `require()` en proyecto ESM | commonjs-require | error | architecture | Usar `import` — ver `rules/architecture.md` |
+| `import X from "module"` para importación de solo tipo | missing-import-type | warning | performance | `import type X from "module"` — habilita `verbatimModuleSyntax` |
+| `innerHTML =` con contenido no confiable | xss-innerHTML | error | security | Usar `textContent` o DOMPurify — ver `guides/security.md` |
+| `dangerouslySetInnerHTML` sin sanitización | xss-dangerously-set | error | security | Sanitizar con DOMPurify antes de renderizar — ver `guides/security.md` |
+| `document.write(...)` | xss-document-write | error | security | Nunca usar `document.write` |
+| `localStorage.setItem("token", ...)` | token-in-localstorage | warning | security | Usar cookies httpOnly — ver `guides/security.md` |
+| `fetch(url)` sin `signal` en contexto de larga duración | missing-abort-signal | suggestion | reliability | Agregar `AbortController` — ver `guides/async/promises.md` |
+| `new XMLHttpRequest()` / XHR sincrónico | sync-xhr | error | performance | Usar `fetch()` con `AbortSignal` |
+| `Promise.all(arr.map(...))` sobre arrays grandes | unbounded-concurrency | warning | performance | Usar helper con límite de concurrencia — ver `guides/async/promises.md` |
+| `catch (e: any)` | catch-any | warning | types | `catch (e: unknown)` y luego estrechar — ver `rules/coding.md` |
+| `throw "string message"` | throw-string | warning | errors | Lanzar instancias de `Error`: `throw new Error("...")` |
+| Componente de clase extendiendo `React.Component` | class-component | warning | react | Componente función con hooks — ver `guides/react/components.md` |
+| `type FooProps = {...}` para props de React | props-type-alias | suggestion | react | Usar `interface FooProps` — ver `guides/react/components.md` |
+| `useEffect` con data-fetching dentro del componente | effect-data-fetch | warning | react | Extraer a custom hook con AbortController — ver `guides/react/components.md` |
+| Prop `key` faltante en render de lista | missing-key-prop | error | react | Agregar `key` estable y único a cada elemento de la lista |
+| `key={index}` en lista dinámica | index-as-key | warning | react | Usar identificador estable (id, slug) como key |
+| `process.env.X` sin validación con Zod | unvalidated-env | warning | architecture | Validar todas las variables de entorno al inicio — ver `rules/architecture.md` |
+| `import X from "./module"` sin extensión `.js` | missing-js-extension | warning | architecture | Agregar extensión `.js` para compatibilidad ESM: `"./module.js"` |
+| Object spread para clonar en profundidad `{ ...obj }` | shallow-clone | warning | reliability | Usar `structuredClone(obj)` para clon profundo |
+| `Math.random()` para tokens de seguridad | insecure-random | error | security | Usar `crypto.getRandomValues()` o `crypto.randomUUID()` |
+| `eval(...)` o `new Function(...)` | eval-usage | error | security | Nunca usar `eval` — reescribir con alternativas seguras |
+| Falta error boundary alrededor de componente React asíncrono | missing-error-boundary | warning | react | Envolver con `<ErrorBoundary>` — ver `guides/react/components.md` |
+| Mutación del objeto de parámetro de función | param-mutation | warning | reliability | Clonar con spread o `structuredClone`, retornar nuevo objeto |
+| `console.log` en código que no es de depuración | console-log | suggestion | observability | Usar logger estructurado con niveles de log |
+| Tipo `object` o `{}` en código de dominio | vague-object-type | warning | types | Definir una `interface` concreta o usar `Record<string, unknown>` |
+| Doble aserción `as unknown as TargetType` | double-assertion | warning | types | Encontrar el tipo correcto — las dobles aserciones ocultan errores de tipos |

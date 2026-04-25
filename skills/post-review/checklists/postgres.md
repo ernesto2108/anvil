@@ -1,4 +1,4 @@
-# PostgreSQL Review Checklist
+# Checklist de Revisión PostgreSQL
 
 ## Correctness
 

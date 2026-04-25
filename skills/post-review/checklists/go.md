@@ -1,4 +1,4 @@
-# Go Review Checklist
+# Checklist de Revisión Go
 
 ## Correctness
 

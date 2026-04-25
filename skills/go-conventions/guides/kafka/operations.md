@@ -1,4 +1,4 @@
-# Kafka Operations
+# Operaciones Kafka
 
 ## Graceful Shutdown
 
@@ -40,7 +40,7 @@ func (c *Consumer) Run(ctx context.Context, handler func(context.Context, kafka.
             continue
         }
 
-        // process + commit
+        // procesar + commit
         if err := handler(ctx, msg); err != nil {
             slog.Error("processing error", "error", err)
         }
@@ -54,9 +54,9 @@ func (c *Consumer) Run(ctx context.Context, handler func(context.Context, kafka.
 
 ---
 
-## OpenTelemetry Trace Propagation
+## Propagación de Trazas con OpenTelemetry
 
-### Header Carrier Adapter
+### Adaptador Header Carrier
 
 ```go
 type KafkaHeaderCarrier []kafka.Header
@@ -100,23 +100,23 @@ func ExtractTraceContext(ctx context.Context, msg kafka.Message) context.Context
 }
 ```
 
-### Key Metrics
+### Métricas Clave
 
-| Metric | Type | Description |
+| Métrica | Tipo | Descripción |
 |--------|------|-------------|
-| `kafka_consumer_lag` | Gauge | Messages behind in partition |
-| `kafka_consumer_messages_total` | Counter | Total messages consumed |
-| `kafka_consumer_errors_total` | Counter | Total consumption errors |
-| `kafka_producer_messages_total` | Counter | Total messages produced |
-| `kafka_dlq_messages_total` | Counter | Messages sent to DLQ |
-| `kafka_consumer_processing_duration` | Histogram | Time to process a message |
-| `kafka_retry_attempts_total` | Counter | Total retry attempts |
+| `kafka_consumer_lag` | Gauge | Mensajes por detrás en la partición |
+| `kafka_consumer_messages_total` | Counter | Total de mensajes consumidos |
+| `kafka_consumer_errors_total` | Counter | Total de errores de consumo |
+| `kafka_producer_messages_total` | Counter | Total de mensajes producidos |
+| `kafka_dlq_messages_total` | Counter | Mensajes enviados al DLQ |
+| `kafka_consumer_processing_duration` | Histogram | Tiempo de procesamiento de un mensaje |
+| `kafka_retry_attempts_total` | Counter | Total de intentos de reintento |
 
 ---
 
-## Schema Evolution
+## Evolución de Schema
 
-Use **Protobuf** for Go services (best tooling and performance). Use Schema Registry for compatibility enforcement.
+Usa **Protobuf** para servicios Go (mejor tooling y rendimiento). Usa Schema Registry para aplicar compatibilidad.
 
 ```protobuf
 syntax = "proto3";
@@ -129,42 +129,42 @@ message OrderEvent {
     double amount = 3;
     OrderStatus status = 4;
     int64 created_at = 5;
-    // v2: new fields — backward compatible
+    // v2: campos nuevos — compatible hacia atrás
     string currency = 6;
     repeated LineItem items = 7;
 }
 ```
 
-**Evolution rules**: adding fields is safe, never reuse field numbers, never change field types, use `reserved` for removed fields.
+**Reglas de evolución**: agregar campos es seguro, nunca reutilices números de campo, nunca cambies tipos de campo, usa `reserved` para campos eliminados.
 
 ---
 
-## Anti-Patterns
+## Anti-Patrones
 
-| Anti-Pattern | Why It's Bad | Fix |
+| Anti-Patrón | Por Qué Es Malo | Solución |
 |-------------|-------------|-----|
-| Auto-commit before processing | Message lost if processing fails | Manual commit after success |
-| `time.Sleep` in retry loop | Blocks goroutine, ignores shutdown | `select` with `time.After` + `ctx.Done()` |
-| Ignoring consumer errors | Silent data loss | Log + DLQ |
-| One consumer for all topics | Hard to tune, single point of failure | One consumer per topic |
-| No partition key | No ordering guarantee | Use entity ID as key |
-| Unbounded goroutines per message | Memory explosion under load | Worker pool with bounded channel |
-| Eager rebalance strategy | Stop-the-world during rebalance | `cooperative-sticky` |
-| Retry without classification | Retrying permanent errors wastes resources | Classify transient vs permanent |
-| No DLQ | Poison messages block partition forever | Always configure a DLQ |
-| DLQ without monitoring | Dead letters pile up silently | Alert on DLQ depth and age |
+| Auto-commit antes de procesar | Mensaje perdido si el procesamiento falla | Commit manual después del éxito |
+| `time.Sleep` en el loop de reintento | Bloquea la goroutine, ignora el shutdown | `select` con `time.After` + `ctx.Done()` |
+| Ignorar errores del consumer | Pérdida silenciosa de datos | Log + DLQ |
+| Un consumer para todos los topics | Difícil de tunear, punto único de falla | Un consumer por topic |
+| Sin partition key | Sin garantía de ordenamiento | Usa el ID de entidad como clave |
+| Goroutines sin límite por mensaje | Explosión de memoria bajo carga | Worker pool con channel acotado |
+| Estrategia de rebalanceo eager | Stop-the-world durante el rebalanceo | `cooperative-sticky` |
+| Reintento sin clasificación | Reintentar errores permanentes desperdicia recursos | Clasifica transitorios vs permanentes |
+| Sin DLQ | Mensajes veneno bloquean la partición para siempre | Siempre configura un DLQ |
+| DLQ sin monitoreo | Los dead letters se acumulan silenciosamente | Alertar sobre profundidad y antigüedad del DLQ |
 
 ---
 
-## Decision Matrix: Kafka vs Other Options
+## Matriz de Decisión: Kafka vs Otras Opciones
 
-| Concern | Kafka |
+| Preocupación | Kafka |
 |---------|-------|
-| **DLQ** | Application-layer (retry topics + DLT) |
-| **Ordering** | Per-partition (use key) |
-| **Exactly-once** | Transactions + idempotent producer |
+| **DLQ** | A nivel de aplicación (retry topics + DLT) |
+| **Ordenamiento** | Por partición (usa clave) |
+| **Exactly-once** | Transacciones + productor idempotente |
 | **Backpressure** | pause/resume, max.poll.records, worker pool |
-| **Retry** | Retry topics with TTL or app-layer backoff |
+| **Reintento** | Retry topics con TTL o backoff a nivel de app |
 | **Schema** | Schema Registry (Protobuf/Avro) |
-| **Scale** | Horizontal via partitions |
-| **Best for** | High throughput, event streaming, replay |
+| **Escala** | Horizontal vía particiones |
+| **Mejor para** | Alto throughput, event streaming, replay |

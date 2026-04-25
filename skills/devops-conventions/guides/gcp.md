@@ -1,37 +1,37 @@
-# Google Cloud Services Guide
+# Guía de Servicios de Google Cloud
 
 ## Cloud Run
-- Default for stateless HTTP workloads — scale-to-zero saves cost
-- Direct VPC egress (not VPC connectors) for private networking
-- Multi-container instances (sidecars) supported: up to 10 containers
-- `min-instances > 0` for latency-sensitive; `max-instances` for cost control
-- `--cpu-boost` for faster cold starts
-- Dedicated service accounts with minimal IAM, never default compute SA
+- Por defecto para cargas de trabajo HTTP sin estado — scale-to-zero ahorra costos
+- VPC egress directo (no conectores VPC) para redes privadas
+- Instancias multi-contenedor (sidecars) soportadas: hasta 10 contenedores
+- `min-instances > 0` para latencia sensible; `max-instances` para control de costos
+- `--cpu-boost` para arranques en frío más rápidos
+- Cuentas de servicio dedicadas con IAM mínimo, nunca el SA de compute por defecto
 
 ## GKE
-- Autopilot mode for most workloads (Google manages nodes)
-- Workload Identity for pod-level IAM, never node-level SA keys
-- Standard mode only when you need GPU, custom node pools, or DaemonSets
+- Modo Autopilot para la mayoría de cargas de trabajo (Google gestiona los nodos)
+- Workload Identity para IAM a nivel de pod, nunca claves de SA a nivel de nodo
+- Modo Standard solo cuando necesites GPU, node pools personalizados, o DaemonSets
 
 ## Cloud SQL
-- Private IP with VPC peering; never expose publicly
-- Automated backups + point-in-time recovery
-- Cloud SQL Auth Proxy for secure connections from GKE/Cloud Run
-- IAM database authentication where supported
+- IP privada con VPC peering; nunca exponer públicamente
+- Backups automatizados + point-in-time recovery
+- Cloud SQL Auth Proxy para conexiones seguras desde GKE/Cloud Run
+- Autenticación IAM de base de datos donde sea soportado
 
 ## Artifact Registry
-- Replaces Container Registry (deprecated)
-- Enable vulnerability scanning
-- Remote repositories as pull-through caches
-- Image digest pinning in production
+- Reemplaza Container Registry (deprecated)
+- Habilita escaneo de vulnerabilidades
+- Repositorios remotos como pull-through caches
+- Pin de digest de imagen en producción
 
 ## Cloud Build
-- Explicit service account permissions (default changed mid-2024)
-- `cloudbuild.yaml` in repo root; keep steps minimal
-- Kaniko for Docker builds (no daemon needed)
-- Cache artifacts in Cloud Storage or Artifact Registry
+- Permisos explícitos de cuenta de servicio (por defecto cambió a mediados de 2024)
+- `cloudbuild.yaml` en la raíz del repo; mantén los steps al mínimo
+- Kaniko para builds de Docker (no necesita daemon)
+- Cachea artefactos en Cloud Storage o Artifact Registry
 
-## Common Terraform Patterns
+## Patrones Comunes de Terraform
 
 ```hcl
 # Cloud Run service

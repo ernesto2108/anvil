@@ -1,14 +1,14 @@
-# Locust — Reference Guide
+# Locust — Guía de Referencia
 
-> Python-based load testing with real-time web UI and native HTML reports. Best for: Python teams, interactive monitoring, quick setup.
+> Herramienta de load testing basada en Python con UI web en tiempo real y reportes HTML nativos. Ideal para: equipos Python, monitoreo interactivo, configuración rápida.
 
-## Install
+## Instalación
 
 ```bash
 pip install locust
 ```
 
-## Basic Locustfile
+## Locustfile Básico
 
 ```python
 from locust import HttpUser, task, between
@@ -41,13 +41,13 @@ class BookingUser(HttpUser):
         )
 ```
 
-## Execution
+## Ejecución
 
 ```bash
-# With web UI (real-time charts at http://localhost:8089)
+# Con UI web (gráficas en tiempo real en http://localhost:8089)
 locust -f locustfile.py --host https://web-api-qa.example.com
 
-# Headless mode with HTML report
+# Modo headless con reporte HTML
 locust -f locustfile.py \
   --headless \
   --users 50 \
@@ -56,34 +56,34 @@ locust -f locustfile.py \
   --host https://web-api-qa.example.com \
   --html report.html
 
-# With CSV output for analysis
+# Con salida CSV para análisis
 locust -f locustfile.py \
   --headless \
   --users 50 \
   --spawn-rate 10 \
   --run-time 30s \
   --csv results
-# Produces: results_stats.csv, results_stats_history.csv, results_failures.csv
+# Produce: results_stats.csv, results_stats_history.csv, results_failures.csv
 ```
 
-## Native Charts
+## Gráficas Nativas
 
-Locust provides charts in two ways:
+Locust provee gráficas de dos formas:
 
-### Web UI (interactive)
-- Run without `--headless` flag
-- Open `http://localhost:8089`
-- Real-time charts: RPS, response times, users
-- Can adjust users during test
+### UI Web (interactiva)
+- Ejecutar sin la flag `--headless`
+- Abrir `http://localhost:8089`
+- Gráficas en tiempo real: RPS, tiempos de respuesta, usuarios
+- Se pueden ajustar usuarios durante el test
 
-### HTML Report
-- Use `--html report.html` flag
-- Generates static HTML with embedded charts
-- Includes: response time percentiles, RPS, failures table
-- **Limitation:** headless HTML reports have fewer charts than the web UI
+### Reporte HTML
+- Usar la flag `--html report.html`
+- Genera HTML estático con gráficas embebidas
+- Incluye: percentiles de tiempo de respuesta, RPS, tabla de fallos
+- **Limitación:** los reportes HTML en modo headless tienen menos gráficas que la UI web
 
-### CSV for Custom Charts
-If the native HTML report is not enough, use CSV output + matplotlib:
+### CSV para Gráficas Personalizadas
+Si el reporte HTML nativo no es suficiente, usar salida CSV + matplotlib:
 
 ```python
 import pandas as pd
@@ -114,7 +114,7 @@ plt.tight_layout()
 plt.savefig('chart-locust-timeline.png', dpi=150)
 ```
 
-## Advanced: Stages (ramping)
+## Avanzado: Stages (ramping)
 
 ```python
 from locust import HttpUser, task, between, LoadTestShape
@@ -135,14 +135,14 @@ class StagesShape(LoadTestShape):
         return None
 ```
 
-## Comparison with Other Tools
+## Comparación con Otras Herramientas
 
-| Feature | Locust |
+| Característica | Locust |
 |---------|--------|
-| Native charts | Yes — web UI + HTML report |
-| Real-time dashboard | Yes (localhost:8089) |
-| HTML report | Yes (`--html`) |
-| Language | Python |
-| Custom scenarios | Python classes |
-| Distributed mode | Yes (master/worker) |
-| Best for | Python teams, interactive monitoring, quick prototyping |
+| Gráficas nativas | Sí — UI web + reporte HTML |
+| Dashboard en tiempo real | Sí (localhost:8089) |
+| Reporte HTML | Sí (`--html`) |
+| Lenguaje | Python |
+| Escenarios personalizados | Clases Python |
+| Modo distribuido | Sí (master/worker) |
+| Ideal para | Equipos Python, monitoreo interactivo, prototipado rápido |

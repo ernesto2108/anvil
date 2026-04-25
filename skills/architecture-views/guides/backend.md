@@ -1,8 +1,8 @@
 # Template: architecture-backend.md
 
-Inspired by: Stripe spec-driven design + bflorat Application View.
+Inspirado en: diseño spec-driven de Stripe + bflorat Application View.
 
-**Generate when:** backend work is involved.
+**Generar cuando:** hay trabajo de backend involucrado.
 
 ## Template
 
@@ -11,7 +11,7 @@ Inspired by: Stripe spec-driven design + bflorat Application View.
 
 ## Patrones de comunicación usados
 
-<!-- List which patterns this feature uses. Include ONLY sections below that apply. -->
+<!-- Listar qué patrones usa esta feature. Incluir SOLO las secciones abajo que apliquen. -->
 - [ ] REST API
 - [ ] Eventos async (Kafka / RabbitMQ / SQS)
 - [ ] gRPC
@@ -23,7 +23,7 @@ Inspired by: Stripe spec-driven design + bflorat Application View.
 
 ## Contratos REST (OpenAPI) — incluir si aplica
 
-<!-- Executable spec — YAML fragment. -->
+<!-- Spec ejecutable — fragmento YAML. -->
 
 ```yaml
 openapi: "3.1.0"
@@ -60,16 +60,16 @@ components:
 
 ## Contratos de eventos / mensajes (AsyncAPI) — incluir si aplica
 
-<!-- Use AsyncAPI format for Kafka topics, RabbitMQ exchanges, SQS queues, etc. -->
+<!-- Usar formato AsyncAPI para Kafka topics, RabbitMQ exchanges, SQS queues, etc. -->
 
 ```yaml
 asyncapi: "2.6.0"
 channels:
   <topic-or-queue-name>:
-    publish:        # producer side
+    publish:        # lado productor
       message:
         $ref: "#/components/messages/<EventName>"
-    subscribe:      # consumer side
+    subscribe:      # lado consumidor
       message:
         $ref: "#/components/messages/<EventName>"
 components:
@@ -81,17 +81,17 @@ components:
         properties:
           eventId:
             type: string
-            description: Idempotency key
+            description: Clave de idempotencia
           occurredAt:
             type: string
             format: date-time
-          # ... domain fields
+          # ... campos de dominio
 ```
 
-**Garantías de entrega:** at-most-once / at-least-once / exactly-once  
-**Orden:** global / por partition key / sin garantía  
-**Idempotencia:** cómo el consumidor detecta duplicados (eventId, dedup window)  
-**Dead letter:** qué pasa si el consumer falla N veces  
+**Garantías de entrega:** at-most-once / at-least-once / exactly-once
+**Orden:** global / por partition key / sin garantía
+**Idempotencia:** cómo el consumidor detecta duplicados (eventId, ventana de dedup)
+**Dead letter:** qué pasa si el consumer falla N veces
 
 ---
 
@@ -126,7 +126,7 @@ commands:
 
 ## Casos de uso
 
-<!-- Ports & adapters: what the system does, not how -->
+<!-- Ports & adapters: qué hace el sistema, no cómo -->
 - ...
 
 ## Comportamiento runtime
@@ -151,12 +151,12 @@ sequenceDiagram
 - **Manejo de fallos:** qué pasa si el downstream no responde
 ```
 
-## Rules
+## Reglas
 
-- Use ONLY the sections that apply — omit empty sections entirely
-- OpenAPI is source of truth for REST contracts; AsyncAPI for events — not prose
-- Every event schema needs an `eventId` (idempotency key) and `occurredAt`
-- Delivery guarantees, ordering, and DLQ strategy are mandatory for any async section
-- Error taxonomy must classify errors as retryable vs fatal — not just HTTP codes
-- Sequence diagrams show happy path + primary failure path
-- If frontend exists, REST/command schemas here are canonical — frontend derives from these
+- Usar SOLO las secciones que apliquen — omitir secciones vacías completamente
+- OpenAPI es la fuente de verdad para contratos REST; AsyncAPI para eventos — no prosa
+- Cada schema de evento necesita un `eventId` (clave de idempotencia) y `occurredAt`
+- Garantías de entrega, orden y estrategia de DLQ son obligatorias para cualquier sección async
+- La taxonomía de errores debe clasificar errores como retryable vs fatal — no solo códigos HTTP
+- Los diagramas de secuencia muestran happy path + path de fallo principal
+- Si existe frontend, los schemas REST/command aquí son canónicos — frontend los deriva de estos

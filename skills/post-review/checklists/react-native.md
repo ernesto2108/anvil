@@ -1,4 +1,4 @@
-# React Native Review Checklist
+# Checklist de Revisión React Native
 
 Incluye todo lo de React (JS/TS) checklist, mas lo siguiente especifico de mobile:
 

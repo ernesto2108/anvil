@@ -1,24 +1,24 @@
 ---
 name: db-schema-scan
-description: Read-only inspection of database schema via migration files and schema SQL. Use when user says "check the schema", "show tables", "inspect migrations", "what columns does X have", or needs to understand the database structure before writing queries.
+description: Inspección de solo lectura del schema de base de datos mediante archivos de migración y SQL de schema. Usar cuando el usuario diga "check the schema", "show tables", "inspect migrations", "what columns does X have", o necesite entender la estructura de la base de datos antes de escribir queries.
 ---
 
-# Database Schema Scan
+# Escaneo de Schema de Base de Datos
 
-> Read-only inspection of the current database schema. Prerequisite for DBA work and query optimization.
+> Inspección de solo lectura del schema de base de datos actual. Prerequisito para el trabajo DBA y la optimización de queries.
 
-## When to Use
+## Cuándo Usar
 
-- Before any DBA migration work (understand current state)
-- Before developer writes repository queries (verify table/column names)
-- When user asks "what columns does X have", "show me the schema", "check the tables"
-- As prerequisite for `/db-optimize`
+- Antes de cualquier trabajo de migración DBA (entender el estado actual)
+- Antes de que el developer escriba queries de repositorio (verificar nombres de tabla/columna)
+- Cuando el usuario pregunta "qué columnas tiene X", "muéstrame el schema", "verifica las tablas"
+- Como prerequisito para `/db-optimize`
 
 ## Workflow
 
-### Step 1 — Find Migration Files
+### Paso 1 — Encontrar Archivos de Migración
 
-Search for migration files in common locations:
+Buscar archivos de migración en ubicaciones comunes:
 
 ```
 migrations/*.sql
@@ -28,62 +28,62 @@ database/migrations/*.sql
 **/migrate/*.sql
 ```
 
-Also check for schema dumps: `schema.sql`, `init.sql`, `db/schema.sql`
+También verificar dumps de schema: `schema.sql`, `init.sql`, `db/schema.sql`
 
-### Step 2 — Parse Schema
+### Paso 2 — Parsear el Schema
 
-Read migration files in order (by number/timestamp) and build a mental model of:
+Leer los archivos de migración en orden (por número/timestamp) y construir un modelo mental de:
 
-1. **Tables** — name, columns, types, constraints
-2. **Relationships** — foreign keys, join tables
-3. **Indexes** — name, columns, unique/partial
-4. **Enums/Types** — custom types defined
-5. **RLS Policies** — if multi-tenant
-6. **Triggers** — if any exist
+1. **Tablas** — nombre, columnas, tipos, restricciones
+2. **Relaciones** — foreign keys, tablas de unión
+3. **Índices** — nombre, columnas, unique/partial
+4. **Enums/Tipos** — tipos personalizados definidos
+5. **Políticas RLS** — si es multi-tenant
+6. **Triggers** — si existen
 
-### Step 3 — Produce Schema Summary
+### Paso 3 — Producir Resumen del Schema
 
-Output a structured summary:
+Generar un resumen estructurado:
 
 ```markdown
-## Schema Summary — <project>
+## Resumen del Schema — <project>
 
-### Tables (<count>)
+### Tablas (<count>)
 
 #### <table_name>
-| Column | Type | Nullable | Default | Constraint |
+| Columna | Tipo | Nullable | Default | Restricción |
 |--------|------|----------|---------|------------|
 | id | UUID | NO | uuid_generate_v7() | PK |
 | email | VARCHAR(255) | NO | — | UNIQUE |
 | tenant_id | UUID | YES | — | FK → tenants(id) |
 | created_at | TIMESTAMP | YES | CURRENT_TIMESTAMP | — |
 
-**Indexes:** idx_users_email, idx_users_tenant_id
+**Índices:** idx_users_email, idx_users_tenant_id
 **RLS:** tenant_id = current_setting('app.tenant_id')
 
-### Relationships
+### Relaciones
 - users.tenant_id → tenants.id
 - user_roles.user_id → users.id
 - user_roles.role_id → roles.id
 
-### Migration Count: <N> (latest: <filename>)
+### Cantidad de Migraciones: <N> (última: <filename>)
 
-### Potential Issues
-- [ ] Table X has no tenant_id (multi-tenant gap)
-- [ ] Table Y has no index on frequently queried column Z
-- [ ] Column A is VARCHAR(255) but only stores short codes
+### Problemas Potenciales
+- [ ] La tabla X no tiene tenant_id (brecha multi-tenant)
+- [ ] La tabla Y no tiene índice en la columna Z consultada frecuentemente
+- [ ] La columna A es VARCHAR(255) pero solo almacena códigos cortos
 ```
 
-### Step 4 — Check for Schema/Code Mismatches (optional)
+### Paso 4 — Verificar Desajustes Schema/Código (opcional)
 
-If the orchestrator asks, compare schema against repository query files:
-- Columns referenced in queries that don't exist in schema
-- Tables in schema that have no corresponding repository
-- Type mismatches (schema says UUID, code scans as string)
+Si el orquestador lo solicita, comparar el schema contra los archivos de queries del repositorio:
+- Columnas referenciadas en queries que no existen en el schema
+- Tablas en el schema que no tienen repositorio correspondiente
+- Desajustes de tipo (schema dice UUID, el código escanea como string)
 
-## Rules
+## Reglas
 
-- **READ-ONLY** — never modify schema or migration files
-- **Report, don't fix** — flag issues for the DBA agent to handle
-- **Order matters** — read migrations in sequence to understand evolution
-- **Check rollbacks** — note migrations that have `.up.sql` but no `.down.sql`
+- **SOLO LECTURA** — nunca modificar el schema ni los archivos de migración
+- **Reportar, no corregir** — marcar problemas para que el agente DBA los maneje
+- **El orden importa** — leer las migraciones en secuencia para entender la evolución
+- **Verificar rollbacks** — notar migraciones que tienen `.up.sql` pero no `.down.sql`

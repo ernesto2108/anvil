@@ -1,48 +1,48 @@
 ---
 name: architecture-boundary-guardrails
-description: Prevent architectural drift by enforcing bounded contexts and use-case-per-file structure. Use when creating new services, moving code across domain boundaries, or detecting cross-context imports, god-interfaces, or monolithic service files.
+description: Previene la deriva arquitectónica haciendo cumplir bounded contexts y la estructura de un caso de uso por archivo. Usar al crear nuevos servicios, mover código entre límites de dominio, o detectar imports cross-context, god-interfaces, o archivos de servicio monolíticos.
 user-invocable: false
 ---
 
-Prevent architectural drift by enforcing bounded contexts and use-case-per-file structure.
+Previene la deriva arquitectónica haciendo cumplir bounded contexts y la estructura de un caso de uso por archivo.
 
-Use when:
-- creating or moving code across domain boundaries
-- implementing application/domain/ports in a clean architecture project
-- adding new services, handlers, workers, or repositories
+Usar cuando:
+- se crea o mueve código entre límites de dominio
+- se implementan capas application/domain/ports en un proyecto de arquitectura limpia
+- se agregan nuevos servicios, handlers, workers o repositorios
 
-## Detection
+## Detección
 
-Before applying rules, detect the project's bounded contexts:
-1. Read the project structure to identify domain modules/folders
-2. If `<vault>/01-project/context.md` exists, use it for context boundaries
-3. Otherwise infer contexts from top-level domain directories (e.g., `internal/`, `src/domains/`, `packages/`)
+Antes de aplicar las reglas, detectar los bounded contexts del proyecto:
+1. Leer la estructura del proyecto para identificar módulos/carpetas de dominio
+2. Si existe `<vault>/01-project/context.md`, usarlo para los límites de contexto
+3. De lo contrario, inferir los contextos a partir de los directorios de dominio de nivel superior (ej. `internal/`, `src/domains/`, `packages/`)
 
-## Core Rules
+## Reglas principales
 
-- do not mix bounded contexts in one module/folder
-- each domain context owns its own entities, value objects, and ports
-- application layer must be use-case oriented:
-  - one use case per file
-  - avoid large service files accumulating unrelated operations
-- keep ports scoped per context; avoid shared god-interfaces
-- if a new file touches two contexts, stop and split
+- no mezclar bounded contexts en un mismo módulo/carpeta
+- cada contexto de dominio tiene sus propias entidades, value objects y ports
+- la capa application debe estar orientada a casos de uso:
+  - un caso de uso por archivo
+  - evitar archivos de servicio grandes que acumulen operaciones no relacionadas
+- mantener los ports con alcance por contexto; evitar god-interfaces compartidas
+- si un nuevo archivo toca dos contextos, detenerse y separar
 
-## Pre-Implementation Checklist
+## Lista de verificación pre-implementación
 
-1. Identify target bounded context(s) for the task
-2. Confirm destination folder belongs to that context
-3. If code spans contexts, define explicit ports/contracts between them
-4. Ensure each use case has its own file
-5. Flag architecture-impact changes before coding refactors
+1. Identificar el o los bounded context(s) objetivo para la tarea
+2. Confirmar que la carpeta de destino pertenece a ese contexto
+3. Si el código abarca contextos, definir ports/contratos explícitos entre ellos
+4. Asegurarse de que cada caso de uso tenga su propio archivo
+5. Marcar los cambios con impacto arquitectónico antes de codificar refactorizaciones
 
-## Validation Checks
+## Validaciones
 
-- no cross-context entity leakage without port contracts
-- no monolithic application files handling multiple unrelated use cases
-- imports remain directional (domain <- application <- infrastructure)
+- sin filtración de entidades cross-context sin contratos de port
+- sin archivos de aplicación monolíticos que manejen múltiples casos de uso no relacionados
+- los imports se mantienen direccionales (domain <- application <- infrastructure)
 
-## Output
+## Salida
 
-- If violation exists: report file, violation type, and split plan
-- If compliant: report "architecture guardrails OK"
+- Si existe violación: reportar archivo, tipo de violación y plan de separación
+- Si está en cumplimiento: reportar "architecture guardrails OK"

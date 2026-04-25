@@ -1,44 +1,44 @@
 ---
 name: write-files
-description: Create or modify files with minimal, focused changes respecting permissions. Use when writing code changes to ensure minimal diffs, preserved formatting, and no unrelated modifications.
+description: Crear o modificar archivos con cambios mínimos y enfocados, respetando los permisos. Úsalo al escribir cambios de código para asegurar diffs mínimos, formato preservado, y sin modificaciones no relacionadas.
 user-invocable: false
 ---
 
-Create or modify files in the repository.
+Crear o modificar archivos en el repositorio.
 
-General rules:
-- modify the minimum number of files
-- small, focused changes
-- preserve formatting
-- never rewrite unrelated code
-- explain changes clearly
+Reglas generales:
+- modificar el mínimo número de archivos
+- cambios pequeños y enfocados
+- preservar el formato
+- nunca reescribir código no relacionado
+- explicar los cambios con claridad
 
-Safe writing strategy:
-1. Read file first
-2. Understand context
-3. Apply minimal patch
-4. Show diff
-5. Then write
+Estrategia de escritura segura:
+1. Leer el archivo primero
+2. Entender el contexto
+3. Aplicar el parche mínimo
+4. Mostrar el diff
+5. Luego escribir
 
-Output format per change:
+Formato de salida por cambio:
 
 File: <path>
-Reason: <why>
+Reason: <por qué>
 
 Diff:
-+ <added lines>
-- <removed lines>
++ <líneas agregadas>
+- <líneas eliminadas>
 
-Never:
-- mass rewrite files
-- change architecture without design
-- modify files outside scope
+Nunca:
+- reescribir archivos en masa
+- cambiar la arquitectura sin diseño
+- modificar archivos fuera del scope
 
-## Design Source Validation
+## Validación de la Fuente de Diseño
 
-When modifying UI code that has a corresponding design file (.pen or Figma):
+Al modificar código de UI que tiene un archivo de diseño correspondiente (.pen o Figma):
 
-1. **Before writing**: Read the design to understand exact spacing, colors, layout, and typography
-2. **After writing**: Compare the implementation visually against the design
-3. **Never assume**: If you don't have the design open, open it first. Memory of "what the design looked like" is not reliable
-4. **Report discrepancies**: If the design and current code already differ, flag it to the user before making changes
+1. **Antes de escribir**: Leer el diseño para entender el espaciado exacto, colores, layout y tipografía
+2. **Después de escribir**: Comparar la implementación visualmente contra el diseño
+3. **Nunca asumir**: Si no tienes el diseño abierto, abrirlo primero. La memoria de "cómo se veía el diseño" no es confiable
+4. **Reportar discrepancias**: Si el diseño y el código actual ya difieren, notificarlo al usuario antes de hacer cambios

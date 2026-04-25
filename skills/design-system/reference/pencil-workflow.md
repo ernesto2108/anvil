@@ -1,70 +1,70 @@
-# Pencil Design Tool — Design System Workflow
+# Pencil Design Tool — Flujo de Trabajo del Design System
 
-How to create a complete design system inside a `.pen` file using Pencil MCP tools.
+Cómo crear un design system completo dentro de un archivo `.pen` usando herramientas MCP de Pencil.
 
-## Pencil Limitations vs Figma
+## Limitaciones de Pencil vs Figma
 
-Pencil does NOT have native Collections or Modes. Simulate them:
-- **Collections** → use naming convention prefixes: `prim-*`, `sem-*`, `comp-*`
-- **Modes** → use Pencil's theme axis system for light/dark
-- **Component Properties** → Pencil supports `reusable: true` but not boolean/text/instance-swap properties natively. Use descendant overrides on instances instead
-- **Variants** → create separate reusable components per variant (Button-Primary, Button-Secondary) or use theme-based switching
-- **Scoping** → not available. Rely on naming discipline
+Pencil NO tiene Collections o Modes nativos. Simúlalos:
+- **Collections** → usa prefijos de convención de nombres: `prim-*`, `sem-*`, `comp-*`
+- **Modes** → usa el sistema de eje de tema de Pencil para light/dark
+- **Component Properties** → Pencil soporta `reusable: true` pero no propiedades boolean/text/instance-swap de forma nativa. Usa overrides de descendientes en instancias en su lugar
+- **Variants** → crea componentes reutilizables separados por variante (Button-Primary, Button-Secondary) o usa switching basado en tema
+- **Scoping** → no disponible. Confía en la disciplina de nomenclatura
 
-## Order of Operations
+## Orden de Operaciones
 
 ```
-1. set_variables()     →  Create ALL variables (simulating collections via naming)
-2. batch_design()      →  Build reusable components using $variables
-3. batch_design()      →  Assemble screens from component instances (ref)
-4. get_screenshot()    →  Verify visually after each section
+1. set_variables()     →  Crea TODAS las variables (simulando collections via nomenclatura)
+2. batch_design()      →  Construye componentes reutilizables usando $variables
+3. batch_design()      →  Ensambla pantallas desde instancias de componentes (ref)
+4. get_screenshot()    →  Verifica visualmente después de cada sección
 ```
 
-Never skip to step 3 without completing 1 and 2.
+Nunca saltes al paso 3 sin completar el 1 y el 2.
 
-## Iteration Workflow (Change Requests)
+## Flujo de Iteración (Solicitudes de Cambio)
 
-When modifying an existing design (NOT creating from scratch), follow this workflow instead of the Order of Operations above. **Never delete and recreate what already exists.**
+Al modificar un diseño existente (NO creando desde cero), sigue este flujo en lugar del Orden de Operaciones anterior. **Nunca elimines y recrees lo que ya existe.**
 
-### Step 0 — Understand what exists
+### Paso 0 — Entiende qué existe
 
-1. `get_editor_state()` → identify the open `.pen` file and current state
-2. `batch_get({ patterns: ["*"] })` → get the full node tree (or targeted patterns for large files)
-3. `get_variables()` → understand current design tokens
-4. Identify the specific nodes affected by the change request
+1. `get_editor_state()` → identifica el archivo `.pen` abierto y el estado actual
+2. `batch_get({ patterns: ["*"] })` → obtén el árbol completo de nodos (o patrones específicos para archivos grandes)
+3. `get_variables()` → entiende los tokens de diseño actuales
+4. Identifica los nodos específicos afectados por la solicitud de cambio
 
-### Step 1 — Classify the change
+### Paso 1 — Clasifica el cambio
 
-| Change type | Action | Example |
+| Tipo de cambio | Acción | Ejemplo |
 |---|---|---|
-| **Token change** (color, font, spacing) | `set_variables()` with updated values only | "Make primary color darker" → update `color-primary` variable |
-| **Content change** (text, images, icons) | `U(nodeId, { content: "new text" })` on each instance | "Change heading to X" → update text nodes |
-| **Component structure change** | Modify the **component mother** — all instances update | "Add an icon to the card component" → edit the reusable component |
-| **Instance customization** | `U(instanceId+"/childId", {...})` or `descendants` | "This specific card needs different text" |
-| **Layout change** (reorder, resize, add/remove sections) | `U()` for repositioning, `I()` only for genuinely new elements, `D()` only for elements explicitly removed | "Move sidebar to the right" → update x/y/layout props |
-| **New screen/section** | Only THIS uses the creation workflow (Steps 1-4 above) | "Add a settings page" → new screen, reusing existing components |
+| **Cambio de token** (color, fuente, espaciado) | `set_variables()` con solo los valores actualizados | "Hacer el color primario más oscuro" → actualiza la variable `color-primary` |
+| **Cambio de contenido** (texto, imágenes, iconos) | `U(nodeId, { content: "new text" })` en cada instancia | "Cambiar heading a X" → actualiza nodos de texto |
+| **Cambio de estructura de componente** | Modifica la **madre del componente** — todas las instancias se actualizan | "Agregar un icono al card component" → edita el componente reutilizable |
+| **Personalización de instancia** | `U(instanceId+"/childId", {...})` o `descendants` | "Esta card específica necesita texto diferente" |
+| **Cambio de layout** (reordenar, redimensionar, agregar/quitar secciones) | `U()` para reposicionar, `I()` solo para elementos genuinamente nuevos, `D()` solo para elementos explícitamente eliminados | "Mover sidebar a la derecha" → actualiza props x/y/layout |
+| **Nueva pantalla/sección** | Solo ESTO usa el flujo de creación (Pasos 1-4 arriba) | "Agregar una página de settings" → nueva pantalla, reutilizando componentes existentes |
 
-### Step 2 — Execute surgically
+### Paso 2 — Ejecuta quirúrgicamente
 
-1. **Change only what changed** — if the user says "make the header bigger", update the header's font-size variable or node. Do NOT rebuild the screen
-2. **Prefer variable changes** — if a visual property comes from a `$variable`, update the variable via `set_variables()`. All nodes using it update automatically
-3. **Prefer component mother edits** — if the change applies to all instances of a component, edit the mother. Do NOT update each instance separately
-4. **Use `U()` not `R()`** — `Update` preserves the node and changes properties. `Replace` creates a new node. Only use `R()` when the node type itself must change (e.g., swapping a text for an icon)
-5. **Never `D()` + `I()` what you can `U()`** — deleting and reinserting is rebuilding, not iterating
+1. **Cambia solo lo que cambió** — si el usuario dice "hacer el header más grande", actualiza la variable de font-size del header o el nodo. NO reconstruyas la pantalla
+2. **Prefiere cambios de variables** — si una propiedad visual viene de una `$variable`, actualiza la variable via `set_variables()`. Todos los nodos que la usan se actualizan automáticamente
+3. **Prefiere ediciones de la madre del componente** — si el cambio aplica a todas las instancias de un componente, edita la madre. NO actualices cada instancia por separado
+4. **Usa `U()` no `R()`** — `Update` preserva el nodo y cambia propiedades. `Replace` crea un nuevo nodo. Solo usa `R()` cuando el tipo del nodo mismo deba cambiar (ej., intercambiando texto por icono)
+5. **Nunca `D()` + `I()` lo que puedes `U()`** — eliminar y reinsertar es reconstruir, no iterar
 
-### Step 3 — Verify
+### Paso 3 — Verifica
 
-1. `get_screenshot()` of the affected section/screen
-2. If the change touched a component mother, also screenshot screens that use instances of it
-3. If the change touched a variable, spot-check screens in both modes (light/dark)
+1. `get_screenshot()` de la sección/pantalla afectada
+2. Si el cambio tocó una madre de componente, también captura pantalla de las pantallas que usan instancias de ese componente
+3. Si el cambio tocó una variable, verifica puntualmente pantallas en ambos modos (light/dark)
 
-### Key principle
+### Principio clave
 
-**The fastest, safest change touches the fewest nodes.** A variable change touches zero nodes (they update automatically). A component mother change touches one node. Instance-level updates touch N nodes. Rebuilding touches everything. Always pick the highest-leverage approach.
+**El cambio más rápido y seguro toca el menor número de nodos.** Un cambio de variable toca cero nodos (se actualizan automáticamente). Un cambio de madre de componente toca un nodo. Las actualizaciones a nivel de instancia tocan N nodos. Reconstruir toca todo. Siempre elige el enfoque de mayor apalancamiento.
 
-## Step 1: Create Variables
+## Paso 1: Crear Variables
 
-Use `set_variables` to define everything at once. Use prefixed names to simulate collections.
+Usa `set_variables` para definir todo de una vez. Usa nombres con prefijos para simular collections.
 
 ```json
 {
@@ -130,26 +130,26 @@ Use `set_variables` to define everything at once. Use prefixed names to simulate
 }
 ```
 
-**Critical:**
-- `font-family-*` MUST be string variables. `fontFamily:"$font-body"`, never `fontFamily:"Inter"`
-- `font-weight-*` MUST be **string** type (not number). Pencil's `fontWeight` expects a string. Use `{"type":"string","value":"600"}`, not `{"type":"number","value":600}`
-- Variable types are **immutable** once created. If you created a variable as number and need string, create a new variable with a different name. `replace:true` in `set_variables` does NOT change types of existing variables
+**Crítico:**
+- Las variables `font-family-*` DEBEN ser de tipo string. `fontFamily:"$font-body"`, nunca `fontFamily:"Inter"`
+- Las variables `font-weight-*` DEBEN ser de tipo **string** (no number). El `fontWeight` de Pencil espera un string. Usa `{"type":"string","value":"600"}`, no `{"type":"number","value":600}`
+- Los tipos de variables son **inmutables** una vez creados. Si creaste una variable como number y necesitas string, crea una nueva variable con un nombre diferente. `replace:true` en `set_variables` NO cambia los tipos de variables existentes
 
-### Simulating Collections via Naming
+### Simulando Collections via Nomenclatura
 
-Since Pencil has no native collections, use prefixes to group variables:
+Dado que Pencil no tiene collections nativas, usa prefijos para agrupar variables:
 
 ```
-Primitives:  color-brand-500, color-gray-200, spacing-4, radius-md, font-size-base
-Semantic:    color-primary, color-text-primary, color-surface, space-component-gap
-Component:   (optional) button-bg, card-padding, input-border
+Primitivos:  color-brand-500, color-gray-200, spacing-4, radius-md, font-size-base
+Semántico:   color-primary, color-text-primary, color-surface, space-component-gap
+Componente:  (opcional) button-bg, card-padding, input-border
 ```
 
-The semantic variables reference the same values as primitives but with purpose-based names. In Pencil there is no aliasing — both are independent variables with the same hex/number value. Update primitives AND semantics when changing values.
+Las variables semánticas referencian los mismos valores que las primitivas pero con nombres basados en propósito. En Pencil no hay aliasing — ambas son variables independientes con el mismo valor hex/number. Actualiza primitivos Y semánticos al cambiar valores.
 
-### Themed Variables (Modes via Theme Axis)
+### Variables Temáticas (Modos via Eje de Tema)
 
-Pencil supports themes via its theme axis system. Use this to simulate Figma's modes:
+Pencil soporta temas via su sistema de eje de tema. Usa esto para simular los modos de Figma:
 
 ```json
 {
@@ -179,15 +179,15 @@ Pencil supports themes via its theme axis system. Use this to simulate Figma's m
 }
 ```
 
-This registers a `mode` theme axis with `light` and `dark` values automatically. Apply theme to frames via the `theme` property: `{theme: {"mode": "dark"}}`.
+Esto registra un eje de tema `mode` con valores `light` y `dark` automáticamente. Aplica tema a frames via la propiedad `theme`: `{theme: {"mode": "dark"}}`.
 
-## Step 2: Build Reusable Components
+## Paso 2: Construir Componentes Reutilizables
 
-Create a component library frame, then build each component inside it.
+Crea un frame de librería de componentes, luego construye cada componente dentro de él.
 
-### Component Library Structure
+### Estructura de la Librería de Componentes
 
-The library is organized in **labeled vertical sections**, not a flat row. Each section has a title label and its components below.
+La librería se organiza en **secciones verticales etiquetadas**, no en una fila plana. Cada sección tiene una etiqueta de título y sus componentes debajo.
 
 ```javascript
 // Main library container — vertical, to the RIGHT of screens
@@ -221,9 +221,9 @@ navLabel=I(lib,{type:"text",content:"Navigation",fontFamily:"$font-sans",fontSiz
 navRow=I(lib,{type:"frame",name:"— Navigation",layout:"vertical",width:"fill_container",gap:"$sp-4"})
 ```
 
-### Color Swatches
+### Swatches de Color
 
-Create a swatch for each semantic color so the designer and developer can see the palette:
+Crea un swatch para cada color semántico para que el diseñador y el desarrollador puedan ver la paleta:
 
 ```javascript
 // One swatch = colored circle + name label
@@ -232,15 +232,15 @@ swatchCircle=I(swatch,{type:"ellipse",width:40,height:40,fill:"$color-primary"})
 swatchName=I(swatch,{type:"text",content:"primary",fontFamily:"$font-mono",fontSize:"$fs-xs",fill:"$color-text-muted"})
 ```
 
-### Icon Samples
+### Muestras de Iconos
 
-Show every icon used in the project. This is the developer's reference for which icons to import.
+Muestra cada icono usado en el proyecto. Esta es la referencia del desarrollador para saber qué iconos importar.
 
-Pencil uses icon fonts (Lucide, Material Symbols, Phosphor, Feather). For web implementation, these become SVG packages:
+Pencil usa icon fonts (Lucide, Material Symbols, Phosphor, Feather). Para implementación web, estos se convierten en paquetes SVG:
 
-| Pencil icon font | Web package | Install |
+| Icon font de Pencil | Paquete web | Instalación |
 |---|---|---|
-| `lucide` | `lucide-react` or `lucide-vue` | `npm i lucide-react` |
+| `lucide` | `lucide-react` o `lucide-vue` | `npm i lucide-react` |
 | `feather` | `react-feather` | `npm i react-feather` |
 | `Material Symbols Outlined` | `@mui/icons-material` | `npm i @mui/icons-material` |
 | `phosphor` | `@phosphor-icons/react` | `npm i @phosphor-icons/react` |
@@ -252,9 +252,9 @@ I(iconSample,{type:"icon_font",iconFontName:"mail",iconFontFamily:"lucide",width
 I(iconSample,{type:"text",content:"mail",fontFamily:"$font-mono",fontSize:"$fs-xs",fill:"$color-text-muted"})
 ```
 
-Create samples at the standard sizes used in the project (typically 16px for inline, 20px for buttons, 24px for standalone).
+Crea muestras en los tamaños estándar usados en el proyecto (típicamente 16px para inline, 20px para botones, 24px para standalone).
 
-### Text Style Components
+### Componentes de Estilo de Texto
 
 ```javascript
 // Text/Heading component
@@ -270,7 +270,7 @@ caption=I(lib,{type:"text",name:"Text/Caption",reusable:true,content:"Caption te
 label=I(lib,{type:"text",name:"Text/Label",reusable:true,content:"Label",fontFamily:"$font-family-body",fontSize:"$font-size-sm",fontWeight:"$font-weight-medium",fill:"$color-text-primary"})
 ```
 
-### Button Components
+### Componentes de Botón
 
 ```javascript
 // Button/Primary
@@ -282,7 +282,7 @@ btnSecondary=I(lib,{type:"frame",name:"Button/Secondary",reusable:true,layout:"h
 btnSecText=I(btnSecondary,{type:"text",content:"Button",fontFamily:"$font-family-body",fontSize:"$font-size-sm",fontWeight:"$font-weight-medium",fill:"$color-text-primary"})
 ```
 
-### Input Component
+### Componente de Input
 
 ```javascript
 // Input/Field (label + input frame + placeholder)
@@ -292,7 +292,7 @@ inputBox=I(inputField,{type:"frame",layout:"horizontal",width:"fill_container",h
 inputPlaceholder=I(inputBox,{type:"text",content:"Placeholder",fontFamily:"$font-family-body",fontSize:"$font-size-base",fontWeight:"$font-weight-normal",fill:"$color-text-muted"})
 ```
 
-### Section Header Component
+### Componente de Section Header
 
 ```javascript
 // Section/Header (title + accent line)
@@ -301,36 +301,36 @@ sectionTitle=I(sectionHeader,{type:"text",content:"SECTION TITLE",fontFamily:"$f
 sectionLine=I(sectionHeader,{type:"rectangle",width:48,height:3,fill:"$color-primary"})
 ```
 
-### Card Component
+### Componente de Card
 
 ```javascript
 // Card
 card=I(lib,{type:"frame",name:"Card",reusable:true,layout:"vertical",width:400,padding:"$spacing-6",fill:"$color-surface",stroke:{thickness:1,fill:"$color-border-default"},cornerRadius:"$radius-lg",gap:"$spacing-4"})
 ```
 
-### Divider Component
+### Componente de Divider
 
 ```javascript
 // Divider
 divider=I(lib,{type:"rectangle",name:"Divider",reusable:true,width:400,height:1,fill:"$color-border-default"})
 ```
 
-## Step 3: Assemble Screens from Components
+## Paso 3: Ensamblar Pantallas desde Componentes
 
-Use `ref` to instantiate components. Override properties via the root or `descendants`.
+Usa `ref` para instanciar componentes. Sobreescribe propiedades via la raíz o `descendants`.
 
-### Example: Using a component instance
+### Ejemplo: Usando una instancia de componente
 
-There are two correct ways to customize instances. Both are safe:
+Hay dos formas correctas de personalizar instancias. Ambas son seguras:
 
-**Option A — `descendants` at insert time** (preferred for new instances):
+**Opción A — `descendants` al insertar** (preferido para nuevas instancias):
 ```javascript
 header1=I(mainContent,{type:"ref",ref:"sectionHeaderId",descendants:{"titleTextId":{content:"EXPERIENCE"}}})
 emailInput=I(formFrame,{type:"ref",ref:"inputFieldId",descendants:{"labelId":{content:"Email"},"placeholderId":{content:"you@company.com"}}})
 submitBtn=I(formFrame,{type:"ref",ref:"btnPrimaryId",width:"fill_container",descendants:{"btnTextId":{content:"Submit"}}})
 ```
 
-**Option B — `U(instanceId+"/childId")` after insertion** (preferred for updates to existing instances):
+**Opción B — `U(instanceId+"/childId")` después de la inserción** (preferido para actualizaciones de instancias existentes):
 ```javascript
 // SAFE — modifies only this instance, not the mother
 U("YkHfO/MNS4B",{content:"New text"})    // updates text in instance YkHfO only
@@ -343,49 +343,49 @@ U("MNS4B",{content:"EXPERIENCE"})  // ← CORRUPTS ALL INSTANCES
 U(header1+"/titleTextId",{content:"EXPERIENCE"})  // ← Also wrong if header1 resolves to a binding, not a stable ID. Use the actual instance ID from batch_get
 ```
 
-**The rule:** always include the instance ID as prefix. `U("instanceId/childId")` = safe instance override. `U("childId")` alone = modifies the mother.
+**La regla:** siempre incluye el ID de instancia como prefijo. `U("instanceId/childId")` = override seguro de instancia. `U("childId")` solo = modifica la madre.
 
-### Key Rules for Instances
+### Reglas Clave para Instancias
 
-- Customize content at creation: use `descendants` in the `ref` insert call
-- Customize content later: use `U(instanceId+"/childId", {props})` — this is SAFE and is the primary mechanism for iterating on existing designs
-- Resize: override `width` or `height` directly on the `ref` node
-- Hide a child: `descendants:{"childId":{enabled:false}}`
-- Replace a child: `R(instanceId+"/childId", {type:"text",...})` (only for structural replacement)
-- `U("childId")` WITHOUT instance prefix modifies the mother component — NEVER do this to customize an instance
-- NEVER recreate a component manually — always use `ref`
+- Personaliza contenido al crear: usa `descendants` en la llamada de inserción `ref`
+- Personaliza contenido después: usa `U(instanceId+"/childId", {props})` — esto es SEGURO y es el mecanismo principal para iterar diseños existentes
+- Redimensionar: sobreescribe `width` o `height` directamente en el nodo `ref`
+- Ocultar un hijo: `descendants:{"childId":{enabled:false}}`
+- Reemplazar un hijo: `R(instanceId+"/childId", {type:"text",...})` (solo para reemplazo estructural)
+- `U("childId")` SIN prefijo de instancia modifica la madre del componente — NUNCA hagas esto para personalizar una instancia
+- NUNCA recrees un componente manualmente — siempre usa `ref`
 
-### Instance Replacement Gotchas
+### Gotchas al Reemplazar Instancias
 
-- When you `R(instance+"/childId")`, the replacement creates a NEW node with a new ID. The old ID is gone
-- If you need to modify a previously-replaced node, use the NEW node ID, not the original: `R("YkHfO/newNodeId")` not `R("YkHfO/originalId")`
-- If `R()` fails with "No such node", the node was already replaced or deleted. Use `batch_get` to find the current ID
-- Alternative pattern when R() fails: `D(nodeId)` + `I(parentId, {...})` + `M(newNode, parentId, position)`
+- Cuando haces `R(instance+"/childId")`, el reemplazo crea un NUEVO nodo con un nuevo ID. El ID anterior ya no existe
+- Si necesitas modificar un nodo previamente reemplazado, usa el ID del NUEVO nodo, no el original: `R("YkHfO/newNodeId")` no `R("YkHfO/originalId")`
+- Si `R()` falla con "No such node", el nodo ya fue reemplazado o eliminado. Usa `batch_get` para encontrar el ID actual
+- Patrón alternativo cuando falla `R()`: `D(nodeId)` + `I(parentId, {...})` + `M(newNode, parentId, position)`
 
-### Component Library Placement
+### Ubicación de la Librería de Componentes
 
-- Position the library frame to the **RIGHT** of all screens (e.g., `x:3200`)
-- Never place it below screens where it gets hidden
-- After assembling screens, **verify components are intact**: `get_screenshot(libraryFrameId)`
+- Posiciona el frame de la librería a la **DERECHA** de todas las pantallas (ej., `x:3200`)
+- Nunca lo pongas debajo de las pantallas donde queda oculto
+- Después de ensamblar pantallas, **verifica que los componentes estén intactos**: `get_screenshot(libraryFrameId)`
 
-## Step 4: Verify
+## Paso 4: Verificar
 
-After each major section:
+Después de cada sección principal:
 
 ```
-get_screenshot(nodeId) → visually inspect
+get_screenshot(nodeId) → inspeccionar visualmente
 ```
 
-Check for:
-- Text visibility (all text has `fill` set via variable)
-- Alignment (flexbox layout, no hardcoded x/y in flex children)
-- Spacing consistency (gaps and padding use `$spacing-*` variables)
-- Color appropriateness (matches the approved proposal)
-- Component reuse (no duplicated node structures)
+Verifica:
+- Visibilidad del texto (todo el texto tiene `fill` establecido via variable)
+- Alineación (layout flexbox, sin x/y hardcodeados en hijos flex)
+- Consistencia del espaciado (gaps y padding usan variables `$spacing-*`)
+- Apropiabilidad del color (coincide con la propuesta aprobada)
+- Reutilización de componentes (sin estructuras de nodos duplicadas)
 
-## Text Inside Containers (CRITICAL — #1 recurring bug)
+## Texto Dentro de Contenedores (CRÍTICO — Bug recurrente #1)
 
-Every text node inside a frame with limited width (cards, callouts, bento tiles):
+Cada nodo de texto dentro de un frame con ancho limitado (cards, callouts, bento tiles):
 
 ```javascript
 // CORRECT — text wraps inside card
@@ -395,41 +395,41 @@ I(card,{type:"text",content:"Long text...",textGrowth:"fixed-width",width:"fill_
 I(card,{type:"text",content:"Long text...",fontFamily:"$font-sans",fontSize:"$fs-base",fill:"$color-text-secondary"})
 ```
 
-- **MUST** set `textGrowth: "fixed-width"` + `width: "fill_container"` on any text inside a width-limited container
-- **Exception**: short labels, badges, buttons (1 line max) — keep default `textGrowth: "auto"`
-- **Verify immediately** with `get_screenshot` after inserting text
+- **DEBE** establecer `textGrowth: "fixed-width"` + `width: "fill_container"` en cualquier texto dentro de un contenedor con ancho limitado
+- **Excepción**: labels cortas, badges, botones (máximo 1 línea) — mantén el `textGrowth: "auto"` por defecto
+- **Verifica inmediatamente** con `get_screenshot` después de insertar texto
 
-## Grid Harmony
+## Armonía de Grid
 
-When creating cards in a horizontal layout (bento grids, card rows):
+Al crear cards en un layout horizontal (bento grids, filas de cards):
 
-- Cards with `height: "fit_content"` will have **uneven heights** if content varies
-- **PREFER fixed equal height** for sibling cards (e.g., all 220px)
-- Screenshot immediately after creating any card grid to verify alignment
+- Las cards con `height: "fit_content"` tendrán **alturas desiguales** si el contenido varía
+- **PREFIERE altura fija igual** para cards hermanas (ej., todas 220px)
+- Captura pantalla inmediatamente después de crear cualquier grid de cards para verificar la alineación
 
-## Additional Pencil Limitations
+## Limitaciones Adicionales de Pencil
 
-- **String variables in `content` resolve ONLY within theme context** — `content: "$txt-title"` works on instance descendants (inherits parent theme) but NOT on nodes created via `R()` (Replace). Replaced nodes lose theme context. For reliable i18n, use `U(instance+"/childId",{content:"$txt-var"})` on existing descendants, or hardcode text on replaced nodes
-- **Copied node descendants get new IDs** — after `C()`, child IDs are regenerated. Never `U()` with original child IDs on a copy. Either use `descendants` in the Copy operation itself, or `batch_get` the copy to read new IDs first
-- **Component changes cascade to instances — unless overridden** — if an instance replaced a node (e.g. text → frame with bullets), deleting and re-creating that node in the component WILL cascade to instances that hadn't overridden it. Instances with overrides keep their overrides (now orphaned). Plan component restructuring carefully
+- **Las variables string en `content` se resuelven SOLO dentro del contexto de tema** — `content: "$txt-title"` funciona en descendientes de instancias (hereda el tema del padre) pero NO en nodos creados via `R()` (Replace). Los nodos reemplazados pierden el contexto de tema. Para i18n confiable, usa `U(instance+"/childId",{content:"$txt-var"})` en descendientes existentes, o hardcodea texto en nodos reemplazados
+- **Los descendientes de nodos copiados obtienen nuevos IDs** — después de `C()`, los IDs de hijos se regeneran. Nunca `U()` con IDs originales de hijos en una copia. O usa `descendants` en la operación Copy misma, o `batch_get` la copia para leer los nuevos IDs primero
+- **Los cambios en componentes se cascadean a instancias — a menos que se sobreescriban** — si una instancia reemplazó un nodo (ej., texto → frame con bullets), eliminar y recrear ese nodo en el componente SÍ se cascadeará a instancias que no lo habían sobreescrito. Las instancias con overrides mantienen sus overrides (ahora huérfanos). Planifica la reestructuración de componentes cuidadosamente
 
-## Interactive Component States (MANDATORY for mobile/app design)
+## Estados de Componentes Interactivos (OBLIGATORIO para diseño mobile/app)
 
-Pencil has NO prototyping. To compensate, every component with interactive states MUST have a dedicated **States frame** showing all states side by side.
+Pencil NO tiene prototipado. Para compensar, cada componente con estados interactivos DEBE tener un frame de **States** dedicado mostrando todos los estados uno al lado del otro.
 
-### When to create state frames
+### Cuándo crear frames de estados
 
-- **Navigation**: closed + open (hamburger menu)
+- **Navigation**: cerrado + abierto (menú hamburguesa)
 - **Buttons**: default + hover + disabled + loading
-- **Inputs**: empty + focused + filled + error
-- **Cards**: collapsed + expanded (if expandable)
-- **Modals/Sheets**: the overlay + the content
+- **Inputs**: vacío + focused + filled + error
+- **Cards**: colapsado + expandido (si es expandible)
+- **Modals/Sheets**: el overlay + el contenido
 - **Toggles**: on + off
-- **Dropdowns**: closed + open with options
+- **Dropdowns**: cerrado + abierto con opciones
 
-### How to structure
+### Cómo estructurar
 
-Create a top-level frame named `{Component} — States` with all states labeled:
+Crea un frame de nivel superior llamado `{Component} — States` con todos los estados etiquetados:
 
 ```javascript
 // Example: Navbar mobile states
@@ -440,71 +440,71 @@ openLabel=I(states,{type:"text",content:"State: Open",fill:"$color-text-muted",f
 // ... build the open state
 ```
 
-### Rules
+### Reglas
 
-- **Create states automatically** when designing the component — don't wait for the user to ask
-- **Label each state** clearly with a `State: {name}` text above it
-- **Place near the component** in the canvas, not in the Library frame
-- **Use the same theme** as the target screen (dark/light)
-- **Both modes if applicable** — if the component appears in dark + light screens, show states for both
+- **Crea estados automáticamente** al diseñar el componente — no esperes a que el usuario lo pida
+- **Etiqueta cada estado** claramente con un texto `State: {nombre}` encima
+- **Coloca cerca del componente** en el canvas, no en el frame de la Librería
+- **Usa el mismo tema** que la pantalla objetivo (dark/light)
+- **Ambos modos si aplica** — si el componente aparece en pantallas dark + light, muestra estados para ambos
 
-## Canvas Organization (MANDATORY)
+## Organización del Canvas (OBLIGATORIO)
 
-Keep the canvas organized chronologically and by type. Always leave ~200px gaps between rows and between frames horizontally so the user can iterate without frames colliding.
+Mantén el canvas organizado cronológicamente y por tipo. Siempre deja ~200px de separación entre filas y entre frames horizontalmente para que el usuario pueda iterar sin que los frames colisionen.
 
-### Layout order (top to bottom)
+### Orden de layout (de arriba a abajo)
 
 ```
-ROW 1 — Library + Component States + Loose Layers
-  Library frame (design tokens + components)
-  Component state frames (Navbar states, expanded cards, modals, etc.)
-  Always at the TOP — this is the reference layer
+FILA 1 — Librería + Estados de Componentes + Capas Sueltas
+  Frame de librería (design tokens + componentes)
+  Frames de estados de componentes (estados de Navbar, cards expandidas, modales, etc.)
+  Siempre en la PARTE SUPERIOR — esta es la capa de referencia
 
-ROW 2 — v1 (first iteration of screens)
-  Oldest design iteration, kept for history
+FILA 2 — v1 (primera iteración de pantallas)
+  Iteración de diseño más antigua, conservada para historia
 
-ROW 3 — v2 (current iteration of screens)
-  Latest web screens: dark, light, language variants, blog, etc.
+FILA 3 — v2 (iteración actual de pantallas)
+  Últimas pantallas web: dark, light, variantes de idioma, blog, etc.
 
-ROW 4 — Mobile screens
-  Mobile dark, mobile light, mobile menu open, etc.
+FILA 4 — Pantallas Mobile
+  Mobile dark, mobile light, menú mobile abierto, etc.
 
-(Add more rows below as new iterations or platforms are added)
+(Agrega más filas abajo a medida que se añadan nuevas iteraciones o plataformas)
 ```
 
-### Rules
+### Reglas
 
-- **~200px gap** between every row and between horizontal frames — never pack frames tight
-- **Chronological top-to-bottom** — oldest at top, newest at bottom
-- **Library always ROW 1** — it's the reference, not a screen
-- **States/layers next to Library** in the same row, not scattered across the canvas
-- **After reorganizing**, run `snapshot_layout(problemsOnly: true)` to verify no overlaps
-- **Never delete frames to reorganize** — only move with `U(id, {x, y})`
+- **~200px de separación** entre cada fila y entre frames horizontales — nunca comprimas frames
+- **Cronológico de arriba a abajo** — más antiguo arriba, más nuevo abajo
+- **Librería siempre FILA 1** — es la referencia, no una pantalla
+- **States/capas junto a la Librería** en la misma fila, no dispersas por el canvas
+- **Después de reorganizar**, ejecuta `snapshot_layout(problemsOnly: true)` para verificar que no haya superposiciones
+- **Nunca elimines frames para reorganizar** — solo mueve con `U(id, {x, y})`
 
-## Cross-Screen Content Sync (MANDATORY)
+## Sincronización de Contenido Entre Pantallas (OBLIGATORIO)
 
-When updating content in one screen (text, badges, labels, data), check ALL screens that share the same data:
+Al actualizar contenido en una pantalla (texto, badges, labels, datos), verifica TODAS las pantallas que comparten los mismos datos:
 
-1. `batch_get` with a pattern matching the old value across the entire document
-2. Update every instance — dark, light, EN, ES, mobile, desktop
-3. If the content comes from a variable (`$txt-*`), update the variable instead — all screens update automatically
-4. If it's hardcoded text, search and replace in every screen manually
+1. `batch_get` con un patrón que coincida con el valor antiguo en todo el documento
+2. Actualiza cada instancia — dark, light, EN, ES, mobile, desktop
+3. Si el contenido viene de una variable (`$txt-*`), actualiza la variable en su lugar — todas las pantallas se actualizan automáticamente
+4. Si es texto hardcodeado, busca y reemplaza en cada pantalla manualmente
 
-**Why:** K8s was changed to Kafka in mobile dark but not in mobile light or web screens, creating inconsistency. Content must be consistent across all screens.
+**Por qué:** K8s fue cambiado a Kafka en mobile dark pero no en mobile light o pantallas web, creando inconsistencia. El contenido debe ser consistente en todas las pantallas.
 
-## Icon Registry (MANDATORY)
+## Registro de Iconos (OBLIGATORIO)
 
-Every icon used in any screen or component MUST appear in the Library's Icons section. When adding a new icon to a design:
+Cada icono usado en cualquier pantalla o componente DEBE aparecer en la sección Icons de la Librería. Al agregar un nuevo icono a un diseño:
 
-1. Use the icon in the component/screen
-2. **Immediately** add it to the Icons section in the Library frame
-3. Each icon sample: icon at 24px + name label below, inside a vertical frame with `alignItems: center`
+1. Usa el icono en el componente/pantalla
+2. **Inmediatamente** agrégalo a la sección Icons en el frame de la Librería
+3. Cada muestra de icono: icono a 24px + etiqueta de nombre abajo, dentro de un frame vertical con `alignItems: center`
 
-Never leave an icon undocumented. The Library is the developer's reference for which icons to install.
+Nunca dejes un icono sin documentar. La Librería es la referencia del desarrollador para saber qué iconos instalar.
 
-## Common Mistakes to Avoid
+## Errores Comunes a Evitar
 
-| Mistake | Correct approach |
+| Error | Enfoque correcto |
 |---|---|
 | `fontFamily:"Inter"` | `fontFamily:"$font-family-body"` |
 | `fontWeight:"600"` | `fontWeight:"$font-weight-semibold"` |
@@ -513,26 +513,26 @@ Never leave an icon undocumented. The Library is the developer's reference for w
 | `cornerRadius:8` | `cornerRadius:"$radius-md"` |
 | `gap:16` | `gap:"$spacing-4"` |
 | `padding:24` | `padding:"$spacing-6"` |
-| Building same card 4 times | Create card component once, use 4 `ref` instances |
-| Designing without a plan | Present color/type/tone proposal first |
-| Text in card without `textGrowth` | Add `textGrowth:"fixed-width"` + `width:"fill_container"` |
-| Sibling cards with uneven heights | Set fixed equal height for all cards in a row |
-| `content:"$txt-var"` on replaced nodes | Use `U(instance+"/descendantId")` for variables, or hardcode on replaced nodes |
-| `U(copy+"/originalChildId")` | Read copy's new IDs first, or use descendants in `C()` |
-| `R(instance+"/oldReplacedId")` | Use current node ID from `batch_get`, not the original component ID |
-| `U("childId")` to customize instance | Use `U(instance+"/childId")` — without prefix you modify the mother |
-| Adding all info at once (tags, links, metadata) | Start minimal, verify, then add layers. Secondary info at low opacity (0.4-0.6) |
-| Inventing content for designs | Use real data from CV, LinkedIn, or user-provided docs |
-| Deleting + reinserting to update | Use `U()` for property changes — only `D()+I()` when node type must change |
+| Construir la misma card 4 veces | Crea componente card una vez, usa 4 instancias `ref` |
+| Diseñar sin un plan | Presenta propuesta de color/tipografía/tono primero |
+| Texto en card sin `textGrowth` | Agrega `textGrowth:"fixed-width"` + `width:"fill_container"` |
+| Cards hermanas con alturas desiguales | Establece altura fija igual para todas las cards en una fila |
+| `content:"$txt-var"` en nodos reemplazados | Usa `U(instance+"/descendantId")` para variables, o hardcodea en nodos reemplazados |
+| `U(copy+"/originalChildId")` | Lee primero los nuevos IDs de la copia, o usa descendants en `C()` |
+| `R(instance+"/oldReplacedId")` | Usa el ID actual del nodo desde `batch_get`, no el ID original del componente |
+| `U("childId")` para personalizar instancia | Usa `U(instance+"/childId")` — sin prefijo modificas la madre |
+| Agregar toda la info a la vez (tags, links, metadata) | Empieza mínimo, verifica, luego agrega capas. Info secundaria con baja opacidad (0.4-0.6) |
+| Inventar contenido para diseños | Usa datos reales del CV, LinkedIn o docs proporcionados por el usuario |
+| Eliminar + reinsertar para actualizar | Usa `U()` para cambios de propiedades — solo `D()+I()` cuando el tipo de nodo deba cambiar |
 
-## Slots (Component Flexibility)
+## Slots (Flexibilidad de Componentes)
 
-Slots are designated areas within a component where elements can be dropped in. They create flexible, customizable regions.
+Los slots son áreas designadas dentro de un componente donde se pueden colocar elementos. Crean regiones flexibles y personalizables.
 
-### Creating a slot
+### Crear un slot
 
-1. Create an empty frame inside a reusable component
-2. Mark it as a slot: `"slot": [suggestedComponentIds]`
+1. Crea un frame vacío dentro de un componente reutilizable
+2. Márcalo como slot: `"slot": [suggestedComponentIds]`
 
 ```javascript
 // Table component with a slot for rows
@@ -542,9 +542,9 @@ tableHeader=I(table,{type:"frame",layout:"horizontal",width:"fill_container",pad
 tableBody=I(table,{type:"frame",layout:"vertical",width:"fill_container",slot:["tableRowComponentId"]})
 ```
 
-### Using slots
+### Usando slots
 
-When instantiating a component with slots, insert children directly into the slot frame:
+Al instanciar un componente con slots, inserta hijos directamente en el frame del slot:
 
 ```javascript
 myTable=I(screen,{type:"ref",ref:"tableId",width:"fill_container"})
@@ -553,31 +553,31 @@ row1=I(myTable+"/tableBodyId",{type:"ref",ref:"tableRowComponentId"})
 row2=I(myTable+"/tableBodyId",{type:"ref",ref:"tableRowComponentId"})
 ```
 
-**Suggested components** — mark which components are recommended for a slot. This helps both human designers and the AI agent know what to insert.
+**Componentes sugeridos** — marca qué componentes son recomendados para un slot. Esto ayuda tanto a diseñadores humanos como al agente de IA a saber qué insertar.
 
-## Design Libraries (.lib.pen)
+## Librerías de Diseño (.lib.pen)
 
-For projects with multiple `.pen` files, extract shared components into a library file:
+Para proyectos con múltiples archivos `.pen`, extrae los componentes compartidos a un archivo de librería:
 
-1. Create a `.pen` file with shared components
-2. Convert it to a library (becomes `.lib.pen` — **irreversible**)
-3. Import the library in other `.pen` files via `imports`
+1. Crea un archivo `.pen` con componentes compartidos
+2. Conviértelo en librería (se convierte en `.lib.pen` — **irreversible**)
+3. Importa la librería en otros archivos `.pen` via `imports`
 
-Changes to library components propagate to all files that import them. Use for cross-file design systems.
+Los cambios en los componentes de la librería se propagan a todos los archivos que la importan. Úsalo para design systems entre archivos.
 
-**When to use:** multiple `.pen` files sharing the same components. For single-file projects, a Component Library frame inside the document is sufficient.
+**Cuándo usar:** múltiples archivos `.pen` compartiendo los mismos componentes. Para proyectos de un solo archivo, un frame de Component Library dentro del documento es suficiente.
 
-## Script Nodes (Code on Canvas)
+## Nodos de Script (Código en el Canvas)
 
-Script nodes render JavaScript output directly on the canvas. Useful for data-driven or repetitive layouts.
+Los nodos de script renderizan output de JavaScript directamente en el canvas. Útil para layouts basados en datos o repetitivos.
 
-### When to use
+### Cuándo usar
 
-- Repeating a pattern N times (grid of cards, data rows)
-- Charts or data visualization
-- Parameterized layouts that need interactive tweaking
+- Repetir un patrón N veces (grid de cards, filas de datos)
+- Gráficos o visualización de datos
+- Layouts parametrizados que necesitan ajuste interactivo
 
-### How they work
+### Cómo funcionan
 
 ```javascript
 // chart.js — referenced by a script node
@@ -595,12 +595,12 @@ return Array.from({length: pencil.input.rows}, (_, i) => ({
 }))
 ```
 
-**Constraints:** max 1000 nodes, 2s timeout, no async, no DOM/network access, deterministic `Math.random()`.
+**Restricciones:** máximo 1000 nodos, timeout de 2s, sin async, sin acceso a DOM/red, `Math.random()` determinista.
 
-**Convert to layers:** once the output looks right, convert to static editable layers for further customization.
+**Convertir a capas:** una vez que el output se vea bien, convierte a capas estáticas editables para mayor personalización.
 
-### When NOT to use
+### Cuándo NO usar
 
-- Simple layouts that batch_design handles in <10 ops
-- One-off screens with no repetition
-- When the designer needs to customize each item individually (use component instances instead)
+- Layouts simples que batch_design maneja en <10 ops
+- Pantallas únicas sin repetición
+- Cuando el diseñador necesita personalizar cada elemento individualmente (usa instancias de componentes en su lugar)

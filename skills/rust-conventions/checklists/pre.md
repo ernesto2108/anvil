@@ -1,11 +1,11 @@
-# Pre-Implementation Checklist
+# Checklist Pre-Implementación
 
-- [ ] Edition 2024? — `edition = "2024"` in Cargo.toml, resolver = "3"
-- [ ] Error strategy — thiserror for lib, anyhow for app, miette for CLI
-- [ ] Ownership plan — who owns the data? Borrow where possible, `Arc` for shared async
-- [ ] Async or sync? — if async, tokio runtime configured, no blocking in async context
-- [ ] `#![forbid(unsafe_code)]` at crate level — allow only in audited modules
-- [ ] Workspace deps — centralized in `[workspace.dependencies]`
-- [ ] For CLI — clap derive, tracing for logging, indicatif for progress
-- [ ] For blockchain — anchor/alloy patterns, constant-time for secrets, no_std if needed
-- [ ] Test strategy — unit + integration, proptest for invariants, criterion for perf
+- [ ] ¿Edition 2024? — `edition = "2024"` en Cargo.toml, resolver = "3"
+- [ ] Estrategia de errores — thiserror para lib, anyhow para app, miette para CLI
+- [ ] Plan de ownership — ¿quién posee los datos? Tomar prestado donde sea posible, `Arc` para async compartido
+- [ ] ¿Async o sync? — si async, runtime tokio configurado, sin bloqueo en contexto async
+- [ ] `#![forbid(unsafe_code)]` a nivel de crate — permitir solo en módulos auditados
+- [ ] Deps del workspace — centralizadas en `[workspace.dependencies]`
+- [ ] Para CLI — clap derive, tracing para logging, indicatif para progreso
+- [ ] Para blockchain — patrones anchor/alloy, tiempo constante para secretos, no_std si es necesario
+- [ ] Estrategia de tests — unit + integration, proptest para invariantes, criterion para perf

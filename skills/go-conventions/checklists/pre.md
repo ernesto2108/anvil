@@ -1,15 +1,15 @@
-# Pre-Implementation Checklist
+# Checklist Pre-Implementación
 
-Before writing Go code, verify:
+Antes de escribir código Go, verificar:
 
-- [ ] Package placement follows existing project structure
-- [ ] Interfaces defined by consumer, not producer
-- [ ] Error wrapping includes operation context
-- [ ] Context passed as first parameter
-- [ ] External calls have timeouts
-- [ ] Concurrent access is protected
-- [ ] Tests are table-driven with subtests
-- [ ] No circular imports introduced
-- [ ] Logging uses structured key-value pairs (no string concatenation)
-- [ ] No sensitive data logged (passwords, tokens, PII)
-- [ ] SQL queries use parameterized placeholders, not string interpolation
+- [ ] El placement de paquetes sigue la estructura existente del proyecto
+- [ ] Las interfaces están definidas por el consumidor, no por el productor
+- [ ] El wrapping de errores incluye contexto de la operación
+- [ ] El contexto se pasa como primer parámetro
+- [ ] Las llamadas externas tienen timeouts
+- [ ] El acceso concurrente está protegido
+- [ ] Los tests son table-driven con subtests
+- [ ] No se introducen importaciones circulares
+- [ ] El logging usa pares clave-valor estructurados (sin concatenación de strings)
+- [ ] No se loguean datos sensibles (contraseñas, tokens, PII)
+- [ ] Las queries SQL usan placeholders parametrizados, no interpolación de strings

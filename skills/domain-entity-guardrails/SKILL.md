@@ -1,41 +1,41 @@
 ---
 name: domain-entity-guardrails
-description: Enforce strict typing and explicit optionality in domain entities and value objects. Use when creating or modifying domain structs, reviewing domain layer code, or detecting pointer fields, `any` types, or `sql.Null*` in domain models.
+description: Aplicar tipado estricto y opcionalidad explícita en entidades de dominio y value objects. Usar cuando se creen o modifiquen structs de dominio, al revisar código de la capa de dominio, o al detectar campos pointer, tipos `any` o `sql.Null*` en modelos de dominio.
 user-invocable: false
 ---
 
-Prevent fragile domain models by enforcing strict typing and explicit optionality.
+Previene modelos de dominio frágiles mediante la aplicación de tipado estricto y opcionalidad explícita.
 
-Use when:
-- creating or modifying domain entities or value objects
-- mapping DB/HTTP DTOs into domain models
-- reviewing domain layer code in a clean architecture project
+Usar cuando:
+- se creen o modifiquen entidades de dominio o value objects
+- se mapeen DTOs de DB/HTTP a modelos de dominio
+- se revise código de la capa de dominio en un proyecto de arquitectura limpia
 
-## Detection
+## Detección
 
-Before applying rules, locate the project's domain layer:
-1. If `<vault>/01-project/context.md` exists, use it to find domain paths
-2. Otherwise search for common patterns: `internal/**/domain/`, `src/domain/`, `pkg/domain/`, `lib/domain/`
-3. Apply rules to any struct/type in the identified domain directories
+Antes de aplicar las reglas, localiza la capa de dominio del proyecto:
+1. Si existe `<vault>/01-project/context.md`, úsalo para encontrar las rutas de dominio
+2. De lo contrario, busca patrones comunes: `internal/**/domain/`, `src/domain/`, `pkg/domain/`, `lib/domain/`
+3. Aplica las reglas a cualquier struct/tipo en los directorios de dominio identificados
 
-## Rules
+## Reglas
 
-- avoid `any`/`interface{}` in domain entities
-- avoid pointer fields in domain entities (`*string`, `*int`, `*time.Time`, etc.)
-- do NOT introduce `Optional*` wrapper types in domain entities
-- model optional semantics with concrete zero values (e.g., empty string, `0`, `time.Time{}`) and document that convention in code comments when needed
-- represent JSON payloads with concrete types; prefer `json.RawMessage` at boundaries unless a strict schema exists
-- prefer enums/value objects over free-form strings for constrained fields
-- keep domain models persistence-agnostic (no `sql.Null*` in domain)
+- evitar `any`/`interface{}` en entidades de dominio
+- evitar campos pointer en entidades de dominio (`*string`, `*int`, `*time.Time`, etc.)
+- NO introducir tipos wrapper `Optional*` en entidades de dominio
+- modelar semánticas opcionales con valores cero concretos (ej., string vacío, `0`, `time.Time{}`) y documentar esa convención en comentarios de código cuando sea necesario
+- representar payloads JSON con tipos concretos; preferir `json.RawMessage` en los límites a menos que exista un esquema estricto
+- preferir enums/value objects sobre strings libres para campos con restricciones
+- mantener los modelos de dominio agnósticos a la persistencia (sin `sql.Null*` en el dominio)
 
-## Checklist Before Finishing
+## Checklist Antes de Terminar
 
-1. Search for `any` in changed domain files
-2. Search for pointer fields in changed domain structs
-3. Confirm optional semantics use zero-value conventions (no `Optional*` wrappers)
-4. Run `gofmt` on edited files
+1. Buscar `any` en los archivos de dominio modificados
+2. Buscar campos pointer en los structs de dominio modificados
+3. Confirmar que las semánticas opcionales usan convenciones de valor cero (sin wrappers `Optional*`)
+4. Ejecutar `gofmt` en los archivos editados
 
 ## Output
 
-- If a rule is violated: list file + field + proposed fix
-- If all pass: report "domain guardrails OK"
+- Si se viola una regla: listar archivo + campo + corrección propuesta
+- Si todo pasa: reportar "domain guardrails OK"

@@ -1,54 +1,54 @@
-# Post-Implementation Gate
+# Gate Post-Implementación
 
-After ANY code change to `.ts` or `.tsx` files, invoke the `/lint` skill before considering the task done. The lint skill runs `tsc --noEmit`, the project linter (ESLint or Biome), and the test suite.
+Después de CUALQUIER cambio de código en archivos `.ts` o `.tsx`, invoca el skill `/lint` antes de considerar la tarea terminada. El skill de lint ejecuta `tsc --noEmit`, el linter del proyecto (ESLint o Biome) y la suite de tests.
 
-## Manual Verification
+## Verificación Manual
 
-In addition to the automated lint gate, verify:
+Además del gate de lint automatizado, verifica:
 
-### Types
+### Tipos
 
-- [ ] `tsc --noEmit` passes with zero errors — no suppressions introduced
-- [ ] Any new `@ts-expect-error` has a clear reason comment explaining why it is necessary
-- [ ] No `any` introduced — check with `grep -r ": any" src/` and `grep -r "as any" src/`
-- [ ] No double assertion `as unknown as X` introduced
+- [ ] `tsc --noEmit` pasa con cero errores — sin supresiones introducidas
+- [ ] Cualquier nuevo `@ts-expect-error` tiene un comentario de razón clara que explica por qué es necesario
+- [ ] No se introdujo `any` — verifica con `grep -r ": any" src/` y `grep -r "as any" src/`
+- [ ] No se introdujo doble aserción `as unknown as X`
 
-### Architecture
+### Arquitectura
 
-- [ ] No new barrel `index.ts` re-exports added
-- [ ] All new `import` statements use `.js` extension
-- [ ] Type-only imports use `import type`
-- [ ] No `require()` calls introduced
+- [ ] No se agregaron nuevos barrel `index.ts` de re-exportación
+- [ ] Todos los nuevos `import` usan extensión `.js`
+- [ ] Los imports solo de tipos usan `import type`
+- [ ] No se introdujeron llamadas `require()`
 
-### Zod Boundaries
+### Fronteras Zod
 
-- [ ] Every new external data source (API response, env var, form, webhook) has a Zod schema
-- [ ] `safeParse` used (not `parse`) at boundaries — caller handles the error branch
-- [ ] Zod errors formatted and returned (not thrown) from boundary handlers
+- [ ] Cada nueva fuente de datos externa (respuesta de API, variable de entorno, formulario, webhook) tiene un schema Zod
+- [ ] Se usa `safeParse` (no `parse`) en las fronteras — quien llama maneja el branch de error
+- [ ] Los errores de Zod se formatean y retornan (no se lanzan) desde los handlers de frontera
 
 ### Async
 
-- [ ] Every new `fetch` call inside a React component or long-lived service accepts or creates an `AbortController`
-- [ ] Every new `useEffect` with async logic has a cleanup function that calls `controller.abort()`
-- [ ] No unhandled Promise rejections (no `.then()` without `.catch()`)
+- [ ] Cada nueva llamada `fetch` dentro de un componente React o servicio de larga vida acepta o crea un `AbortController`
+- [ ] Cada nuevo `useEffect` con lógica async tiene una función de cleanup que llama a `controller.abort()`
+- [ ] Sin rechazos de Promise sin manejar (no hay `.then()` sin `.catch()`)
 
-### React (when applicable)
+### React (cuando aplique)
 
-- [ ] No new class components
-- [ ] No new `dangerouslySetInnerHTML` without `DOMPurify.sanitize()`
-- [ ] No new `key={index}` in dynamic lists
-- [ ] New async Server Components have `<Suspense>` + `<ErrorBoundary>` wrappers
+- [ ] Sin nuevos class components
+- [ ] Sin nuevo `dangerouslySetInnerHTML` sin `DOMPurify.sanitize()`
+- [ ] Sin nuevo `key={index}` en listas dinámicas
+- [ ] Los nuevos async Server Components tienen wrappers `<Suspense>` + `<ErrorBoundary>`
 
-### Security
+### Seguridad
 
-- [ ] No secrets or tokens stored in `localStorage`
-- [ ] No `eval()` or `new Function()` usage
-- [ ] No `Math.random()` for security-relevant values
-- [ ] No SQL/template interpolation with user input
+- [ ] Sin secretos ni tokens almacenados en `localStorage`
+- [ ] Sin uso de `eval()` o `new Function()`
+- [ ] Sin `Math.random()` para valores relevantes de seguridad
+- [ ] Sin interpolación de SQL/plantillas con input del usuario
 
 ### Tests
 
-- [ ] New behavior covered by Vitest tests
-- [ ] Type-level behavior covered by `expectTypeOf` assertions where applicable
-- [ ] All tests pass: `vitest run`
-- [ ] No `vi.mock` calls left without cleanup in `afterEach`
+- [ ] El nuevo comportamiento está cubierto por tests de Vitest
+- [ ] El comportamiento a nivel de tipos está cubierto por aserciones `expectTypeOf` donde aplique
+- [ ] Todos los tests pasan: `vitest run`
+- [ ] Sin llamadas `vi.mock` dejadas sin cleanup en `afterEach`

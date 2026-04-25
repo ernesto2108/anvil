@@ -1,17 +1,17 @@
 # SQLite
 
-## Limitations
-- `ALTER TABLE` can only `ADD COLUMN` — no DROP, no RENAME (before 3.35), no ALTER TYPE
-- No `ENUM` type — use `CHECK` constraints: `status TEXT CHECK(status IN ('active','inactive'))`
-- No concurrent index creation — no `CONCURRENTLY` option
-- No native `UUID` type — store as `TEXT`
-- No `TIMESTAMP` type — store as `TEXT` in RFC3339 format
-- `AUTOINCREMENT` is optional and slower than `INTEGER PRIMARY KEY` (which auto-increments by default)
-- For schema changes beyond ADD COLUMN: **4-step pattern** — create new table, copy data, drop old, rename
+## Limitaciones
+- `ALTER TABLE` solo puede `ADD COLUMN` — sin DROP, sin RENAME (antes de 3.35), sin ALTER TYPE
+- Sin tipo `ENUM` — usa constraints `CHECK`: `status TEXT CHECK(status IN ('active','inactive'))`
+- Sin creación de índices concurrente — sin opción `CONCURRENTLY`
+- Sin tipo `UUID` nativo — almacena como `TEXT`
+- Sin tipo `TIMESTAMP` — almacena como `TEXT` en formato RFC3339
+- `AUTOINCREMENT` es opcional y más lento que `INTEGER PRIMARY KEY` (que auto-incrementa por defecto)
+- Para cambios de esquema más allá de ADD COLUMN: **patrón de 4 pasos** — crea nueva tabla, copia datos, elimina la antigua, renombra
 
-## Production PRAGMAs (MANDATORY on connection open)
+## PRAGMAs de Producción (OBLIGATORIOS al abrir conexión)
 
-Apply these in order on every new connection:
+Aplica estos en orden en cada nueva conexión:
 
 ```sql
 PRAGMA journal_mode = WAL;          -- concurrent reads, non-blocking writes
@@ -23,36 +23,36 @@ PRAGMA temp_store = MEMORY;         -- temp tables/indices in memory
 PRAGMA mmap_size = 268435456;       -- 256MB memory-mapped I/O for read performance
 ```
 
-## WAL Mode Details
-- WAL enables concurrent reads while a write is in progress — critical for any multi-goroutine or multi-process access
-- Auto-checkpoint at 1000 pages (default) — sufficient for CLI/desktop tools
-- For high-write workloads: `PRAGMA wal_autocheckpoint = <pages>` or manual `PRAGMA wal_checkpoint(TRUNCATE)` on graceful shutdown
-- Always checkpoint before backup (`sqlite3 .backup`)
-- WAL mode persists across connections — set it once, it stays
+## Detalles del Modo WAL
+- WAL habilita lecturas concurrentes mientras una escritura está en progreso — crítico para cualquier acceso multi-goroutine o multi-proceso
+- Auto-checkpoint en 1000 páginas (por defecto) — suficiente para herramientas CLI/desktop
+- Para cargas de trabajo con alta escritura: `PRAGMA wal_autocheckpoint = <pages>` o `PRAGMA wal_checkpoint(TRUNCATE)` manual en shutdown graceful
+- Siempre hace checkpoint antes del backup (`sqlite3 .backup`)
+- El modo WAL persiste entre conexiones — configúralo una vez, se mantiene
 
-## Data Rotation Patterns
-- Use `ON DELETE CASCADE` on all child FKs so a single `DELETE FROM parent` cleans children
-- Count-based rotation: `DELETE FROM parent WHERE id NOT IN (SELECT id FROM parent ORDER BY created_at DESC LIMIT ?)` — predictable DB size
-- Run `PRAGMA optimize` periodically (on app shutdown) to maintain query planner stats
-- `VACUUM` reclaims space after large deletes — but locks the DB, so run during maintenance windows or on shutdown
+## Patrones de Rotación de Datos
+- Usa `ON DELETE CASCADE` en todos los FKs hijos para que un solo `DELETE FROM parent` limpie los hijos
+- Rotación basada en cantidad: `DELETE FROM parent WHERE id NOT IN (SELECT id FROM parent ORDER BY created_at DESC LIMIT ?)` — tamaño de DB predecible
+- Ejecuta `PRAGMA optimize` periódicamente (al cerrar la app) para mantener estadísticas del query planner
+- `VACUUM` recupera espacio después de eliminaciones grandes — pero bloquea la DB, así que ejecútalo durante ventanas de mantenimiento o en shutdown
 
-## Migration Quirks
-- Migrations must NOT contain explicit `BEGIN` / `COMMIT` — `golang-migrate` and most tools wrap each file in an implicit transaction
-- `CREATE TABLE IF NOT EXISTS` for idempotent first migration
-- `ON DELETE CASCADE` must be declared at table creation — cannot be added later via ALTER
-- Include `CREATE INDEX` statements in the same migration as the table they index
-- Foreign keys are NOT enforced unless `PRAGMA foreign_keys = ON` — this is per-connection, not persistent
-- When using `golang-migrate` with `WithInstance(db, ...)`: do NOT call `m.Close()` — it closes the shared `*sql.DB` connection. Let the caller manage the connection lifecycle
-- When tables have FK relationships, order migrations so parent tables are created first (e.g., `000001_create_runs`, `000002_create_agents` where agents references runs)
+## Quirks de Migración
+- Las migraciones NO deben contener `BEGIN` / `COMMIT` explícitos — `golang-migrate` y la mayoría de herramientas envuelven cada archivo en una transacción implícita
+- `CREATE TABLE IF NOT EXISTS` para primera migración idempotente
+- `ON DELETE CASCADE` debe declararse en la creación de la tabla — no se puede agregar después via ALTER
+- Incluye sentencias `CREATE INDEX` en la misma migración que la tabla que indexan
+- Las foreign keys NO se aplican a menos que `PRAGMA foreign_keys = ON` — esto es por conexión, no persistente
+- Al usar `golang-migrate` con `WithInstance(db, ...)`: NO llames `m.Close()` — cierra el `*sql.DB` compartido. Deja que el llamador maneje el ciclo de vida de la conexión
+- Cuando las tablas tienen relaciones FK, ordena las migraciones para que las tablas padre se creen primero (ej., `000001_create_runs`, `000002_create_agents` donde agents referencia runs)
 
-## Migration sources: `iofs` vs `file://` (CRITICAL for shipped binaries)
+## Fuentes de migración: `iofs` vs `file://` (CRÍTICO para binarios distribuidos)
 
-`golang-migrate` supports multiple sources. The choice matters a lot for distribution.
+`golang-migrate` soporta múltiples fuentes. La elección importa mucho para la distribución.
 
-### `file://` source
-- Reads `.sql` files from disk at runtime
-- Works only when migrations live on the host filesystem — typically during tests or local dev
-- **Fails in any binary distributed without the repo** — the user does not have `./migrations/` on their machine
+### Fuente `file://`
+- Lee archivos `.sql` del disco en tiempo de ejecución
+- Funciona solo cuando las migraciones viven en el filesystem del host — típicamente durante tests o desarrollo local
+- **Falla en cualquier binario distribuido sin el repositorio** — el usuario no tiene `./migrations/` en su máquina
 
 ```go
 m, err := migrate.NewWithDatabaseInstance(
@@ -60,10 +60,10 @@ m, err := migrate.NewWithDatabaseInstance(
 )
 ```
 
-### `iofs` source (required for shipped binaries)
-- Reads migrations from any `fs.FS` — including `embed.FS`
-- The migrations become part of the binary via `//go:embed`
-- This is the ONLY source that works for a binary the end-user downloads
+### Fuente `iofs` (requerida para binarios distribuidos)
+- Lee migraciones de cualquier `fs.FS` — incluyendo `embed.FS`
+- Las migraciones se convierten en parte del binario via `//go:embed`
+- Esta es la ÚNICA fuente que funciona para un binario que el usuario final descarga
 
 ```go
 import (
@@ -89,10 +89,10 @@ if err != nil {
 }
 ```
 
-### Rule — design for iofs from day one
-If the store will ever be distributed in a binary (CLI tool, desktop app, server), **use `iofs` from the first migration**. Offering BOTH sources is fine (tests can keep using `file://` for ergonomics), but the default production path must be `iofs`.
+### Regla — diseña para iofs desde el primer día
+Si el store alguna vez se distribuirá en un binario (CLI tool, desktop app, servidor), **usa `iofs` desde la primera migración**. Ofrecer AMBAS fuentes está bien (los tests pueden seguir usando `file://` por ergonomía), pero la ruta de producción por defecto debe ser `iofs`.
 
-**Recommended pattern — two constructors sharing a helper:**
+**Patrón recomendado — dos constructores compartiendo un helper:**
 ```go
 // Shared DB setup — no duplication
 func openDB(dbPath string) (*sql.DB, error) { /* ... */ }
@@ -119,11 +119,11 @@ func NewFS(dbPath string, migrations fs.FS, subPath string, maxRuns int) (*Store
 func New(dbPath, migrationsPath string, maxRuns int) (*Store, error) { /* uses file:// */ }
 ```
 
-### Anti-pattern — `file://` in production code
-If the CLI command opens the store with `store.New(dbPath, filepath.Join(home, ".app", "migrations"), ...)`, the binary will fail at first run for any user that does not have a separately-installed migrations directory. This is a **design gap**, not a bug — catch it in architecture review, not at runtime.
+### Anti-patrón — `file://` en código de producción
+Si el comando CLI abre el store con `store.New(dbPath, filepath.Join(home, ".app", "migrations"), ...)`, el binario fallará en el primer run para cualquier usuario que no tenga un directorio de migraciones instalado por separado. Esto es una **brecha de diseño**, no un bug — detéctala en la revisión de arquitectura, no en runtime.
 
-## Go Driver
-- `github.com/mattn/go-sqlite3` — the only production-grade `database/sql` driver (requires CGO)
+## Driver de Go
+- `github.com/mattn/go-sqlite3` — el único driver `database/sql` de grado producción (requiere CGO)
 - Connection string: `file:<path>?_journal_mode=WAL&_foreign_keys=on&_busy_timeout=5000`
-- Single writer pattern: open one `*sql.DB` with `SetMaxOpenConns(1)` for writes
-- For read-heavy workloads: separate `*sql.DB` for reads with `SetMaxOpenConns(max(4, runtime.NumCPU()))`
+- Patrón de escritor único: abre un `*sql.DB` con `SetMaxOpenConns(1)` para escrituras
+- Para cargas de trabajo con muchas lecturas: `*sql.DB` separado para lecturas con `SetMaxOpenConns(max(4, runtime.NumCPU()))`

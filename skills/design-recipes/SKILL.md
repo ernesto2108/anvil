@@ -1,52 +1,52 @@
 ---
 name: design-recipes
-description: Reusable design patterns for efficient screen building in Pencil or Figma. Reduces operations per screen by providing tested recipes. Load during the Design Execution GATE phase. Use when building screens from design system components in any design tool.
+description: Patrones de diseño reutilizables para construir pantallas de forma eficiente en Pencil o Figma. Reduce las operaciones por pantalla al proporcionar recetas probadas. Cargar durante la fase GATE de Ejecución de Diseño. Usar cuando se construyen pantallas a partir de componentes del sistema de diseño en cualquier herramienta de diseño.
 ---
 
 # Design Recipes
 
-> Tested patterns for assembling screens efficiently. Tool-agnostic patterns with tool-specific implementations.
+> Patrones probados para ensamblar pantallas de forma eficiente. Patrones independientes de la herramienta con implementaciones específicas por herramienta.
 
-## When to Load
+## Cuándo Cargar
 
-Load this skill during the **Design Execution GATE** in the orchestration pipeline — after the designer produces ui-spec.md and before executing the visual design.
+Carga esta skill durante el **GATE de Ejecución de Diseño** en el pipeline de orquestación — después de que el diseñador produce `ui-spec.md` y antes de ejecutar el diseño visual.
 
-## Workflow
+## Flujo de trabajo
 
-### Step 0 — Load Pencil Guidelines (if .pen file)
+### Paso 0 — Cargar Lineamientos de Pencil (si hay archivo .pen)
 
-Before building ANY screen, load the Pencil guidelines that match the project type:
+Antes de construir CUALQUIER pantalla, carga los lineamientos de Pencil que correspondan al tipo de proyecto:
 
-1. **Detect project type** from the PRD/ui-spec:
-   - SaaS dashboard, admin panel, CRM → `get_guidelines("guide", "Web App")`
-   - Landing page, marketing site → `get_guidelines("guide", "Landing Page")`
-   - Mobile app → `get_guidelines("guide", "Mobile App")`
-   - Data-heavy screens, tables → `get_guidelines("guide", "Table")`
-   - Design system work → `get_guidelines("guide", "Design System")`
+1. **Detecta el tipo de proyecto** desde el PRD/ui-spec:
+   - SaaS dashboard, panel de admin, CRM → `get_guidelines("guide", "Web App")`
+   - Landing page, sitio de marketing → `get_guidelines("guide", "Landing Page")`
+   - App móvil → `get_guidelines("guide", "Mobile App")`
+   - Pantallas con muchos datos, tablas → `get_guidelines("guide", "Table")`
+   - Trabajo de sistema de diseño → `get_guidelines("guide", "Design System")`
 
-2. **Explore visual styles** — Pencil offers curated style archetypes. Before starting:
-   - Run `get_guidelines()` to see available styles
-   - Pick a style that matches the domain (e.g., "Soft Bento" for friendly SaaS, "Aerial Gravitas" for enterprise, "Editorial Scientific" for data-heavy apps)
-   - Load it: `get_guidelines("style", "<chosen style>")`
+2. **Explora estilos visuales** — Pencil ofrece arquetipos de estilo curados. Antes de comenzar:
+   - Ejecuta `get_guidelines()` para ver los estilos disponibles
+   - Elige un estilo que coincida con el dominio (ej., "Soft Bento" para SaaS amigable, "Aerial Gravitas" para empresarial, "Editorial Scientific" para apps con muchos datos)
+   - Cárgalo: `get_guidelines("style", "<estilo elegido>")`
 
-3. **Apply guidelines alongside recipes** — Pencil guidelines define principles (hierarchy, density, feedback). Recipes below define structure. Use both.
+3. **Aplica lineamientos junto con las recetas** — los lineamientos de Pencil definen principios (jerarquía, densidad, retroalimentación). Las recetas a continuación definen la estructura. Usa ambos.
 
-### Step 1 — Build Screens
+### Paso 1 — Construir Pantallas
 
-1. Detect the design tool:
-   - `.pen` file → load `reference/pencil.md`
-   - Figma URL or `.fig` → load `reference/figma.md`
-2. Identify which screen types you're building
-3. Follow the recipe for each type
-4. Verify with screenshot after each screen
+1. Detecta la herramienta de diseño:
+   - Archivo `.pen` → carga `reference/pencil.md`
+   - URL de Figma o `.fig` → carga `reference/figma.md`
+2. Identifica qué tipos de pantalla vas a construir
+3. Sigue la receta para cada tipo
+4. Verifica con captura de pantalla después de cada pantalla
 
-## Screen Type Recipes
+## Recetas por Tipo de Pantalla
 
-### Recipe 1: Auth Screen (Login, Register, Verify)
+### Receta 1: Pantalla de Autenticación (Login, Registro, Verificación)
 
-**Pattern:** Split layout — brand panel (left/top) + form panel (right/bottom)
+**Patrón:** Layout dividido — panel de marca (izquierda/arriba) + panel de formulario (derecha/abajo)
 
-**Structure:**
+**Estructura:**
 ```
 Desktop (1440×900):
 ┌──────────────┬─────────────────────────┐
@@ -66,15 +66,15 @@ Mobile (375×812):
 └─────────────────────┘
 ```
 
-**Components needed:** InputGroup, InputPassword, Button/Primary, Button/Ghost
-**Operations:** ~12 desktop, ~10 mobile
-**Reuse tip:** Build Login first, then Copy for Register/Verify and modify content
+**Componentes necesarios:** InputGroup, InputPassword, Button/Primary, Button/Ghost
+**Operaciones:** ~12 desktop, ~10 mobile
+**Consejo de reutilización:** Construye Login primero, luego Copia para Registro/Verificación y modifica el contenido
 
-### Recipe 2: App Shell (Nav + Content)
+### Receta 2: App Shell (Nav + Contenido)
 
-**Pattern:** Top nav + scrollable content area
+**Patrón:** Nav superior + área de contenido con scroll
 
-**Structure:**
+**Estructura:**
 ```
 Desktop:
 ┌─────────────────────────────────────────┐
@@ -95,155 +95,155 @@ Mobile:
 └─────────────────────┘
 ```
 
-**Components needed:** NavBar (desktop) or MobileNav, Avatar
-**Reuse tip:** Build one app shell, Copy for each page, replace content only
+**Componentes necesarios:** NavBar (desktop) o MobileNav, Avatar
+**Consejo de reutilización:** Construye un app shell, Cópialo para cada página, reemplaza solo el contenido
 
-### Recipe 3: Data Table Page
+### Receta 3: Página de Tabla de Datos
 
-**Pattern:** Header + filters + table + pagination
+**Patrón:** Encabezado + filtros + tabla + paginación
 
-**Structure:**
+**Estructura:**
 ```
-Content area:
-├── Page header: Title (left) + Primary button (right)
-├── Filters row: Dropdown selects (horizontal)
-├── Table card (surface bg, rounded, border):
-│   ├── Header row (neutral-50 bg): column labels
-│   ├── Data rows: cells with text/badges
-│   └── Last row: no bottom border
-└── Pagination: info text (left) + prev/next buttons (right)
+Área de contenido:
+├── Encabezado de página: Título (izquierda) + botón Primary (derecha)
+├── Fila de filtros: Dropdown selects (horizontal)
+├── Tarjeta de tabla (surface bg, rounded, border):
+│   ├── Fila de encabezado (neutral-50 bg): etiquetas de columnas
+│   ├── Filas de datos: celdas con texto/badges
+│   └── Última fila: sin borde inferior
+└── Paginación: texto informativo (izquierda) + botones prev/next (derecha)
 ```
 
-**Table row pattern (CRITICAL):**
+**Patrón de fila de tabla (CRÍTICO):**
 ```
 Row (horizontal, fill_container, padding [14, 20], bottom border)
-├── Cell 1 (frame, width: fill_container or fixed) → content
-├── Cell 2 (frame, width: fill_container or fixed) → content
-├── Cell N (frame, width: fixed for badges/dates) → badge/text
+├── Cell 1 (frame, width: fill_container o fixed) → content
+├── Cell 2 (frame, width: fill_container o fixed) → content
+├── Cell N (frame, width: fixed para badges/dates) → badge/text
 ```
 
-**Column width guide:**
-- Name/title: fill_container
-- Description: fill_container
-- Status badge: 120-140px
-- Date: 140-160px
-- Count/number: 80-100px
-- Actions: 80-100px
+**Guía de ancho de columnas:**
+- Nombre/título: fill_container
+- Descripción: fill_container
+- Badge de estado: 120-140px
+- Fecha: 140-160px
+- Conteo/número: 80-100px
+- Acciones: 80-100px
 
-**Operations:** ~25 for header+table+3 rows. Split into 2 calls.
+**Operaciones:** ~25 para encabezado+tabla+3 filas. Dividir en 2 llamadas.
 
-### Recipe 4: Detail Page
+### Receta 4: Página de Detalle
 
-**Pattern:** Breadcrumb + header with actions + multi-column content
+**Patrón:** Breadcrumb + encabezado con acciones + contenido multi-columna
 
-**Structure:**
+**Estructura:**
 ```
-Content area:
-├── Breadcrumb: parent > current
-├── Header: title + badge + edit button
-├── Description text
-├── Metadata row (horizontal, gap 24)
-├── Two-column layout (horizontal, gap 24):
-│   ├── Left column (fill_container): primary info
-│   └── Right column (fill_container): secondary info
-└── Related items section
+Área de contenido:
+├── Breadcrumb: padre > actual
+├── Encabezado: título + badge + botón editar
+├── Texto de descripción
+├── Fila de metadatos (horizontal, gap 24)
+├── Layout de dos columnas (horizontal, gap 24):
+│   ├── Columna izquierda (fill_container): info principal
+│   └── Columna derecha (fill_container): info secundaria
+└── Sección de elementos relacionados
 ```
 
-### Recipe 5: Wizard/Stepper
+### Receta 5: Wizard/Stepper
 
-**Pattern:** Breadcrumb + stepper + form card + navigation buttons
+**Patrón:** Breadcrumb + stepper + tarjeta de formulario + botones de navegación
 
-**Stepper states:**
-- Completed: green circle + check icon + green text + green line
-- Active: primary circle + number + primary text
-- Upcoming: neutral circle + number + secondary text + neutral line
+**Estados del stepper:**
+- Completado: círculo verde + ícono check + texto verde + línea verde
+- Activo: círculo primary + número + texto primary
+- Pendiente: círculo neutral + número + texto secundario + línea neutral
 
-**Structure:**
+**Estructura:**
 ```
-Content area:
+Área de contenido:
 ├── Breadcrumb
-├── Title
-├── Stepper (horizontal, 3 steps)
-├── Form card (surface bg, rounded, padding 32):
-│   ├── Section title
-│   ├── Description
-│   ├── Form fields
-│   └── Actions: Back (left) + Next/Create (right)
+├── Título
+├── Stepper (horizontal, 3 pasos)
+├── Tarjeta de formulario (surface bg, rounded, padding 32):
+│   ├── Título de sección
+│   ├── Descripción
+│   ├── Campos del formulario
+│   └── Acciones: Atrás (izquierda) + Siguiente/Crear (derecha)
 ```
 
-**Reuse tip:** Build step 1, Copy for steps 2-3, update stepper states + form content
+**Consejo de reutilización:** Construye el paso 1, Copia para los pasos 2-3, actualiza los estados del stepper + contenido del formulario
 
-### Recipe 6: Mobile Card List (replaces tables)
+### Receta 6: Lista de Tarjetas Móvil (reemplaza tablas)
 
-**Pattern:** Vertical stack of cards instead of table rows
+**Patrón:** Pila vertical de tarjetas en lugar de filas de tabla
 
-**Card structure:**
+**Estructura de tarjeta:**
 ```
 Card (surface bg, rounded-lg, border, padding 16):
-├── Top row (horizontal, space_between):
-│   ├── Name/title (semibold)
-│   └── Status badge
-├── Description (secondary text, xs)
-└── Metadata (disabled text, xs)
+├── Fila superior (horizontal, space_between):
+│   ├── Nombre/título (semibold)
+│   └── Badge de estado
+├── Descripción (texto secundario, xs)
+└── Metadatos (texto disabled, xs)
 ```
 
-### Recipe 7: Hamburger Menu (Mobile)
+### Receta 7: Menú Hamburguesa (Móvil)
 
-**Pattern:** Full-screen overlay with sections
+**Patrón:** Overlay de pantalla completa con secciones
 
-**Structure:**
+**Estructura:**
 ```
-Full screen (375×812):
-├── Nav bar: X (close) + Logo + Avatar
-├── Content (vertical, padding):
-│   ├── SECTION: "NAVEGACIÓN" (label, uppercase, xs)
-│   │   ├── Menu item (active: primary bg + primary text)
-│   │   ├── Menu item (icon + text)
-│   │   └── Menu item
+Pantalla completa (375×812):
+├── Barra de nav: X (cerrar) + Logo + Avatar
+├── Contenido (vertical, padding):
+│   ├── SECCIÓN: "NAVEGACIÓN" (label, uppercase, xs)
+│   │   ├── Item de menú (activo: primary bg + texto primary)
+│   │   ├── Item de menú (ícono + texto)
+│   │   └── Item de menú
 │   ├── Divider
-│   ├── SECTION: "APARIENCIA"
-│   │   └── Theme toggle (icon + text + switch)
+│   ├── SECCIÓN: "APARIENCIA"
+│   │   └── Toggle de tema (ícono + texto + switch)
 │   ├── Divider
-│   ├── SECTION: "CUENTA"
+│   ├── SECCIÓN: "CUENTA"
 │   │   ├── Profile
 │   │   ├── Settings
-│   │   └── Logout (error color)
+│   │   └── Logout (color error)
 ├── Spacer (fill_container)
-└── User bar (bottom): avatar + name + email + role badge
+└── Barra de usuario (inferior): avatar + nombre + email + badge de rol
 ```
 
-### Recipe 8: Avatar Dropdown (Desktop)
+### Receta 8: Dropdown de Avatar (Desktop)
 
-**Pattern:** Floating card anchored to avatar
+**Patrón:** Tarjeta flotante anclada al avatar
 
-**Structure:**
+**Estructura:**
 ```
 Dropdown (260w, surface bg, rounded-lg, shadow-lg):
-├── User info row: avatar + name/email + role badge
+├── Fila de info de usuario: avatar + nombre/email + badge de rol
 ├── Divider
-├── Menu items: icon (18px) + text
+├── Items de menú: ícono (18px) + texto
 │   ├── Profile
 │   ├── Settings
-│   └── Theme toggle (icon + text + switch)
+│   └── Toggle de tema (ícono + texto + switch)
 ├── Divider
-└── Logout (error color)
+└── Logout (color error)
 ```
 
-**Placement:** absolute positioned, x = nav_width - dropdown_width - 24, y = nav_height - 4
+**Posicionamiento:** posición absoluta, x = nav_width - dropdown_width - 24, y = nav_height - 4
 
-## Dark Mode Recipe
+## Receta de Modo Oscuro
 
-1. Build light version first
-2. Copy the frame: `C("lightFrameId", document, {name: "Dark: ...", positionDirection: "bottom", positionPadding: 100, theme: {"mode": "dark"}})`
-3. Override tool-specific elements:
-   - Theme toggle: icon moon→sun, text "Modo oscuro"→"Modo claro", switch OFF→ON
-4. Verify with screenshot — check contrast on badges and text
+1. Construye primero la versión clara
+2. Copia el frame: `C("lightFrameId", document, {name: "Dark: ...", positionDirection: "bottom", positionPadding: 100, theme: {"mode": "dark"}})`
+3. Sobreescribe los elementos específicos de la herramienta:
+   - Toggle de tema: ícono luna→sol, texto "Modo oscuro"→"Modo claro", switch OFF→ON
+4. Verifica con captura de pantalla — revisa el contraste en badges y texto
 
-## Efficiency Rules
+## Reglas de Eficiencia
 
-1. **Components FIRST** — build all reusable components before any screen
-2. **Copy, don't rebuild** — first screen of each type is built, variants are copied
-3. **Max 25 ops per batch** — split large screens into logical sections
-4. **Verify after each screen** — screenshot to catch issues early
-5. **Use refs, not raw frames** — every repeated pattern should be a component instance
-6. **Batch related updates** — group all overrides for one instance in a single call
+1. **Componentes PRIMERO** — construye todos los componentes reutilizables antes de cualquier pantalla
+2. **Copia, no reconstruyas** — la primera pantalla de cada tipo se construye, las variantes se copian
+3. **Máximo 25 ops por lote** — divide las pantallas grandes en secciones lógicas
+4. **Verifica después de cada pantalla** — captura de pantalla para detectar problemas temprano
+5. **Usa refs, no frames crudos** — todo patrón repetido debe ser una instancia de componente
+6. **Agrupa actualizaciones relacionadas** — agrupa todas las sobreescrituras para una instancia en una sola llamada

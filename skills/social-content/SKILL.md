@@ -1,232 +1,232 @@
 ---
 name: social-content
-description: Complete social media content knowledge — copywriting frameworks, visual design, platform-specific rules (LinkedIn, Instagram, Twitter/X), algorithm mechanics, engagement strategy, color psychology, typography, and image creation. Used by mkt-content agent. Use when creating any social media content.
+description: Conocimiento completo de contenido para redes sociales — frameworks de copywriting, diseño visual, reglas específicas por plataforma (LinkedIn, Instagram, Twitter/X), mecánicas de algoritmos, estrategia de engagement, psicología del color, tipografía y creación de imágenes. Usado por el agente mkt-content. Úsalo al crear cualquier contenido para redes sociales.
 ---
 
 # Social Content
 
-Everything the mkt-content agent needs to create text + visual for any social platform.
+Todo lo que el agente mkt-content necesita para crear texto + visual para cualquier plataforma social.
 
 ---
 
-## 1. Copywriting Frameworks
+## 1. Frameworks de Copywriting
 
 ### PAS (Problem-Agitate-Solution)
-Best for cold audiences and pain-point content.
+Ideal para audiencias frías y contenido centrado en puntos de dolor.
 ```
-[Problem] Name the pain.
-[Agitate] Intensify — consequences, frustration, wasted time/money.
-[Solution] Your product/service as the bridge out.
+[Problem] Nombra el dolor.
+[Agitate] Intensifica — consecuencias, frustración, tiempo/dinero perdido.
+[Solution] Tu producto/servicio como el puente de salida.
 ```
 
 ### BAB (Before-After-Bridge)
-Best for transformation stories and feature highlights.
+Ideal para historias de transformación y destacar features.
 ```
-[Before] The painful status quo.
-[After] The better world with your solution.
-[Bridge] How your product gets them there.
+[Before] El status quo doloroso.
+[After] El mundo mejor con tu solución.
+[Bridge] Cómo tu producto los lleva allí.
 ```
 
 ### AIDA (Attention-Interest-Desire-Action)
-Best for longer posts and launch announcements.
+Ideal para posts más largos y anuncios de lanzamiento.
 ```
-[Attention] Hook that stops the scroll.
-[Interest] Build with facts, story, or insight.
-[Desire] Show the transformation / result.
-[Action] Clear CTA.
+[Attention] Hook que detiene el scroll.
+[Interest] Construir con hechos, historia o insight.
+[Desire] Mostrar la transformación / resultado.
+[Action] CTA claro.
 ```
 
 ### Story Arc
-Best for building-in-public and personal content.
+Ideal para contenido de building-in-public y personal.
 ```
-[Situation] Set the scene.
-[Complication] What went wrong / the struggle.
-[Resolution] What you learned / built / changed.
+[Situation] Establecer la escena.
+[Complication] Qué salió mal / la lucha.
+[Resolution] Qué aprendiste / construiste / cambiaste.
 ```
 
 ---
 
-## 2. Hook Writing
+## 2. Escritura de Hooks
 
-The first line decides everything. Every platform truncates early — everything after is hidden.
+La primera línea decide todo. Cada plataforma trunca temprano — todo lo que sigue queda oculto.
 
-### The 7-Word Rule
+### La Regla de las 7 Palabras
 
-Create a **curiosity gap** in 7 words or fewer.
+Crear una **brecha de curiosidad** en 7 palabras o menos.
 
-### Five Proven Patterns
+### Cinco Patrones Probados
 
-| Pattern | Example | Why It Works |
+| Patrón | Ejemplo | Por Qué Funciona |
 |---------|---------|-------------|
-| **Opposite of expected** | "Stop writing unit tests." | Disrupts assumptions |
-| **Challenge the norm** | "Your marketing agency is wasting your money." | Tension with status quo |
-| **Shared frustration** | "Every restaurant owner has done this at midnight." | Instant identification |
-| **Personal/raw** | "I almost closed my business last month." | Vulnerability = connection |
-| **Lead with result** | "One image replaced our 20-slide deck." | Concrete outcome |
+| **Opuesto a lo esperado** | "Stop writing unit tests." | Rompe suposiciones |
+| **Desafía la norma** | "Your marketing agency is wasting your money." | Tensión con el status quo |
+| **Frustración compartida** | "Every restaurant owner has done this at midnight." | Identificación instantánea |
+| **Personal/crudo** | "I almost closed my business last month." | Vulnerabilidad = conexión |
+| **Liderar con resultado** | "One image replaced our 20-slide deck." | Resultado concreto |
 
-### Hook Anti-Patterns (NEVER)
+### Anti-Patrones de Hooks (NUNCA)
 
-- "Excited to announce..." — self-centered, no curiosity
-- "I'm thrilled to share..." — corporate fluff
-- "Check out our new..." — pure promotion
-- "Big news!" — vague
-- Engagement bait ("Comment YES if...") — algorithmically penalized
+- "Excited to announce..." — centrado en uno mismo, sin curiosidad
+- "I'm thrilled to share..." — relleno corporativo
+- "Check out our new..." — pura promoción
+- "Big news!" — vago
+- Engagement bait ("Comment YES if...") — penalizado algorítmicamente
 
 ---
 
-## 3. Visual Design
+## 3. Diseño Visual
 
-### Philosophy: Less Is More
+### Filosofía: Menos Es Más
 
-1 powerful image > 10 mediocre slides. Every element must earn its place.
+1 imagen poderosa > 10 slides mediocres. Cada elemento debe ganarse su lugar.
 
-### Color Psychology
+### Psicología del Color
 
-| Color family | Communicates | Best for |
+| Familia de color | Comunica | Ideal para |
 |-------------|-------------|----------|
-| **Black/dark gray** | Premium, sophistication, tech | Developer tools, luxury, editorial |
-| **White/light** | Clean, simple, modern | Minimalist brands, healthcare, SaaS |
-| **Dark blue/navy** | Trust, authority | Finance, enterprise, B2B |
-| **Red/coral** | Urgency, passion, energy | Sales, food, entertainment, CTAs |
-| **Green** | Growth, health, success | Finance, health, sustainability |
-| **Yellow/amber** | Optimism, warmth, attention | Creative, education |
-| **Purple** | Creativity, premium | Design tools, creative agencies |
-| **Blue/cyan** | Technology, trust, calm | Tech, social media, corporate |
-| **Orange** | Energy, playfulness | Startups, food, community |
+| **Negro/gris oscuro** | Premium, sofisticación, tech | Herramientas para desarrolladores, lujo, editorial |
+| **Blanco/claro** | Limpio, simple, moderno | Marcas minimalistas, salud, SaaS |
+| **Azul oscuro/navy** | Confianza, autoridad | Finanzas, enterprise, B2B |
+| **Rojo/coral** | Urgencia, pasión, energía | Ventas, comida, entretenimiento, CTAs |
+| **Verde** | Crecimiento, salud, éxito | Finanzas, salud, sostenibilidad |
+| **Amarillo/ámbar** | Optimismo, calidez, atención | Creativo, educación |
+| **Púrpura** | Creatividad, premium | Herramientas de diseño, agencias creativas |
+| **Azul/cyan** | Tecnología, confianza, calma | Tech, redes sociales, corporativo |
+| **Naranja** | Energía, dinamismo | Startups, comida, comunidad |
 
-### Color Contrast Rules
+### Reglas de Contraste de Color
 
-- **Minimum 4.5:1** ratio for text over backgrounds (accessibility)
-- **Dark bg + light text** = premium/tech feel
-- **Light bg + dark text** = clean/professional feel
-- **One accent color** for emphasis — not rainbow
-- **Brand colors first** — use the user's palette if they have one
+- **Mínimo 4.5:1** de ratio para texto sobre fondos (accesibilidad)
+- **Fondo oscuro + texto claro** = sensación premium/tech
+- **Fondo claro + texto oscuro** = sensación limpia/profesional
+- **Un color de acento** para énfasis — no arcoíris
+- **Colores de marca primero** — usar la paleta del usuario si la tiene
 
-### Typography as Design
+### Tipografía como Diseño
 
-Text IS the visual. A well-set phrase with the right font, weight, and size is a complete image.
+El texto ES el visual. Una frase bien tipografiada con la fuente, peso y tamaño correctos es una imagen completa.
 
-**When text alone works:** bold statements, numbers/stats, single-line hooks, brand messages.
+**Cuándo el texto solo funciona:** declaraciones en negrita, números/estadísticas, hooks de una línea, mensajes de marca.
 
-**Rules:**
-- One font family, two weights (regular + bold/black)
-- Size hierarchy: title 48-72px, subtitle 24-36px, body 18-22px
-- Line height: 1.2 titles, 1.5 body
-- Letter spacing: tight for large titles (-0.02em), normal for body
-- Max 2 fonts. Don't mix 3+
-- Recommended: Inter, Plus Jakarta Sans, Satoshi (modern), JetBrains Mono (code), Playfair Display (editorial)
+**Reglas:**
+- Una familia tipográfica, dos pesos (regular + bold/black)
+- Jerarquía de tamaños: título 48-72px, subtítulo 24-36px, cuerpo 18-22px
+- Altura de línea: 1.2 títulos, 1.5 cuerpo
+- Espaciado entre letras: compacto para títulos grandes (-0.02em), normal para cuerpo
+- Máx 2 fuentes. No mezclar 3+
+- Recomendadas: Inter, Plus Jakarta Sans, Satoshi (moderno), JetBrains Mono (código), Playfair Display (editorial)
 
-### Carousel Rules
+### Reglas para Carruseles
 
-Only when content genuinely needs sequence:
-- **Max 3-5 slides** — every slide must justify existing
-- **Slide 1 = the only one visible in feed** — spend 50% effort here
-- **One idea per slide**
-- **Last slide = CTA**
+Solo cuando el contenido genuinamente necesita secuencia:
+- **Máx 3-5 slides** — cada slide debe justificar su existencia
+- **Slide 1 = el único visible en el feed** — invertir 50% del esfuerzo aquí
+- **Una idea por slide**
+- **Último slide = CTA**
 
-**When carousel is NOT the answer:** 1-2 ideas (use single image), single statement (use typography), slides just repeat the text (image should ADD, not repeat).
+**Cuándo el carrusel NO es la respuesta:** 1-2 ideas (usar imagen única), declaración única (usar tipografía), los slides solo repiten el texto (la imagen debe AGREGAR, no repetir).
 
 ---
 
-## 4. Image Creation
+## 4. Creación de Imágenes
 
-**Every post gets a visual. No exceptions.** Text-only posts get 0.7x engagement on LinkedIn. Even a simple stat card or quote card outperforms naked text.
+**Cada post tiene un visual. Sin excepciones.** Los posts solo de texto obtienen 0.7x de engagement en LinkedIn. Incluso una tarjeta de estadística simple o una tarjeta de cita supera al texto desnudo.
 
-### 4.1 Visual Strategy — Pick the Right Type
+### 4.1 Estrategia Visual — Elegir el Tipo Correcto
 
-Choose the visual type BEFORE designing. Match it to your content:
+Elegir el tipo de visual ANTES de diseñar. Asociarlo al contenido:
 
-| Content type | Visual type | Why it works |
+| Tipo de contenido | Tipo visual | Por qué funciona |
 |-------------|------------|-------------|
-| Bold opinion / hot take | **Statement card** — big text, bold color, minimal | The text IS the visual. High contrast stops the scroll |
-| Data / result / number | **Stat card** — one dominant number, context below | A giant "47%" catches the eye faster than any paragraph |
-| Before/after / comparison | **Split layout** — two halves, visual contrast | Side-by-side creates instant understanding |
-| Personal story / behind the scenes | **Photo with text overlay** — real photo, semi-transparent overlay, short text | Human faces get 38% more engagement. Real > stock |
-| Quote / testimonial | **Quote card** — large quotation marks, attribution, clean bg | Social proof is visual. A quote in an image gets shared more |
-| How-to / process | **Numbered steps** — each step as a visual block (max 3-4) | Visual structure makes complex simple |
-| Launch / announcement | **Product shot + headline** — screenshot or mockup with context | Show the thing. Don't just talk about it |
-| Code / technical | **Code snippet card** — dark bg, syntax highlighting, one concept | Developers screenshot good code. Make it screenshot-worthy |
+| Opinión fuerte / hot take | **Tarjeta de declaración** — texto grande, color llamativo, mínimo | El texto ES el visual. Alto contraste detiene el scroll |
+| Dato / resultado / número | **Tarjeta de estadística** — un número dominante, contexto abajo | Un "47%" gigante atrapa la mirada más rápido que cualquier párrafo |
+| Antes/después / comparación | **Layout dividido** — dos mitades, contraste visual | La comparación lado a lado genera comprensión instantánea |
+| Historia personal / detrás de escenas | **Foto con superposición de texto** — foto real, overlay semitransparente, texto corto | Las caras humanas obtienen 38% más engagement. Real > stock |
+| Cita / testimonio | **Tarjeta de cita** — comillas grandes, atribución, fondo limpio | La prueba social es visual. Una cita en imagen se comparte más |
+| Cómo hacer / proceso | **Pasos numerados** — cada paso como bloque visual (máx 3-4) | La estructura visual simplifica lo complejo |
+| Lanzamiento / anuncio | **Screenshot del producto + headline** — screenshot o mockup con contexto | Muestra el producto. No solo hables de él |
+| Código / técnico | **Tarjeta de snippet de código** — fondo oscuro, resaltado de sintaxis, un concepto | Los desarrolladores capturan buen código. Hacerlo digno de captura |
 
-### 4.2 Human Element Rules
+### 4.2 Reglas del Elemento Humano
 
-**Posts with human faces get 38% more engagement on LinkedIn and 2x on Instagram.**
+**Los posts con caras humanas obtienen 38% más engagement en LinkedIn y 2x en Instagram.**
 
-When to use human elements:
-- **Personal stories** — use the user's real photo if available
-- **Testimonials** — real customer photo > anonymous quote
-- **Team/culture posts** — candid > posed. Real office > stock office
-- **Behind the scenes** — messy desk, whiteboard scribbles, real screenshots
+Cuándo usar elementos humanos:
+- **Historias personales** — usar la foto real del usuario si está disponible
+- **Testimoniales** — foto real del cliente > cita anónima
+- **Posts de equipo/cultura** — candid > posado. Oficina real > oficina stock
+- **Detrás de escenas** — escritorio desordenado, garabatos en pizarrón, screenshots reales
 
-When NOT to use human elements:
-- Data/stat posts — the number is the star
-- Code/technical — the code is the star
-- Bold opinion — the text is the star
+Cuándo NO usar elementos humanos:
+- Posts de datos/estadísticas — el número es la estrella
+- Posts de código/técnico — el código es la estrella
+- Opinión fuerte — el texto es la estrella
 
-**NEVER use generic stock photos.** A person-in-suit-pointing-at-screen kills credibility instantly. If you don't have a real photo, use text/graphic instead — it's more honest and more effective.
+**NUNCA usar fotos stock genéricas.** Una persona-en-traje-apuntando-a-una-pantalla destruye la credibilidad al instante. Si no tienes una foto real, usar texto/gráfico en su lugar — es más honesto y más efectivo.
 
-For stock photos when needed, suggest the user source from:
-- Unsplash (free, high quality, real-looking)
-- Suggest specific search terms based on the content
+Para fotos stock cuando sea necesario, sugerir al usuario que las busque en:
+- Unsplash (gratuito, alta calidad, aspecto real)
+- Sugerir términos de búsqueda específicos basados en el contenido
 
-### 4.3 Scroll-Stopping Techniques
+### 4.3 Técnicas para Detener el Scroll
 
-The image has ONE job: make someone stop scrolling. These techniques work:
+La imagen tiene UN trabajo: hacer que alguien deje de hacer scroll. Estas técnicas funcionan:
 
-1. **Contrast shock** — dark bg with neon accent, or white bg with one bold color element
-2. **Giant number** — "382%" at 120px font size catches the eye from the feed
-3. **Unexpected crop** — tight crop on a face, hands on keyboard, close-up of a screen
-4. **Color block** — solid vibrant background with minimal white text
-5. **Visual tension** — two things side by side that don't normally go together
-6. **Negative space** — 70% empty, 30% content. The emptiness draws attention to the content
-7. **Handwritten element** — a hand-drawn arrow, circle, or underline on top of clean design
-8. **Screenshot with annotation** — real screenshot with a red circle/arrow pointing at something specific
+1. **Shock de contraste** — fondo oscuro con acento neón, o fondo blanco con un elemento de color llamativo
+2. **Número gigante** — "382%" a 120px de fuente atrapa la mirada desde el feed
+3. **Recorte inesperado** — recorte ajustado en una cara, manos en teclado, primer plano de una pantalla
+4. **Bloque de color** — fondo vibrante sólido con texto blanco mínimo
+5. **Tensión visual** — dos cosas una al lado de la otra que normalmente no van juntas
+6. **Espacio negativo** — 70% vacío, 30% contenido. El vacío atrae la atención al contenido
+7. **Elemento manuscrito** — una flecha dibujada a mano, círculo o subrayado sobre un diseño limpio
+8. **Screenshot con anotación** — screenshot real con un círculo/flecha rojo apuntando a algo específico
 
-### 4.4 Execution Setup (MANDATORY before building)
+### 4.4 Configuración de Ejecución (OBLIGATORIO antes de construir)
 
 **Pencil (.pen):**
-1. `get_editor_state({ include_schema: true })` — ONLY on first call per session. All subsequent: `include_schema: false`
-2. `get_guidelines("style", "<chosen style>")` — pick a style that fits the brand. Load ONCE, not per asset
-3. `set_variables` — set brand tokens (colors, fonts, accent) ONCE upfront
-4. `find_empty_space_on_canvas` — get coordinates before inserting
+1. `get_editor_state({ include_schema: true })` — SOLO en la primera llamada por sesión. Todas las siguientes: `include_schema: false`
+2. `get_guidelines("style", "<chosen style>")` — elegir un estilo que se adapte a la marca. Cargar UNA VEZ, no por asset
+3. `set_variables` — establecer tokens de marca (colores, fuentes, acento) UNA VEZ al inicio
+4. `find_empty_space_on_canvas` — obtener coordenadas antes de insertar
 
-**Figma:** load `figma-use` skill → set variables via collection → build
+**Figma:** cargar skill `figma-use` → establecer variables via collection → construir
 
-### 4.5 Composition Recipes
+### 4.5 Recetas de Composición
 
-Each recipe defines what to build. Build using **Pencil** (`batch_design`) or **Figma** (`use_figma`). Never generate HTML.
+Cada receta define qué construir. Construir usando **Pencil** (`batch_design`) o **Figma** (`use_figma`). Nunca generar HTML.
 
-#### Recipe A — Statement Card (bold opinion, hook) — ~6 ops
+#### Receta A — Tarjeta de Declaración (opinión fuerte, hook) — ~6 ops
 
-**Layout:** single frame, centered content, generous padding
+**Layout:** frame único, contenido centrado, padding generoso
 
 ```javascript
-// Pencil: 1 batch_design call, 6 ops
+// Pencil: 1 llamada batch_design, 6 ops
 card=I(document,{type:"frame",name:"Social: Statement",layout:"vertical",x:X,y:Y,width:1080,height:1080,fill:"$brand-bg",padding:100,justifyContent:"center",alignItems:"center",gap:32})
 headline=I(card,{type:"text",content:"Your headline here",fontFamily:"Inter",fontSize:64,fontWeight:"$fw-black",fill:"$brand-text",textAlign:"center",letterSpacing:-0.02,lineHeight:1.1,textGrowth:"fixed-width",width:880})
 subtitle=I(card,{type:"text",content:"One supporting line",fontFamily:"Inter",fontSize:24,fontWeight:"$fw-regular",fill:"$brand-text",opacity:0.6,textAlign:"center"})
 brand=I(card,{type:"text",content:"@handle",fontFamily:"Inter",fontSize:16,fontWeight:"$fw-bold",fill:"$brand-text",opacity:0.4})
 ```
 
-**Accent word:** after building, use `U()` to wrap key phrase in accent color — or split headline into multiple text nodes with different fills.
+**Palabra de acento:** después de construir, usar `U()` para envolver la frase clave en color de acento — o dividir el headline en múltiples nodos de texto con diferentes fills.
 
-#### Recipe B — Stat Card (data, results, numbers) — ~6 ops
+#### Receta B — Tarjeta de Estadística (datos, resultados, números) — ~6 ops
 
-**Layout:** single frame, centered, one dominant number
+**Layout:** frame único, centrado, un número dominante
 
 ```javascript
-// Pencil: 1 batch_design call, 6 ops
+// Pencil: 1 llamada batch_design, 6 ops
 card=I(document,{type:"frame",name:"Social: Stat",layout:"vertical",x:X,y:Y,width:1080,height:1080,fill:"$brand-bg",padding:100,justifyContent:"center",alignItems:"center",gap:8})
 number=I(card,{type:"text",content:"47%",fontFamily:"Inter",fontSize:160,fontWeight:"$fw-black",fill:"$brand-accent",letterSpacing:-0.04,lineHeight:1})
 context=I(card,{type:"text",content:"of teams saved 12+ hours per week",fontFamily:"Inter",fontSize:28,fontWeight:"$fw-medium",fill:"$brand-text",textAlign:"center",textGrowth:"fixed-width",width:600,lineHeight:1.4})
 brand=I(card,{type:"text",content:"@handle",fontFamily:"Inter",fontSize:16,fontWeight:"$fw-bold",fill:"$brand-text",opacity:0.3})
 ```
 
-#### Recipe C — Split/Comparison (before-after, vs) — ~10 ops
+#### Receta C — Layout Dividido/Comparación (antes-después, vs) — ~10 ops
 
-**Layout:** two equal halves side by side
+**Layout:** dos mitades iguales una al lado de la otra
 
 ```javascript
-// Pencil: 1 batch_design call, 10 ops
+// Pencil: 1 llamada batch_design, 10 ops
 card=I(document,{type:"frame",name:"Social: Split",layout:"horizontal",x:X,y:Y,width:1080,height:1080})
 left=I(card,{type:"frame",layout:"vertical",width:"fill_container",height:"fill_container",fill:"#fef2f2",padding:60,justifyContent:"center",alignItems:"center",gap:24})
 lLabel=I(left,{type:"text",content:"BEFORE",fontFamily:"Inter",fontSize:20,fontWeight:"$fw-bold",fill:"#991b1b",opacity:0.5,letterSpacing:0.1,textTransform:"uppercase"})
@@ -236,12 +236,12 @@ rLabel=I(right,{type:"text",content:"AFTER",fontFamily:"Inter",fontSize:20,fontW
 rText=I(right,{type:"text",content:"15 minutes with a framework",fontFamily:"Inter",fontSize:32,fontWeight:"$fw-bold",fill:"#166534",textAlign:"center",lineHeight:1.3})
 ```
 
-#### Recipe D — Quote Card (testimonial, social proof) — ~7 ops
+#### Receta D — Tarjeta de Cita (testimonio, prueba social) — ~7 ops
 
-**Layout:** single frame, centered, editorial feel
+**Layout:** frame único, centrado, sensación editorial
 
 ```javascript
-// Pencil: 1 batch_design call, 7 ops
+// Pencil: 1 llamada batch_design, 7 ops
 card=I(document,{type:"frame",name:"Social: Quote",layout:"vertical",x:X,y:Y,width:1080,height:1080,fill:"#fafaf9",padding:100,justifyContent:"center",alignItems:"center",gap:8})
 mark=I(card,{type:"text",content:"\u201c",fontFamily:"Inter",fontSize:200,fontWeight:"$fw-black",fill:"$brand-accent",opacity:0.15,lineHeight:0.6})
 quote=I(card,{type:"text",content:"Quote text here.",fontFamily:"Inter",fontSize:36,fontWeight:"$fw-medium",fontStyle:"italic",fill:"#1c1917",textAlign:"center",textGrowth:"fixed-width",width:700,lineHeight:1.4})
@@ -249,25 +249,25 @@ name=I(card,{type:"text",content:"Maria Lopez",fontFamily:"Inter",fontSize:20,fo
 role=I(card,{type:"text",content:"COO, RestaurantePro",fontFamily:"Inter",fontSize:16,fontWeight:"$fw-regular",fill:"#1c1917",opacity:0.4})
 ```
 
-#### Recipe E — Photo + Text Overlay (personal, story) — ~6 ops
+#### Receta E — Foto + Superposición de Texto (personal, historia) — ~6 ops
 
-**Layout:** full-bleed image with gradient overlay at bottom
+**Layout:** imagen a pantalla completa con superposición de gradiente en la parte inferior
 
 ```javascript
-// Pencil: 1 batch_design call, 6 ops
+// Pencil: 1 llamada batch_design, 6 ops
 card=I(document,{type:"frame",name:"Social: Photo",layout:"vertical",x:X,y:Y,width:1080,height:1080,justifyContent:"end"})
-// Image: use batch_design image operation to set background, or placeholder
+// Imagen: usar operación de imagen batch_design para establecer fondo, o placeholder
 overlay=I(card,{type:"frame",layout:"vertical",width:"fill_container",height:432,padding:[80,60,60,60],justifyContent:"end",gap:16,fill:{type:"linear-gradient",stops:[{color:"#00000000",position:0},{color:"#000000D9",position:1}]}})
 headline=I(overlay,{type:"text",content:"The moment I knew.",fontFamily:"Inter",fontSize:40,fontWeight:"$fw-extrabold",fill:"#FFFFFF",lineHeight:1.2})
 subtitle=I(overlay,{type:"text",content:"A story about failing forward.",fontFamily:"Inter",fontSize:20,fontWeight:"$fw-regular",fill:"#FFFFFF",opacity:0.8})
 ```
 
-#### Recipe F — Code Snippet (technical content) — ~8 ops
+#### Receta F — Snippet de Código (contenido técnico) — ~8 ops
 
-**Layout:** dark frame, title + code block
+**Layout:** frame oscuro, título + bloque de código
 
 ```javascript
-// Pencil: 1 batch_design call, 8 ops
+// Pencil: 1 llamada batch_design, 8 ops
 card=I(document,{type:"frame",name:"Social: Code",layout:"vertical",x:X,y:Y,width:1080,height:1080,fill:"#0d1117",padding:80,justifyContent:"center",gap:32})
 title=I(card,{type:"text",content:"// The fix that saved us 3h/day",fontFamily:"Inter",fontSize:28,fontWeight:"$fw-bold",fill:"#58a6ff"})
 block=I(card,{type:"frame",layout:"vertical",width:"fill_container",fill:"#161b22",cornerRadius:12,padding:40,stroke:{align:"inside",thickness:1,fill:"#30363d"}})
@@ -275,206 +275,206 @@ code=I(block,{type:"text",content:"// Before: N+1 query nightmare\nfor _, user :
 brand=I(card,{type:"text",content:"@handle",fontFamily:"Inter",fontSize:16,fontWeight:"$fw-bold",fill:"#c9d1d9",opacity:0.3,textAlign:"center"})
 ```
 
-### 4.6 Adapting Recipes
+### 4.6 Adaptar Recetas
 
-Recipes are starting points. For every post:
-1. **Set brand variables ONCE** — colors, fonts, accent via `set_variables` (Pencil) or variable collections (Figma). Don't hardcode per-recipe
-2. **Copy, don't rebuild** — if making variants (different sizes, A/B hooks), use `C()` on the first card and update content with `descendants` overrides
-3. **Adjust dimensions** per platform (1080x1080 square, 1080x1350 portrait, 1200x627 landscape) — change frame width/height only
-4. **Combine elements** — a stat card can include a small photo, a quote card can have a color block accent
+Las recetas son puntos de partida. Para cada post:
+1. **Establecer variables de marca UNA VEZ** — colores, fuentes, acento via `set_variables` (Pencil) o colecciones de variables (Figma). No hardcodear por receta
+2. **Copiar, no reconstruir** — si se hacen variantes (diferentes tamaños, hooks A/B), usar `C()` en la primera tarjeta y actualizar contenido con overrides de `descendants`
+3. **Ajustar dimensiones** por plataforma (1080x1080 cuadrado, 1080x1350 vertical, 1200x627 horizontal) — cambiar solo el ancho/alto del frame
+4. **Combinar elementos** — una tarjeta de estadística puede incluir una foto pequeña, una tarjeta de cita puede tener un bloque de color de acento
 
-### 4.7 Exporting
+### 4.7 Exportar
 
-**Pencil:** use `export_nodes` to export the frame as PNG/JPG
-**Figma:** export the frame via `use_figma` export API
+**Pencil:** usar `export_nodes` para exportar el frame como PNG/JPG
+**Figma:** exportar el frame via la API de exportación de `use_figma`
 
-Output formats:
-- **PNG** for quality (statements, graphics, code)
-- **JPG** for photos (photo overlays, real images)
-- **PDF** for LinkedIn carousels (multi-page document)
+Formatos de salida:
+- **PNG** para calidad (declaraciones, gráficos, código)
+- **JPG** para fotos (overlays de fotos, imágenes reales)
+- **PDF** para carruseles de LinkedIn (documento multipágina)
 
-### 4.8 AI Image Prompts (for editorial/abstract imagery)
+### 4.8 Prompts para Imágenes con IA (para imágenes editoriales/abstractas)
 
-When the content needs a real photo or illustration that can't be built with design tools:
+Cuando el contenido necesita una foto real o ilustración que no se puede construir con herramientas de diseño:
 
 ```markdown
-**Tool:** DALL-E 3 / Stable Diffusion XL
-**Prompt:** "[composition, lighting, colors, style, mood]"
-**Negative prompt:** "text, watermark, blurry, low quality" (SD only)
-**Size:** [platform dimensions]
+**Herramienta:** DALL-E 3 / Stable Diffusion XL
+**Prompt:** "[composición, iluminación, colores, estilo, mood]"
+**Negative prompt:** "text, watermark, blurry, low quality" (solo SD)
+**Tamaño:** [dimensiones de la plataforma]
 ```
 
-Rules:
-- No text in AI images (unreliable rendering)
-- Specify brand colors in the prompt
-- Describe composition, not just subjects
-- Always specify: camera angle, lighting type, color palette, mood
-- For people: describe scenario/action, not just "person at desk"
+Reglas:
+- Sin texto en imágenes de IA (renderizado no confiable)
+- Especificar colores de marca en el prompt
+- Describir la composición, no solo los sujetos
+- Especificar siempre: ángulo de cámara, tipo de iluminación, paleta de colores, mood
+- Para personas: describir escenario/acción, no solo "persona en escritorio"
 
-### 4.9 Efficiency Rules
+### 4.9 Reglas de Eficiencia
 
-1. **`include_schema: true` ONCE** — first `get_editor_state` only. All subsequent: `include_schema: false`
-2. **Load guidelines ONCE** — `get_guidelines("style", ...)` at start, not per asset
-3. **Set variables ONCE** — brand tokens upfront, reuse across all cards
-4. **Max 25 ops per `batch_design`** — all social recipes fit in 1 call (6-10 ops each)
-5. **Copy for variants** — `C("cardId", document, {name: "Variant", positionDirection: "right", positionPadding: 50})` then override content via `descendants`
-6. **Verify with `get_screenshot`** — once after building, not after every operation
-7. **No redundant reads** — don't `batch_get` nodes you just created (you have the IDs from the insert response)
-8. **Total budget for 1 social asset:** 2-3 tool calls max (setup + build + export)
+1. **`include_schema: true` UNA VEZ** — solo en el primer `get_editor_state`. Todos los siguientes: `include_schema: false`
+2. **Cargar guidelines UNA VEZ** — `get_guidelines("style", ...)` al inicio, no por asset
+3. **Establecer variables UNA VEZ** — tokens de marca al inicio, reutilizar en todas las tarjetas
+4. **Máx 25 ops por `batch_design`** — todas las recetas de social caben en 1 llamada (6-10 ops cada una)
+5. **Copiar para variantes** — `C("cardId", document, {name: "Variant", positionDirection: "right", positionPadding: 50})` y luego sobrescribir contenido via `descendants`
+6. **Verificar con `get_screenshot`** — una vez después de construir, no después de cada operación
+7. **Sin lecturas redundantes** — no usar `batch_get` en nodos que acabas de crear (tienes los IDs de la respuesta de inserción)
+8. **Presupuesto total para 1 asset social:** máx 2-3 llamadas a herramientas (setup + build + export)
 
 ---
 
-## 5. Platform References
+## 5. Referencias por Plataforma
 
 ### LinkedIn
 
-**Dimensions:**
+**Dimensiones:**
 
-| Format | Size | When |
+| Formato | Tamaño | Cuándo |
 |--------|------|------|
-| Single image | 1200 x 627 px | Standard posts |
-| Square | 1080 x 1080 px | Bold statements |
-| Carousel | 1080 x 1350 px (4:5) | Sequential content (max 3-5 slides) |
-| Banner | 1584 x 396 px | Profile header |
+| Imagen única | 1200 x 627 px | Posts estándar |
+| Cuadrado | 1080 x 1080 px | Declaraciones en negrita |
+| Carrusel | 1080 x 1350 px (4:5) | Contenido secuencial (máx 3-5 slides) |
+| Banner | 1584 x 396 px | Encabezado de perfil |
 
-**Algorithm (2025-2026):**
+**Algoritmo (2025-2026):**
 
-Ranking signals by weight:
-1. **Saves** — #1 signal. Write reference-value content worth bookmarking
-2. **Thoughtful comments** (3+ sentences) — 15x heavier than likes
-3. **Dwell time** — carousels and long-form text win
-4. **Shares** — secondary but strong
-5. **Clicks** — count but links in body get deprioritized
+Señales de ranking por peso:
+1. **Guardados** — señal #1. Escribir contenido de referencia digno de guardar
+2. **Comentarios reflexivos** (3+ oraciones) — 15x más peso que los likes
+3. **Tiempo de visualización** — carruseles y texto largo ganan
+4. **Compartidos** — secundario pero fuerte
+5. **Clics** — cuentan pero los links en el cuerpo son deprioritzados
 
-Distribution:
-- Tests with 2-5% of network first
-- **First hour is critical** — reply to every comment
-- Only 5% of underperforming posts recover
-- Extended window: 3-8 hours
+Distribución:
+- Prueba con el 2-5% de la red primero
+- **La primera hora es crítica** — responder a cada comentario
+- Solo el 5% de los posts con bajo rendimiento se recuperan
+- Ventana extendida: 3-8 horas
 
-Penalized:
-- External links in post body → say "Link in comments"
-- Engagement bait → NLP detection penalizes
-- Editing within 10 min → resets distribution
-- Tagging non-engagers
-- More than 1 post/day → cannibalization
+Penalizado:
+- Links externos en el cuerpo del post → decir "Link in comments"
+- Engagement bait → detección por NLP penaliza
+- Editar dentro de los primeros 10 min → resetea la distribución
+- Etiquetar personas que no interactúan
+- Más de 1 post/día → canibalización
 
-**Post formats ranked:**
+**Formatos de post clasificados:**
 
-| Format | Engagement | Best for |
+| Formato | Engagement | Ideal para |
 |--------|-----------|----------|
-| Document/Carousel | 3x | Tutorials, lists, comparisons |
-| Multi-image | 2.5x | Before/after, showcases |
-| Long-form text | 2x | Stories, thought leadership |
-| Native video (30-90s) | 1.4x | Demos, walkthroughs |
-| Single image + text | 1x | Announcements |
-| Text only (short) | 0.7x | Quick thoughts |
-| Link post | 0.5x | Avoid |
+| Documento/Carrusel | 3x | Tutoriales, listas, comparaciones |
+| Multi-imagen | 2.5x | Antes/después, showcases |
+| Texto largo | 2x | Historias, thought leadership |
+| Video nativo (30-90s) | 1.4x | Demos, walkthroughs |
+| Imagen única + texto | 1x | Anuncios |
+| Solo texto (corto) | 0.7x | Pensamientos rápidos |
+| Post con link | 0.5x | Evitar |
 
-**Post length:**
-- Text: 1,000-1,300 characters
-- With image: 500-800 characters
-- Carousel caption: 300-500 characters
+**Longitud de post:**
+- Texto: 1,000-1,300 caracteres
+- Con imagen: 500-800 caracteres
+- Caption de carrusel: 300-500 caracteres
 
-**Engagement strategy:**
-1. Post → immediately add link as first comment
-2. Reply to every comment in first 60 minutes
-3. Ask follow-up questions in replies
-4. 3-5 posts/week, never >1/day
-5. Best times: Tue-Thu, 8-10 AM audience timezone
+**Estrategia de engagement:**
+1. Publicar → agregar inmediatamente el link como primer comentario
+2. Responder a cada comentario en los primeros 60 minutos
+3. Hacer preguntas de seguimiento en las respuestas
+4. 3-5 posts/semana, nunca >1/día
+5. Mejores horarios: Mar-Jue, 8-10 AM en la zona horaria de la audiencia
 
-**Hashtags:** nearly irrelevant. Max 3-5 at end if used. Algorithm reads text via NLP.
+**Hashtags:** casi irrelevantes. Máx 3-5 al final si se usan. El algoritmo lee el texto via NLP.
 
 ### Instagram
 
-**Dimensions:**
+**Dimensiones:**
 
-| Format | Size | When |
+| Formato | Tamaño | Cuándo |
 |--------|------|------|
-| Square | 1080 x 1080 px | Feed posts |
-| Portrait | 1080 x 1350 px | Feed posts (more real estate) |
-| Story/Reel | 1080 x 1920 px (9:16) | Stories and Reels |
-| Carousel | 1080 x 1080 px | Multi-slide (prefer 3-5) |
+| Cuadrado | 1080 x 1080 px | Posts de feed |
+| Vertical | 1080 x 1350 px | Posts de feed (más espacio en pantalla) |
+| Story/Reel | 1080 x 1920 px (9:16) | Stories y Reels |
+| Carrusel | 1080 x 1080 px | Multi-slide (preferir 3-5) |
 
-**Key differences from LinkedIn:**
-- Visual-first — image quality matters more than text
-- Hashtags still relevant (15-20, mix of sizes)
-- Reels > static for reach
-- Caption can be longer but front-load value
-- Link in bio (no clickable links in posts)
+**Diferencias clave con LinkedIn:**
+- Visual primero — la calidad de la imagen importa más que el texto
+- Los hashtags siguen siendo relevantes (15-20, mezcla de tamaños)
+- Reels > estático para alcance
+- El caption puede ser más largo pero hay que poner el valor al inicio
+- Link en bio (sin links clicables en posts)
 
 ### Twitter/X
 
-**Dimensions:**
+**Dimensiones:**
 
-| Format | Size | When |
+| Formato | Tamaño | Cuándo |
 |--------|------|------|
-| Single image | 1200 x 675 px (16:9) | Standard tweets |
-| Square | 1200 x 1200 px | Bold statements |
+| Imagen única | 1200 x 675 px (16:9) | Tweets estándar |
+| Cuadrado | 1200 x 1200 px | Declaraciones en negrita |
 
-**Key differences:**
-- Short and punchy — 280 chars constraint shapes style
-- Threads for depth (but each tweet must stand alone)
-- Engagement happens fast — first 30 min matter most
-- Retweets > likes for distribution
-- Quote tweets spark discussion
+**Diferencias clave:**
+- Corto y directo — la limitación de 280 chars da forma al estilo
+- Hilos para profundidad (pero cada tweet debe sostenerse solo)
+- El engagement ocurre rápido — los primeros 30 min importan más
+- Retweets > likes para distribución
+- Los quote tweets generan discusión
 
-### General Rules (all platforms)
+### Reglas Generales (todas las plataformas)
 
 - **RGB**, 72 DPI
-- **Min text:** 22px body, 36px headings
-- **Padding:** 80px all sides
-- **Safe zone:** keep key content within central area
-- **PNG** for quality, **JPG** for photos, **PDF** for LinkedIn carousels
-- **Max 10 MB** for optimal mobile loading
+- **Texto mínimo:** 22px cuerpo, 36px encabezados
+- **Padding:** 80px en todos los lados
+- **Zona segura:** mantener el contenido clave dentro del área central
+- **PNG** para calidad, **JPG** para fotos, **PDF** para carruseles de LinkedIn
+- **Máx 10 MB** para carga óptima en móvil
 
 ---
 
-## 6. Content Calendar Template
+## 6. Plantilla de Calendario de Contenido
 
-| Day | Type | Goal |
+| Día | Tipo | Objetivo |
 |-----|------|------|
-| Monday | Thought leadership / contrarian take | Discussion, comments |
-| Tuesday | Tutorial / how-to | Saves, reference value |
-| Thursday | Behind the scenes / personal story | Connection, shares |
-| Friday | Milestone / community spotlight | Reach, amplification |
+| Lunes | Thought leadership / opinión contraria | Discusión, comentarios |
+| Martes | Tutorial / cómo hacer | Guardados, valor de referencia |
+| Jueves | Detrás de escenas / historia personal | Conexión, compartidos |
+| Viernes | Hito / spotlight de comunidad | Alcance, amplificación |
 
 ---
 
-## 7. Anti-Patterns
+## 7. Anti-Patrones
 
-- **10 slides when 1 works** — more ≠ better
-- **Text wall on image** — paragraphs go in the post body, not the image
-- **Rainbow colors** — one accent, not a palette explosion
-- **Decoration without purpose** — every element must communicate
-- **Stock photo generic** — better no image than a generic stock photo
-- **Tiny text** — if not readable on phone at arm's length, too small
-- **Multiple focal points** — one dominant element, rest supports
-- **Repeating the post in the image** — image should ADD information, not echo
-- **Corporate fluff in copy** — no "excited to announce", no "revolutionary"
-- **Link in post body** (LinkedIn) — always in comments
+- **10 slides cuando 1 funciona** — más ≠ mejor
+- **Muro de texto en imagen** — los párrafos van en el cuerpo del post, no en la imagen
+- **Colores arcoíris** — un acento, no una explosión de paleta
+- **Decoración sin propósito** — cada elemento debe comunicar
+- **Foto stock genérica** — mejor sin imagen que una foto stock genérica
+- **Texto diminuto** — si no se puede leer en el teléfono a distancia del brazo, es muy pequeño
+- **Múltiples puntos focales** — un elemento dominante, el resto apoya
+- **Repetir el post en la imagen** — la imagen debe AGREGAR información, no hacer eco
+- **Relleno corporativo en el copy** — sin "excited to announce", sin "revolutionary"
+- **Link en el cuerpo del post** (LinkedIn) — siempre en los comentarios
 
 ---
 
-## 8. Anti-AI Voice (MANDATORY)
+## 8. Voz Anti-IA (OBLIGATORIO)
 
-Source: [Wikipedia — Signs of AI Writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), cross-referenced with industry research on AI content detection (2025-2026).
+Fuente: [Wikipedia — Signs of AI Writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), cruzado con investigación de la industria sobre detección de contenido IA (2025-2026).
 
-**Why this matters:** 50%+ of LinkedIn posts are AI-generated. Readers have developed an internal detector — text that is too smooth, too balanced, too careful reads as AI. Human-written posts outperform AI-detected posts by 40-44% in engagement. If it sounds like AI, people scroll past.
+**Por qué importa:** más del 50% de los posts en LinkedIn son generados por IA. Los lectores han desarrollado un detector interno — el texto demasiado fluido, demasiado equilibrado, demasiado cuidadoso se lee como IA. Los posts escritos por humanos superan a los posts detectados como IA en un 40-44% de engagement. Si suena como IA, la gente hace scroll sin parar.
 
-### 8.1 Banned Words
+### 8.1 Palabras Prohibidas
 
-These words are statistical red flags — LLMs use them 10-100x more than humans. **NEVER use them.**
+Estas palabras son señales estadísticas de alerta — los LLMs las usan 10-100x más que los humanos. **NUNCA usarlas.**
 
-**Verbs:** delve, leverage, utilize, harness, streamline, underscore, foster, garner, showcase, bolster, enhance, optimize, elevate, empower, navigate (as metaphor), embark, endeavour, revolutionize, redefine, unleash, cultivate, encompass
+**Verbos:** delve, leverage, utilize, harness, streamline, underscore, foster, garner, showcase, bolster, enhance, optimize, elevate, empower, navigate (como metáfora), embark, endeavour, revolutionize, redefine, unleash, cultivate, encompass
 
-**Adjectives:** pivotal, robust, innovative, seamless, cutting-edge, groundbreaking, transformative, meticulous, vibrant, intricate, holistic, versatile, comprehensive, unparalleled, commendable, pioneering, trailblazing, frictionless, next-gen, adaptive, data-driven
+**Adjetivos:** pivotal, robust, innovative, seamless, cutting-edge, groundbreaking, transformative, meticulous, vibrant, intricate, holistic, versatile, comprehensive, unparalleled, commendable, pioneering, trailblazing, frictionless, next-gen, adaptive, data-driven
 
-**Nouns:** landscape, realm, tapestry, synergy, testament, paradigm, underpinnings, interplay, intricacies, ecosystem (unless literal biology)
+**Sustantivos:** landscape, realm, tapestry, synergy, testament, paradigm, underpinnings, interplay, intricacies, ecosystem (a menos que sea biología literal)
 
-**Adverbs:** meticulously, crucially, importantly, additionally, furthermore, moreover
+**Adverbios:** meticulously, crucially, importantly, additionally, furthermore, moreover
 
-**Filler phrases (instant AI detection):**
+**Frases de relleno (detección de IA instantánea):**
 - "In today's [digital/modern/fast-paced] landscape/world"
 - "It's worth noting that..."
 - "This is not just X, it's Y"
@@ -488,66 +488,66 @@ These words are statistical red flags — LLMs use them 10-100x more than humans
 - "It goes without saying"
 - "Think about it"
 
-### 8.2 Banned Structural Patterns
+### 8.2 Patrones Estructurales Prohibidos
 
-| Pattern | What it looks like | Why it's a tell |
+| Patrón | Cómo se ve | Por qué es una señal |
 |---------|-------------------|-----------------|
-| **Rule of three** | "fast, reliable, and scalable" | LLMs default to triplets obsessively |
-| **Not just X, but Y** | "It's not just a tool, it's a revolution" | Signature LLM contrast structure |
-| **Elegant variation** | Using 5 synonyms for one thing to avoid repetition | Humans repeat words naturally |
-| **Copula avoidance** | "serves as", "stands as", "represents" instead of "is" | Humans say "is" — AI avoids it |
-| **Present participle analysis** | "...highlighting the importance of..." | Vague attribution via -ing phrases |
-| **Symmetrical paragraphs** | Every paragraph is exactly 2-3 sentences, same rhythm | Human writing has irregular rhythm |
-| **Escalating list** | Each point slightly more dramatic than the last | AI builds to a crescendo; humans don't |
-| **Summary conclusion** | Restating everything said in the post | Humans end with a punch, not a recap |
-| **Em dash overuse** | Three+ em dashes per paragraph | Humans use them sparingly |
-| **Excessive transitions** | "Additionally", "Furthermore", "Moreover" between every point | Humans jump between ideas without signposting |
+| **Regla de tres** | "fast, reliable, and scalable" | Los LLMs por defecto usan tripletas obsesivamente |
+| **Not just X, but Y** | "It's not just a tool, it's a revolution" | Estructura de contraste característica de LLMs |
+| **Variación elegante** | Usar 5 sinónimos para una cosa para evitar repetición | Los humanos repiten palabras naturalmente |
+| **Evitar la cópula** | "serves as", "stands as", "represents" en lugar de "is" | Los humanos dicen "is" — la IA lo evita |
+| **Análisis en participio presente** | "...highlighting the importance of..." | Atribución vaga via frases en -ing |
+| **Párrafos simétricos** | Cada párrafo tiene exactamente 2-3 oraciones, mismo ritmo | La escritura humana tiene ritmo irregular |
+| **Lista escalada** | Cada punto un poco más dramático que el anterior | La IA construye hasta un crescendo; los humanos no |
+| **Conclusión resumen** | Reafirmar todo lo dicho en el post | Los humanos terminan con un golpe, no con un resumen |
+| **Abuso del guión em** | Tres o más guiones em por párrafo | Los humanos los usan con moderación |
+| **Transiciones excesivas** | "Additionally", "Furthermore", "Moreover" entre cada punto | Los humanos saltan entre ideas sin señalizaciones |
 
-### 8.3 Banned Tone Patterns
+### 8.3 Patrones de Tono Prohibidos
 
-- **Promotional superlatives** — "best", "most powerful", "industry-leading", "world-class" without evidence
-- **Vague authority claims** — "experts agree", "research shows", "studies indicate" without citing anything specific
-- **Emotional inflation** — everything is "incredible", "amazing", "mind-blowing"
-- **False humility** — "I'm just a [role] who..." before flex
-- **Sycophantic framing** — "What an incredible journey" / "I'm so grateful for..."
-- **Wisdom broadcasting** — "Here's what I learned:" followed by generic advice anyone could give
-- **Performative vulnerability** — opening with fake struggle that resolves too neatly
+- **Superlativos promocionales** — "best", "most powerful", "industry-leading", "world-class" sin evidencia
+- **Afirmaciones de autoridad vagas** — "experts agree", "research shows", "studies indicate" sin citar nada específico
+- **Inflación emocional** — todo es "incredible", "amazing", "mind-blowing"
+- **Falsa humildad** — "I'm just a [role] who..." antes de un flex
+- **Encuadre adulador** — "What an incredible journey" / "I'm so grateful for..."
+- **Difusión de sabiduría** — "Here's what I learned:" seguido de consejo genérico que cualquiera podría dar
+- **Vulnerabilidad performativa** — abrir con una lucha falsa que se resuelve demasiado perfectamente
 
-### 8.4 Human Voice Techniques
+### 8.4 Técnicas de Voz Humana
 
-**How real humans actually write on social media:**
+**Cómo los humanos realmente escriben en redes sociales:**
 
-1. **Irregular rhythm** — mix short punchy sentences with longer ones. "Broke it. Then spent three hours figuring out why the whole pipeline was down because one config value was wrong."
-2. **Specific over general** — "Tuesday at 2am" not "late at night". "Postgres" not "database". "$4,200" not "significant savings"
-3. **Contractions always** — "don't", "can't", "it's", "we're". Never "do not", "cannot", "it is" in social copy
-4. **Incomplete thoughts** — humans trail off, leave gaps, start sentences with "And" or "But"
-5. **Plain verbs** — "use" not "utilize", "show" not "showcase", "help" not "empower", "improve" not "enhance", "start" not "embark"
-6. **One voice throughout** — don't shift between casual and formal. Pick a register and stay there
-7. **Real reactions** — "honestly didn't expect that" beats "the results were remarkable"
-8. **Colloquial connectors** — "so", "anyway", "turns out", "honestly" instead of "furthermore", "additionally", "moreover"
-9. **Opinions without hedging** — "this is wrong" not "this might not be the best approach". Humans commit to positions
-10. **Imperfect structure** — not every paragraph needs to be the same length. Not every post needs a tidy ending
+1. **Ritmo irregular** — mezclar oraciones cortas y directas con oraciones más largas. "Broke it. Then spent three hours figuring out why the whole pipeline was down because one config value was wrong."
+2. **Específico sobre general** — "Tuesday at 2am" no "late at night". "Postgres" no "database". "$4,200" no "significant savings"
+3. **Contracciones siempre** — "don't", "can't", "it's", "we're". Nunca "do not", "cannot", "it is" en copy de social
+4. **Pensamientos incompletos** — los humanos se van por las ramas, dejan huecos, empiezan oraciones con "And" o "But"
+5. **Verbos simples** — "use" no "utilize", "show" no "showcase", "help" no "empower", "improve" no "enhance", "start" no "embark"
+6. **Una voz coherente** — no cambiar entre casual y formal. Elegir un registro y mantenerlo
+7. **Reacciones reales** — "honestly didn't expect that" es mejor que "the results were remarkable"
+8. **Conectores coloquiales** — "so", "anyway", "turns out", "honestly" en lugar de "furthermore", "additionally", "moreover"
+9. **Opiniones sin vacilar** — "this is wrong" no "this might not be the best approach". Los humanos se comprometen con posiciones
+10. **Estructura imperfecta** — no todos los párrafos necesitan tener la misma longitud. No todos los posts necesitan un final ordenado
 
-### 8.5 Self-Review Checklist (run BEFORE presenting draft)
+### 8.5 Checklist de Auto-Revisión (ejecutar ANTES de presentar el borrador)
 
-After writing every draft, scan it against this checklist. If ANY item fails, rewrite that part.
+Después de escribir cada borrador, escanearlo contra este checklist. Si CUALQUIER ítem falla, reescribir esa parte.
 
 ```
-[ ] No banned words from 8.1 appear in the text
-[ ] No banned structural patterns from 8.2
-[ ] No banned tone patterns from 8.3
-[ ] Uses contractions throughout (don't, can't, it's)
-[ ] Has irregular sentence rhythm (not all sentences same length)
-[ ] Contains at least one specific detail (name, number, date, place)
-[ ] Could pass as written by the user, not by an AI assistant
-[ ] Read it out loud — does it sound like someone talking?
-[ ] No sentence starts with "This is" or "It is" followed by an adjective
-[ ] The ending is a punch or CTA, not a summary of what was said
-[ ] No more than one em dash per paragraph
+[ ] No aparecen palabras prohibidas del 8.1 en el texto
+[ ] Sin patrones estructurales prohibidos del 8.2
+[ ] Sin patrones de tono prohibidos del 8.3
+[ ] Usa contracciones a lo largo (don't, can't, it's)
+[ ] Tiene ritmo de oraciones irregular (no todas las oraciones del mismo largo)
+[ ] Contiene al menos un detalle específico (nombre, número, fecha, lugar)
+[ ] Podría pasar como escrito por el usuario, no por un asistente de IA
+[ ] Leerlo en voz alta — ¿suena como alguien hablando?
+[ ] Ninguna oración empieza con "This is" o "It is" seguido de un adjetivo
+[ ] El final es un golpe o CTA, no un resumen de lo dicho
+[ ] No más de un guión em por párrafo
 ```
 
-### 8.6 The Ultimate Test
+### 8.6 La Prueba Definitiva
 
-Read the draft and ask: **"Would I cringe if someone replied 'nice ChatGPT post' to this?"**
+Leer el borrador y preguntarse: **"¿Me daría vergüenza si alguien respondiera 'nice ChatGPT post' a esto?"**
 
-If yes — rewrite. A human wrote this. It should read like a human wrote this.
+Si sí — reescribir. Un humano escribió esto. Debe leerse como si un humano lo hubiera escrito.

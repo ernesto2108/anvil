@@ -1,4 +1,4 @@
-# React (JS/TS) Review Checklist
+# Checklist de Revisión React (JS/TS)
 
 ## Correctness
 

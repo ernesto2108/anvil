@@ -1,71 +1,71 @@
-# Coding Rules
+# Reglas de Codificación
 
-## Strict Mode Settings
+## Configuración de Strict Mode
 
-Always enable these in `tsconfig.json`. The `"strict": true` umbrella flag is not enough:
+Siempre habilitar estas opciones en `tsconfig.json`. El flag umbrella `"strict": true` no es suficiente:
 
 ```jsonc
 {
   "compilerOptions": {
-    "strict": true,                        // enables 8 strict checks
-    "noUncheckedIndexedAccess": true,      // arr[0] is T | undefined, not T
+    "strict": true,                        // habilita 8 verificaciones estrictas
+    "noUncheckedIndexedAccess": true,      // arr[0] es T | undefined, no T
     "exactOptionalPropertyTypes": true,    // { a?: string } ≠ { a: string | undefined }
-    "noImplicitReturns": true,             // every code path must return
-    "noFallthroughCasesInSwitch": true,    // switch exhaustion
-    "noUncheckedSideEffectImports": true   // TS 5.6+: explicit side-effect imports
+    "noImplicitReturns": true,             // cada camino de código debe retornar
+    "noFallthroughCasesInSwitch": true,    // exhaustividad de switch
+    "noUncheckedSideEffectImports": true   // TS 5.6+: imports de efectos secundarios explícitos
   }
 }
 ```
 
-Never disable `strictNullChecks` per-file. If you must opt out of a single check, use a scoped `@ts-expect-error` with a reason.
+Nunca deshabilitar `strictNullChecks` por archivo. Si es necesario omitir una sola verificación, usar un `@ts-expect-error` con alcance específico y motivo.
 
-## `satisfies` Operator
+## Operador `satisfies`
 
-Use `satisfies` to validate a value against a type without widening the inferred type. This is especially useful for config objects and literal type narrowing.
+Usar `satisfies` para validar un valor contra un tipo sin ampliar el tipo inferido. Es especialmente útil para objetos de configuración y estrechamiento de tipos literales.
 
 ```typescript
-// WRONG: type assertion loses literal information
+// INCORRECTO: la aserción de tipo pierde información de literales
 const palette = {
   red: [255, 0, 0],
   green: "#00ff00",
 } as Record<string, string | number[]>;
-// palette.red is now string | number[], not [number, number, number]
+// palette.red ahora es string | number[], no [number, number, number]
 
-// RIGHT: satisfies validates without widening
+// CORRECTO: satisfies valida sin ampliar
 const palette = {
   red: [255, 0, 0],
   green: "#00ff00",
 } satisfies Record<string, string | number[]>;
-// palette.red is still [number, number, number]
-palette.red.at(0); // OK — tuple preserved
+// palette.red sigue siendo [number, number, number]
+palette.red.at(0); // OK — tupla preservada
 ```
 
 ## Const Assertions
 
-Use `as const` to freeze literal types for objects used as lookup tables or union sources.
+Usar `as const` para congelar tipos literales de objetos usados como tablas de lookup o fuentes de uniones.
 
 ```typescript
-// WRONG: type is { statuses: string[] }
+// INCORRECTO: el tipo es { statuses: string[] }
 const CONFIG = { statuses: ["active", "inactive"] };
 
-// RIGHT: type is { readonly statuses: readonly ["active", "inactive"] }
+// CORRECTO: el tipo es { readonly statuses: readonly ["active", "inactive"] }
 const CONFIG = { statuses: ["active", "inactive"] } as const;
 type Status = typeof CONFIG.statuses[number]; // "active" | "inactive"
 ```
 
-## Discriminated Unions (Not Enums)
+## Discriminated Unions (No Enums)
 
-Enums have poor ergonomics, are not tree-shakeable, and require an import to check values.
+Los enums tienen ergonomía pobre, no son tree-shakeable y requieren un import para verificar valores.
 
 ```typescript
-// WRONG: enum
+// INCORRECTO: enum
 enum Direction { Up = "UP", Down = "DOWN" }
 
-// RIGHT: const union — serializable, composable, no import needed at runtime
+// CORRECTO: unión const — serializable, composable, sin import necesario en tiempo de ejecución
 const DIRECTIONS = ["up", "down"] as const;
 type Direction = typeof DIRECTIONS[number]; // "up" | "down"
 
-// RIGHT: tagged union for algebraic types
+// CORRECTO: tagged union para tipos algebraicos
 type Result<T> =
   | { status: "ok"; data: T }
   | { status: "error"; code: string; message: string };
@@ -73,7 +73,7 @@ type Result<T> =
 function handle(result: Result<User>) {
   switch (result.status) {
     case "ok":
-      return result.data; // data: User — TypeScript narrows correctly
+      return result.data; // data: User — TypeScript estrecha correctamente
     case "error":
       return result.message; // message: string
   }
@@ -82,7 +82,7 @@ function handle(result: Result<User>) {
 
 ## Template Literal Types
 
-Use template literal types to express string constraints at the type level.
+Usar template literal types para expresar restricciones de string a nivel de tipos.
 
 ```typescript
 type EventName = `on${Capitalize<string>}`;
@@ -94,38 +94,38 @@ type RouteParam<T extends string> = T extends `${infer _}:${infer Param}/${infer
   : never;
 ```
 
-## `using` Declarations (Explicit Resource Management — TS 5.2+)
+## Declaraciones `using` (Gestión Explícita de Recursos — TS 5.2+)
 
-Use `using` for any resource that has a `[Symbol.dispose]()` method. Never rely on `try/finally` for cleanup when `using` is available.
+Usar `using` para cualquier recurso que tenga un método `[Symbol.dispose]()`. Nunca depender de `try/finally` para limpieza cuando `using` esté disponible.
 
 ```typescript
-// WRONG: manual cleanup, forgettable
+// INCORRECTO: limpieza manual, olvidable
 const handle = await openFile("data.csv");
 try {
   await processFile(handle);
 } finally {
-  handle.close(); // easy to forget or skip on early return
+  handle.close(); // fácil de olvidar o saltarse en un return temprano
 }
 
-// RIGHT: using — cleanup is guaranteed regardless of throw/return
+// CORRECTO: using — la limpieza está garantizada independientemente de throw/return
 await using handle = await openFile("data.csv");
-await processFile(handle); // handle.close() called automatically
+await processFile(handle); // handle.close() se llama automáticamente
 ```
 
 ## Branded / Nominal Types
 
-Use branded types to prevent mixing up values of the same primitive type (e.g., `UserId` vs `OrderId`).
+Usar branded types para prevenir mezclar valores del mismo tipo primitivo (e.g., `UserId` vs `OrderId`).
 
 ```typescript
-// WRONG: all just strings — easy to pass wrong id
+// INCORRECTO: todos son solo strings — fácil pasar el id equivocado
 function getOrder(userId: string, orderId: string) { ... }
 
-// RIGHT: branded types — compiler rejects wrong arguments
+// CORRECTO: branded types — el compilador rechaza argumentos incorrectos
 type UserId = string & { readonly __brand: unique symbol };
 type OrderId = string & { readonly __brand: unique symbol };
 
 function createUserId(raw: string): UserId {
-  return raw as UserId; // single casting point
+  return raw as UserId; // único punto de casting
 }
 
 function getOrder(userId: UserId, orderId: OrderId) { ... }
@@ -133,33 +133,33 @@ function getOrder(userId: UserId, orderId: OrderId) { ... }
 const uid = createUserId("u_123");
 const oid = createOrderId("o_456");
 getOrder(uid, oid);   // OK
-getOrder(oid, uid);   // TypeScript error
+getOrder(oid, uid);   // Error de TypeScript
 ```
 
-## `NoInfer<T>` Utility (TS 5.4+)
+## Utilitario `NoInfer<T>` (TS 5.4+)
 
-Use `NoInfer<T>` to block inference on a specific type parameter position, forcing callers to be explicit.
+Usar `NoInfer<T>` para bloquear la inferencia en una posición específica de parámetro de tipo, forzando a los callers a ser explícitos.
 
 ```typescript
-// WRONG: TS infers T from both positions, accepting wrong fallbacks
+// INCORRECTO: TS infiere T de ambas posiciones, aceptando fallbacks incorrectos
 function createStore<T>(initial: T, fallback: T): Store<T> { ... }
-createStore({ a: 1 }, { b: 2 }); // T inferred as { a?: number; b?: number }
+createStore({ a: 1 }, { b: 2 }); // T inferido como { a?: number; b?: number }
 
-// RIGHT: NoInfer blocks inference from fallback
+// CORRECTO: NoInfer bloquea la inferencia desde fallback
 function createStore<T>(initial: T, fallback: NoInfer<T>): Store<T> { ... }
-createStore({ a: 1 }, { b: 2 }); // Error: { b: number } not assignable to { a: number }
+createStore({ a: 1 }, { b: 2 }); // Error: { b: number } no asignable a { a: number }
 ```
 
-## Error Handling
+## Manejo de Errores
 
-Never throw raw strings. Never catch `any`. Libraries must not throw — return a `Result` type.
+Nunca lanzar strings crudos. Nunca capturar `any`. Las librerías no deben lanzar excepciones — retornar un tipo `Result`.
 
 ```typescript
-// WRONG: throw string, catch any
+// INCORRECTO: lanzar string, capturar any
 throw "something went wrong";
 catch (e: any) { console.log(e.message) }
 
-// RIGHT: typed errors with discriminated result
+// CORRECTO: errores tipados con resultado discriminado
 type AppError =
   | { kind: "not-found"; resource: string }
   | { kind: "unauthorized" }
@@ -167,7 +167,7 @@ type AppError =
 
 type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 
-// Library code — never throws, always returns Result
+// Código de librería — nunca lanza, siempre retorna Result
 function parseConfig(raw: unknown): Result<Config> {
   const parsed = configSchema.safeParse(raw);
   if (!parsed.success) {
@@ -176,11 +176,11 @@ function parseConfig(raw: unknown): Result<Config> {
   return { ok: true, value: parsed.data };
 }
 
-// Catch with unknown — always narrow before using
+// Capturar con unknown — siempre estrechar antes de usar
 try {
   await fetch(url);
 } catch (e: unknown) {
   if (e instanceof TypeError) { ... }
-  throw e; // re-throw what you can't handle
+  throw e; // re-lanzar lo que no puedes manejar
 }
 ```

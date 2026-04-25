@@ -1,10 +1,10 @@
-# Flutter Architecture Guide
+# Guía de Arquitectura Flutter
 
-## MVVM + Clean Architecture (Google Official)
+## MVVM + Clean Architecture (Oficial de Google)
 
-Google officially recommends MVVM with layered architecture. Proven at scale by BMW (300 devs), Nubank (90M+ users), ByteDance (700+ devs).
+Google recomienda oficialmente MVVM con arquitectura por capas. Probado a escala por BMW (300 devs), Nubank (90M+ usuarios), ByteDance (700+ devs).
 
-### Layers
+### Capas
 
 ```
 ┌─────────────────────────────────┐
@@ -16,15 +16,15 @@ Google officially recommends MVVM with layered architecture. Proven at scale by 
 └─────────────────────────────────┘
 ```
 
-### Relationships
+### Relaciones
 
-- **Views ↔ ViewModels**: one-to-one per feature
-- **ViewModels ↔ Repositories**: many-to-many
-- **Services**: hold NO state — pure data-loading wrappers
-- **Repositories**: never interact with each other — combine data in ViewModels or domain layer
-- Imports are **directional inward** — UI → Domain → Data, never reverse
+- **Views ↔ ViewModels**: uno-a-uno por feature
+- **ViewModels ↔ Repositories**: muchos-a-muchos
+- **Services**: NO tienen estado — solo wrappers de carga de datos
+- **Repositories**: nunca interactúan entre sí — combinar datos en ViewModels o capa de dominio
+- Las importaciones son **direccionales hacia adentro** — UI → Domain → Data, nunca al revés
 
-### Folder Structure — Feature-First
+### Estructura de Carpetas — Feature-First
 
 ```
 lib/
@@ -48,13 +48,13 @@ lib/
 test/                             # mirrors lib/ structure
 ```
 
-Not every feature needs all folders — only include what's necessary.
+No todos los features necesitan todas las carpetas — incluir solo lo necesario.
 
 ---
 
-## Error Handling — Result Pattern (Google Official)
+## Manejo de Errores — Patrón Result (Oficial de Google)
 
-Repositories return `Result<T>`, never throw. ViewModels/BLoCs switch on Result.
+Los repositorios retornan `Result<T>`, nunca lanzan excepciones. Los ViewModels/BLoCs hacen switch sobre Result.
 
 ```dart
 sealed class Result<T> {
@@ -74,7 +74,7 @@ final class Error<T> extends Result<T> {
 }
 ```
 
-### Usage with Pattern Matching
+### Uso con Pattern Matching
 
 ```dart
 final result = await userRepository.getProfile(id);
@@ -86,14 +86,14 @@ switch (result) {
 }
 ```
 
-### Error Flow by Layer
+### Flujo de Errores por Capa
 
-| Layer | Error Handling |
+| Capa | Manejo de errores |
 |---|---|
-| **Service** | May throw (HTTP errors, parsing) |
-| **Repository** | Catches service exceptions, returns `Result.error()` |
-| **ViewModel/BLoC** | Switches on `Result`, never try/catch |
-| **Widget** | Renders based on state (loading/success/error) |
+| **Service** | Puede lanzar (errores HTTP, parseo) |
+| **Repository** | Captura excepciones del service, retorna `Result.error()` |
+| **ViewModel/BLoC** | Hace switch sobre `Result`, nunca try/catch |
+| **Widget** | Renderiza según el estado (loading/success/error) |
 
 ```dart
 // repository
@@ -128,17 +128,17 @@ Future<void> loadUser(String id) async {
 
 ---
 
-## Code Generation Stack
+## Stack de Generación de Código
 
-| Package | Purpose |
+| Paquete | Propósito |
 |---------|---------|
-| **freezed** | Immutable data classes, copyWith, equality, sealed unions |
-| **json_serializable** | JSON serialization/deserialization |
-| **injectable** | DI configuration generation |
-| **auto_route** | Route generation (if not using GoRouter) |
-| **build_runner** | Orchestrates all code generation |
+| **freezed** | Clases de datos inmutables, copyWith, igualdad, sealed unions |
+| **json_serializable** | Serialización/deserialización JSON |
+| **injectable** | Generación de configuración de DI |
+| **auto_route** | Generación de rutas (si no se usa GoRouter) |
+| **build_runner** | Orquesta toda la generación de código |
 
-### Domain Entity with Freezed
+### Entidad de Dominio con Freezed
 
 ```dart
 @freezed
@@ -152,7 +152,7 @@ class User with _$User {
 }
 ```
 
-### DTO with json_serializable
+### DTO con json_serializable
 
 ```dart
 @JsonSerializable()
@@ -177,19 +177,19 @@ class UserDto {
 }
 ```
 
-### Two DTO Layers
+### Dos Capas de DTO
 
-- **Domain entities** (`freezed`): immutable, no serialization annotations
-- **DTOs** (`json_serializable`): serialization, `toDomain()` mapper
-- Never mix — domain entities don't know about JSON
+- **Entidades de dominio** (`freezed`): inmutables, sin anotaciones de serialización
+- **DTOs** (`json_serializable`): serialización, mapper `toDomain()`
+- Nunca mezclar — las entidades de dominio no saben de JSON
 
-Run `dart run build_runner watch` during development.
+Ejecutar `dart run build_runner watch` durante el desarrollo.
 
 ---
 
-## Dependency Injection
+## Inyección de Dependencias
 
-### get_it + injectable (Enterprise Standard)
+### get_it + injectable (Estándar Enterprise)
 
 ```dart
 @module
@@ -216,7 +216,7 @@ void main() {
 final bloc = getIt<AuthBloc>();
 ```
 
-### Environment-Specific Registration
+### Registro por Entorno
 
 ```dart
 @Environment('dev')
@@ -228,7 +228,7 @@ class MockAuthRepository implements AuthRepository { ... }
 class AuthRepositoryImpl implements AuthRepository { ... }
 ```
 
-### Riverpod DI (Alternative)
+### DI con Riverpod (Alternativa)
 
 ```dart
 @riverpod
@@ -239,7 +239,7 @@ AuthRepository authRepository(Ref ref) {
 
 ---
 
-## Navigation — GoRouter
+## Navegación — GoRouter
 
 ```dart
 final router = GoRouter(
@@ -270,18 +270,18 @@ final router = GoRouter(
 );
 ```
 
-### Rules
+### Reglas
 
-- `StatefulShellRoute` for bottom nav with independent stacks (preserves state per tab)
-- Declarative with URL synchronization
+- `StatefulShellRoute` para navegación inferior con stacks independientes (preserva estado por tab)
+- Declarativo con sincronización de URL
 - Deep linking out of the box
-- Redirect guards for auth: `redirect: (context, state) => isLoggedIn ? null : '/login'`
+- Guards de redirección para auth: `redirect: (context, state) => isLoggedIn ? null : '/login'`
 
 ---
 
-## Platform-Specific Code
+## Código Específico de Plataforma
 
-### Simple Cases — MethodChannel
+### Casos Simples — MethodChannel
 
 ```dart
 const platform = MethodChannel('com.example/native');
@@ -296,20 +296,20 @@ Future<String> getBatteryLevel() async {
 }
 ```
 
-### Complex Cases — Federated Plugin Architecture
+### Casos Complejos — Arquitectura de Plugin Federado
 
-1. **Platform Interface Package**: abstract interface
-2. **App-Facing Package**: API for Flutter app
-3. **Platform Implementations**: iOS, Android, Web in separate packages
+1. **Platform Interface Package**: interfaz abstracta
+2. **App-Facing Package**: API para la app Flutter
+3. **Platform Implementations**: iOS, Android, Web en paquetes separados
 
 ---
 
-## Patterns by Company
+## Patrones por Empresa
 
-| Company | Scale | Pattern | Key Lesson |
+| Empresa | Escala | Patrón | Lección clave |
 |---------|-------|---------|------------|
-| **BMW** | 300 devs, 47 countries | Domain-based MVVM | Domain teams, not platform teams. BFF pattern decouples features from app releases |
-| **Nubank** | 90M+ users | BLoC + Clean Arch | Strict separation for financial compliance. PRs merge in 9.9 min avg |
-| **Alibaba** | 100M+ users | Fish Redux | Adapter pattern for ListView FPS (40→53). Data prefetch -300ms on low-end |
-| **ByteDance** | 700+ devs | Custom engine | Strip unused libraries for size. 33% productivity increase over native |
-| **Toyota** | Embedded | AOT + Embedder API | Flutter beyond mobile — in-car infotainment |
+| **BMW** | 300 devs, 47 países | MVVM basado en dominio | Equipos de dominio, no de plataforma. Patrón BFF desacopla features de releases de la app |
+| **Nubank** | 90M+ usuarios | BLoC + Clean Arch | Separación estricta para cumplimiento financiero. PRs se mergean en promedio en 9.9 min |
+| **Alibaba** | 100M+ usuarios | Fish Redux | Patrón Adapter para FPS en ListView (40→53). Prefetch de datos -300ms en dispositivos de gama baja |
+| **ByteDance** | 700+ devs | Motor personalizado | Eliminar librerías no usadas para reducir tamaño. Aumento de productividad del 33% vs nativo |
+| **Toyota** | Embebido | AOT + Embedder API | Flutter más allá del móvil — infotainment en autos |

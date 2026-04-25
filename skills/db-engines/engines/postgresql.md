@@ -1,31 +1,31 @@
 # PostgreSQL
 
-## Types & Conventions
-- Use `UUID` with `uuid_generate_v7()` or `gen_random_uuid()` for primary keys
-- Use `TIMESTAMP WITH TIME ZONE` (not `DATETIME`, not `TIMESTAMP` without TZ)
-- Use `ENUM` types or `CHECK` constraints for status columns
-- Use `TEXT` over `VARCHAR(n)` unless you need the length constraint for business reasons
-- `BOOLEAN` is native — use it directly
+## Tipos y Convenciones
+- Usa `UUID` con `uuid_generate_v7()` o `gen_random_uuid()` para primary keys
+- Usa `TIMESTAMP WITH TIME ZONE` (no `DATETIME`, no `TIMESTAMP` sin TZ)
+- Usa tipos `ENUM` o constraints `CHECK` para columnas de status
+- Prefiere `TEXT` sobre `VARCHAR(n)` a menos que necesites el constraint de longitud por razones de negocio
+- `BOOLEAN` es nativo — úsalo directamente
 
-## Migration Patterns
-- `CREATE INDEX CONCURRENTLY` for indexes on large tables (avoids table lock)
-- `IF NOT EXISTS` / `IF EXISTS` for idempotent migrations
-- `ALTER TABLE ... ADD COLUMN ... DEFAULT <value>` in a single statement (Postgres 11+ rewrites no rows)
-- `BEGIN` / `COMMIT` explicit transactions are allowed and encouraged for multi-statement migrations
+## Patrones de Migración
+- `CREATE INDEX CONCURRENTLY` para índices en tablas grandes (evita bloqueo de tabla)
+- `IF NOT EXISTS` / `IF EXISTS` para migraciones idempotentes
+- `ALTER TABLE ... ADD COLUMN ... DEFAULT <value>` en una sola sentencia (Postgres 11+ no reescribe filas)
+- Transacciones explícitas `BEGIN` / `COMMIT` están permitidas y son recomendadas para migraciones multi-sentencia
 
-## Performance Tuning
-- Connection pooling: use `pgxpool` or external pooler (PgBouncer) — never open unbounded connections
-- `EXPLAIN ANALYZE` to verify index usage before and after changes
-- Partial indexes: `CREATE INDEX ... WHERE deleted_at IS NULL` for soft-delete tables
-- Covering indexes: `INCLUDE (col)` to avoid heap lookup
-- `GROUPING SETS` for multiple aggregations in one pass
+## Ajuste de Rendimiento
+- Connection pooling: usa `pgxpool` o pooler externo (PgBouncer) — nunca abras conexiones ilimitadas
+- `EXPLAIN ANALYZE` para verificar el uso de índices antes y después de cambios
+- Índices parciales: `CREATE INDEX ... WHERE deleted_at IS NULL` para tablas con soft-delete
+- Índices de cobertura: `INCLUDE (col)` para evitar búsqueda en heap
+- `GROUPING SETS` para múltiples agregaciones en un solo paso
 
 ## Multi-Tenant
-- Row Level Security (RLS) policies for tenant isolation
-- `current_setting('app.tenant_id')` for RLS context
-- Compound indexes lead with `tenant_id`: `idx_table_tenant_status`
+- Políticas de Row Level Security (RLS) para aislamiento de tenant
+- `current_setting('app.tenant_id')` para contexto de RLS
+- Los índices compuestos lideran con `tenant_id`: `idx_table_tenant_status`
 
-## Go Drivers
-- `github.com/jackc/pgx/v5` — preferred (pure Go, connection pooling via `pgxpool`)
-- `github.com/lib/pq` — legacy, `database/sql` compatible
-- Error translation: `pq.Error` or `pgconn.PgError` codes to domain errors (23505 = unique violation, 23503 = FK violation)
+## Drivers de Go
+- `github.com/jackc/pgx/v5` — preferido (Go puro, connection pooling via `pgxpool`)
+- `github.com/lib/pq` — legacy, compatible con `database/sql`
+- Traducción de errores: `pq.Error` o códigos `pgconn.PgError` a errores de dominio (23505 = violación de unique, 23503 = violación FK)

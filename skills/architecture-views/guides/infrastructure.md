@@ -1,8 +1,8 @@
 # Template: architecture-infra.md
 
-Inspired by: AWS Well-Architected + bflorat Infrastructure View.
+Inspirado en: AWS Well-Architected + bflorat Infrastructure View.
 
-**Generate when:** infrastructure changes are involved.
+**Generar cuando:** hay cambios de infraestructura involucrados.
 
 ## Template
 
@@ -11,7 +11,7 @@ Inspired by: AWS Well-Architected + bflorat Infrastructure View.
 
 ## Componentes involucrados
 
-<!-- Mark which apply -->
+<!-- Marcar cuáles aplican -->
 - [ ] Servicios / containers (API, workers, schedulers)
 - [ ] Message broker (Kafka / RabbitMQ / SQS / Redis Streams)
 - [ ] Base de datos
@@ -67,7 +67,7 @@ graph LR
 
 ## Impacto CI/CD
 
-<!-- Specific pipeline files that need changes -->
+<!-- Archivos de pipeline específicos que necesitan cambios -->
 - ...
 
 ## Seguridad de infraestructura
@@ -77,12 +77,12 @@ graph LR
 - **Acceso:** IAM roles, service accounts, mínimo privilegio
 ```
 
-## Rules
+## Reglas
 
-- Include ONLY sections that apply — omit empty sections entirely
-- Brokers/queues section is mandatory if any async pattern is used — document DLQ always
-- SLOs section required for Medium+ tasks — "N/A" only if explicitly a background job with no user impact
-- Observability section must name specific metrics — "add logging" is not enough
-- Deployment diagram shows services and connections — not internal code
-- Every env var must specify type (string, int, bool, secret) and whether it's required
-- If backend view exists, env vars here must match backend config references exactly
+- Incluir SOLO secciones que apliquen — omitir secciones vacías completamente
+- La sección de brokers/colas es obligatoria si se usa cualquier patrón async — documentar DLQ siempre
+- La sección de SLOs es requerida para tareas Medium+ — "N/A" solo si explícitamente es un job background sin impacto al usuario
+- La sección de observabilidad debe nombrar métricas específicas — "agregar logging" no es suficiente
+- El diagrama de despliegue muestra servicios y conexiones — no código interno
+- Cada env var debe especificar tipo (string, int, bool, secret) y si es requerida
+- Si existe vista backend, las env vars aquí deben coincidir con las referencias de config backend exactamente

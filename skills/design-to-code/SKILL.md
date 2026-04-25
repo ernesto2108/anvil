@@ -1,164 +1,164 @@
 ---
 name: design-to-code
-description: Translate approved designs to production code. Works with any design tool (Pencil, Figma). Syncs design tokens with CSS, maps components to code, and validates visual fidelity. Use when user says "implement this design", "code this", "translate to code", "design to code", or after a design is approved.
+description: Traducir diseños aprobados a código de producción. Funciona con cualquier herramienta de diseño (Pencil, Figma). Sincroniza tokens de diseño con CSS, mapea componentes a código y valida la fidelidad visual. Usar cuando el usuario diga "implementa este diseño", "codifica esto", "traduce a código", "design to code", o después de que un diseño sea aprobado.
 ---
 
 # Design to Code
 
-> Translates approved designs into production code with visual fidelity. Tool-agnostic.
+> Traduce diseños aprobados a código de producción con fidelidad visual. Independiente de la herramienta.
 
-## Prerequisites
+## Prerrequisitos
 
-- Design must be approved (never code before design approval)
-- The design file must be open — use `/design-project` first if needed
+- El diseño debe estar aprobado (nunca codificar antes de la aprobación del diseño)
+- El archivo de diseño debe estar abierto — usa `/design-project` primero si es necesario
 
-## Step 0: Detect design tool
+## Paso 0: Detectar la herramienta de diseño
 
-Determine which tool the design is in:
+Determina en qué herramienta está el diseño:
 
-| Signal | Tool | How to read |
+| Señal | Herramienta | Cómo leer |
 |---|---|---|
-| `.pen` file open | Pencil | Use Pencil MCP tools (`get_variables`, `batch_get`, `get_screenshot`) |
-| Figma URL provided | Figma | Use Figma MCP tools (load `/figma-use` first) |
-| Design spec / static mockup | Manual | Read dimensions and tokens from the spec document |
+| Archivo `.pen` abierto | Pencil | Usa las herramientas MCP de Pencil (`get_variables`, `batch_get`, `get_screenshot`) |
+| URL de Figma proporcionada | Figma | Usa las herramientas MCP de Figma (carga `/figma-use` primero) |
+| Especificación de diseño / mockup estático | Manual | Lee dimensiones y tokens desde el documento de especificación |
 
-All subsequent steps use the appropriate tool's API but the **output is the same**: CSS, HTML, components.
+Todos los pasos siguientes usan la API de la herramienta correspondiente pero el **output es el mismo**: CSS, HTML, componentes.
 
-## Step 0.5: Compare design vs code (MANDATORY if code already exists)
+## Paso 0.5: Comparar diseño vs. código (OBLIGATORIO si ya existe código)
 
-Before writing any code, create a section-by-section comparison:
+Antes de escribir cualquier código, crea una comparación sección por sección:
 
-| Section | Design | Code | Difference | Action |
+| Sección | Diseño | Código | Diferencia | Acción |
 |---|---|---|---|---|
-| Hero | Linear flow, no cards | Bento grid with cards | Structure differs | Align to design |
-| Nav | Hamburger + X | Hamburger only | Missing state | Add X animation |
+| Hero | Flujo lineal, sin tarjetas | Bento grid con tarjetas | Estructura difiere | Alinear al diseño |
+| Nav | Hamburguesa + X | Solo hamburguesa | Estado faltante | Agregar animación X |
 
-Present this table to the user. If design and code diverge, **analyze which version is better for UX** — don't just list differences. Take the best of each, explain why, get approval before coding.
+Presenta esta tabla al usuario. Si el diseño y el código divergen, **analiza qué versión es mejor para UX** — no solo liste diferencias. Toma lo mejor de cada uno, explica por qué, obtén aprobación antes de codificar.
 
-## Step 1: Sync design tokens
+## Paso 1: Sincronizar tokens de diseño
 
-### Read tokens from design:
+### Leer tokens del diseño:
 
-- **Pencil**: `get_variables()` — returns all variables with types and themed values
-- **Figma**: read variables/styles from the Figma file via MCP
+- **Pencil**: `get_variables()` — devuelve todas las variables con tipos y valores temáticos
+- **Figma**: leer variables/estilos desde el archivo de Figma via MCP
 
-### Read tokens from code:
+### Leer tokens del código:
 
-Read the project's CSS variables file (e.g., `global.css`, `variables.css`, `tailwind.config`)
+Lee el archivo de variables CSS del proyecto (ej., `global.css`, `variables.css`, `tailwind.config`)
 
-### Diff and fix:
+### Diff y corrección:
 
-1. **Missing in CSS**: tokens that exist in design but not in code → add them
-2. **Value mismatch**: same name but different value → flag to user
-3. **Missing in design**: tokens in code not in design → may be fine (code-only utilities)
+1. **Faltante en CSS**: tokens que existen en el diseño pero no en el código → agregarlos
+2. **Discrepancia de valor**: mismo nombre pero valor diferente → señalar al usuario
+3. **Faltante en diseño**: tokens en el código que no están en el diseño → puede estar bien (utilidades solo de código)
 
-Present the diff. Fix mismatches before proceeding.
+Presenta el diff. Corrige las discrepancias antes de continuar.
 
-## Step 2: Read target screen
+## Paso 2: Leer la pantalla objetivo
 
-### From Pencil:
-1. `batch_get` the screen frame at depth 2-3
-2. `get_screenshot` of the screen
+### Desde Pencil:
+1. `batch_get` el frame de pantalla a profundidad 2-3
+2. `get_screenshot` de la pantalla
 
-### From Figma:
-1. Read the frame/page structure
-2. Get a screenshot or inspect node properties
+### Desde Figma:
+1. Lee la estructura de frame/página
+2. Obtén una captura de pantalla o inspecciona las propiedades del nodo
 
-### Then (tool-agnostic):
-3. Identify sections and which components are used
-4. Map each section to a code component (e.g., Hero.astro, Navbar.tsx)
+### Luego (independiente de la herramienta):
+3. Identifica las secciones y qué componentes se usan
+4. Mapea cada sección a un componente de código (ej., Hero.astro, Navbar.tsx)
 
-## Step 3: Read component structure
+## Paso 3: Leer la estructura del componente
 
-For each component that needs to be created or updated:
+Para cada componente que necesita ser creado o actualizado:
 
-### From Pencil:
-`batch_get` the reusable component at depth 3
+### Desde Pencil:
+`batch_get` el componente reutilizable a profundidad 3
 
-### From Figma:
-Read the component's properties, variants, and auto-layout settings
+### Desde Figma:
+Lee las propiedades del componente, variantes y configuraciones de auto-layout
 
-### Then map to CSS (universal):
+### Luego mapea a CSS (universal):
 
-| Design property | CSS |
+| Propiedad de diseño | CSS |
 |---|---|
-| Vertical layout | `flex-direction: column` |
-| Horizontal layout | `flex-direction: row` |
-| Gap with token | `gap: var(--token-name)` |
-| Fill with token | `background: var(--token-name)` |
+| Layout vertical | `flex-direction: column` |
+| Layout horizontal | `flex-direction: row` |
+| Gap con token | `gap: var(--token-name)` |
+| Fill con token | `background: var(--token-name)` |
 | Corner radius | `border-radius: var(--token-name)` |
 | Border/stroke | `border: 1px solid var(--token-name)` |
-| Padding array | `padding: var(--top) var(--right) var(--bottom) var(--left)` |
-| Fill container | `width: 100%` or `flex: 1` |
+| Array de padding | `padding: var(--top) var(--right) var(--bottom) var(--left)` |
+| Fill container | `width: 100%` o `flex: 1` |
 | Fit content | `width: fit-content` |
 | Space between | `justify-content: space-between` |
-| Center align | `align-items: center` |
+| Alineación centrada | `align-items: center` |
 
-## Step 4: Delegate to developer agent
+## Paso 4: Delegar al agente developer
 
-The `developer` agent is the ONLY agent allowed to write production code. After steps 1-3, launch the developer agent with:
+El agente `developer` es el ÚNICO agente autorizado a escribir código de producción. Después de los pasos 1-3, lanza el agente developer con:
 
-1. **Token diff** — new/changed CSS variables to add
-2. **Component map** — which components to create/update, mapped from design sections
-3. **Design properties** — layout, spacing, colors, typography extracted in step 3
-4. **Screenshot** — design screenshot for visual reference
+1. **Token diff** — variables CSS nuevas/modificadas para agregar
+2. **Component map** — qué componentes crear/actualizar, mapeados desde las secciones del diseño
+3. **Propiedades de diseño** — layout, espaciado, colores, tipografía extraídos en el paso 3
+4. **Screenshot** — captura de pantalla del diseño como referencia visual
 
-Include this context INLINE in the agent prompt (never tell the agent to "read file X").
+Incluye este contexto INLINE en el prompt del agente (nunca le digas al agente "lee el archivo X").
 
-Rules for the developer:
-- **Use CSS custom properties**, never hardcoded values
-- **Use the same semantic names** as the design tokens
-- **If a design token doesn't have a CSS equivalent**, add it to the CSS file first
-- **Mobile-first**: if both web and mobile designs exist, code mobile layout first, add desktop overrides with `min-width` media queries
-- **Reuse existing components** — check what already exists in the codebase before creating new ones
-- **Load the appropriate conventions skill** for the target stack (e.g., `astro-conventions`, `react-conventions`, `flutter-conventions`)
+Reglas para el developer:
+- **Usa CSS custom properties**, nunca valores codificados
+- **Usa los mismos nombres semánticos** que los tokens de diseño
+- **Si un token de diseño no tiene equivalente CSS**, agrégalo primero al archivo CSS
+- **Mobile-first**: si existen diseños web y móvil, codifica el layout móvil primero, agrega overrides de desktop con media queries `min-width`
+- **Reutiliza componentes existentes** — verifica qué ya existe en el codebase antes de crear nuevos
+- **Carga la skill de convenciones apropiada** para el stack objetivo (ej., `astro-conventions`, `react-conventions`, `flutter-conventions`)
 
-## Step 5: Visual QA (MANDATORY)
+## Paso 5: QA Visual (OBLIGATORIO)
 
-After implementing:
+Después de implementar:
 
-1. **Build check**: Run `build` to verify no errors
-2. **Browser check**: View at target viewport
-3. **Compare with design**: Open the design side by side with the browser. Check:
-   - Spacing matches (padding, gap, margins)
-   - Colors match (especially across themes/modes)
-   - Typography matches (family, size, weight, line-height)
-   - Layout matches (alignment, direction, wrapping)
-4. **Check all states**: If component has interactive states, verify each one
-5. **Check both modes**: If light/dark modes exist, verify both
-6. **Check responsive**: If mobile + desktop, verify both viewports
+1. **Verificación de build**: Ejecuta `build` para verificar que no hay errores
+2. **Verificación en browser**: Visualiza en el viewport objetivo
+3. **Comparar con diseño**: Abre el diseño lado a lado con el browser. Verifica:
+   - El espaciado coincide (padding, gap, margins)
+   - Los colores coinciden (especialmente entre temas/modos)
+   - La tipografía coincide (familia, tamaño, peso, line-height)
+   - El layout coincide (alineación, dirección, wrapping)
+4. **Verifica todos los estados**: Si el componente tiene estados interactivos, verifica cada uno
+5. **Verifica ambos modos**: Si existen modos claro/oscuro, verifica ambos
+6. **Verifica responsive**: Si hay mobile + desktop, verifica ambos viewports
 
-**Only present to the user after ALL checks pass.**
+**Solo presenta al usuario después de que TODAS las verificaciones pasen.**
 
-## Design-to-Code Completeness Check (MANDATORY)
+## Checklist de Completitud Design-to-Code (OBLIGATORIO)
 
-After implementing design tokens and components, verify:
+Después de implementar tokens de diseño y componentes, verifica:
 
-1. [ ] Every CSS variable used in components has a value in both `:root` (light) and `.dark` (dark mode)
-2. [ ] If dark mode exists in design → a JS mechanism toggles the `dark` class on `<html>` (hook or store)
-3. [ ] If theme toggle exists in design → it's wired to the toggle mechanism and persists to `localStorage`
-4. [ ] System preference: `prefers-color-scheme` is respected as the initial default
-5. [ ] Every interactive element in the design (dropdowns, modals, menus) has a functional implementation, not just visual
-6. [ ] Frontend request/response types match the current backend DTOs (check after any backend changes)
-7. [ ] All icons use the project's icon library (e.g., `lucide-react`), not inline SVGs
-8. [ ] Tailwind classes use v4 syntax if the project uses Tailwind v4: `(--var)` not `[var(--var)]`
+1. [ ] Cada variable CSS usada en componentes tiene un valor tanto en `:root` (claro) como en `.dark` (modo oscuro)
+2. [ ] Si existe modo oscuro en el diseño → un mecanismo JS activa/desactiva la clase `dark` en `<html>` (hook o store)
+3. [ ] Si existe toggle de tema en el diseño → está conectado al mecanismo de toggle y persiste en `localStorage`
+4. [ ] Preferencia del sistema: `prefers-color-scheme` se respeta como el valor inicial por defecto
+5. [ ] Cada elemento interactivo en el diseño (dropdowns, modales, menús) tiene una implementación funcional, no solo visual
+6. [ ] Los tipos de solicitud/respuesta del frontend coinciden con los DTOs actuales del backend (verificar después de cualquier cambio en el backend)
+7. [ ] Todos los íconos usan la librería de íconos del proyecto (ej., `lucide-react`), no SVGs inline
+8. [ ] Las clases de Tailwind usan sintaxis v4 si el proyecto usa Tailwind v4: `(--var)` no `[var(--var)]`
 
-## Rules
+## Reglas
 
-- **Never guess dimensions** — read them from the design file
-- **Never hardcode colors** — always use CSS variables
-- **Design is source of truth** — if code looks different from design, the code is wrong
-- **Surgical changes** — if updating existing code, only change what the design changed
-- **Token sync first** — always sync variables before coding components
-- **Tool-agnostic output** — CSS is CSS regardless of whether the design came from Pencil or Figma
+- **Nunca adivines dimensiones** — léelas desde el archivo de diseño
+- **Nunca codifiques colores** — siempre usa variables CSS
+- **El diseño es la fuente de verdad** — si el código luce diferente al diseño, el código está mal
+- **Cambios quirúrgicos** — si actualizas código existente, cambia solo lo que cambió en el diseño
+- **Sincronizar tokens primero** — siempre sincroniza las variables antes de codificar componentes
+- **Output independiente de la herramienta** — CSS es CSS sin importar si el diseño vino de Pencil o Figma
 
-## Anti-Patterns
+## Anti-Patrones
 
-| Anti-Pattern | Fix |
+| Anti-Patrón | Corrección |
 |---|---|
-| Coding from memory instead of reading the design | Always read the design file first |
-| Hardcoded hex colors in CSS | Use `var(--color-name)` |
-| Presenting code without building | Run build first |
-| Presenting without visual comparison | Compare design screenshot with browser |
-| Implementing mobile without checking desktop | Check both viewports |
-| Assuming the design tool | Detect from file extension or URL |
+| Codificar de memoria en lugar de leer el diseño | Siempre leer el archivo de diseño primero |
+| Colores hex codificados en CSS | Usar `var(--color-name)` |
+| Presentar código sin construir | Ejecutar build primero |
+| Presentar sin comparación visual | Comparar captura del diseño con el browser |
+| Implementar mobile sin verificar desktop | Verificar ambos viewports |
+| Asumir la herramienta de diseño | Detectar desde extensión de archivo o URL |

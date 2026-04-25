@@ -1,19 +1,19 @@
-# Kafka Overview
+# Resumen de Kafka
 
-## Library Selection
+## Selección de Librería
 
-| Scenario | Library |
+| Escenario | Librería |
 |----------|---------|
-| Pure Go, easy local dev, no CGo | `segmentio/kafka-go` |
-| Max performance, Confluent ecosystem, transactions | `confluent-kafka-go` |
-| Existing Sarama codebase, need mock testing | `IBM/sarama` |
-| New project, general purpose | `segmentio/kafka-go` |
-| Financial/critical exactly-once requirements | `confluent-kafka-go` |
+| Go puro, dev local sencillo, sin CGo | `segmentio/kafka-go` |
+| Máximo rendimiento, ecosistema Confluent, transacciones | `confluent-kafka-go` |
+| Codebase existente con Sarama, necesita mock testing | `IBM/sarama` |
+| Proyecto nuevo, propósito general | `segmentio/kafka-go` |
+| Requerimientos financieros/críticos de exactly-once | `confluent-kafka-go` |
 
-## Industry Context
+## Contexto de la Industria
 
-- **Netflix**: 2+ trillion msgs/day. One consumer per topic. Invested in message tracing (Inca) early
-- **Uber**: Trillions of msgs/day. Built uForwarder (push-based consumer proxy). Partition-level flow control, not all-or-nothing pausing. Federated clusters (~150 nodes each)
-- **LinkedIn**: 7+ trillion msgs/day, 100+ clusters, 100k+ topics. Separate topics by category (commands, events, logs, metrics). Partitioning as the scaling primitive
+- **Netflix**: 2+ billones de msgs/día. Un consumer por topic. Invirtió tempranamente en trazabilidad de mensajes (Inca)
+- **Uber**: Billones de msgs/día. Construyó uForwarder (consumer proxy push-based). Control de flujo a nivel de partición, no pausa total. Clusters federados (~150 nodos cada uno)
+- **LinkedIn**: 7+ billones de msgs/día, 100+ clusters, 100k+ topics. Separa topics por categoría (commands, events, logs, metrics). El particionamiento como primitiva de escalado
 
-**Key takeaways**: single-responsibility consumers, partition-based parallelism, invest in observability, separate topics by message category.
+**Conclusiones clave**: consumers de responsabilidad única, paralelismo basado en particiones, invertir en observabilidad, separar topics por categoría de mensaje.

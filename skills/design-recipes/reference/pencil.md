@@ -1,18 +1,18 @@
-# Pencil Implementation — Design Recipes
+# Pencil — Implementación de Design Recipes
 
-Tool-specific syntax for building recipe patterns in .pen files.
+Sintaxis específica de herramienta para construir patrones de recetas en archivos .pen.
 
-## General Rules
+## Reglas Generales
 
-- `include_schema: true` only on FIRST `get_editor_state` call per session. All subsequent: `include_schema: false`
-- Load guidelines ONCE, not per screen
-- Max 25 operations per `batch_design` call
-- Use bindings for parent references within same batch
-- After Copy (C), use `descendants` for overrides — NOT separate U() calls on copied children (IDs change)
+- `include_schema: true` solo en la PRIMERA llamada a `get_editor_state` por sesión. Todas las siguientes: `include_schema: false`
+- Carga guidelines UNA VEZ, no por pantalla
+- Máximo 25 operaciones por llamada a `batch_design`
+- Usa bindings para referencias de padre dentro del mismo batch
+- Después de Copy (C), usa `descendants` para overrides — NO llamadas U() separadas en hijos copiados (los IDs cambian)
 
-## Icon Name Reference (Lucide)
+## Referencia de Nombres de Iconos (Lucide)
 
-Common icons used in B2B SaaS — verified names:
+Iconos comunes usados en B2B SaaS — nombres verificados:
 ```
 Navigation: layout-dashboard, git-branch, play, menu, x, chevron-down, arrow-right
 Actions: plus, check, trash-2, edit, search, log-out
@@ -20,9 +20,9 @@ Status: activity, circle-check, circle-alert, circle-play (NOT check-circle, ale
 UI: user, settings, moon, sun, eye, eye-off, mail, bell
 ```
 
-**CRITICAL:** Lucide v4+ uses `circle-*` prefix (circle-check), NOT `*-circle` suffix (check-circle). Always verify.
+**CRÍTICO:** Lucide v4+ usa el prefijo `circle-*` (circle-check), NO el sufijo `*-circle` (check-circle). Siempre verifica.
 
-## Recipe: Auth Screen — Pencil
+## Receta: Pantalla de Auth — Pencil
 
 ```javascript
 // Step 1: Create screen frame (1 op)
@@ -56,9 +56,9 @@ footer=I(card,{type:"frame",layout:"horizontal",width:"fill_container",justifyCo
 U("SCREEN_ID",{placeholder:false})
 ```
 
-Total: ~18-22 ops across 2 batch_design calls.
+Total: ~18-22 ops en 2 llamadas a batch_design.
 
-## Recipe: App Shell — Pencil
+## Receta: App Shell — Pencil
 
 ```javascript
 // Call 1: Structure (3 ops)
@@ -70,7 +70,7 @@ main=I(screen,{type:"frame",layout:"vertical",width:"fill_container",padding:[32
 // ... add content to main
 ```
 
-## Recipe: Table Row — Pencil
+## Receta: Fila de Tabla — Pencil
 
 ```javascript
 // Standard 5-column row (7 ops)
@@ -83,7 +83,7 @@ c3=I(row,{type:"frame",width:140})
 c3b=I(c3,{type:"ref",ref:"BADGE_ID"})
 ```
 
-## Recipe: Mobile Nav — Pencil
+## Receta: Nav Mobile — Pencil
 
 ```javascript
 nav=I(screen,{type:"frame",layout:"horizontal",width:"fill_container",height:56,padding:[0,16],alignItems:"center",justifyContent:"space_between",fill:"$bg-surface",stroke:{align:"inside",thickness:{bottom:1},fill:"$border-default"}})
@@ -93,7 +93,7 @@ avatar=I(nav,{type:"frame",width:32,height:32,cornerRadius:"$radius-full",fill:"
 avatarIcon=I(avatar,{type:"icon_font",iconFontFamily:"lucide",iconFontName:"user",width:16,height:16,fill:"$color-primary-600"})
 ```
 
-## Recipe: Dark Mode Copy — Pencil
+## Receta: Copia en Modo Oscuro — Pencil
 
 ```javascript
 // Copy light frame with dark theme
@@ -109,11 +109,11 @@ dark=C("LIGHT_FRAME_ID",document,{name:"Dark: ScreenName",positionDirection:"bot
 // U("DROPDOWN_REF_ID/SWITCH_ID",{fill:"$color-primary-500",justifyContent:"end"})
 ```
 
-## Common Mistakes to Avoid
+## Errores Comunes a Evitar
 
-1. **Icon names:** Use `circle-check` NOT `check-circle`, `circle-alert` NOT `alert-circle`
-2. **Move with bindings:** `M()` requires actual node IDs, not binding names. Insert first, get the ID from response, then Move in next batch
-3. **Copy + Update descendants:** After `C()`, child IDs change. Use `descendants` in the Copy operation itself, or `batch_get` the copy to find new IDs
-4. **Font family variable:** `fontFamily: "$font-family"` may show warning in Pencil — use `fontFamily: "Inter"` directly (known Pencil limitation)
-5. **`alignItems: "baseline"`:** Not supported in .pen. Use `"end"` instead
-6. **Placeholder discipline:** Set `placeholder: true` immediately when creating/copying a frame. Remove only when ALL content is added
+1. **Nombres de iconos:** Usa `circle-check` NO `check-circle`, `circle-alert` NO `alert-circle`
+2. **Mover con bindings:** `M()` requiere IDs de nodo reales, no nombres de binding. Inserta primero, obtén el ID de la respuesta, luego mueve en el siguiente batch
+3. **Copy + Update descendants:** Después de `C()`, los IDs de hijos cambian. Usa `descendants` en la operación Copy misma, o `batch_get` la copia para encontrar los nuevos IDs
+4. **Variable de font family:** `fontFamily: "$font-family"` puede mostrar advertencia en Pencil — usa `fontFamily: "Inter"` directamente (limitación conocida de Pencil)
+5. **`alignItems: "baseline"`:** No soportado en .pen. Usa `"end"` en su lugar
+6. **Disciplina con placeholder:** Establece `placeholder: true` inmediatamente al crear/copiar un frame. Elimínalo solo cuando TODO el contenido esté agregado

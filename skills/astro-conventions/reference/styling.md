@@ -1,8 +1,8 @@
-# Styling in Astro
+# Estilos en Astro
 
-## Scoped CSS (Default)
+## CSS Scoped (Por Defecto)
 
-`<style>` in `.astro` files is automatically scoped via data attributes:
+`<style>` en archivos `.astro` se aplica automáticamente con scope via atributos de datos:
 
 ```astro
 <style>
@@ -11,7 +11,7 @@
 </style>
 ```
 
-## Global Styles
+## Estilos Globales
 
 ```astro
 <!-- Entire block is global -->
@@ -25,7 +25,7 @@
 </style>
 ```
 
-## Dynamic CSS Variables
+## Variables CSS Dinámicas
 
 ```astro
 ---
@@ -42,9 +42,9 @@ const spacing = "1.5rem";
 </style>
 ```
 
-## Passing Classes to Components
+## Pasar Clases a Componentes
 
-Components must explicitly accept and forward `class`:
+Los componentes deben aceptar y reenviar explícitamente `class`:
 
 ```astro
 ---
@@ -58,13 +58,13 @@ const { class: className } = Astro.props;
 </div>
 ```
 
-## Tailwind CSS v4 Integration
+## Integración de Tailwind CSS v4
 
 ```bash
 npx astro add tailwind
 ```
 
-This installs `@tailwindcss/vite` plugin. Then create:
+Esto instala el plugin `@tailwindcss/vite`. Luego crea:
 
 ```css
 /* src/styles/global.css */
@@ -79,7 +79,7 @@ This installs `@tailwindcss/vite` plugin. Then create:
 }
 ```
 
-Import once in base layout:
+Importa una vez en el layout base:
 
 ```astro
 ---
@@ -93,9 +93,9 @@ import '../styles/global.css';
 </html>
 ```
 
-## CSS Preprocessors
+## Preprocesadores CSS
 
-Install the preprocessor, use `lang` attribute:
+Instala el preprocesador, usa el atributo `lang`:
 
 ```html
 <style lang="scss">
@@ -104,17 +104,17 @@ Install the preprocessor, use `lang` attribute:
 </style>
 ```
 
-Supported: Sass/SCSS, Stylus, Less.
+Soportados: Sass/SCSS, Stylus, Less.
 
-## Cascade Order (lowest → highest)
+## Orden de Cascada (menor → mayor)
 
-1. `<link>` tags (external stylesheets)
-2. Imported stylesheets (`import './styles.css'`)
-3. Scoped styles (`<style>` in component)
+1. Tags `<link>` (hojas de estilo externas)
+2. Hojas de estilo importadas (`import './styles.css'`)
+3. Estilos con scope (`<style>` en componente)
 
-## Production Optimization
+## Optimización en Producción
 
-- Stylesheets < 4kB → auto-inlined in `<head>`
-- Larger stylesheets → external `<link>` tags
-- Unused CSS purged by Tailwind automatically
-- No CSS-in-JS runtime — all resolved at build time
+- Hojas de estilo < 4kB → auto-inlined en `<head>`
+- Hojas de estilo más grandes → tags `<link>` externos
+- CSS no usado purgado automáticamente por Tailwind
+- Sin runtime de CSS-in-JS — todo resuelto en tiempo de build

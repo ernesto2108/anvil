@@ -1,28 +1,28 @@
-# RabbitMQ Overview
+# Resumen de RabbitMQ
 
-## Library Selection
+## Selección de Librería
 
-| Library | Type | Best For |
+| Librería | Tipo | Mejor Para |
 |---------|------|----------|
-| `rabbitmq/amqp091-go` | Official client | Full control, production use |
-| `wagslane/go-rabbitmq` | Wrapper over amqp091 | Auto-reconnect, simpler API, declarative topology |
+| `rabbitmq/amqp091-go` | Cliente oficial | Control total, uso en producción |
+| `wagslane/go-rabbitmq` | Wrapper sobre amqp091 | Auto-reconexión, API más simple, topología declarativa |
 
-**Default choice**: `amqp091-go` — official, well-maintained, full feature support. Handle reconnection manually (the library does NOT auto-reconnect).
+**Elección por defecto**: `amqp091-go` — oficial, bien mantenida, soporte completo de features. Maneja la reconexión manualmente (la librería NO reconecta automáticamente).
 
-## Core Concepts
+## Conceptos Fundamentales
 
-### Exchange Types
+### Tipos de Exchange
 
-| Type | Routing | Use Case |
+| Tipo | Enrutamiento | Caso de Uso |
 |------|---------|----------|
-| `direct` | Exact routing key match | Point-to-point, task queues |
-| `topic` | Pattern matching (`order.*`, `#.error`) | Event routing by category |
-| `fanout` | Broadcast to all bound queues | Notifications, logging |
-| `headers` | Header attribute matching | Complex routing rules |
+| `direct` | Coincidencia exacta de routing key | Point-to-point, task queues |
+| `topic` | Pattern matching (`order.*`, `#.error`) | Enrutamiento de eventos por categoría |
+| `fanout` | Broadcast a todas las colas vinculadas | Notificaciones, logging |
+| `headers` | Coincidencia por atributos de header | Reglas de enrutamiento complejas |
 
-### Durability Rules
+### Reglas de Durabilidad
 
-- **Exchanges**: always `durable: true`
-- **Queues**: always `durable: true` for production
-- **Messages**: always `DeliveryMode: amqp.Persistent`
-- **These three together** ensure messages survive broker restarts
+- **Exchanges**: siempre `durable: true`
+- **Colas**: siempre `durable: true` en producción
+- **Mensajes**: siempre `DeliveryMode: amqp.Persistent`
+- **Los tres juntos** garantizan que los mensajes sobrevivan reinicios del broker

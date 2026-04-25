@@ -1,22 +1,22 @@
-# HTTP Middleware Guide
+# Guía de HTTP Middleware
 
-## The Pattern
+## El Patrón
 
-Every middleware has the same signature:
+Todo middleware tiene la misma firma:
 
 ```go
 type Middleware func(http.Handler) http.Handler
 ```
 
-Receives a handler, returns a handler. Like layers of an onion — each wraps the next.
+Recibe un handler, retorna un handler. Como capas de una cebolla — cada una envuelve a la siguiente.
 
 ```
-Request → Recovery → Logging → Auth → Your Handler → Response
+Request → Recovery → Logging → Auth → Tu Handler → Response
 ```
 
-## responseWriter Wrapper
+## Wrapper de responseWriter
 
-Most middleware needs to capture the response status code. The stdlib `http.ResponseWriter` doesn't expose it, so wrap it:
+La mayoría de middleware necesita capturar el código de status de la respuesta. El `http.ResponseWriter` del stdlib no lo expone, así que envuélvelo:
 
 ```go
 type responseWriter struct {
@@ -30,9 +30,9 @@ func (rw *responseWriter) WriteHeader(code int) {
 }
 ```
 
-## Common Middleware
+## Middleware Comunes
 
-### Recovery — catch panics, prevent server crash
+### Recovery — captura panics, previene el crash del servidor
 
 ```go
 func RecoveryMiddleware(logger *slog.Logger) Middleware {
@@ -54,9 +54,9 @@ func RecoveryMiddleware(logger *slog.Logger) Middleware {
 }
 ```
 
-**Always outermost.** If recovery is inside logging, a panic in logging middleware crashes the server.
+**Siempre el más externo.** Si el recovery está dentro del logging, un panic en el middleware de logging crashea el servidor.
 
-### Request ID — correlate logs for the same request
+### Request ID — correlaciona logs de la misma request
 
 ```go
 func RequestIDMiddleware(next http.Handler) http.Handler {
@@ -72,7 +72,7 @@ func RequestIDMiddleware(next http.Handler) http.Handler {
 }
 ```
 
-### Logging — log every request with method, path, status, latency
+### Logging — registra cada request con método, path, status y latencia
 
 ```go
 func LoggingMiddleware(logger *slog.Logger) Middleware {
@@ -95,7 +95,7 @@ func LoggingMiddleware(logger *slog.Logger) Middleware {
 }
 ```
 
-### Auth — validate token, inject user into context
+### Auth — valida token, inyecta usuario en el contexto
 
 ```go
 func AuthMiddleware(auth TokenValidator) Middleware {
@@ -107,7 +107,7 @@ func AuthMiddleware(auth TokenValidator) Middleware {
                 return
             }
 
-            // Strip "Bearer " prefix
+            // Elimina el prefijo "Bearer "
             token = strings.TrimPrefix(token, "Bearer ")
 
             user, err := auth.Validate(r.Context(), token)
@@ -122,14 +122,14 @@ func AuthMiddleware(auth TokenValidator) Middleware {
     }
 }
 
-// Helper to extract user from context in handlers
+// Helper para extraer el usuario del contexto en los handlers
 func UserFromContext(ctx context.Context) (*User, bool) {
     user, ok := ctx.Value(userKey).(*User)
     return user, ok
 }
 ```
 
-### CORS — handle cross-origin requests
+### CORS — maneja requests cross-origin
 
 ```go
 func CORSMiddleware(allowedOrigins []string) Middleware {
@@ -159,9 +159,9 @@ func CORSMiddleware(allowedOrigins []string) Middleware {
 }
 ```
 
-## Chaining Middleware
+## Encadenamiento de Middleware
 
-Apply in order: first listed = outermost layer.
+Aplica en orden: el primero listado = capa más externa.
 
 ```go
 func Chain(h http.Handler, mws ...Middleware) http.Handler {
@@ -171,13 +171,13 @@ func Chain(h http.Handler, mws ...Middleware) http.Handler {
     return h
 }
 
-// Usage — order matters:
-// 1. Recovery (outermost — catches everything)
-// 2. Request ID (assign before logging)
+// Uso — el orden importa:
+// 1. Recovery (el más externo — captura todo)
+// 2. Request ID (asignar antes del logging)
 // 3. Security headers
-// 4. Logging (logs after handler completes)
+// 4. Logging (registra después de que el handler completa)
 // 5. Metrics
-// 6. Auth (before business logic)
+// 6. Auth (antes de la lógica de negocio)
 mux := http.NewServeMux()
 mux.HandleFunc("GET /users/{id}", handler.GetUser)
 mux.HandleFunc("POST /users", handler.CreateUser)
@@ -196,27 +196,27 @@ srv := &http.Server{Addr: ":8080", Handler: wrapped}
 
 ## stdlib ServeMux (Go 1.22+)
 
-Go 1.22 added pattern routing to the standard library — for most APIs you no longer need Gin, Chi, or Echo:
+Go 1.22 agregó enrutamiento por patrones a la librería estándar — para la mayoría de APIs ya no necesitas Gin, Chi o Echo:
 
 ```go
 mux := http.NewServeMux()
 
-// Method + pattern routing (Go 1.22+)
+// Enrutamiento por método + patrón (Go 1.22+)
 mux.HandleFunc("GET /users/{id}", handler.GetUser)
 mux.HandleFunc("POST /users", handler.CreateUser)
 mux.HandleFunc("PUT /users/{id}", handler.UpdateUser)
 mux.HandleFunc("DELETE /users/{id}", handler.DeleteUser)
 
-// Access path parameters
+// Acceder a parámetros del path
 func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
     id := r.PathValue("id") // Go 1.22+
     // ...
 }
 ```
 
-**When to use a third-party router:** route groups with shared middleware, complex path matching, middleware per-group. If the project already uses Gin/Chi, follow the project convention.
+**Cuándo usar un router de terceros:** grupos de rutas con middleware compartido, matching complejo de paths, middleware por grupo. Si el proyecto ya usa Gin/Chi, sigue la convención del proyecto.
 
-## Testing Middleware
+## Testing de Middleware
 
 ```go
 func TestLoggingMiddleware(t *testing.T) {
