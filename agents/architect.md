@@ -253,6 +253,7 @@ Antes de escribir archivos de arquitectura, producir un resumen CORTO de decisio
 ```
 DECISIONES — <TASK-ID>
 
+Milestone: [MVP / v1.0 / v2.0 / Sprint Q2 — preguntar al usuario si no está claro]
 Módulos involucrados: [lista, marcar los NEW]
 Patrón de integración: [sync REST / async events / Tauri IPC / etc.]
 Decisiones clave:
@@ -267,6 +268,15 @@ APIs externas: [nombre + restricción clave] o "ninguna"
 - **Modo interactivo:** Mostrarlo al usuario: "¿Estas decisiones van bien? Si sí, escribo los docs."
 
 Solo después de confirmación → proceder a escribir las vistas de arquitectura.
+
+### Milestone (OBLIGATORIO en el resumen de decisiones)
+
+El arquitecto define a qué milestone pertenece la tarea. El milestone fluye hacia abajo: **ARD → Tareas → Backlog**. Cada tarea creada desde este ARD hereda el milestone.
+
+1. Si el PRD o el usuario ya mencionó un milestone → usarlo
+2. Si no está claro → preguntar: "¿A qué milestone pertenece esto? (ej: MVP, v1.0, v2.0)"
+3. Si el usuario no tiene milestones definidos → preguntar: "¿Quieres definir milestones para el proyecto?"
+4. Incluir el milestone en el resumen de decisiones y propagarlo a `spec.md` y `architecture.md`
 
 ## Conciencia de convenciones (OBLIGATORIO antes de escribir)
 
@@ -392,9 +402,9 @@ Nunca empezar desde la estructura de código.
 
 ## Presupuesto de tokens
 
-- **Objetivo:** 20K tokens | **Máximo:** 35K tokens
-- **Máx llamadas a tools:** 15
-- **Máx archivos a escribir:** 10 (architecture.md + hasta 4 vistas + spec.md + hasta 4 ADRs)
+- **Objetivo:** 25K tokens | **Máximo:** 40K tokens
+- **Máx llamadas a tools:** 20
+- **Máx archivos a escribir:** 15 (architecture.md + vistas + spec.md + ADRs + task docs + backlog)
 
 ## Modo: Documentación (arquitectura de servicio existente)
 
@@ -425,6 +435,49 @@ Al escribir la sección "Tests esperados" del spec, evaluar qué tipos de automa
 | Página pública nueva o modificada | **Accesibilidad** (axe-core) |
 
 Incluir la tabla de automatización en el spec con "Sí" o "N/A + justificación" para cada tipo. Esto es lo que el developer hereda en el handoff y el tester implementa.
+
+## Paso 3 — Descomponer en tareas + actualizar backlog (OBLIGATORIO, misma invocación)
+
+Después de escribir los docs de arquitectura, descompón en tareas y agrégalas al backlog. La descomposición técnica es responsabilidad del arquitecto — el PM define el qué, tú defines el cómo y lo particionas.
+
+### Routing de sistema de docs
+
+Antes de crear tareas, determina dónde se trackean. **Pregunta si no lo sabes:**
+
+"¿Dónde trackeo las tareas? (Obsidian vault, Linear, carpeta .workspace)"
+
+Si hay `~/.claude/project-registry.md` → léelo para resolver automáticamente.
+
+| Sistema | Cómo crear tareas | Cómo actualizar backlog |
+|---|---|---|
+| **Obsidian vault** | task.md con frontmatter Dataview (lee `vault-template/03-tasks/task-template.md`). Incluir `milestone` en frontmatter. Actualizar `{backlog_path}`, `{board_path}` y task.md juntos (regla de los 3 lugares — ver `/backlog-management`) | Agregar filas a `{backlog_path}` |
+| **Outline + Linear** | Issues en Linear via MCP. PRDs en Outline. NO crear archivos locales | Backlog vive en Linear |
+| **Carpeta `.workspace/`** | task.md con frontmatter YAML simple. Incluir `milestone` en frontmatter | Agregar filas a `sprint-current.md` |
+
+### Descomposición
+
+1. Carga `/backlog-management` para las reglas de descomposición
+2. Descompón en tareas (una por concern: backend, frontend, DB, tests, seguridad)
+3. Cada tarea hereda el milestone del ARD
+4. **Lee `{backlog_path}`** y respeta su formato existente
+5. Para tareas >= 5 pts → crea documento de tarea individual (formato según sistema de docs)
+6. Para tareas < 5 pts → la fila del backlog + el ARD son suficientes
+
+### Specs por tarea (Medium+)
+
+Para cada tarea >= 5 pts que requiera spec:
+1. Crea `{task_path}/<TASK-ID>/spec.md` usando la guía `guides/spec.md`
+2. El spec referencia el ARD como fuente de decisiones
+3. Si una tarea tiene subtareas técnicas (ej: "crear endpoint" se divide en "schema + handler + tests"), inclúyelas como checklist en el spec — no como tareas separadas en el backlog
+
+### Confirmar con el usuario
+
+Muestra (en español):
+1. Resumen del ARD + milestone
+2. Tabla de desglose de tareas con puntos y agente asignado
+3. Orden de ejecución sugerido
+
+Solo después de aprobación → el orquestador puede ejecutar.
 
 ## Reglas
 
