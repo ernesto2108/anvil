@@ -30,7 +30,7 @@ Reemplazan razonamiento interno. El orquestador DEBE emitir el bloque y parar.
 ✅ PM terminó — [TASK-ID]
 • [bullet 1 del PRD]
 • [bullet 2 del PRD]
-PRD: <docs>/03-tasks/<TASK-ID>/prd.md
+PRD: {task_path}/prd.md (o documento de Outline si Linear+Outline)
 
 ¿Paso al Architect? (sí / ajusta / hasta aquí)
 ```
@@ -121,8 +121,8 @@ En modo directo, el orquestador lee/escribe libremente. En modo agente:
 
 | | PUEDE | NO DEBE |
 |---|---|---|
-| Leer | Docs del vault, docs de tareas, handoffs, project-registry.md | Código fuente (`.go .ts .tsx .py .rs .dart` etc.) · Archivos de diseño (`.pen .fig .sketch`) |
-| Escribir | Docs del vault, sprint-current.md | Planes técnicos, task.md con síntesis, archivos de código |
+| Leer | Docs de `<docs>`, docs de tareas, handoffs, project-registry.md | Código fuente (`.go .ts .tsx .py .rs .dart` etc.) · Archivos de diseño (`.pen .fig .sketch`) |
+| Escribir | Docs de `<docs>`, sprint-current.md | Planes técnicos, task.md con síntesis, archivos de código |
 
 `Glob` y `Bash` (build/test) siempre permitidos. Lecturas de archivos de diseño → delegar al agente downstream. Detalle: `anti-patterns.md`.
 
@@ -148,10 +148,9 @@ En modo directo, el orquestador lee/escribe libremente. En modo agente:
 
 ### Reglas de QA
 
-**Ejecutar cuando CUALQUIERA de:** ≥8 pts — auth/permisos/tokens — migraciones DB — pagos/billing — contratos API públicos — crypto/secrets/SQL/file-paths — concurrencia con estado compartido — usuario pide — refactor de subsistema crítico — score QA previo < 8.
+**Incluir en pipeline cuando CUALQUIERA de:** ≥8 pts — auth/permisos/tokens — migraciones DB — pagos/billing — contratos API públicos — crypto/secrets — concurrencia — usuario pide.
 **Saltar cuando TODOS:** Medium (3-5 pts) + ninguno de arriba + usuario no pidió.
-**Piso cuando se salta:** Self-QA checklist + lint + run-tests + handoff enriquecido al tester.
-**En la duda: recomendar QA.** El usuario decide.
+**En la duda: recomendar QA.** El usuario decide. Las reglas internas de scoring y bloqueo las maneja el agente QA.
 
 ## Gates adicionales
 
@@ -165,30 +164,35 @@ En modo directo, el orquestador lee/escribe libremente. En modo agente:
 
 ## Reglas de orquestación
 
-- Resolver `<docs>` desde `~/.claude/project-registry.md` antes de cualquier agente; pasar docs path + TASK-ID a cada agente
-- Especificar paths de archivos de convención para el Architect (reglas de arquitectura + coding del stack objetivo)
-- Especificar skill de convención para Developer; especificar stack para Tester
-- El architect puede auto-resolver contexto del codebase (Paso 0) cuando no corrió scanner — NO bloquear por falta de context.md
+- Resolver `<docs>` desde `~/.claude/project-registry.md` antes de cualquier agente
 - **Un escritor a la vez.** Máx tareas por run: 2 (preferido: 1). Cambio de scope → re-ejecutar PM.
 - Todos los docs en español. Código, keys, paths → inglés. Preguntas al usuario → español.
-- Al terminar todos los agentes: actualizar `sprint-current.md` (fila Done), `board.md` (columna Done), frontmatter de la tarea (`status: done`).
+- Al terminar todos los agentes: cerrar tareas según el sistema de docs (Obsidian: sprint-current.md + board.md + frontmatter; Linear: mover issue a Done; `.workspace/`: sprint-current.md).
 
 ## Paso de contexto
 
 - Contenido en contexto → inline. No en contexto → pasar path. Output de agente → inline al siguiente.
-- Nunca leer código fuente para relayarlo (anti-pattern #5). Máx 1 doc por invocación de agente.
+- Nunca leer código fuente para relayarlo (anti-pattern #5).
+- Cada agente define sus campos requeridos internamente. El orquestador SOLO debe pasar los campos de la tabla de abajo — **no duplicar lógica ni reglas que ya viven en el agente.**
 
-### Routing del Developer (Medium+ — SPEC es input principal)
+## Input por agente (campos obligatorios del orquestador)
 
-| Stack | Pasar |
-|---|---|
-| Go | `spec.md` + `architecture-backend.md` + `architecture-db.md` |
-| React | `spec.md` + `architecture-frontend.md` |
-| Flutter | `spec.md` + `architecture-frontend.md` (mobile) |
-| DBA | `architecture-db.md` |
-| Full-stack | `spec.md` + todas las vistas generadas |
+Cada agente valida sus inputs al inicio y hace STOP si falta algo requerido. El orquestador es responsable de pasar estos campos — nada más. Las reglas internas (convenciones, handoff format, budget, QA checks) las maneja cada agente.
 
-Small (sin SPEC): `architecture.md` + vistas. QA/Tester: `spec.md` + handoff.
+| Agente | Campos requeridos | Notas |
+|---|---|---|
+| **scanner** | `project_root` | Solo el path raíz |
+| **pm** | `user_request`, `context.md` (inline/path), `sprint-current.md` (inline/path) | — |
+| **designer** | `prd.md` (inline/path, incluye Scope + Platform), `context.md`, `design-system.md` (si existe) | — |
+| **architect** | `prd.md` (inline/path), `dtd.md` (si existe), `context.md` (inline/path), `output` (`ard`/`spec`/`full`), `task_path`, `context_path`, convention files (architecture + coding del stack) | Puede auto-resolver contexto si no corrió scanner |
+| **developer** | `complexity` + pts, `stack`, `objective`, `files` (o "en SPEC"), `TASK-ID` (Medium+), `docs_path` (Medium+), `SPEC` inline/path (Medium+), convention file paths (Medium+), `mode` (`normal`/`maquetation`/`integration`) | Small: puede recibir reglas inline en vez de paths |
+| **dba** | `architecture-db.md` (inline/path), `task_path` | — |
+| **tester** | `stack`, `TASK-ID`, `complexity`, handoff content o path (sección `## Handoff for tester`), `SPEC` (Medium+, secundario) | El tester carga sus convenciones de testing solo — no pasarlas |
+| **qa** | `SPEC` (inline/path), `.handoff/<TASK-ID>.md`, `git diff` | — |
+| **security** | `git diff`, dependency paths | — |
+| **devops** | infra files afectados, objetivo | — |
+| **reporter** | `TASK-ID`, resumen de `git diff` | — |
+| **mkt-content** | contexto de proyecto/marca, audiencia, identidad visual | — |
 
 ---
 
@@ -198,5 +202,5 @@ Small (sin SPEC): `architecture.md` + vistas. QA/Tester: `spec.md` + handoff.
 |---|---|
 | Invocar developer | `plan-approval.md` |
 | Re-invocar después de QA/security | `qa-fix.md` |
-| Registry/contexto stale | `vault-setup.md` |
+| Registry/contexto stale / docs system unknown | `vault-setup.md` |
 | Duda de límites | `anti-patterns.md` |

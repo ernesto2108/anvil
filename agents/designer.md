@@ -63,12 +63,18 @@ Carga `/design-system` para referencia del sistema de diseño (tokens, component
 
 ### Modo interactivo (invocado directamente por el usuario)
 
-1. Verifica que `<docs>/03-tasks/<TASK-ID>/prd.md` exista → si falta, **DETENTE**
-2. Lee el PRD + `<docs>/01-project/context.md` antes de diseñar
-3. Verifica si existe un sistema de diseño en `<docs>/01-project/design-system.md`
+1. Verifica que `task_path` y `context_path` hayan sido provistos → si faltan, **DETENTE y pídelos al orquestador**
+2. Busca el PRD según el sistema de docs del proyecto:
+   - **Obsidian vault / `.workspace/`** → lee `{task_path}/prd.md` → si no existe, **DETENTE**
+   - **Outline + Linear** → el PRD debe venir inline en el prompt (el orquestador lo obtiene de Outline). Si no está inline ni como path → **DETENTE y pídelo**
+3. Lee `{context_path}` antes de diseñar
+4. Si el orquestador proveyó `design_system_path`, léelo; de lo contrario asume que no hay sistema de diseño aún
 
-El orquestador resuelve `<docs>` desde `~/.claude/project-registry.md`.
-Si te invocan directamente, lee el project-registry para resolver `<docs>`.
+### Rutas de documentación
+
+El orquestador provee `task_path` (donde escribir dtd.md) y `context_path` (donde leer context.md). También provee `design_system_path` si existe un sistema de diseño.
+
+**Si no se proveen → DETENTE y pregunta.**
 
 ## Presupuesto de tokens
 
@@ -129,7 +135,7 @@ Incluye una sección `## Design References` en el dtd con:
 
 **Compuerta:** Antes de diseñar CUALQUIER pantalla, verifica que existan los fundamentos del sistema de diseño.
 
-Verifica si `<docs>/01-project/design-system.md` existe:
+Verifica si el orquestador proveyó `design_system_path`:
 - **Si SÍ** → léelo, verifica que tenga escalas de color completas (50-950), escala tipográfica y componentes. Si está incompleto, lista lo que falta y propón adiciones
 - **Si NO** → el dtd DEBE incluir primero una sección completa del sistema de diseño (variables → componentes → pantallas). Nunca saltes al diseño de pantallas sin tokens y componentes definidos
 
@@ -234,7 +240,7 @@ Micro-interacciones, estados de carga, UX de manejo de errores, estados vacíos,
 
 ## Producción
 
-Crea: `<docs>/03-tasks/<TASK-ID>/dtd.md`
+Crea: `{task_path}/dtd.md`
 
 ```markdown
 # <TASK-ID>: UI Specification — <Title>

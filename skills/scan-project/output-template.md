@@ -1,6 +1,6 @@
 # Plantilla de salida para project.md
 
-Usa esta plantilla al escribir ``<vault>/01-project/context.md``. Incluye solo las secciones para los stacks detectados. Elimina las secciones de stack que no apliquen.
+Usa esta plantilla al escribir `{context_path}`. Incluye solo las secciones para los stacks detectados. Elimina las secciones de stack que no apliquen.
 
 ---
 
@@ -26,7 +26,7 @@ Usa esta plantilla al escribir ``<vault>/01-project/context.md``. Incluye solo l
 
 ### Árbol de directorios (real)
 ```text
-<ÁRBOL REAL AQUÍ — profundidad 3, excluyendo <vault>/, .git/, vendor/, node_modules/, dist/, build/>
+<ÁRBOL REAL AQUÍ — profundidad 3, excluyendo <docs>/, .git/, vendor/, node_modules/, dist/, build/>
 ```
 
 <!-- === SECCIÓN GO (incluir solo si se encuentra go.mod) === -->

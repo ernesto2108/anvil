@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Task Complete
 
-Automatiza los 5 pasos necesarios para cerrar una tarea en el vault de Obsidian.
+Automatiza los pasos necesarios para cerrar una tarea. El comportamiento se adapta al sistema de docs del proyecto (Obsidian vault, Linear+Outline, o `.workspace/`). Resolver `<docs>` desde `~/.claude/project-registry.md` para detectar el sistema.
 
 ## Uso
 
@@ -21,7 +21,10 @@ Cuando se invoca con un TASK-ID (y resumen opcional):
 
 ### Paso 1 — Encontrar el archivo de tarea
 
-Buscar `<TASK-ID>.md` en `<docs>/03-tasks/` (verificar primero las carpetas de sprint, luego el backlog).
+Buscar el archivo de tarea según el sistema de docs:
+- **Obsidian vault:** `<docs>/03-tasks/<TASK-ID>/task.md`
+- **`.workspace/`:** `.workspace/tasks/<TASK-ID>/task.md`
+- **Linear+Outline:** buscar el issue en Linear por TASK-ID
 
 ### Paso 2 — Actualizar el estado de la tarea
 
@@ -30,19 +33,27 @@ En el frontmatter del archivo de tarea, establecer:
 status: done
 ```
 
-### Paso 3 — Actualizar el tablero Kanban
+### Paso 3 — Actualizar el tablero (si aplica)
 
-En `<docs>/02-backlog/board.md`:
-1. **Eliminar** la línea de la tarea de cualquier columna en la que se encuentre (Backlog, To Do, In Progress, Blocked)
-2. **Eliminar** cualquier duplicado en Backlog si la tarea también existe en una carpeta de sprint
+**Obsidian vault:**
+En `{board_path}` (solo Obsidian vault):
+1. **Eliminar** la línea de la tarea de cualquier columna en la que se encuentre
+2. **Eliminar** cualquier duplicado en Backlog
 3. **Agregar** a la columna Done:
    ```
    - [x] [[<sprint>/<TASK-ID>]] <resumen o título> #<service> #<labels>
    ```
 
+**Linear+Outline:** mover el issue a Done en Linear. No hay archivos locales.
+
+**`.workspace/`:** no hay board.md — omitir este paso.
+
 ### Paso 4 — Actualizar métricas del sprint (si aplica)
 
-En `<docs>/02-backlog/sprint-current.md`, incrementar los SP completados por los `story_points` de la tarea.
+**Obsidian vault:** En `<docs>/02-backlog/sprint-current.md`, incrementar los SP completados.
+**`.workspace/`:** En `.workspace/sprint-current.md`, incrementar los SP completados.
+
+**Linear+Outline:** las métricas viven en Linear — omitir.
 
 ### Paso 5 — Archivar la nota de handoff
 
@@ -57,7 +68,7 @@ Emitir una confirmación de una línea:
 
 ## Reglas
 
-- Resolver `<docs>` desde `~/.claude/project-registry.md`
+- Resolver `<docs>` y el tipo de sistema de docs desde `~/.claude/project-registry.md`
 - Si no se encuentra el archivo de tarea → reportar error, no crearlo
 - Si la tarea ya tiene `status: done` → omitir, reportar "already done"
 - NO modificar ningún archivo que no sea: el .md de la tarea, board.md, sprint-current.md

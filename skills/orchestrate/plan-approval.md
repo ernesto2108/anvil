@@ -1,147 +1,147 @@
 ---
 name: orchestrate/plan-approval
-description: Flow 0/A/B plan approval protocol, clarification checkpoints, developer-to-tester handoff enrichment, and convention injection for Small tasks. Load when orchestrator is about to invoke developer for a Medium+ task.
+description: Protocolo de aprobación de plan Flow 0/A/B, checkpoints de clarificación, enriquecimiento de handoff developer-a-tester e inyección de convenciones para tareas Small. Cargar cuando el orquestador esté por invocar developer para una tarea Medium+.
 ---
 
-# Plan Approval
+# Aprobación de Plan
 
-**Load when:** about to invoke developer for a Medium+ task (Flow 0/A/B decision, handoff chain prep).
-
----
-
-## Clarification checkpoints (MANDATORY)
-
-Before launching certain agents, the orchestrator MUST ask the user questions. DO NOT assume — ask first.
-
-### Before Architect (if task touches DB or schema)
-
-Ask: (1) "What existing tables are related?" (2) "Extend existing table or create new?" (3) "Constraints or relationships to consider?"
-
-**Why:** prevents Architect from designing a new table when ALTER TABLE would suffice.
-
-### Before Developer
-
-**For Medium+ tasks**, check for an existing handoff note per `/handoff` skill (Read operation). If found, pass it inline to the developer — this is a continuation.
-
-**If no handoff exists**, ask the user:
-1. "Do you already have progress on this feature? What files already exist?"
-2. "Is there partial code or a branch with prior work?"
-
-**Why:** The handoff prevents the Developer from wasting tokens re-reading PRD, design, and code already processed. If the user confirms prior work (and there's no handoff), be specific: "Only X, Y, Z are missing — don't read the rest."
-
-**Skip handoff check for Small tasks (1-5 pts).**
+**Cargar cuando:** se esté por invocar developer para una tarea Medium+ (decisión Flow 0/A/B, preparación de cadena de handoff).
 
 ---
 
-## Plan approval flows (CRITICAL)
+## Checkpoints de clarificación (OBLIGATORIO)
 
-**The USER approves plans, not the orchestrator.** Hard rule. Three flows, chosen by whether an architect already ran.
+Antes de lanzar ciertos agentes, el orquestador DEBE hacer preguntas al usuario. NO asumir — preguntar primero.
 
-### Flow 0 — Architect ran, reuse §8 checklist (PREFERRED for Complex tasks)
+### Antes del Architect (si la tarea toca DB o schema)
 
-When the architect just produced `design.md` with a `§8 Implementation checklist` (or equivalent "pasos secuenciales"), **do not re-synthesize** the plan. The checklist IS the plan at file-level granularity.
+Preguntar: (1) "¿Qué tablas existentes están relacionadas?" (2) "¿Extender tabla existente o crear nueva?" (3) "¿Constraints o relaciones a considerar?"
 
-1. Orchestrator already has `design.md` in context from the architect call
-2. Present the `§8 checklist` **verbatim** to the user + a 2-line summary of key decisions D1-Dn
-3. User approves explicitly (`sí`, `dale`, `apruebo`)
-4. Invoke developer with `plan_preapproved=true` and the design.md inlined (see Design inline rule below)
+**Por qué:** previene que el Architect diseñe una tabla nueva cuando ALTER TABLE bastaría.
 
-**Forbidden in Flow 0:** rewriting the checklist, adding files the architect didn't list, removing files without user approval, asking the developer to "come up with the file list". The DASH-FEAT-008 retrospective showed Flow 0 absence caused duplicated tokens and minor drift.
+### Antes del Developer
 
-### Flow A — User-dictated plan, no architect (shortcut)
+**Para tareas Medium+**, verificar si existe una nota de handoff según la skill `/handoff` (operación Read). Si existe, pasarla inline al developer — es una continuación.
 
-Valid ONLY when the orchestrator has: read context itself, designed a concrete plan with file list + patterns + decisions, presented it to the user in the main conversation, and received EXPLICIT approval (`sí`, `dale`, `apruebo`) — not a generic "continue".
+**Si no existe handoff**, preguntar al usuario:
+1. "¿Ya tienes avance en esta feature? ¿Qué archivos ya existen?"
+2. "¿Hay código parcial o un branch con trabajo previo?"
 
-Then invoke developer once with `plan_preapproved=true` + the full plan inline + instructions to create `.handoff/<TASK-ID>.md` as progress artifact, proceed directly, update handoff during work, fill `## Handoff for tester` before finishing.
+**Por qué:** El handoff previene que el Developer gaste tokens re-leyendo PRD, diseño y código ya procesado. Si el usuario confirma trabajo previo (y no hay handoff), ser específico: "Solo falta X, Y, Z — no leas el resto."
 
-**Flow A legitimacy test:** did the USER type the file list in chat, or did the ORCHESTRATOR synthesize it and the user only approved the strategy ("go with option B")? Strategic approval = Flow B, not Flow A. See `anti-patterns.md` #6.
+**Omitir verificación de handoff para tareas Small (1-5 pts).**
 
-### Flow B — Developer designs the plan (no architect, no user plan)
+---
 
-1. Invoke developer with: `"MANDATORY FIRST STEP: Create .handoff/<TASK-ID>.md with execution plan. Then STOP and return plan summary — do NOT write production code. Do NOT present directly to user."`
-2. Developer returns plan summary
-3. **Orchestrator surfaces the plan to the user and WAITS for explicit approval.** Forbidden phrases: "el plan coincide, apruebo", "sigo adelante" — user decides, not orchestrator
-4. Loop:
-   - `dale` / `ok` / `aprobado` → invoke developer with `plan_preapproved=true` + approved plan inline
-   - User asks changes → new plan → surface again
-   - User rejects → restart scope
+## Flujos de aprobación de plan (CRÍTICO)
 
-**Never:** auto-approve, interpret silence as approval, interpret generic "sigue" as approval, skip the surface step.
+**El USUARIO aprueba planes, no el orquestador.** Regla dura. Tres flujos, elegidos según si un architect ya corrió.
 
-### Design inline rule (Flow 0 + tester handoffs)
+### Flow 0 — Architect corrió, reutilizar checklist §8 (PREFERIDO para tareas Complex)
 
-When invoking the developer after Flow 0, **inline the `design.md` content in the prompt** instead of only passing the path, when ALL: `design.md` ≤500 lines, orchestrator already has it in context, developer needs the full design.
+Cuando el architect acaba de producir `design.md` con un `§8 Checklist de implementación` (o equivalente "pasos secuenciales"), **no re-sintetizar** el plan. El checklist ES el plan a nivel de granularidad de archivos.
 
-This saves a full `Read` call (~3-5k tokens) and guarantees the developer sees the same version the user approved. Pass it as:
+1. El orquestador ya tiene `design.md` en contexto desde la llamada al architect
+2. Presentar el `checklist §8` **textualmente** al usuario + un resumen de 2 líneas de decisiones clave D1-Dn
+3. El usuario aprueba explícitamente (`sí`, `dale`, `apruebo`)
+4. Invocar developer con `plan_preapproved=true` y el design.md inlined (ver regla de Design inline abajo)
+
+**Prohibido en Flow 0:** reescribir el checklist, agregar archivos que el architect no listó, eliminar archivos sin aprobación del usuario, pedirle al developer que "genere la lista de archivos". La retrospectiva de DASH-FEAT-008 mostró que la ausencia de Flow 0 causó tokens duplicados y desviación menor.
+
+### Flow A — Plan dictado por el usuario, sin architect (atajo)
+
+Válido SOLO cuando el orquestador ha: leído el contexto él mismo, diseñado un plan concreto con lista de archivos + patrones + decisiones, presentado al usuario en la conversación principal, y recibido aprobación EXPLÍCITA (`sí`, `dale`, `apruebo`) — no un genérico "continúa".
+
+Luego invocar developer una vez con `plan_preapproved=true` + el plan completo inline + instrucciones de crear `.handoff/<TASK-ID>.md` como artefacto de progreso, proceder directamente, actualizar handoff durante el trabajo, llenar `## Handoff para tester` antes de terminar.
+
+**Test de legitimidad de Flow A:** ¿el USUARIO escribió la lista de archivos en el chat, o el ORQUESTADOR la sintetizó y el usuario solo aprobó la estrategia ("ve con la opción B")? Aprobación estratégica = Flow B, no Flow A. Ver `anti-patterns.md` #6.
+
+### Flow B — Developer diseña el plan (sin architect, sin plan del usuario)
+
+1. Invocar developer con: `"PRIMER PASO OBLIGATORIO: Crear .handoff/<TASK-ID>.md con plan de ejecución. Luego DETENERSE y devolver resumen del plan — NO escribir código de producción. NO presentar directamente al usuario."`
+2. Developer devuelve resumen del plan
+3. **El orquestador muestra el plan al usuario y ESPERA aprobación explícita.** Frases prohibidas: "el plan coincide, apruebo", "sigo adelante" — el usuario decide, no el orquestador
+4. Ciclo:
+   - `dale` / `ok` / `aprobado` → invocar developer con `plan_preapproved=true` + plan aprobado inline
+   - El usuario pide cambios → nuevo plan → mostrar de nuevo
+   - El usuario rechaza → reiniciar alcance
+
+**Nunca:** auto-aprobar, interpretar silencio como aprobación, interpretar genérico "sigue" como aprobación, omitir el paso de mostrar.
+
+### Regla de Design inline (Flow 0 + handoffs para tester)
+
+Al invocar el developer después de Flow 0, **incluir el contenido de `design.md` inline en el prompt** en lugar de solo pasar el path, cuando TODO: `design.md` ≤500 líneas, el orquestador ya lo tiene en contexto, el developer necesita el diseño completo.
+
+Esto ahorra una llamada `Read` completa (~3-5k tokens) y garantiza que el developer vea la misma versión que el usuario aprobó. Pasarlo como:
 
 ```
-Design (pre-approved by user, from <docs>/03-tasks/<TASK-ID>/design.md):
-<inline content>
+Diseño (pre-aprobado por el usuario, de {task_path}/design.md):
+<contenido inline>
 
-DO NOT re-read the design file — you have the complete content above.
+NO releas el archivo de diseño — tienes el contenido completo arriba.
 ```
 
-For files >500 lines: pass the path + tell the developer which sections are load-bearing.
+Para archivos >500 líneas: pasar el path + decirle al developer qué secciones son clave.
 
-**Same rule for tester handoffs:** inline the `## Handoff for tester` section if the orchestrator has it in context, instead of asking the tester to re-read the handoff file.
-
----
-
-## Handoff path rule (CRITICAL)
-
-Handoffs → `.handoff/` in project root. Docs → `<docs>/` vault. Never mix. See `vault-setup.md` path map.
+**Misma regla para handoffs al tester:** incluir inline la sección `## Handoff para tester` si el orquestador la tiene en contexto, en lugar de pedirle al tester que relea el archivo de handoff.
 
 ---
 
-## Developer → Tester handoff enrichment (MANDATORY)
+## Regla de path de handoff (CRÍTICO)
 
-Before the orchestrator invokes the tester, it MUST verify that the developer filled the `## Handoff for tester` section of `.handoff/<TASK-ID>.md`. This section exists precisely so the tester does not re-read production files.
+Handoffs → `.handoff/` en la raíz del proyecto. Docs → `<docs>/` vault. Nunca mezclar. Ver mapa de paths en `vault-setup.md`.
 
-**Verification checklist (before invoking tester):**
+---
 
-1. [ ] `.handoff/<TASK-ID>.md` has a non-empty `## Handoff for tester` section
-2. [ ] "Public interfaces / contracts" has the exact signatures of new/modified functions, types, DTOs
-3. [ ] "Edge cases descubiertos" is filled (not just "N/A" — if there truly are none, the developer should say "sin edge cases no triviales")
-4. [ ] "Tests requeridos — por stack" has tests grouped by stack (`#### Tests Go`, `#### Tests React/TS`, etc.) — each group with file path, run command, and numbered list. **Single flat list is NOT accepted for cross-stack tasks.**
-5. [ ] "Validación ya ejecutada" lists the commands the developer ran (go build, go vet, npm run build)
-6. [ ] `## Output entregado` table is filled with build/lint/test results
-7. [ ] `## Puente de contratos` is filled (cross-stack tasks only) — both "Backend expone" and "Frontend consume" have exact types
-8. [ ] `## Dependencias cross-service` is filled (cross-service tasks only)
+## Enriquecimiento de handoff Developer → Tester (OBLIGATORIO)
 
-**If any check fails:** re-invoke the developer with the specific gap: "Fill [missing section] in `.handoff/<TASK-ID>.md`. Do NOT touch production code." This is cheaper than letting the tester re-read the codebase.
+Antes de que el orquestador invoque al tester, DEBE verificar que el developer llenó la sección `## Handoff para tester` de `.handoff/<TASK-ID>.md`. Esta sección existe precisamente para que el tester no relea archivos de producción.
 
-**After QA passes (before archive):** verify the developer filled `## Retro` → "Qué funcionó" and "Qué no funcionó". The orchestrator fills "Métricas" with actual invocation counts and QA bounces.
+**Checklist de verificación (antes de invocar tester):**
 
-**Tester prompt template (after verification passes):**
+1. [ ] `.handoff/<TASK-ID>.md` tiene una sección `## Handoff para tester` no vacía
+2. [ ] "Interfaces públicas / contratos" tiene las firmas exactas de funciones, tipos y DTOs nuevos/modificados
+3. [ ] "Edge cases descubiertos" está lleno (no solo "N/A" — si realmente no hay, el developer debe decir "sin edge cases no triviales")
+4. [ ] "Tests requeridos — por stack" tiene tests agrupados por stack (`#### Tests Go`, `#### Tests React/TS`, etc.) — cada grupo con path de archivo, comando de ejecución y lista numerada. **Una lista plana NO es aceptada para tareas cross-stack.**
+5. [ ] "Validación ya ejecutada" lista los comandos que el developer ejecutó (go build, go vet, npm run build)
+6. [ ] `## Output entregado` tiene tabla llena con resultados de build/lint/test
+7. [ ] `## Puente de contratos` está lleno (solo tareas cross-stack) — tanto "Backend expone" como "Frontend consume" tienen tipos exactos
+8. [ ] `## Dependencias cross-service` está lleno (solo tareas cross-service)
+
+**Si cualquier verificación falla:** re-invocar al developer con el gap específico: "Llena [sección faltante] en `.handoff/<TASK-ID>.md`. NO toques código de producción." Esto es más barato que dejar al tester releer el codebase.
+
+**Después de que QA pasa (antes de archivar):** verificar que el developer llenó `## Retro` → "Qué funcionó" y "Qué no funcionó". El orquestador llena "Métricas" con conteos reales de invocaciones y rebotes de QA.
+
+**Plantilla de prompt para tester (después de que la verificación pasa):**
 
 ```
 Stack(s): <go|react|flutter|...>. Skill: <convention-skill>.
 
-PRIMARY INPUT: Read `.handoff/<TASK-ID>.md` — specifically the `## Handoff for tester` section. That section contains:
-- files the developer touched (with their role)
-- exact signatures of new interfaces/DTOs
-- patterns applied
-- edge cases discovered
+INPUT PRINCIPAL: Lee `.handoff/<TASK-ID>.md` — específicamente la sección `## Handoff para tester`. Esa sección contiene:
+- archivos que el developer tocó (con su rol)
+- firmas exactas de interfaces/DTOs nuevos
+- patrones aplicados
+- edge cases descubiertos
 - build tags / constraints
-- **tests requeridos — por stack** — tests grouped by stack (#### Tests Go, #### Tests React/TS, etc.), each with file path, run command, and numbered list. Work one stack at a time.
-- validation already run (do NOT repeat build checks)
+- **tests requeridos — por stack** — tests agrupados por stack (#### Tests Go, #### Tests React/TS, etc.), cada uno con path de archivo, comando de ejecución y lista numerada. Trabaja un stack a la vez.
+- validación ya ejecutada (NO repetir verificaciones de build)
 
-For cross-stack tasks, also check `## Puente de contratos` — it shows the exact contract between backend and frontend. If your tests touch the boundary, verify both sides match.
+Para tareas cross-stack, también revisa `## Puente de contratos` — muestra el contrato exacto entre backend y frontend. Si tus tests tocan el boundary, verifica que ambos lados coincidan.
 
-Do NOT re-read the production files unless the handoff is missing a specific detail you need. If the handoff is incomplete, STOP and report to the orchestrator.
+NO releas los archivos de producción a menos que el handoff no tenga un detalle específico que necesites. Si el handoff está incompleto, DETENTE y reporta al orquestador.
 
-Your job: implement ONLY the tests listed in each stack group of "Tests requeridos — por stack". Do NOT add extra tests beyond these lists.
+Tu trabajo: implementar SOLO los tests listados en cada grupo de stack de "Tests requeridos — por stack". NO agregues tests extra más allá de estas listas.
 ```
 
-Developer boundary: never writes test files. If tester finds dev-authored tests, report violation (see tester.md).
+Límite del developer: nunca escribe archivos de test. Si el tester encuentra tests escritos por el dev, reportar violación (ver tester.md).
 
 ---
 
-## Convention injection for Small tasks
+## Inyección de convenciones para tareas Small
 
-For Small tasks (1-5 pts), do NOT tell developer to load the full convention skill. Instead, read its essential rules and inject inline in the prompt:
+Para tareas Small (1-5 pts), NO decirle al developer que cargue la skill de convención completa. En su lugar, leer las reglas esenciales e inyectar inline en el prompt:
 
 - **Go:** `go-conventions/rules/coding.md` + `rules/architecture.md`
-- **React / Flutter / Astro:** read `<stack>-conventions` essential rules, include inline
+- **React / Flutter / Astro:** leer reglas esenciales de `<stack>-conventions`, incluir inline
 
-**Context injection rule:** if user provided context in conversation (screenshots, files, decisions), pass it inline — do NOT tell the agent "read file X". See global instructions for full protocol.
+**Regla de inyección de contexto:** si el usuario proporcionó contexto en la conversación (screenshots, archivos, decisiones), pasarlo inline — NO decirle al agente "lee el archivo X". Ver instrucciones globales para el protocolo completo.

@@ -57,7 +57,7 @@ Después de recopilar suficientes respuestas: confirmar con un breve resumen en 
 
 ## Template de PRD
 
-Crear en: `<docs>/03-tasks/<TASK-ID>/prd.md`
+Crear en: `{task_path}/prd.md` (el orquestador provee `task_path` resuelto). En Linear+Outline, el PRD se crea como documento en Outline y se vincula al issue de Linear.
 
 ```markdown
 # <TASK-ID>: <Titulo>
@@ -169,11 +169,13 @@ Usar formato Dado/Cuando/Entonces. Un comportamiento por escenario.
 
 ## Formato de salida para descomposición de tareas
 
-Cuando el PM descompone un PRD en tareas (vía `/backlog-management`), cada archivo de tarea DEBE incluir **frontmatter de Dataview** para que funcionen el Kanban de Obsidian y las queries de Dataview.
+Cuando el PM descompone un PRD en tareas (vía `/backlog-management`), el formato depende del sistema de docs del proyecto:
 
-**Template:** Leer `vault-template/03-tasks/task-template.md` para el formato exacto. Copiarlo como punto de partida para cada nuevo archivo de tarea.
+- **Obsidian vault:** cada task.md DEBE incluir frontmatter de Dataview. Leer `vault-template/03-tasks/task-template.md` para el formato exacto.
+- **Linear+Outline:** las tareas se crean como issues en Linear — no como archivos locales.
+- **`.workspace/`:** task.md con frontmatter YAML simple (sin plugins de Obsidian).
 
-**Error común:** Crear archivos task.md como markdown plano sin frontmatter. Esto rompe el tablero Kanban y el dashboard. Cada task.md necesita el bloque YAML `---` al inicio.
+**Si no sabes qué sistema usa el proyecto → consulta `~/.claude/project-registry.md` o pregunta al usuario.**
 
 ## Qué NO va en un PRD
 

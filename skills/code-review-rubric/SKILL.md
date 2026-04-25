@@ -53,7 +53,7 @@ description: Rúbrica de puntuación y formato de reporte para revisiones de có
 
 ## Formato del Reporte
 
-Escribir en: `<docs>/03-tasks/<TASK-ID>/qa-review.md`
+Escribir en: `{task_path}/qa-review.md` (el orquestador provee `task_path` resuelto según el sistema de docs)
 
 ```markdown
 # QA Review — <TASK-ID>
@@ -82,7 +82,7 @@ low / medium / high — basado en el radio de explosión de los problemas encont
 
 ## Formato de Tarea para el Backlog
 
-Cuando se encuentran problemas, agregar a: `<docs>/02-backlog/sprint-current.md`
+Cuando se encuentran problemas, agregar al backlog (`{backlog_path}` — resuelto por el orquestador según el sistema de docs; en Linear+Outline crear issues en Linear)
 
 Cada tarea debe incluir:
 - Título (imperativo: "Fix nil check in user service")

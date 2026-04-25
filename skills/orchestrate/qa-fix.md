@@ -1,77 +1,77 @@
 ---
 name: orchestrate/qa-fix
-description: QA fix loop re-invocation protocol, prompt template, security-fix mode, and when NOT to use this mode. Load when orchestrator is about to re-invoke developer after QA or security blocking findings.
+description: Protocolo de re-invocación del loop de corrección QA, plantilla de prompt, modo security-fix y cuándo NO usar este modo. Cargar cuando el orquestador esté por re-invocar developer después de hallazgos bloqueantes de QA o security.
 ---
 
-# QA Fix Loop
+# Loop de Corrección QA
 
-**Load when:** QA or security agent returns blocking findings on a completed task and the orchestrator is about to re-invoke developer to apply fixes.
-
----
-
-## Rule: re-invoke the developer in `qa-fix` mode
-
-When QA returns BLOCKING findings, the orchestrator must re-invoke the developer to apply fixes. A FRESH developer invocation costs ~20-30k tokens (re-loading convention skills, PRD, design, context.md, production files, handoff). That is pure waste — the previous developer invocation already had all that context and wrote the handoff to prove it.
-
-The orchestrator passes `Mode: qa-fix` in the developer prompt. In this mode the developer:
-1. Reads `.handoff/<TASK-ID>.md` (the handoff from the first invocation) as PRIMARY context
-2. Does **NOT** re-read PRD, design, context.md
-3. Does **NOT** re-load the full convention skill — the orchestrator injects ONLY the specific rules that apply to the files being fixed (3-5 rules inline, not the whole dispatcher)
-4. Reads **ONLY** the files listed in the QA findings, not the whole package or the whole codebase
-5. Applies SURGICAL fixes — no refactors, no "while I'm here" cleanups
-6. Re-runs validation only for the files touched (`go vet -tags <tag> ./internal/<pkg>`, `npm run build` only if frontend changed)
-7. Updates `## Notas` in the handoff with a one-line entry per fix applied
-8. Does NOT rewrite `## Handoff for tester` unless a fix changed a public interface signature
+**Cargar cuando:** QA o el agente de security devuelve hallazgos bloqueantes en una tarea completada y el orquestador está por re-invocar developer para aplicar correcciones.
 
 ---
 
-## qa-fix prompt template
+## Regla: re-invocar al developer en modo `qa-fix`
+
+Cuando QA devuelve hallazgos BLOQUEANTES, el orquestador debe re-invocar al developer para aplicar correcciones. Una invocación NUEVA del developer cuesta ~20-30k tokens (re-cargar skills de convención, PRD, diseño, context.md, archivos de producción, handoff). Eso es puro desperdicio — la invocación anterior del developer ya tenía todo ese contexto y escribió el handoff para probarlo.
+
+El orquestador pasa `Mode: qa-fix` en el prompt del developer. En este modo el developer:
+1. Lee `.handoff/<TASK-ID>.md` (el handoff de la primera invocación) como contexto PRINCIPAL
+2. **NO** relee PRD, diseño, context.md
+3. **NO** recarga la skill de convención completa — el orquestador inyecta SOLO las reglas específicas que aplican a los archivos siendo corregidos (3-5 reglas inline, no el dispatcher completo)
+4. Lee **SOLO** los archivos listados en los hallazgos de QA, no el paquete completo ni todo el codebase
+5. Aplica correcciones QUIRÚRGICAS — sin refactors, sin limpiezas de "ya que estoy aquí"
+6. Re-ejecuta validación solo para los archivos tocados (`go vet -tags <tag> ./internal/<pkg>`, `npm run build` solo si cambió frontend)
+7. Actualiza `## Notas` en el handoff con una entrada de una línea por corrección aplicada
+8. NO reescribe `## Handoff para tester` a menos que una corrección haya cambiado la firma de una interfaz pública
+
+---
+
+## Plantilla de prompt qa-fix
 
 ```
 Mode: qa-fix. TASK-ID: <TASK-ID>.
 
-The developer already completed the initial implementation for this task. The handoff at `.handoff/<TASK-ID>.md` contains the full context: files touched, patterns applied, decisions made, validation run. THAT is your primary context.
+El developer ya completó la implementación inicial para esta tarea. El handoff en `.handoff/<TASK-ID>.md` contiene el contexto completo: archivos tocados, patrones aplicados, decisiones tomadas, validación ejecutada. ESE es tu contexto principal.
 
-QA review returned the following BLOCKING findings (must fix before this task can merge):
+La revisión de QA devolvió los siguientes hallazgos BLOQUEANTES (deben corregirse antes de que esta tarea pueda mergearse):
 
-<inline QA findings — exact issues with file paths and line numbers when available, one finding per bullet>
+<hallazgos de QA inline — issues exactos con paths de archivos y números de línea cuando estén disponibles, un hallazgo por bullet>
 
-Execution rules:
-1. Read `.handoff/<TASK-ID>.md` first. Do NOT re-read PRD, design, or context.md.
-2. Read ONLY the files mentioned in the QA findings above — not the whole package, not the whole codebase.
-3. Apply MINIMAL fixes — address ONLY the findings. No extra refactors, no cleanups, no "while I'm here".
-4. Re-run validation commands scoped to the files you touched:
-   - Go: `go vet -tags <tag> ./internal/<pkg>` + relevant unit test package
-   - Frontend: `npm run build` only if you touched .ts/.tsx
-5. Update `## Notas` in the handoff — one line per fix applied.
-6. Do NOT modify `## Handoff for tester` unless a fix changed a public interface signature.
+Reglas de ejecución:
+1. Lee `.handoff/<TASK-ID>.md` primero. NO releas PRD, diseño ni context.md.
+2. Lee SOLO los archivos mencionados en los hallazgos de QA arriba — no el paquete completo, no todo el codebase.
+3. Aplica correcciones MÍNIMAS — aborda SOLO los hallazgos. Sin refactors extras, sin limpiezas, sin "ya que estoy aquí".
+4. Re-ejecuta comandos de validación con alcance limitado a los archivos que tocaste:
+   - Go: `go vet -tags <tag> ./internal/<pkg>` + paquete de unit test relevante
+   - Frontend: `npm run build` solo si tocaste .ts/.tsx
+5. Actualiza `## Notas` en el handoff — una línea por corrección aplicada.
+6. NO modifiques `## Handoff para tester` a menos que una corrección haya cambiado la firma de una interfaz pública.
 
-Convention rules that apply to your fix (injected inline — do NOT load the full skill):
-<inline ONLY the 3-5 specific rules from the convention skill that apply to the fix — e.g., "error wrapping: wrap SQL errors with fmt.Errorf('package: action: %w', err)" — NOT the whole dispatcher>
+Reglas de convención que aplican a tu corrección (inyectadas inline — NO cargues la skill completa):
+<inline SOLO las 3-5 reglas específicas de la skill de convención que aplican a la corrección — ej., "wrapping de errores: envolver errores SQL con fmt.Errorf('paquete: acción: %w', err)" — NO el dispatcher completo>
 
-Forbidden:
-- Loading the full convention skill
-- Reading PRD / design / context.md
-- Touching files outside the findings
-- Refactoring code that works
+Prohibido:
+- Cargar la skill de convención completa
+- Leer PRD / diseño / context.md
+- Tocar archivos fuera de los hallazgos
+- Refactorizar código que funciona
 ```
 
 ---
 
-## When NOT to use qa-fix mode
+## Cuándo NO usar modo qa-fix
 
-- **Findings are non-blocking** (rubric score still ≥7) → add them to the backlog as follow-up tasks, do NOT re-invoke the developer at all
-- **Findings require architectural changes** (new patterns, new abstractions, moving files) → re-invoke the developer in NORMAL mode with a new plan, not qa-fix
-- **Findings span > 5 files** → fixes are no longer surgical; use normal mode with a focused plan
-
----
-
-## Security-fix mode
-
-When the security agent returns blocking findings on a completed task, use `Mode: security-fix` with the same template (swap "QA" for "security" in the prompt). The context-savings logic is identical.
+- **Los hallazgos son no-bloqueantes** (puntaje del rubric sigue ≥7) → agregarlos al backlog como tareas de seguimiento, NO re-invocar al developer para nada
+- **Los hallazgos requieren cambios arquitecturales** (nuevos patrones, nuevas abstracciones, mover archivos) → re-invocar al developer en modo NORMAL con un nuevo plan, no qa-fix
+- **Los hallazgos abarcan > 5 archivos** → las correcciones ya no son quirúrgicas; usar modo normal con un plan enfocado
 
 ---
 
-## Expected savings
+## Modo security-fix
 
-On tasks like DASH-FEAT-006, where a fresh developer re-invocation for a11y fixes cost **22k tokens**, qa-fix mode should bring that down to **~5-8k**. Savings per QA cycle: **~15-17k tokens**. Over 5 tasks with QA cycles, that is a full invocation's worth of budget reclaimed.
+Cuando el agente de security devuelve hallazgos bloqueantes en una tarea completada, usar `Mode: security-fix` con la misma plantilla (intercambiar "QA" por "security" en el prompt). La lógica de ahorro de contexto es idéntica.
+
+---
+
+## Ahorros esperados
+
+En tareas como DASH-FEAT-006, donde una re-invocación nueva del developer para correcciones de a11y costó **22k tokens**, el modo qa-fix debería reducir eso a **~5-8k**. Ahorro por ciclo de QA: **~15-17k tokens**. En 5 tareas con ciclos de QA, eso es el presupuesto de una invocación completa recuperado.

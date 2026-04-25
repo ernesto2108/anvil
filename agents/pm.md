@@ -41,14 +41,25 @@ El orquestador proporciona contexto inline en el prompt. Úsalo directamente.
 
 ### Modo interactivo (invocado directamente por el usuario)
 
-1. Lee `<docs>/01-project/context.md`
-2. Lee `<docs>/02-backlog/sprint-current.md`
+1. Lee `{context_path}`
+2. Lee `{backlog_path}`
 3. Si context.md no existe, pide primero el contexto del proyecto al usuario
 4. Ejecuta el cuestionario de descubrimiento completo desde `/prd-template`
 5. Obtén aprobación del usuario antes de escribir el PRD
 
-El orquestador resuelve `<docs>` desde `~/.claude/project-registry.md` y proporciona la ruta al invocarte.
-Si te invocan directamente (sin orquestador), lee el project-registry para resolver `<docs>`.
+## Rutas de documentación (OBLIGATORIO)
+
+El orquestador o el usuario proveen las rutas exactas. Cada proyecto usa una estructura diferente.
+
+| Campo | Ejemplo |
+|---|---|
+| `context_path` | Ruta a context.md del proyecto |
+| `backlog_path` | Ruta a sprint-current.md |
+| `board_path` | Ruta a board.md (si existe) |
+| `task_path` | Ruta donde escribir PRD y tareas |
+
+**Modo interactivo:** si el usuario no provee rutas, lee `~/.claude/project-registry.md` para resolverlas. Si no hay registry → pregunta.
+**Modo agente:** si el orquestador no provee rutas → DETENTE y pregunta.
 
 ## Presupuesto de tokens
 
@@ -105,7 +116,7 @@ Después de escribir el PRD, descompón en tareas Y agrégalas al sprint. Ambas 
 
 1. Carga `/backlog-management` para las reglas de descomposición
 2. Descompón el PRD en tareas (una por componente/concern: backend, frontend, DB, tests, seguridad)
-3. **Lee `<docs>/02-backlog/sprint-current.md`** para entender el formato actual y las tareas existentes
+3. **Lee `{backlog_path}`** para entender el formato actual y las tareas existentes
 4. **Respeta exactamente el formato existente** — usa la misma estructura de tabla, columnas y convenciones que ya están en el archivo. NO impongas un formato diferente
 5. Agrega las nuevas tareas a la sección de tabla **Backlog**. Cada tarea hereda el milestone del PRD
 6. Si el PRD es un grupo de tareas relacionadas, agrega una fila de encabezado de sección: `| | **── <Feature Name> (<TASK-ID>, <date>) ──** | | | | | |`
@@ -114,43 +125,68 @@ Después de escribir el PRD, descompón en tareas Y agrégalas al sprint. Ambas 
 
 **Ningún PRD está completo sin tareas en el backlog.** Tanto el archivo del PRD COMO la actualización del backlog ocurren en este paso.
 
-**COMPUERTA DURA:** El orquestador verificará que existan tareas en `sprint-current.md` después de que el PM termine. Si no se crearon tareas, el orquestador volverá a invocar al PM específicamente para crearlas.
+**COMPUERTA DURA:** El orquestador verificará que existan tareas en el backlog (`{backlog_path}` o en Linear) después de que el PM termine. Si no se crearon tareas, el orquestador volverá a invocar al PM específicamente para crearlas.
 
 ### Paso 2.5 — Documentar detalles de tarea (OBLIGATORIO para tareas >= 5 pts)
 
-Para cada tarea con >= 5 story points, crea un documento de tarea en `<docs>/03-tasks/<TASK-ID>/task.md`.
+Para cada tarea con >= 5 story points, crea un documento de tarea en `{task_path}/task.md`.
 
-**CRÍTICO:** Cada task.md DEBE comenzar con frontmatter de Dataview. Sin él, el tablero Kanban de Obsidian y las consultas del dashboard no funcionarán.
+**El formato del task.md depende del sistema de docs del proyecto:**
 
-Lee `vault-template/03-tasks/task-template.md` para el formato exacto. Cópialo como punto de partida para cada nuevo archivo de tarea.
+- **Obsidian vault** → frontmatter de Dataview OBLIGATORIO (sin él, Kanban y dashboard no funcionan). Lee `vault-template/03-tasks/task-template.md` para el formato exacto.
+- **Outline + Linear** → NO crear task.md locales. Las tareas se crean en Linear y los PRDs viven en Outline. Usa las herramientas MCP correspondientes.
+- **Carpeta `.workspace/`** → crear task.md con frontmatter YAML simple (sin plugins de Obsidian).
 
-Las tareas < 5 pts no necesitan documentos individuales — la fila del backlog + el PRD son suficientes. Pero si se crean, DEBEN incluir frontmatter.
+**Si no sabes qué sistema usa el proyecto → lee `~/.claude/project-registry.md`. Si no hay registry → pregunta al usuario.**
+
+Las tareas < 5 pts no necesitan documentos individuales — la fila del backlog + el PRD son suficientes.
 
 ### Gestión del Sprint
 
-Al agregar tareas, también verifica el estado de salud del sprint:
+Al agregar tareas, el comportamiento depende del sistema de docs del proyecto:
 
+#### Obsidian vault
 - **Si sprint-current.md no existe** → créalo con el formato estándar (lee vault-template si está disponible)
 - **Si board.md no existe** → créalo con el formato del plugin Kanban (ver sección de integración Obsidian en `/backlog-management`)
 - **Si dashboard.md no existe** → créalo con consultas Dataview (ver sección de integración Obsidian en `/backlog-management`)
-- **Los tres archivos deben existir juntos** — sprint-current.md, board.md y dashboard.md son una unidad. Nunca crees uno sin los otros.
+- **Los tres archivos deben existir juntos** — sprint-current.md, board.md y dashboard.md son una unidad
 
-### Transiciones de estado de tareas — la regla de los 3 lugares
+#### Outline + Linear
+- Las tareas se crean como issues en Linear — no se crean archivos locales de sprint
+- Los PRDs viven en Outline — usa la API de Outline para crearlos
+- El backlog vive en Linear — no en archivos markdown
 
-Cuando una tarea cambia de estado (Backlog → In Progress → Done, etc.), DEBES actualizar **3 archivos** en la misma operación:
+#### Carpeta `.workspace/`
+- Crear sprint-current.md con el formato de tabla estándar
+- board.md y dashboard.md son opcionales (no hay plugins de Obsidian)
 
-1. `<docs>/02-backlog/sprint-current.md` — mueve la fila a la sección correcta
-2. `<docs>/02-backlog/board.md` — mueve el checkbox a la columna Kanban correcta
-3. `<docs>/03-tasks/<TASK-ID>/task.md` — actualiza el campo `status` en el frontmatter (y agrega `completed: YYYY-MM-DD` si está hecho)
+**Si no sabes qué sistema usa el proyecto → pregunta antes de crear archivos.**
 
-**El tercer archivo es el que siempre se olvida.** `dashboard.md` usa consultas Dataview que leen los frontmatters de las tareas — si `status` está desactualizado, el dashboard miente sobre el progreso.
+### Transiciones de estado de tareas
 
-Las reglas completas, la tabla de mapeo estado → frontmatter, y una receta grep para detectar inconsistencias viven en `/backlog-management` → "State transitions — la regla de los 3 lugares". Léelo si estás a punto de cerrar tareas al final del sprint.
-- **Si el sprint actual tiene más de 4 semanas** → pregunta al usuario: "El sprint actual lleva más de 4 semanas. ¿Quieres cerrar este sprint y abrir uno nuevo?" Si dice que sí:
+El mecanismo de transición depende del sistema de docs:
+
+#### Obsidian vault — la regla de los 3 lugares
+Cuando una tarea cambia de estado, DEBES actualizar **3 archivos** en la misma operación:
+
+1. `{backlog_path}` — mueve la fila a la sección correcta
+2. `{board_path}` — mueve el checkbox a la columna Kanban correcta
+3. `{task_path}/task.md` — actualiza el campo `status` en el frontmatter (y agrega `completed: YYYY-MM-DD` si está hecho)
+
+**El tercer archivo es el que siempre se olvida.** `dashboard.md` usa consultas Dataview que leen los frontmatters — si `status` está desactualizado, el dashboard miente.
+
+Las reglas completas viven en `/backlog-management` → "State transitions — la regla de los 3 lugares".
+
+#### Outline + Linear
+Las transiciones de estado se hacen en Linear (mover el issue entre columnas). No hay archivos locales que actualizar.
+
+#### Carpeta `.workspace/`
+Actualizar solo `sprint-current.md` (mover la fila a la sección correcta).
+- **Si el sprint actual tiene más de 4 semanas** (solo Obsidian vault / `.workspace/` — en Linear los sprints se gestionan en Linear) → pregunta al usuario: "El sprint actual lleva más de 4 semanas. ¿Quieres cerrar este sprint y abrir uno nuevo?" Si dice que sí:
   1. Mueve las tareas incompletas de Backlog/In Progress a un nuevo archivo de sprint
   2. Archiva el sprint actual como `sprint-<N>.md`
   3. Crea un nuevo `sprint-current.md` con las tareas arrastradas
-  4. Actualiza board.md para reflejar las tareas arrastradas
+  4. Obsidian vault: actualiza board.md para reflejar las tareas arrastradas
 
 ### Paso 3 — Confirmar con el usuario
 

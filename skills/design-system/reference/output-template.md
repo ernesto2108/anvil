@@ -1,6 +1,6 @@
 # Plantilla de Output — design-system.md
 
-Usa exactamente esta estructura al producir `<docs>/01-project/design-system.md`.
+Usa exactamente esta estructura al producir `{design_system_path}`.
 
 ```markdown
 # Design System — <Nombre del Proyecto>

@@ -12,8 +12,10 @@ Prevenir cambios que rompan la compatibilidad entre microservicios verificando l
 ## Ubicación del Service Map
 
 ```
-<vault>/04-architecture/service-map.yaml
+{service_map_path}
 ```
+
+Resolver desde vault-setup path table. Obsidian: `<docs>/04-architecture/service-map.yaml`. `.workspace/` o Linear+Outline: `.workspace/service-map.yaml`.
 
 Si no existe un service map, solicitar al usuario que cree uno usando la plantilla en `service-map-template.yaml`.
 

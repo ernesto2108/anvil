@@ -13,9 +13,9 @@ Invocar `/git-diff` primero para recopilar el diff crudo y el resumen de cambios
 ## Entradas
 
 - Salida de `/git-diff` (archivos cambiados, estadísticas del diff)
-- `<vault>/02-backlog/sprint-current.md`
-- `<vault>/03-tasks/<TASK-ID>/prd.md`
-- `<vault>/01-project/context.md`
+- `{backlog_path}` (sprint-current.md o Linear — según sistema de docs)
+- `{task_path}/prd.md` (o documento de Outline en Linear+Outline)
+- `{context_path}` (context.md — resuelto por el orquestador)
 
 ## Acciones
 
@@ -24,4 +24,4 @@ Invocar `/git-diff` primero para recopilar el diff crudo y el resumen de cambios
 - Inferir la intención a partir de las tareas
 - Explicar las razones
 
-Salida: `<vault>/06-reports/last-run.md` (sobreescribir si existe)
+Salida: `{reports_path}/last-run.md` (sobreescribir si existe). El orquestador resuelve `reports_path` según el sistema de docs.

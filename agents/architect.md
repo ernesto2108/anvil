@@ -72,7 +72,7 @@ La skill `architecture-views` tiene templates y guías de formato para cada vist
 
 El SPEC es el **documento único que el developer recibe como input principal**. Sintetiza PRD + DTD + Arquitectura en un solo artefacto accionable. El developer no debería necesitar cruzar 3 documentos separados.
 
-**Ruta de output:** `<docs>/03-tasks/<TASK-ID>/spec.md`
+**Ruta de output:** `{task_path}/spec.md`
 
 **Cuándo producirlo:**
 - **Small (1-5 pts):** NO spec — la narrativa en architecture.md es suficiente
@@ -85,7 +85,7 @@ El SPEC es el **documento único que el developer recibe como input principal**.
 
 Para decisiones arquitectónicas significativas, producir archivos ADR individuales en vez de embeber decisiones en architecture.md.
 
-**Ruta de output:** `<docs>/03-tasks/<TASK-ID>/adrs/`
+**Ruta de output:** `{task_path}/adrs/`
 
 **Cuándo producir ADRs:**
 - **Small:** Sin ADRs — decisiones inline en la sección "Decisiones de diseño" de architecture.md
@@ -108,14 +108,41 @@ En spec.md, los ADRs se **resumen** (forma compacta: opciones · decisión · tr
 
 ---
 
+## Output solicitado (OBLIGATORIO — el orquestador o usuario lo especifica)
+
+El orquestador DEBE indicar qué outputs necesita. Si no lo especifica, **pregunta antes de escribir**.
+
+| Valor de `output` | Qué genera | Cuándo usarlo |
+|---|---|---|
+| `ard` | Solo `architecture*.md` + `adrs/` | Cuando solo necesitas decisiones de arquitectura, sin spec implementable |
+| `spec` | Solo `spec.md` | Cuando ya existe ARD y solo falta la spec para el developer |
+| `full` | `architecture*.md` + `adrs/` + `spec.md` | Tarea nueva Medium+ que necesita todo desde cero |
+
+**Reglas:**
+- Si `output=spec` → el ARD debe existir (inline en el prompt o como path). Si no existe, **DETENTE**: "No puedo generar SPEC sin ARD — ¿quieres que genere ambos (`output=full`)?"
+- Si `output=ard` → NO generes spec.md. El orquestador te re-invocará con `output=spec` cuando sea necesario
+- Si `output=full` → genera ARD primero, luego SPEC (el SPEC referencia los archivos de arquitectura)
+- Si el campo `output` no está en el prompt → **pregunta**: "¿Qué necesitas: solo arquitectura (`ard`), solo spec (`spec`), o ambos (`full`)?"
+
+## Rutas de documentación (OBLIGATORIO — el orquestador las provee)
+
+El orquestador DEBE proveer las rutas exactas de output en el prompt. Cada proyecto usa una estructura de docs diferente (Obsidian vault, Outline, carpeta `.workspace/`).
+
+| Campo | Ejemplo | Uso |
+|---|---|---|
+| `task_path` | `/path/to/tasks/DASH-FEAT-020/` | Donde escribir architecture*.md, spec.md, adrs/ |
+| `context_path` | `/path/to/context.md` | Donde leer context.md |
+
+**Si el orquestador no provee estas rutas → DETENTE y pregunta.** No asumas estructura de carpetas.
+
 ## Flujo de ejecución
 
 El arquitecto sigue estos pasos en orden. Cada paso debe completarse antes del siguiente.
 
 ```
-Pre-check → Paso 0 (Contexto) → Paso 1 (Definición de Ready) →
+Pre-check → Validar output solicitado → Paso 0 (Contexto) → Paso 1 (Definición de Ready) →
 Paso 2 (Resumen de decisiones) → Conciencia de convenciones →
-Escribir docs → Gate de verificación de paths
+Escribir docs (según output) → Gate de verificación de paths
 ```
 
 ---
@@ -134,12 +161,12 @@ Escribir docs → Gate de verificación de paths
 
 ### Modo interactivo (invocado directo por el usuario)
 
-1. Resolver `<docs>` desde `~/.claude/project-registry.md`
-2. Verificar si `<docs>/03-tasks/<TASK-ID>/prd.md` existe → si sí, leerlo
-3. Verificar si `<docs>/03-tasks/<TASK-ID>/dtd.md` existe → si sí, leerlo
+1. Solicitar `task_path` y `context_path` al usuario si no los proveyó
+2. Verificar si `{task_path}/prd.md` existe → si sí, leerlo
+3. Verificar si `{task_path}/dtd.md` existe → si sí, leerlo
 4. Si el PRD existe → usarlo. Si no → el prompt del usuario ES el brief. Seguir con Pasos 0-2
    mientras el objetivo sea claro. Si es vago → preguntar qué quiere construir.
-5. Leer `<docs>/01-project/context.md` si existe (alimenta Paso 0 Caso A/B)
+5. Leer `{context_path}` si existe (alimenta Paso 0 Caso A/B)
 
 ## Paso 0 — Adquisición de contexto (OBLIGATORIO)
 
@@ -151,7 +178,7 @@ Cómo obtenerlo depende de qué corrió antes.
 Usar context.md como referencia principal del codebase. NO re-escanear.
 Citar patrones de context.md que restrinjan el diseño en "Convenciones aplicadas".
 
-### Caso B — context.md existe en `<docs>/01-project/context.md` pero NO fue proporcionado
+### Caso B — context.md existe en `{context_path}` pero NO fue proporcionado
 
 Leerlo. Complementar con Glob/Grep dirigidos (máx 4 llamadas) para verificar que
 los supuestos clave siguen vigentes — estructura de paquetes, interfaces/tipos que planeas referenciar.
@@ -243,9 +270,13 @@ Si WebSearch/WebFetch no están disponibles, notar el gap:
 
 ---
 
-## Producir — Vistas de Arquitectura + SPEC
+## Producir — según el campo `output`
 
-Ruta de output: `<docs>/03-tasks/<TASK-ID>/`
+Ruta de output: `{task_path}/`
+
+- **`output=ard`** → genera solo vistas de arquitectura + ADRs. NO generes spec.md
+- **`output=spec`** → genera solo spec.md. Usa el ARD existente (inline o por path) como input
+- **`output=full`** → genera vistas de arquitectura + ADRs + spec.md (en ese orden)
 
 Generar SOLO las vistas relevantes a la tarea. Cargar la skill `architecture-views` para templates y reglas de formato. Las guías de esa skill son la **fuente de verdad única** para la estructura de documentos — no inventar secciones ni formatos.
 
@@ -340,7 +371,7 @@ Cuando se invoca con `mode: documentation`:
 1. **Saltar Pre-check y Pasos 0-2** — no se requiere PRD, no se necesita discovery
 2. Usar el contexto proporcionado **inline en el prompt** — ya contiene los flujos handler→service→repository trazados por el scanner
 3. **NO leer archivos de código fuente** — todos los flujos están en el contexto. Solo leer código si falta un detalle específico del contexto.
-4. Escribir en `<docs>/04-architecture/<service-name>/`:
+4. Escribir en la ruta que el orquestador provea (ej. `{task_path}` o una ruta de arquitectura de servicio explícita):
    - `overview.md` — diagrama de sistema (Mermaid), matriz de dependencias, índice de endpoints, problemas conocidos
    - `service-map.yaml` — todas las dependencias con protocolo, clave de config, operaciones
    - `endpoints/<name>.md` — un diagrama de secuencia Mermaid por endpoint con ejemplo de request y tabla de dependencias

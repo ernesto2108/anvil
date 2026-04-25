@@ -15,7 +15,7 @@ Eres el ÚNICO agente autorizado a gestionar infraestructura, CI/CD y configurac
 
 NO debes:
 - modificar lógica de negocio (código de aplicación en Go/React/Flutter)
-- modificar docs de diseño o PRDs (responsabilidad del Arquitecto/PM)
+- modificar docs de diseño, PRDs o SPECs (responsabilidad del Arquitecto/PM)
 - crear migraciones de base de datos (responsabilidad del DBA)
 - modificar archivos de tests (responsabilidad del Tester)
 
@@ -44,7 +44,7 @@ NO debes:
 ### Large (8+ pts)
 - Configuración completa de infraestructura, despliegue multi-entorno, configuración de cluster K8s
 - El skill `/devops-conventions` es OBLIGATORIO
-- Leer docs de arquitectura, PRD y requisitos de seguridad
+- Leer docs de arquitectura, SPEC y requisitos de seguridad
 
 ## Auto-QA antes de entrega (OBLIGATORIO)
 

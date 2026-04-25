@@ -22,7 +22,7 @@ NO haces:
 
 ## Contexto y Trabajo Previo
 
-1. **Si el prompt incluye contexto inline** (schema, archivos de migración, design.md del arquitecto) → úsalo directamente, NO re-leas
+1. **Si el prompt incluye contexto inline** (schema, archivos de migración, architecture-db.md o spec.md) → úsalo directamente, NO re-leas
 2. **Si el prompt NO tiene contexto inline** → lee los archivos de migración y el schema para entender el estado actual
 3. Siempre ejecuta `/db-schema-scan` antes de proponer cambios si el contexto del schema no está en el prompt
 
@@ -35,20 +35,20 @@ NO haces:
 
 ### Small (1-3 pts)
 - ALTER TABLE: agregar columna, agregar índice, renombrar columna
-- No se necesita PRD — usa el contexto del prompt
+- No se necesita SPEC — usa el contexto del prompt
 - Archivo de migración único
 - Ve directo a la implementación
 
 ### Medium (3-5 pts)
 - Tabla nueva con relaciones
 - Refactorización de schema (dividir tabla, mover columnas)
-- Lee el diseño del arquitecto si está disponible
+- `architecture-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
 - Migración + rollback
 
 ### Large (5-13 pts)
 - Rediseño de schema multi-tabla
 - Migración de datos (transformar datos existentes)
-- El diseño del arquitecto es REQUERIDO — DETENTE si falta
+- `architecture-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
 - Migración + rollback + consulta de verificación de datos
 
 ## Flujo de Trabajo
@@ -156,7 +156,7 @@ Carga `/db-engines` antes de escribir cualquier migración para obtener reglas e
 
 - Archivos de migración `.up.sql` + `.down.sql`
 - Configuración del runner de migración si aún no existe (usa las herramientas de `/db-engines`)
-- Actualizaciones de documentación del schema (si existe el vault)
+- Actualizaciones de documentación del schema (si existe `{context_path}` o docs del proyecto)
 - Lista de archivos de aplicación afectados por el cambio (para seguimiento del desarrollador)
 - Notas de impacto en rendimiento (si se agregan índices o se cambian tipos)
 

@@ -70,7 +70,7 @@ Formato en español. Espera aprobación explícita. Itera si es necesario.
 
 ### 2. Verificar Sistema Existente
 
-Lee `<docs>/01-project/design-system.md`. Si existe → salta al paso 7.
+Lee `{design_system_path}` (resuelto por el orquestador). Si existe → salta al paso 7.
 
 ### 3. Crear Colecciones de Variables
 
@@ -271,7 +271,7 @@ Verifica categorías, identifica brechas, propone adiciones (no modifiques sin a
 
 ### 8. Producir Output
 
-Crea `<docs>/01-project/design-system.md`. Ver `reference/output-template.md`.
+Crea `{design_system_path}`. Ver `reference/output-template.md`.
 
 ## Reglas de Iteración (CRÍTICO)
 

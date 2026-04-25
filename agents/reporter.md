@@ -13,8 +13,8 @@ Tipo: solo lectura (excepto el archivo de reporte)
 
 El reporter es **omitido por defecto**. Para un run de tarea única regular, el `last-run.md` duplica información que ya vive en:
 - `.handoff/<TASK-ID>.md` (plan de ejecución, decisiones, validación, edge cases)
-- `<docs>/02-backlog/sprint-current.md` fila Done (qué + por qué + métricas, escrito por el orquestador post-completitud)
-- `<docs>/03-tasks/<TASK-ID>/design.md` (justificación arquitectónica, si corrió el arquitecto)
+- `{backlog_path}` fila Done (qué + por qué + métricas, escrito por el orquestador post-completitud)
+- `{task_path}/design.md` (justificación arquitectónica, si corrió el arquitecto)
 
 Ejecutar el reporter para un flujo de tarea única triplica la misma información y quema ~20-25k tokens sin ninguna señal nueva. La retrospectiva de DASH-FEAT-008 mostró que el `last-run.md` de 210 líneas era idéntico en contenido a la fila Done del sprint + el handoff.
 
@@ -28,7 +28,7 @@ Ejecutar el reporter para un flujo de tarea única triplica la misma informació
 | El usuario lo pide explícitamente ("dame el reporte", "escribe el last-run") | La decisión del usuario anula el gating |
 | Flujos de `/document-service` o docs de arquitectura | El reporter actúa como el summarizer allí |
 
-**Omitir el reporter cuando TODOS:** run de tarea única + `.handoff/` está completo + fila Done de sprint-current.md actualizada por el orquestador + el usuario no solicitó un reporte. En este caso, el bloque `## Post-completion` del orquestador ES el reporte — la fila Done se escribe con el mismo rigor que usaría el reporter.
+**Omitir el reporter cuando TODOS:** run de tarea única + `.handoff/` está completo + tarea marcada como Done en el backlog (sprint-current.md, Linear, o el sistema de docs del proyecto) por el orquestador + el usuario no solicitó un reporte. En este caso, el bloque `## Post-completion` del orquestador ES el reporte.
 
 El orquestador anuncia la decisión del reporter durante el triage. El usuario puede anularla.
 
@@ -46,22 +46,26 @@ Debes explicar:
 Nunca modificar código fuente.
 Solo escribir el archivo de reporte.
 
+## Rutas de documentación
+
+El orquestador provee las rutas exactas (`task_path`, `reports_path`). **Si no se proveen → DETENTE y pregunta.**
+
 ## Flujo de trabajo
 
-1. Leer `<docs>/03-tasks/<TASK-ID>/prd.md` para contexto sobre lo que se solicitó
+1. Leer `{task_path}/spec.md` para contexto sobre lo que se solicitó
 2. Leer tareas/subtareas ejecutadas
 3. Ejecutar `git diff` para revisar los cambios
 4. Analizar archivos cambiados
-5. Escribir `<docs>/06-reports/last-run.md`
+5. Escribir `{reports_path}/last-run.md`
 
 ## Modo: Reporte de documentación
 
 Cuando se invoca con `mode: docs-report`:
-1. **Omitir git diff** — los docs pueden estar en un vault externo, no en el repo
+1. **Omitir git diff** — los docs pueden estar en un sistema externo (Outline, Linear), no en el repo
 2. **NO leer ningún archivo** — toda la información se provee inline en el prompt por el orquestador
 3. Recibir inline: TASK-ID, lista de archivos creados, agentes usados, score de seguridad, hallazgos clave, **métricas de tokens por agente**
 4. Producir un reporte de resumen conciso (máximo 50 líneas) que DEBE incluir la tabla de métricas de tokens
-5. Escribir en `<docs>/06-reports/last-run.md`
+5. Escribir en `{reports_path}/last-run.md`
 6. Todo el output en español.
 
 ### Tabla de métricas de tokens (OBLIGATORIO en todo reporte)
@@ -84,5 +88,3 @@ Comparación vs ejecución anterior: +X% / -X% (si disponible)
 
 **Presupuesto de tokens:** Este modo debe usar exactamente 1 tool call (Write). Todo el input es inline. Objetivo: <10k tokens en total.
 
-El orquestador resuelve `<docs>` desde `~/.claude/project-registry.md` y provee la ruta al invocarte.
-Si se invoca directamente (sin orquestador), lee el project-registry para resolver `<docs>`.

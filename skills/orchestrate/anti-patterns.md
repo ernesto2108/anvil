@@ -1,145 +1,145 @@
 ---
 name: orchestrate/anti-patterns
-description: The 7 orchestrator anti-patterns with full reasoning, examples, and the Token discipline section. Load when about to do any non-trivial Read/Write operation or when boundary doubt arises.
+description: Los 7 anti-patrones del orquestador con razonamiento completo, ejemplos y la sección de disciplina de tokens. Cargar cuando se esté por hacer cualquier operación Read/Write no trivial o cuando surjan dudas de límites.
 ---
 
-# Anti-Patterns
+# Anti-Patrones
 
-**Load when:** about to do any non-trivial Read/Write op, or when boundary doubt arises.
-
----
-
-## 1. Manual handoff as triage bypass
-
-**Wrong:** user asks for Medium+ feature, orchestrator writes the plan in `.handoff/<TASK>.md` directly and executes it themselves (rationalizes: "I already have context, agents are overhead").
-
-**Why it is wrong:** The `/orchestrate` skill IS the triage. Bypassing it skips pipeline selection, skill loading, and agent boundaries — violating the "developer is the only code writer" rule.
-
-**Right:** Invoke triage, select pipeline, spawn developer with the plan inline. Handoff is written BY the developer, not instead of it.
+**Cargar cuando:** se esté por hacer cualquier operación Read/Write no trivial, o cuando surjan dudas de límites.
 
 ---
 
-## 2. "This looks simple, I'll just do it"
+## 1. Handoff manual como bypass de triaje
 
-**Wrong:** orchestrator decides a task is "basically boilerplate" and skips straight to editing WITHOUT the user choosing direct mode.
+**Incorrecto:** el usuario pide una feature Medium+, el orquestador escribe el plan en `.handoff/<TASK>.md` directamente y lo ejecuta él mismo (racionaliza: "ya tengo el contexto, los agentes son overhead").
 
-**Why it is wrong:** The user controls execution mode (see Rule #0). The orchestrator does not get to decide "this is simple enough to skip agents." If the user activated the orchestrator, use agents. If the user said "hazlo directo", then direct execution is correct.
+**Por qué está mal:** La skill `/orchestrate` ES el triaje. Saltarlo omite la selección de pipeline, carga de skills y límites de agentes — violando la regla "el developer es el único que escribe código".
 
-**Right:** follow the user's chosen execution mode. If in doubt, ask.
-
----
-
-## 3. Writing code without user authorization
-
-**Wrong:** orchestrator writes `.go`, `.ts`, `.tsx` etc. while running in orchestration mode (agents activated).
-
-**Why it is wrong:** In orchestration mode, code writing is the developer agent's job. The orchestrator's role is routing, gates, and user confirmations — not implementation.
-
-**Right:** In orchestration mode, delegate all code to the developer agent. In direct mode (user's choice), writing code yourself is correct and expected.
-
-**Always OK regardless of mode:**
-- `go.mod` via `go get` / `go mod tidy`
-- Config files: `Makefile`, `wails.json`, `.gitignore`, `tsconfig.json`, `package.json`
-- Shell commands: `go build`, `go vet`, `npm run build`
-- Markdown docs, handoff files, sprint-current.md
+**Correcto:** Invocar triaje, seleccionar pipeline, lanzar developer con el plan inline. El handoff lo escribe EL developer, no en lugar de él.
 
 ---
 
-## 4. Claiming a skill was loaded without confirmation
+## 2. "Esto se ve simple, lo hago yo"
 
-**Wrong:** orchestrator names a skill in the prompt and assumes the agent loaded it without verifying.
+**Incorrecto:** el orquestador decide que una tarea es "básicamente boilerplate" y pasa directo a editar SIN que el usuario haya elegido modo directo.
 
-**Why it is wrong:** the agent may have silently skipped it. The user catches this later — forcing a re-run.
+**Por qué está mal:** El usuario controla el modo de ejecución (ver Regla #0). El orquestador no decide "esto es tan simple que puedo saltarme los agentes." Si el usuario activó el orquestador, usa agentes. Si el usuario dijo "hazlo directo", entonces la ejecución directa es correcta.
 
-**Right:** after agent completes, verify its report names the skill or references its rules. If neither, follow up: "confirm you loaded <skill> and re-validate files against its rules." Cheaper than a redo.
+**Correcto:** seguir el modo de ejecución elegido por el usuario. Si hay duda, preguntar.
 
 ---
 
-## 5. Building context in Opus instead of delegating to a subagent
+## 3. Escribir código sin autorización del usuario
 
-**Applies ONLY in orchestration mode (agents activated).** In direct mode, reading source code is expected and correct.
+**Incorrecto:** el orquestador escribe `.go`, `.ts`, `.tsx` etc. mientras corre en modo orquestación (agentes activados).
 
-**Wrong (orchestration mode):** orchestrator reads 10+ production source files to "understand the feature" before invoking any agent, paying Opus rates for reads the developer would have done in Sonnet.
+**Por qué está mal:** En modo orquestación, escribir código es trabajo del agente developer. El rol del orquestador es enrutamiento, gates y confirmaciones con el usuario — no implementación.
 
-**Why it is wrong:**
-1. **Cost ratio.** Opus is roughly 4x Sonnet per token. Every file the orchestrator reads costs 4x the same read inside any subagent.
-2. **Double-counting.** Reading files SO THAT you can pass them inline is the failure mode, not the intent.
-3. **Subagents read better.** They load convention skills and have domain framing.
+**Correcto:** En modo orquestación, delegar todo el código al agente developer. En modo directo (elección del usuario), escribir código tú mismo es correcto y esperado.
 
-**Right (orchestration mode):**
-- For codebase understanding: spawn `Explore` subagent with a precise question. Consume the summary, not the files.
-- For feature-specific details: let the developer read them during its planning pass (Flow B).
-- Content from PRIOR turns (user pasted code, previous agent result, docs read for routing) is legitimate inline-pass material.
+**Siempre permitido sin importar el modo:**
+- `go.mod` vía `go get` / `go mod tidy`
+- Archivos de config: `Makefile`, `wails.json`, `.gitignore`, `tsconfig.json`, `package.json`
+- Comandos shell: `go build`, `go vet`, `npm run build`
+- Docs markdown, archivos de handoff, sprint-current.md
 
-**Opus read allow-list (orchestration mode only):**
-- `<docs>/01-project/context.md`, `02-backlog/*.md`, `03-tasks/<TASK-ID>/*.md`, `04-architecture/*.md`
+---
+
+## 4. Afirmar que una skill fue cargada sin confirmación
+
+**Incorrecto:** el orquestador nombra una skill en el prompt y asume que el agente la cargó sin verificar.
+
+**Por qué está mal:** el agente puede haberla saltado silenciosamente. El usuario lo detecta después — forzando una re-ejecución.
+
+**Correcto:** después de que el agente complete, verificar que su reporte nombre la skill o referencie sus reglas. Si ninguno lo hace, seguir con: "confirma que cargaste <skill> y revalida los archivos contra sus reglas." Más barato que rehacer.
+
+---
+
+## 5. Construir contexto en Opus en lugar de delegar a un subagente
+
+**Aplica SOLO en modo orquestación (agentes activados).** En modo directo, leer código fuente es esperado y correcto.
+
+**Incorrecto (modo orquestación):** el orquestador lee 10+ archivos de código fuente para "entender la feature" antes de invocar cualquier agente, pagando tarifas Opus por lecturas que el developer haría en Sonnet.
+
+**Por qué está mal:**
+1. **Ratio de costo.** Opus es aproximadamente 4x Sonnet por token. Cada archivo que el orquestador lee cuesta 4x la misma lectura dentro de cualquier subagente.
+2. **Doble conteo.** Leer archivos PARA pasarlos inline es el modo de falla, no la intención.
+3. **Los subagentes leen mejor.** Cargan skills de convención y tienen framing de dominio.
+
+**Correcto (modo orquestación):**
+- Para entender el codebase: lanzar subagente `Explore` con una pregunta precisa. Consumir el resumen, no los archivos.
+- Para detalles específicos de la feature: dejar que el developer los lea durante su pase de planificación (Flow B).
+- Contenido de turnos ANTERIORES (código pegado por el usuario, resultado de agente previo, docs leídos para enrutamiento) es material legítimo para pasar inline.
+
+**Lista de lectura permitida en Opus (solo modo orquestación):**
+- `{context_path}`, `{backlog_path}`, `{task_path}/*.md`, docs de arquitectura (paths resueltos desde la tabla de paths en vault-setup)
 - `.handoff/<TASK-ID>.md`
 - `~/.claude/project-registry.md`
-- Other markdown docs in the vault
+- Otros docs markdown en `<docs>`
 
-In orchestration mode, the orchestrator MUST NOT `Read` source files (`.go`, `.ts`, `.tsx`, `.py`, `.rs`, `.dart`, etc.). Delegate to a subagent. `Glob` and `Bash` (build/test) are always allowed.
-
----
-
-## 6. Writing the technical plan in Opus instead of using Flow B
-
-**Wrong:** orchestrator drafts a 200-400 line developer prompt containing exact Go function signatures, SQL queries, React component structure, file-by-file execution order, and marks it `plan_preapproved=true`. The "plan" is effectively architect + developer design work, performed in Opus.
-
-**Why it happens:** the orchestrator thinks a complete spec saves the developer from rediscovery. It does — at 4x the cost per token. And the orchestrator is NOT faster at designing than the developer agent with fresh code context loaded through its convention skills.
-
-**Why it is wrong:** Flow A (`plan_preapproved=true`) exists for the case where the USER typed the file-level plan in chat and the orchestrator is just relaying it. It is NOT a license for the orchestrator to write the plan itself and then "pre-approve" it on the user's behalf. If the orchestrator wrote the plan, that is Flow B territory — the developer should have written it.
-
-**Right:** default to Flow B for anything bigger than Trivial. Invoke developer with "plan and STOP". Developer returns a ~50 line plan summary (Sonnet). Orchestrator surfaces it to the user verbatim. After explicit user approval, re-invoke developer with `plan_preapproved=true` and the now-approved short plan inline. Two Sonnet invocations beat one Opus-authored mega-prompt.
-
-**Flow A legitimacy test:** before claiming a plan is "pre-approved in the main conversation", check — did the USER type the file list and approach in chat? Or did the ORCHESTRATOR synthesize it and the user only approved the high-level strategy (e.g., "go with option B")? If the latter, that is Flow B, not Flow A. "Option B" = strategic approval, not file-level approval. The developer still needs to produce the file-level plan. See `plan-approval.md` for the full Flow A / Flow B decision tree.
+En modo orquestación, el orquestador NO DEBE hacer `Read` de archivos fuente (`.go`, `.ts`, `.tsx`, `.py`, `.rs`, `.dart`, etc.). Delegar a un subagente. `Glob` y `Bash` (build/test) siempre están permitidos.
 
 ---
 
-## 7. Writing docs the PM, developer, or reporter should write
+## 6. Escribir el plan técnico en Opus en lugar de usar Flow B
 
-**Wrong:** orchestrator writes `03-tasks/<NEW-ID>/task.md` frontmatter + context + AC for follow-up tasks discovered mid-execution. Orchestrator also writes "Resultado de ejecución" sections on completed task files, and enriched `sprint-current.md` Done rows synthesized from agent outputs.
+**Incorrecto:** el orquestador redacta un prompt de 200-400 líneas para el developer conteniendo firmas exactas de funciones Go, queries SQL, estructura de componentes React, orden de ejecución archivo por archivo, y lo marca `plan_preapproved=true`. El "plan" es efectivamente trabajo de architect + developer design, realizado en Opus.
 
-**Why it is wrong:** task creation with Obsidian Dataview frontmatter + backlog formatting is PM work — the PM agent has `backlog-management` and `prd-template` skills loaded and produces the correct format first time. Final task reports and sprint enrichment are `reporter` work (or can be inlined into the developer handoff). All Sonnet. The orchestrator is producing Opus-priced docs that a Sonnet agent produces better.
+**Por qué sucede:** el orquestador piensa que una spec completa le ahorra al developer el redescubrimiento. Lo hace — a 4x el costo por token. Y el orquestador NO es más rápido diseñando que el agente developer con contexto de código fresco cargado a través de sus skills de convención.
 
-**Right:**
-- **Follow-up tasks discovered mid-run:** spawn `pm` with "create follow-up <NEW-ID>: scope X, parent <PARENT-ID>, reason Y". Even for a single row. Cost is ~5k Sonnet vs ~5k Opus + wrong-format risk. PM wins.
-- **Task closeouts on Medium (reporter skipped):** instruct the developer in its prompt to append a `## Closeout` section to `.handoff/<TASK-ID>.md` containing `archivos tocados`, `métricas de validación`, `delta de cobertura`, `decisiones no obvias`. The orchestrator copy-pastes that section verbatim into `task.md` and `sprint-current.md`. Zero Opus synthesis.
-- **Task closeouts on Complex/Maximum:** reporter is already in the pipeline — it writes the summary, the orchestrator copies file paths.
-- **User-facing chat summary at the end:** this is a legitimate orchestrator job — 1-3 short paragraphs. Do not confuse "chat status update to the user" (allowed) with "writing the task.md resultado section" (PM/reporter job).
+**Por qué está mal:** Flow A (`plan_preapproved=true`) existe para el caso donde el USUARIO escribió el plan a nivel de archivos en el chat y el orquestador solo lo retransmite. NO es una licencia para que el orquestador escriba el plan él mismo y luego lo "pre-apruebe" en nombre del usuario. Si el orquestador escribió el plan, eso es territorio de Flow B — el developer debió haberlo escrito.
 
----
+**Correcto:** usar Flow B por defecto para cualquier cosa más grande que Trivial. Invocar developer con "planifica y DETENTE". El developer devuelve un resumen de plan de ~50 líneas (Sonnet). El orquestador lo muestra al usuario textualmente. Después de aprobación explícita del usuario, re-invocar developer con `plan_preapproved=true` y el plan corto aprobado inline. Dos invocaciones Sonnet superan un mega-prompt escrito en Opus.
 
-## Token discipline — Opus cost reality
-
-Opus is 4x Sonnet per token. The orchestrator is the ONLY Opus process — every subagent runs in Sonnet. Every 1k Opus tokens = 4k Sonnet-equivalent. Before any non-trivial read/write, ask: *can a Sonnet subagent do this?* If yes, delegate.
-
-**Legitimate (Opus is right):** triage + routing, gates + user confirmations, vault doc reads (NOT code), short status summaries, `Glob`/`Bash` verification, mechanical copy-paste between docs.
-
-**Illegitimate (delegate to subagent):** reading production source files, writing technical plans or pseudo-PRDs, writing task.md with synthesis, summarizing code diffs, designing component structures/SQL/DTOs.
-
-When in doubt: > ~3k tokens on a non-triage/non-gate operation → stop and spawn Sonnet subagent.
+**Test de legitimidad de Flow A:** antes de afirmar que un plan está "pre-aprobado en la conversación principal", verificar — ¿el USUARIO escribió la lista de archivos y el approach en el chat? ¿O el ORQUESTADOR lo sintetizó y el usuario solo aprobó la estrategia de alto nivel (ej., "ve con la opción B")? Si es lo segundo, eso es Flow B, no Flow A. "Opción B" = aprobación estratégica, no aprobación a nivel de archivos. El developer aún necesita producir el plan a nivel de archivos. Ver `plan-approval.md` para el árbol de decisión completo de Flow A / Flow B.
 
 ---
 
-## Context passing — full reasoning (token optimization)
+## 7. Escribir docs que el PM, developer o reporter deberían escribir
 
-**Rule:** Pass content inline ONLY when already in context from a LEGITIMATE source (user messages, previous subagent results, vault docs). Freshly reading production source code to relay it = anti-pattern #5 — doubles cost at Opus rates.
+**Incorrecto:** el orquestador escribe archivos de tarea (frontmatter + contexto + AC) para tareas de seguimiento descubiertas durante la ejecución. El orquestador también escribe secciones de "Resultado de ejecución" en archivos de tareas completadas, y filas enriquecidas de backlog Done sintetizadas desde outputs de agentes.
 
-Examples: `[reads 8 files → pastes in prompt] = 40k tokens (BAD)` vs `[already had context.md from prior turn → passes inline] = 20k tokens (GOOD)` vs `[doesn't have file → tells agent the path] = GOOD`.
+**Por qué está mal:** la creación de tareas con el formato correcto del sistema de docs (Obsidian Dataview frontmatter, issues de Linear, o YAML de .workspace) + formato de backlog es trabajo del PM — el agente PM tiene las skills `backlog-management` y `prd-template` cargadas y produce el formato correcto a la primera. Los reportes finales de tareas y enriquecimiento del sprint son trabajo del `reporter` (o pueden ir inline en el handoff del developer). Todo Sonnet. El orquestador está produciendo docs a precio Opus que un agente Sonnet produce mejor.
 
-**Self-check before any `Read` call:** is the path in the Opus allow-list (anti-pattern #5)? Source code extension → STOP, spawn subagent instead.
+**Correcto:**
+- **Tareas de seguimiento descubiertas durante la ejecución:** lanzar `pm` con "crear seguimiento <NEW-ID>: alcance X, padre <PARENT-ID>, razón Y". Incluso para una sola fila. El costo es ~5k Sonnet vs ~5k Opus + riesgo de formato incorrecto. PM gana.
+- **Cierres de tarea en Medium (reporter omitido):** instruir al developer en su prompt para agregar una sección `## Closeout` a `.handoff/<TASK-ID>.md` conteniendo `archivos tocados`, `métricas de validación`, `delta de cobertura`, `decisiones no obvias`. El orquestador copia esa sección textualmente en `task.md` y `sprint-current.md`. Cero síntesis Opus.
+- **Cierres de tarea en Complex/Maximum:** el reporter ya está en el pipeline — escribe el resumen, el orquestador copia los paths de archivos.
+- **Resumen al usuario en el chat al final:** este es un trabajo legítimo del orquestador — 1-3 párrafos cortos. No confundir "actualización de estado al usuario en el chat" (permitido) con "escribir la sección de resultado en task.md" (trabajo del PM/reporter).
 
-Each agent receives ONLY what it needs:
+---
 
-| Agent | Receives (INLINE) | Does NOT receive |
-|-------|-------------------|-----------------|
-| pm | context.md content, sprint-current.md content, user request, API surface summary | code, diffs, file paths to source code |
-| scanner | project root path | tasks |
-| designer | prd.md content (including Scope → Platform field), context.md content, design-system.md content (if exists) | code, reports |
-| architect | prd.md content, ui-spec.md content (if exists), context.md content | code, reports |
-| developer | prd.md content, design.md content, ui-spec.md content (if exists), skill name | QA/security reports |
-| tester | prd.md content, design.md content, list of changed files | full diffs |
-| qa | prd.md content, design.md content, git diff | conversation history |
-| security | git diff, dependency paths | requirements, design |
-| reporter | TASK-ID, git diff summary | minimal context |
-| mkt-content | project/brand context, discovery answers, target audience, visual identity | code, architecture, DB, PRDs |
+## Disciplina de tokens — realidad de costos Opus
+
+Opus es 4x Sonnet por token. El orquestador es el ÚNICO proceso Opus — cada subagente corre en Sonnet. Cada 1k tokens Opus = 4k equivalente Sonnet. Antes de cualquier lectura/escritura no trivial, preguntar: *¿puede un subagente Sonnet hacer esto?* Si sí, delegar.
+
+**Legítimo (Opus es correcto):** triaje + enrutamiento, gates + confirmaciones con el usuario, lecturas de `<docs>` (NO código), resúmenes cortos de estado, verificación con `Glob`/`Bash`, copy-paste mecánico entre docs.
+
+**Ilegítimo (delegar a subagente):** leer archivos de código fuente, escribir planes técnicos o pseudo-PRDs, escribir task.md con síntesis, resumir diffs de código, diseñar estructuras de componentes/SQL/DTOs.
+
+En caso de duda: > ~3k tokens en una operación que no es triaje/gate → detenerse y lanzar subagente Sonnet.
+
+---
+
+## Paso de contexto — razonamiento completo (optimización de tokens)
+
+**Regla:** Pasar contenido inline SOLO cuando ya está en contexto de una fuente LEGÍTIMA (mensajes del usuario, resultados de subagentes previos, docs del vault). Leer código fuente fresco para retransmitirlo = anti-patrón #5 — duplica costo a tarifas Opus.
+
+Ejemplos: `[lee 8 archivos → los pega en el prompt] = 40k tokens (MAL)` vs `[ya tenía context.md del turno anterior → lo pasa inline] = 20k tokens (BIEN)` vs `[no tiene el archivo → le dice al agente el path] = BIEN`.
+
+**Auto-verificación antes de cualquier llamada `Read`:** ¿el path está en la lista permitida de Opus (anti-patrón #5)? Extensión de código fuente → DETENERSE, lanzar subagente en su lugar.
+
+Cada agente recibe SOLO lo que necesita. Consultar la tabla **"Input por agente"** en `SKILL.md` para los campos obligatorios exactos. A continuación, lo que NO debe recibir:
+
+| Agente | NO recibe |
+|--------|-----------|
+| pm | código, diffs, paths de archivos fuente |
+| scanner | tareas, docs |
+| designer | código, reportes |
+| architect | código fuente, reportes de QA/security |
+| developer | reportes de QA/security (salvo en mode qa-fix) |
+| tester | diffs completos, PRD directo (usa handoff + SPEC) |
+| qa | historial de conversación |
+| security | requerimientos, diseño |
+| reporter | contexto extenso — solo TASK-ID + resumen |
+| mkt-content | código, arquitectura, DB, PRDs |

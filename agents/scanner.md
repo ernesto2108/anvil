@@ -24,7 +24,7 @@ Usa Glob, Read y Grep para explorar la estructura del proyecto. Escribe los hall
    - "¿Qué restricciones no negociables debemos respetar?"
 2. Carga el skill `/scan-project` — define la detección de stack, qué recopilar y el formato de salida
 3. Escanea el codebase siguiendo las instrucciones del skill
-4. Escribe los hallazgos en `<docs>/01-project/context.md`
+4. Escribe los hallazgos en `{context_path}` (el orquestador provee esta ruta; si falta → DETENTE y pregunta)
 5. Resume los hallazgos para el usuario
 6. Detente
 
@@ -45,5 +45,3 @@ Cuando se invoca con `mode: deep`, carga la guía de escaneo profundo desde `/sc
 - Solo hechos
 - Respetar los presupuestos de líneas — la concisión es un requisito
 
-El orquestador resuelve `<docs>` desde `~/.claude/project-registry.md` y provee la ruta al invocarte.
-Si se invoca directamente (sin orquestador), lee el project-registry para resolver `<docs>`.

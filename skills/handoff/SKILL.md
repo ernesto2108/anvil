@@ -96,10 +96,14 @@ El orquestador lee el handoff y lo pasa inline al desarrollador. El desarrollado
 Llamado por `/task-complete` o manualmente por el orquestador:
 
 1. Leer el contenido del handoff
-2. **Agregar `## Resumen de completacion` al archivo de la tarea en el vault de Obsidian** (ej. `anvil-knowledge-base/03-tasks/<TASK-ID>/task.md`). Este es el registro permanente — incluir: fecha, archivos creados, archivos modificados, decisiones tomadas, resultado de tests. Seguir el mismo formato que las tareas completadas existentes en el vault.
+2. **Agregar `## Resumen de completacion` al archivo de la tarea** — el destino depende del sistema de docs:
+   - **Obsidian vault:** `{task_path}/task.md`. Seguir el formato de tareas completadas existentes.
+   - **Linear+Outline:** agregar el resumen como comentario en el issue de Linear.
+   - **`.workspace/`:** `{task_path}/task.md` con YAML simple.
 3. Mover el archivo de handoff a `.handoff/archive/<TASK-ID>.md`
-4. Actualizar el board en el vault (`02-backlog/board.md`) — mover la tarea de la columna actual a Done
-5. Actualizar el frontmatter de la tarea: `status: done`, `completed: <fecha>`
+4. **Obsidian vault:** actualizar board (`{board_path}`) — mover la tarea a Done. Actualizar frontmatter: `status: done`, `completed: <fecha>`.
+   **Linear+Outline:** mover issue a Done en Linear.
+   **`.workspace/`:** actualizar `{backlog_path}` solamente.
 
 ## Template
 

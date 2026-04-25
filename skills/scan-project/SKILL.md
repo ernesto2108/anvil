@@ -10,7 +10,7 @@ Descubrir la estructura REAL del repositorio y las herramientas utilizadas. NO a
 
 ## Paso 1: Objetivo del Producto
 
-Si el contexto del objetivo del producto está ausente o desactualizado en ``<vault>/01-project/context.md``, hacer estas preguntas primero:
+Si el contexto del objetivo del producto está ausente o desactualizado en `{context_path}` (resolver desde `~/.claude/project-registry.md` — ver vault-setup path table), hacer estas preguntas primero:
 1. "What is the project objective in 3-6 lines?"
 2. "What non-negotiable rules must I always respect?"
 
@@ -34,7 +34,7 @@ Para TODOS los stacks:
 1. Árbol de directorios (profundidad 3)
 2. Hints de CI / runtime — `Dockerfile`, `docker-compose.*`, `.github/workflows/*`
 3. Archivos de configuración — `Makefile`, `taskfile`, scripts
-4. Ignorar: `<vault>/`, `.git/`, `vendor/`, `node_modules/`, `dist/`, `build/`, `tmp/`, `.next/`
+4. Ignorar: `<docs>/`, `.git/`, `vendor/`, `node_modules/`, `dist/`, `build/`, `tmp/`, `.next/`
 
 ### Específico de Go
 - Leer `go.mod` — versión y dependencias
@@ -59,7 +59,9 @@ Para TODOS los stacks:
 
 ## Paso 4: Escribir Salida
 
-Escribir ÚNICAMENTE: ``<vault>/01-project/context.md`` (sobreescribir si existe).
+Escribir ÚNICAMENTE en `{context_path}` (sobreescribir si existe). Resolver la ruta desde vault-setup path table:
+- Obsidian vault: `<docs>/01-project/context.md`
+- Linear+Outline o `.workspace/`: `.workspace/context.md`
 Nunca eliminar secciones técnicas al agregar contexto del objetivo del producto; conservar ambas.
 
 Usar el template de `output-template.md` — incluir solo las secciones para los stacks detectados.
@@ -72,4 +74,4 @@ Usar el template de `output-template.md` — incluir solo las secciones para los
 - [ ] Buscar archivos CI (`.github/workflows/*`, `Dockerfile`, `docker-compose.*`)
 - [ ] Buscar herramientas de build (`Makefile`, `taskfile.*`)
 - [ ] Preguntar sobre el objetivo del producto si está ausente
-- [ ] Escribir ``<vault>/01-project/context.md``
+- [ ] Escribir `{context_path}`

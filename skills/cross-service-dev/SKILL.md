@@ -17,7 +17,7 @@ cross-service-dev    = orchestrate × N repos (coordinado)
 
 ## Prerequisitos
 
-- `service-map.yaml` existe en `<vault>/04-architecture/`
+- `service-map.yaml` existe en `{service_map_path}` (resuelto por el orquestador según vault-setup path table)
 - Los repos de servicios afectados están en disco (local_path debe resolver)
 - Si existe `service-map.local.yaml`, usarlo para overrides de rutas locales
 
@@ -52,7 +52,9 @@ Adicionalmente, el orquestador debe:
    - DELETE/DEPRECATE → la verificación transitiva es CRÍTICA
    - UPDATE con cambios de contrato → todos los consumidores están afectados
 
-4. El PM escribe **un** `prd.md` en `<vault>/03-tasks/<TASK-ID>/prd.md`
+4. El PM escribe **un** PRD:
+   - Obsidian/`.workspace/`: `{task_path}/prd.md`
+   - Linear+Outline: documento en Outline vinculado al issue de Linear
    - Debe listar TODOS los servicios en scope bajo Dependencias
    - Debe notar los servicios omitidos como pendientes
    - Debe especificar el tipo de operación
@@ -60,10 +62,10 @@ Adicionalmente, el orquestador debe:
 ### Fase 2 — Arquitectura (1 agente architect)
 
 Un arquitecto recibe:
-- `<vault>/03-tasks/<TASK-ID>/prd.md`
-- `<vault>/01-project/context.md` de **cada** servicio en scope
+- PRD (inline o desde `{task_path}/prd.md`)
+- `{context_path}` de **cada** servicio en scope
 
-Produce un solo `<vault>/03-tasks/<TASK-ID>/design.md` con:
+Produce un solo `{task_path}/design.md` con:
 - Una sección por servicio
 - Definiciones de contrato (compartidas)
 - Orden de ejecución
@@ -74,8 +76,8 @@ Produce un solo `<vault>/03-tasks/<TASK-ID>/design.md` con:
 ### Fase 3 — Implementación (N agentes developer)
 
 Un agente developer por servicio. Cada uno recibe:
-- `<vault>/03-tasks/<TASK-ID>/prd.md`
-- `<vault>/03-tasks/<TASK-ID>/design.md`
+- PRD (inline o desde `{task_path}/prd.md`)
+- `{task_path}/design.md`
 - Skill de convención a cargar
 - La ruta de su servicio específico como directorio de trabajo
 
@@ -99,12 +101,12 @@ Un agente QA ve el diff combinado de todos los servicios. Foco en:
 
 ### Fase 6 — Documentar + Reportar
 
-**6a.** Agregar a `<vault>/06-reports/cross-service-changes.md`:
+**6a.** Agregar a `{reports_path}/cross-service-changes.md`:
 - Fecha, operación, scope, cambios por servicio, contratos, trabajo pendiente, orden de deploy
 
-**6b.** Actualizar `<vault>/04-architecture/service-map.yaml` para reflejar el nuevo estado
+**6b.** Actualizar `{service_map_path}` para reflejar el nuevo estado
 
-**6c.** Agente reporter → `<vault>/06-reports/last-run.md`
+**6c.** Agente reporter → `{reports_path}/last-run.md`
 
 ---
 
@@ -128,4 +130,4 @@ Un agente QA ve el diff combinado de todos los servicios. Foco en:
 3. Developer y Tester son por servicio — guiados por design.md consolidado
 4. NUNCA omitir silenciosamente servicios afectados
 5. El orden de eliminación es inverso al de creación — consumidores primero, productor último
-6. Todos los docs centralizados en el vault — sin duplicación entre repos
+6. Todos los docs centralizados en `<docs>` — sin duplicación entre repos

@@ -102,22 +102,20 @@ Las verificaciones de QA específicas del stack (browser, responsive, verificaci
 El orquestador indica el nivel de complejidad al invocarte. Adapta tu comportamiento en consecuencia:
 
 ### Small (1-5 pts)
-- **No se requiere PRD/diseño** — usa el contexto proporcionado en el prompt
+- **No se requiere SPEC** — usa el contexto proporcionado en el prompt
 - **No se requieren archivos de convenciones** — el orquestador puede inyectar reglas clave inline
 - **No se requiere leer context.md** — el orquestador proporciona lo que necesitas
 - Ve directo a la implementación
 
 ### Medium (5-8 pts)
-- Lee el PRD si está disponible (no te DETENGAS si falta — usa el contexto del prompt)
-- Lee el diseño si está disponible
+- El SPEC es REQUERIDO — DETENTE si falta
 - Lee los archivos de convenciones si se proporcionan rutas
 - Lee context.md si no está en el prompt
 
 ### Large (8-13 pts)
-- El PRD y el diseño son REQUERIDOS — DETENTE si faltan
+- El SPEC es REQUERIDO — DETENTE si falta
 - Los archivos de convenciones son REQUERIDOS — DETENTE si no se proporcionan
 - Lee siempre context.md
-- Verifica la spec de UI si aplica
 
 ## Modo de Ejecución
 
@@ -160,8 +158,6 @@ El orquestador DEBE proporcionar estos campos. Si algún campo requerido falta, 
 | Qué hacer (objetivo) | REQUERIDO | REQUERIDO | REQUERIDO |
 | Archivos a cambiar | REQUERIDO (listados) | REQUERIDO (en SPEC §Implementation Map) | REQUERIDO (en SPEC §Implementation Map) |
 | **SPEC path o inline** | N/A | **REQUERIDO** | **REQUERIDO** |
-| PRD path o inline | opcional | opcional (SPEC es primario) | opcional (SPEC es primario) |
-| DTD path o inline | N/A | opcional (referencia) | opcional (referencia) |
 | Context.md | opcional (inline) | recomendado | REQUERIDO |
 | Mode | default: normal | default: normal | REQUERIDO |
 | TASK-ID | opcional | REQUERIDO | REQUERIDO |
@@ -183,7 +179,7 @@ Para tareas Medium+, el **SPEC.md** es tu entrada primaria. Sintetiza PRD + DTD 
 
 **Si algo no está en el SPEC, no lo implementes.** Si descubres una brecha durante la implementación (contrato faltante, comportamiento poco claro), DETENTE y pregunta al orquestador — no adivines.
 
-El PRD y el DTD permanecen disponibles como **referencia** para contexto más profundo, pero el SPEC es la fuente de verdad sobre qué construir.
+**El SPEC es la fuente de verdad sobre qué construir.** No leas PRD ni DTD — el arquitecto ya los sintetizó en el SPEC.
 
 **Las tareas cross-stack** requieren adicionalmente:
 - Qué stack va primero (orden de dependencias)
@@ -243,14 +239,14 @@ Después de la implementación, verifica si los archivos cambiados incluyen algu
 2. Pregunta al usuario **en español**: "Estos cambios pueden afectar documentación: [lista]. ¿Quieres que actualice la doc?"
 3. **Espera la respuesta del usuario** — nunca apliques automáticamente
 4. El usuario puede aprobar, rechazar, o proporcionar ajustes en su respuesta (ej: "sí pero cambia la descripción a X", "sí pero agrega los códigos de error")
-5. Si aprueba, localiza la doc usando las reglas de ruteo del project-registry y actualiza solo las secciones afectadas
+5. Si aprueba, usa la ruta `docs_path` provista por el orquestador y actualiza solo las secciones afectadas
 6. Muestra los cambios al usuario antes de escribir — deja que los revise
 7. Si no existe doc para el endpoint/feature afectado, pregunta en español: "No encontré doc existente para [X]. ¿Quieres que la cree? Si necesitas documentar el proyecto completo puedo usar `/document-architecture`"
 
 **NO:**
 - Actualices docs silenciosamente sin preguntar
 - Omitas este paso porque la tarea fue pequeña
-- Asumas la ubicación de la doc — verifica el project-registry
+- Asumas la ubicación de la doc — usa la ruta que proveyó el orquestador
 
 ## Reglas Específicas del Stack
 
@@ -267,9 +263,9 @@ Para **tareas Medium+** (5+ pts), sigue el skill `/handoff`. Esto aplica tanto s
 3. **Durante la implementación:** Actualiza el handoff después de cada milestone (marca pasos completados, agrega decisiones). Para tareas cross-stack, llena `## Puente de contratos` tan pronto como ambos lados estén definidos.
 4. **ANTES de terminar (OBLIGATORIO):** Llena `## Handoff for tester` (con tests agrupados por stack), `## Output entregado` y `## Puente de contratos` (si es cross-stack). Ver plantilla y guía abajo.
 5. **Al terminar:** Actualización final (`/task-complete` lo archiva y elimina).
-6. **En continuación:** Si el orquestador proporciona un handoff con flag `plan_preapproved=true` o explícitamente "plan approved — proceed", reanuda desde "Siguiente paso" — omite la compuerta de aprobación, NO re-leas PRD/diseño/contexto.
+6. **En continuación:** Si el orquestador proporciona un handoff con flag `plan_preapproved=true` o explícitamente "plan approved — proceed", reanuda desde "Siguiente paso" — omite la compuerta de aprobación, NO re-leas SPEC/contexto.
 
-**Regla de ruta:** Los archivos de handoff VAN SIEMPRE en `.handoff/` en la raíz del proyecto (donde vive go.mod / package.json). Nunca en el vault de docs/knowledge-base.
+**Regla de ruta:** Los archivos de handoff VAN SIEMPRE en `.handoff/` en la raíz del proyecto (donde vive go.mod / package.json). Nunca en `<docs>` ni en sistemas externos.
 
 **Omite el handoff para tareas Small (1-5 pts).**
 
@@ -312,7 +308,7 @@ Cuando el orquestador te invoca con `Mode: qa-fix`, estás retomando la misma ta
 **Reglas para el modo qa-fix (ESTRICTAS):**
 
 1. **El contexto primario es `.handoff/<TASK-ID>.md`** — léelo primero. Tiene tu lista de archivos previos, patrones, decisiones y validación. ESA ES tu memoria.
-2. **NO re-leas:** PRD, diseño, context.md, o ningún archivo de producción que no esté listado en los hallazgos de QA
+2. **NO re-leas:** SPEC, context.md, o ningún archivo de producción que no esté listado en los hallazgos de QA
 3. **NO recargues el skill de convenciones completo.** El orquestador inyecta solo las reglas específicas (3-5 bullets) que aplican a la corrección inline en el prompt. Confía en esas reglas — no busques más
 4. **Lee SOLO los archivos listados en los hallazgos de QA** — no todo el paquete, no todo el codebase
 5. **Aplica correcciones QUIRÚRGICAS** — atiende SOLO los hallazgos. Sin refactorizaciones, sin "ya que estoy" limpiezas, sin mejoras de paso. Si ves otros problemas, menciónalos en `## Notas` del handoff como candidatos al backlog — NO los corrijas en este pase
@@ -329,12 +325,12 @@ Cuando el orquestador te invoca con `Mode: qa-fix`, estás retomando la misma ta
 Razones válidas para escalar fuera del modo qa-fix:
 - Más de 5 archivos necesitan cambios
 - Un hallazgo requiere un nuevo patrón, nueva abstracción, o mover archivos entre paquetes
-- La causa raíz no está clara y requiere re-leer el PRD o diseño
+- La causa raíz no está clara y requiere re-leer el SPEC
 - Un hallazgo contradice una decisión registrada en el handoff (conflicto de diseño — necesita discusión con el usuario)
 
 **Prohibido en modo qa-fix:**
 - Cargar el skill de convenciones completo
-- Leer el PRD, diseño, o context.md
+- Leer el SPEC o context.md (fuera de qa-fix)
 - Tocar archivos fuera de los hallazgos
 - Ejecutar `go vet ./...` o builds del proyecto completo cuando los comandos limitados son suficientes
 - Crear archivos nuevos (a menos que un hallazgo lo demande explícitamente)
@@ -347,12 +343,17 @@ El desarrollador es dueño del estado de la tarea de principio a fin:
 
 | Momento | Acción |
 |---|---|
-| **Al comenzar** | Marca la tarea `in-progress` en `sprint-current.md` + mueve la tarjeta a **In Progress** en `board.md` |
+| **Al comenzar** | Marca la tarea `in-progress` según el sistema de docs (ver abajo) |
 | **Al terminar** | Ejecuta `/task-complete <TASK-ID>` — marca `done`, archiva el handoff, actualiza métricas del sprint |
 
 - **Al comenzar** ocurre ANTES de escribir cualquier código
 - **Al terminar** ocurre DESPUÉS de que pasan las verificaciones post-implementación
-- El orquestador proporciona la ruta `<docs>`
+- El orquestador proporciona las rutas resueltas (`task_path`, `backlog_path`, etc.)
+
+**Transición "Al comenzar" por sistema de docs:**
+- **Obsidian vault:** actualizar `{backlog_path}` (sprint-current.md) + `{board_path}` (board.md) + frontmatter de `{task_path}/task.md`
+- **Linear+Outline:** mover el issue a In Progress en Linear
+- **`.workspace/`:** actualizar `{backlog_path}` (sprint-current.md)
 
 Si no hay TASK-ID (invocación directa), omite las actualizaciones del backlog — solo gestiona el archivo de handoff.
 

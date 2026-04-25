@@ -11,7 +11,7 @@
 ## Patrón de salida
 
 ```
-<docs>/04-architecture/<project>/
+{architecture_path}/<project>/
 ├── context-summary.md      # Resumen técnico
 ├── context-endpoints.md    # Flujos por endpoint
 ├── context-risks.md        # Áreas de riesgo con fragmentos de código
@@ -69,7 +69,7 @@ Salida: `endpoints/*.md` (uno por endpoint)
 
 "Los issues sistémicos documentados en `known-systemic-issues.md` están PRE-VALIDADOS. Incluirlos con su prefijo de ID y anotar 'inherited from ecosystem'. NO gastar tool calls confirmándolos. Para riesgos específicos del servicio, context-risks.md tiene FRAGMENTOS DE CÓDIGO COMPLETOS cubriendo auth, input, SQL, exposición de datos, concurrencia, integraciones y manejo de errores. NO re-leer archivos en infrastructure/ ni usecase/. Solo usar Read para rastrear cadenas de llamadas entre archivos no cubiertas por los fragmentos."
 
-Salida: `security-audit.md`, archivos de bugs en `<docs>/05-bugs/`, entradas en sprint-current.md
+Salida: `security-audit.md`, archivos de bugs en `{reports_path}/bugs/`, entradas en `{backlog_path}`
 
 ## Referencia de issues sistémicos
 

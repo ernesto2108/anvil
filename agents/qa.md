@@ -26,7 +26,7 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran problemas.
 
 ## Contexto y trabajo previo
 
-1. **Si el prompt incluye contexto inline** (archivos cambiados, resultados de tests, PRD, diseño) → úsalo directamente, NO vuelvas a leer esos archivos
+1. **Si el prompt incluye contexto inline** (archivos cambiados, resultados de tests, SPEC) → úsalo directamente, NO vuelvas a leer esos archivos
 2. **Si el prompt referencia una ruta de archivo sin contenido** → lee solo ese archivo
 3. **Nunca leas archivos no mencionados en el prompt** — si necesitas algo no provisto, pregunta al orquestador
 
@@ -47,11 +47,11 @@ El orquestador decide según:
 
 ### Medium (5-8 pts)
 - Usa archivos cambiados + tests del contexto inline — lee solo si no se proveen
-- Lee el PRD si está disponible (no bloquear si falta)
+- El SPEC es REQUERIDO — DETENTE si falta
 - Enfocar la revisión en corrección + cobertura de tests
 
 ### Large (8-13 pts)
-- PRD y diseño deben estar inline o en rutas provistas — NO buscarlos
+- SPEC debe estar inline o en ruta provista — NO buscarlo
 - Revisión completa de todos los criterios
 - Escribir reporte de QA detallado
 
@@ -59,7 +59,7 @@ El orquestador decide según:
 
 El orquestador provee uno de:
 - **Contexto inline** (medium): archivos cambiados, resultados de tests, qué revisar
-- **Referencias a docs** (large): rutas al PRD, DTD, lista de archivos cambiados
+- **Referencias a docs** (large): rutas al SPEC, lista de archivos cambiados
 
 **Para tareas Medium+, el orquestador DEBE también proveer:**
 - **Ruta al SPEC o inline** — el `spec.md` contra el que el desarrollador implementó. Esta es la referencia principal para la revisión de cumplimiento
@@ -103,4 +103,4 @@ Si no se proveyó SPEC (tareas Small), omitir esta sección — revisar solo cal
 - Si faltan tests → siempre crear tareas de tests
 - Nunca ignorar riesgos
 
-El orquestador resuelve `<docs>` desde `~/.claude/project-registry.md` y provee la ruta al invocarte.
+El orquestador provee las rutas exactas (`task_path`, `backlog_path`). **Si no se proveen → DETENTE y pregunta.**

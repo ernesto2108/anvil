@@ -33,7 +33,7 @@ Ejecuta `ls <repo>/` y determina:
 
 ## Paso 1 — Verificar patrón de output
 
-Verifica `<docs>/04-architecture/` para la estructura de archivos esperada. La guía especifica qué archivos generar.
+Verifica `{architecture_path}` para la estructura de archivos esperada. El orquestador resuelve esta ruta según vault-setup path table. La guía especifica qué archivos generar.
 
 ## Paso 2 — Decidir seguridad
 
@@ -72,9 +72,9 @@ Omitir si el Paso 2 dijo que no. Lee `known-systemic-issues.md`, inyéctalo INLI
 ## Paso 6 — Cerrar tarea
 
 1. Actualiza el estado de la tarea a `done`
-2. Actualiza board.md
+2. Si el sistema es Obsidian: actualiza board.md + frontmatter. Si es Linear: mueve issue a Done. Si es `.workspace/`: actualiza sprint-current.md.
 3. Elimina duplicado del backlog si existe
-4. Actualiza métricas del sprint
+4. Actualiza métricas del sprint (si aplica al sistema de docs)
 
 ## Reglas
 

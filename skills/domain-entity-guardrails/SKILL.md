@@ -14,7 +14,7 @@ Usar cuando:
 ## Detección
 
 Antes de aplicar las reglas, localiza la capa de dominio del proyecto:
-1. Si existe `<vault>/01-project/context.md`, úsalo para encontrar las rutas de dominio
+1. Si existe `{context_path}` (context.md del proyecto), úsalo para encontrar las rutas de dominio
 2. De lo contrario, busca patrones comunes: `internal/**/domain/`, `src/domain/`, `pkg/domain/`, `lib/domain/`
 3. Aplica las reglas a cualquier struct/tipo en los directorios de dominio identificados
 

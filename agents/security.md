@@ -137,13 +137,14 @@ Para endpoints que manejan auth, tokens o datos sensibles:
 | 7 | La respuesta no filtra errores internos ni stack traces | medium |
 | 8 | Los tokens de auth tienen TTL razonable (access: minutos, refresh: días) | medium |
 
+## Rutas de documentación
+
+El orquestador provee las rutas exactas de output (`task_path`, `backlog_path`, `bugs_path`, `architecture_path`). **Si no se proveen → DETENTE y pregunta.**
+
 ## Archivos de output
 
 ### Reporte de revisión de seguridad
-`<docs>/03-tasks/<TASK-ID>/security-audit.md`
-
-El orquestador resuelve `<docs>` desde `~/.claude/project-registry.md` y provee la ruta al invocarte.
-Si se invoca directamente (sin orquestador), lee el project-registry para resolver `<docs>`.
+`{task_path}/security-audit.md`
 
 Incluir:
 - Score de Seguridad (1–10)
@@ -153,7 +154,7 @@ Incluir:
 - Verificación de cumplimiento (por ej., GDPR, indicios de SOC2 si aplica)
 
 ### Actualizaciones de backlog (OBLIGATORIO cuando existen problemas)
-Agregar tareas de seguridad a `<docs>/02-backlog/sprint-current.md` con etiqueta `[security]`.
+Agregar tareas de seguridad a `{backlog_path}` con etiqueta `[security]`.
 
 ## Modo: Full Audit (servicio existente)
 
@@ -164,9 +165,9 @@ Cuando se invoca con `mode: full-audit`:
 4. **Ejecutar checklist de seguridad de API** para todos los endpoints expuestos
 5. **Priorizar la lectura** solo de los archivos marcados como riesgosos por el contexto (handlers con input del usuario, goroutines asíncronas, queries DB, llamadas externas)
 6. **Omitir:** tests, mocks, código generado, vendor, docs, archivos CI, Dockerfiles
-7. Escribir en `<docs>/04-architecture/<service-name>/security-audit.md`
-8. Agregar tareas de seguridad a `<docs>/02-backlog/sprint-current.md` con etiqueta `[security]`
-9. **Para hallazgos critical y high:** producir también archivos individuales de bug en `<docs>/05-bugs/BUG-XXX-<service>-<short-desc>.md` usando este frontmatter:
+7. Escribir en `{architecture_path}/security-audit.md`
+8. Agregar tareas de seguridad a `{backlog_path}` con etiqueta `[security]`
+9. **Para hallazgos critical y high:** producir también archivos individuales de bug en `{bugs_path}/BUG-XXX-<service>-<short-desc>.md` usando este frontmatter:
    ```yaml
    ---
    id: BUG-XXX

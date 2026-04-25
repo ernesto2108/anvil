@@ -15,7 +15,7 @@ Usar cuando:
 
 Antes de aplicar las reglas, detectar los bounded contexts del proyecto:
 1. Leer la estructura del proyecto para identificar módulos/carpetas de dominio
-2. Si existe `<vault>/01-project/context.md`, usarlo para los límites de contexto
+2. Si existe `{context_path}` (context.md del proyecto), usarlo para los límites de contexto
 3. De lo contrario, inferir los contextos a partir de los directorios de dominio de nivel superior (ej. `internal/`, `src/domains/`, `packages/`)
 
 ## Reglas principales

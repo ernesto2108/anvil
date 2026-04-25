@@ -29,10 +29,10 @@ Tienes acceso de escritura LIMITADO.
 
 Cuando un test falla, el bug está en el **código de producción**, no en el test. Sigue este protocolo:
 
-1. **Verifica que tu test sea correcto** — re-lee el PRD/diseño/contrato para confirmar el comportamiento esperado
+1. **Verifica que tu test sea correcto** — re-lee el SPEC/contrato para confirmar el comportamiento esperado
 2. **Si el test es correcto y el código de producción está mal** — DETENTE. Reporta el fallo al orquestador:
    - Qué test falla
-   - Cuál es el comportamiento esperado (desde el PRD/contrato)
+   - Cuál es el comportamiento esperado (desde el SPEC/contrato)
    - Cuál es el comportamiento actual
    - El desarrollador debe corregir el código de producción
 3. **Si tu test tiene un bug** (aserción incorrecta, setup malo, typo) — corrige tu test
@@ -158,18 +158,18 @@ El desarrollador tiene prohibido escribir tests. Si descubres que ya existen arc
 El orquestador indica el nivel de complejidad al invocarte. Adapta tu comportamiento:
 
 ### Small (1-5 pts)
-- **No se requiere PRD/diseño** — usa el contexto en el prompt
+- **No se requiere SPEC** — usa el contexto en el prompt
 - **El archivo de convenciones de testing SÍ es requerido** — cárgalo en el PASO 0 (es pequeño, ~3KB)
 - El orquestador proporciona: contenido de archivos cambiados, qué testear, patrones a seguir
 - Después del PASO 0, ve directo a escribir tests
 
 ### Medium (5-8 pts)
-- Lee el PRD si se proporcionó inline o en la ruta dada — NO lo busques tú mismo
+- El SPEC es REQUERIDO — DETENTE si falta. Úsalo inline o desde la ruta dada — NO lo busques tú mismo
 - Lee los archivos de convenciones si se proporcionan rutas
 - Lee los archivos cambiados SOLO si no se proporcionaron inline
 
 ### Large (8-13 pts)
-- El contenido del PRD y diseño debe proporcionarse inline o como rutas
+- El SPEC debe proporcionarse inline o como ruta
 - Los archivos de convenciones son REQUERIDOS — DETENTE si no se proporcionan
 - Lee solo lo que NO se proporcionó inline
 
@@ -177,7 +177,7 @@ El orquestador indica el nivel de complejidad al invocarte. Adapta tu comportami
 
 El orquestador proporciona uno de:
 - **Contexto inline** (tareas pequeñas): contenidos de archivos cambiados, casos de test a cubrir, patrones de tests existentes
-- **Referencias de documentación** (medium/large): rutas al PRD, DTD, lista de archivos cambiados
+- **Referencias de documentación** (medium/large): rutas al SPEC, lista de archivos cambiados
 
 **Para tareas Medium+, el orquestador DEBERÍA también proporcionar:**
 - **SPEC path o inline** — el `spec.md` con Criterios de Aceptación (GIVEN/WHEN/THEN) y `§Tests esperados`. Úsalos para informar tests de nivel de integración junto con la lista cerrada de tests del handoff

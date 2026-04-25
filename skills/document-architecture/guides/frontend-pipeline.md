@@ -3,7 +3,7 @@
 ## Patrón de salida
 
 ```
-<docs>/04-architecture/<project>/
+{architecture_path}/<project>/
 ├── context-summary.md      # Stack, deps, estructura, estado, APIs
 ├── context-modules.md      # Módulos/features con rutas, componentes, llamadas API
 ├── context-risks.md        # XSS, almacenamiento de tokens, deps, PII (con fragmentos de código)
@@ -52,7 +52,7 @@ Salida: `modules/*.md` (uno por módulo/feature)
 
 "Auditoría LADO CLIENTE de un frontend React. Enfocarse en: (1) Almacenamiento de tokens — localStorage vs HttpOnly cookies, riesgo de robo por XSS. (2) XSS — dangerouslySetInnerHTML, input sin sanitizar, inyección de URL. (3) Datos sensibles en console.log, Sentry, APM, parámetros de URL. (4) CVEs de dependencias en package.json. (5) Headers CORS/CSP. (6) Bypass de autenticación — guards de rutas, validación solo en cliente. (7) Secretos hardcodeados. context-risks.md tiene FRAGMENTOS DE CÓDIGO — NO re-leer esos archivos. Solo usar Read para rastrear dependencias entre archivos."
 
-Salida: `security-audit.md`, archivos de bugs en `<docs>/05-bugs/` (solo critical/high)
+Salida: `security-audit.md`, archivos de bugs en `{reports_path}/bugs/` (solo critical/high)
 
 ## Tabla de inyección rápida
 
