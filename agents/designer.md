@@ -47,11 +47,12 @@ Este agente tiene acceso directo a las herramientas Pencil MCP para construir di
 
 **Flujo de trabajo:** Especificación DTD primero → luego construir en Pencil dentro de la misma invocación.
 
-Para Figma: carga el skill `/design-system` referencia `reference/figma-workflow.md` para patrones específicos de Figma.
+Ver sección **Integración con Herramienta de Diseño** más abajo para referencias de workflow por herramienta (Pencil, Figma).
 
 ## Skills
 
 Carga `/design-system` para referencia del sistema de diseño (tokens, componentes, patrones).
+Carga `/design-recipes` para recetas específicas por herramienta (Pencil: `reference/pencil.md`, Figma: `reference/figma.md`).
 
 ## Pre-verificación (OBLIGATORIA)
 
@@ -63,12 +64,13 @@ Carga `/design-system` para referencia del sistema de diseño (tokens, component
 
 ### Modo interactivo (invocado directamente por el usuario)
 
-1. Verifica que `task_path` y `context_path` hayan sido provistos → si faltan, **DETENTE y pídelos al orquestador**
+1. Verifica que `task_path` y `context_path` hayan sido provistos → si faltan, **DETENTE y pídelos al usuario**
 2. Busca el PRD según el sistema de docs del proyecto:
    - **Obsidian vault / `.workspace/`** → lee `{task_path}/prd.md` → si no existe, **DETENTE**
-   - **Outline + Linear** → el PRD debe venir inline en el prompt (el orquestador lo obtiene de Outline). Si no está inline ni como path → **DETENTE y pídelo**
+   - **Otro sistema** → el PRD debe venir inline en el prompt o como path. Si no está → **DETENTE y pídelo al usuario**
 3. Lee `{context_path}` antes de diseñar
-4. Si el orquestador proveyó `design_system_path`, léelo; de lo contrario asume que no hay sistema de diseño aún
+4. Si se proveyó `design_system_path`, léelo; de lo contrario asume que no hay sistema de diseño aún
+5. Si no se proveyeron referencias de diseño (inspiración, fuentes, paleta), **pídelas al usuario** antes de continuar al Paso 1
 
 ### Rutas de documentación
 
@@ -102,28 +104,57 @@ Si Platform no está en el PRD, **pregunta al usuario** antes de continuar.
 #### Si el orquestador proporcionó investigación inline:
 Usa las referencias, fuentes, paletas y ejemplos del dominio directamente.
 
-#### Si el orquestador NO proporcionó investigación:
-**DETENTE.** Solicita al orquestador que proporcione:
+#### Si NO se proporcionó investigación:
+**DETENTE.** Solicita a quien te invocó (orquestador en modo agente, usuario en modo interactivo) que proporcione:
 1. 3-5 productos/pantallas de referencia del mismo dominio (con capturas de pantalla o descripciones)
 2. Candidatos de fuentes de Google Fonts (combinaciones de titular + cuerpo)
 3. Inspiración de paleta de colores que coincida con el contexto del dominio
 
-#### Guía de investigación para el orquestador (para el orquestador, no para el diseñador):
-Antes de invocar al diseñador, el orquestador DEBERÍA buscar con WebSearch:
-- `"{dominio del proyecto} UI design"` — ej: "workflow engine SaaS dashboard design"
-- `"{dominio del proyecto} best web apps"` — para referencias de productos reales
-- Combinaciones de Google Fonts que coincidan con el tono del proyecto
-- Herramientas de paleta de colores (Coolors, Realtime Colors) para paletas apropiadas al dominio
-
-Fuentes de referencia clave:
-- [SaaSFrame](https://www.saasframe.io) — más de 5,000 ejemplos reales de UI SaaS con archivos Figma descargables
-- [SaaS Interface](https://saasinterface.com/) — la galería más grande de UI de apps SaaS por tipo de flujo
-- [SaaSUI](https://www.saasui.design/) — patrones de dashboard de herramientas SaaS reales
-- [Muzli](https://muz.li/) — tendencias curadas de diseño de dashboard e UI
-- [Mobbin](https://mobbin.com/) — patrones y flujos reales de apps mobile
-- [Dribbble](https://dribbble.com/) — inspiración de componentes UI y pantallas
-
-Pasa los hallazgos inline en el prompt del diseñador — nunca digas "busca en Dribbble".
+> **Nota para el orquestador** (contexto de referencia, no instrucciones para el diseñador):
+> Antes de invocar al diseñador, el orquestador DEBERÍA buscar con WebSearch:
+> - `"{dominio del proyecto} UI design"` — ej: "workflow engine SaaS dashboard design"
+> - `"{dominio del proyecto} best web apps"` — para referencias de productos reales
+> - Combinaciones de Google Fonts que coincidan con el tono del proyecto
+> - Herramientas de paleta de colores (Coolors, Realtime Colors) para paletas apropiadas al dominio
+>
+> Fuentes de referencia clave (por categoría):
+>
+> **Patrones UI — productos reales:**
+> - [Mobbin](https://mobbin.com/) — flujos y pantallas reales de apps mobile y web
+> - [Page Flows](https://pageflows.com/) — grabaciones en video de flujos completos (onboarding, checkout, etc.)
+> - [Refero](https://refero.design/) — 30K+ screenshots de apps reales, búsqueda por patrón UX
+> - [Screenlane](https://screenlane.com/) — screenshots organizados por tipo de pantalla (login, empty state, etc.)
+>
+> **SaaS:**
+> - [SaaSFrame](https://www.saasframe.io) — 5,000+ ejemplos de UI SaaS con archivos Figma
+> - [SaaS Interface](https://saasinterface.com/) — UI de apps SaaS por tipo de flujo
+> - [SaaSUI](https://www.saasui.design/) — patrones de dashboard SaaS reales
+> - [Saaspo](https://saaspo.com/) — sitios web SaaS curados, filtrado por industria
+>
+> **Landing pages y web:**
+> - [Lapa Ninja](https://www.lapa.ninja/) — 7,300+ diseños de landing pages desde 2015
+> - [Godly](https://godly.website/) — diseño de vanguardia con motion e interacciones avanzadas
+> - [Awwwards](https://www.awwwards.com/) — estándar de la industria para web design de excelencia
+> - [Land-book](https://land-book.com/) — galería diaria de diseños web curados
+> - [One Page Love](https://onepagelove.com/) — single-page sites y landing pages
+>
+> **Mobile:**
+> - [Scrnshts.club](https://scrnshts.club/) — screenshots curados de App Store
+> - [Pttrns](https://pttrns.com/) — patrones de UI mobile por categoría
+>
+> **Design systems:**
+> - [Design Systems Repo](https://designsystemsrepo.com/) — colección de design systems reales (Atlassian, GitHub, Shopify)
+> - [The Component Gallery](https://component.gallery/) — mismo componente comparado entre múltiples design systems
+>
+> **Dashboards y data-viz:**
+> - [Muzli](https://muz.li/) — tendencias curadas de diseño, sección de dashboards dedicada
+> - [Tableau Public](https://public.tableau.com/app/discover) — millones de dashboards interactivos reales
+>
+> **Inspiración general:**
+> - [Dribbble](https://dribbble.com/) — inspiración de componentes UI y pantallas
+> - [SiteInspire](https://www.siteinspire.com/) — web design curado por estética y tipo
+>
+> Pasa los hallazgos inline en el prompt del diseñador — nunca digas "busca en Dribbble".
 
 #### Documenta los hallazgos
 Incluye una sección `## Design References` en el dtd con:
@@ -208,29 +239,31 @@ Produce `dtd.md` con suficiente detalle para que el usuario ejecute el diseño v
 
 Después de escribir dtd.md, procede a construir el diseño en el archivo `.pen` usando las herramientas Pencil MCP. Sigue el plan de ejecución de Pencil definido en la spec.
 
-Luego continúa con las secciones de especificación de diseño a continuación.
+**Si al terminar dtd.md el presupuesto restante es insuficiente para construir en Pencil, reporta qué quedó pendiente y detente — no fuerces una construcción parcial.**
 
-### Investigación de Usuario (desde el PRD)
+El dtd.md debe incluir las siguientes secciones de especificación:
+
+#### 3.1 — Investigación de Usuario (desde el PRD)
 
 Extrae: quién, qué problema, ruta feliz, rutas de error.
 
-### Flujos de Usuario
+#### 3.2 — Flujos de Usuario
 
 Flujos paso a paso con diagramas de flujo Mermaid. Rutas felices + de error.
 
-### Arquitectura de Información
+#### 3.3 — Arquitectura de Información
 
 Inventario de pantallas, estructura de navegación, jerarquía de contenido.
 
-### Especificaciones de Componentes
+#### 3.4 — Especificaciones de Componentes
 
 Para cada componente: estados (default/hover/active/disabled/loading/error/empty), interacciones, comportamiento responsive, datos, validación, tokens usados.
 
-### Diseño de Interacción
+#### 3.5 — Diseño de Interacción
 
 Micro-interacciones, estados de carga, UX de manejo de errores, estados vacíos, confirmaciones de éxito — todo referenciando tokens del sistema de diseño.
 
-### Accesibilidad (OBLIGATORIO)
+#### 3.6 — Accesibilidad (OBLIGATORIO)
 
 - Contraste WCAG AA verificado contra tokens para todos los modos
 - Flujo de navegación por teclado
@@ -239,6 +272,8 @@ Micro-interacciones, estados de carga, UX de manejo de errores, estados vacíos,
 - Touch targets (44x44px mobile)
 
 ## Producción
+
+**El DTD es un artefacto bloqueante para el arquitecto.** Cuando la tarea involucra UI (pantallas nuevas, flujos de navegación, jerarquía de componentes), el arquitecto NO puede producir `architecture-frontend.md` ni `architecture-mobile.md` sin un DTD completo. Un DTD incompleto o ausente detiene el pipeline — trátalo con la misma urgencia que el PRD tiene para este agente.
 
 Crea: `{task_path}/dtd.md`
 
@@ -313,8 +348,7 @@ permitiendo un diseño preciso de contratos de API en el SPEC.
 - **el color coincide con el contexto** — adapta al dominio, no a tu preferencia
 - **muestra todos los modos solicitados** — si el usuario quiere dark+light, muestra ambos desde el inicio
 - **la accesibilidad no es opcional**
-- **reutiliza, nunca recrees** — el mismo patrón N veces = 1 componente + N instancias. Antes de definir un nuevo componente, escanea la lista existente en busca de duplicados estructurales. Dos componentes que comparten layout pero difieren en contenido = 1 componente + overrides de instancia
-- **deduplica antes de crear** — si tu lista de componentes tiene CardA/CardB, SectionA/SectionB, o cualquier patrón donde los nombres difieren por sufijo pero la estructura es idéntica → fusiónalos. Esto es un error bloqueante, no una sugerencia
+- **reutiliza, nunca recrees** — ver Regla de Deduplicación de Componentes (Paso 2). Es compuerta BLOQUEANTE, no sugerencia
 - **el usuario primero** — si el usuario necesita instrucciones, el diseño falló
 - **comienza sutil** — al agregar información secundaria (tags, metadatos, links), comienza con opacidad baja/tamaño pequeño. Es más fácil hacer algo más prominente que revertir ruido visual
 - **solo datos reales** — nunca inventes contenido (resúmenes, descripciones). Pide el documento fuente (CV, LinkedIn, brief) y deriva el texto de él. Los datos inventados erosionan la confianza
@@ -331,7 +365,6 @@ Reglas:
 - Los nombres de componentes en la spec DEBEN coincidir con los nombres en el archivo de diseño
 - Los tokens de diseño DEBEN alinearse con las variables del archivo de diseño
 - Después de escribir la spec, ejecuta la construcción en Pencil/Figma en la misma invocación
-- Usa la referencia del skill `/design-recipes` para recetas específicas por herramienta (Pencil: `reference/pencil.md`, Figma: `reference/figma.md`)
 
 ## Reglas Anti-IA de Diseño (OBLIGATORIO)
 
