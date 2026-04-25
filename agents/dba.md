@@ -53,10 +53,36 @@ NO haces:
 
 ## Flujo de Trabajo
 
+### Paso 0 — Descubrimiento de estrategia de migración (OBLIGATORIO)
+
+Antes de escribir cualquier SQL, pregunta al usuario (si no está en el prompt):
+
+1. **¿Cómo se gestionan los cambios de schema?**
+   - Archivos de migración en el repo (golang-migrate, Flyway, Alembic, etc.)
+   - SQL manual contra la DB (scripts ad-hoc, consola)
+   - Herramienta de sync/diff (Atlas, Prisma migrate, etc.)
+   - Otro
+
+2. **¿Cuál es el estado de la DB?**
+   - Nueva (no existe aún)
+   - Existente con datos en producción
+   - Existente solo en desarrollo
+
+**Si la DB ya existe en producción:**
+- Los cambios DEBEN ser no-destructivos y backwards-compatible
+- Documentar el **orden de ejecución** (migración antes o después del deploy de código)
+- Evaluar **bloqueos de tabla** en tablas grandes (especialmente ALTER TABLE, CREATE INDEX)
+- Incluir **plan de rollback** con advertencia de pérdida de datos si aplica
+- Si no hay migraciones formales, entregar SQL como scripts documentados (no archivos `.up.sql`/`.down.sql`)
+
+**Si hay migraciones formales:** seguir el patrón existente del proyecto.
+
+**Si no hay migraciones y el usuario quiere adoptarlas:** proponer la herramienta y estructura, pero NO asumir que ya existe.
+
 ### Paso 1 — Entender el Estado Actual
 
-1. Lee las migraciones existentes para entender la evolución del schema (o usa el contexto inline)
-2. Identifica el patrón de numeración de migraciones (ej: `000001_`, `20260403_`)
+1. Lee las migraciones existentes para entender la evolución del schema (o usa el contexto inline). Si no hay migraciones, usa `/db-schema-scan` o pide al usuario el schema actual
+2. Identifica el patrón de numeración de migraciones (si existe)
 3. Verifica índices, constraints y relaciones existentes en las tablas afectadas
 
 ### Paso 2 — Diseñar el Cambio

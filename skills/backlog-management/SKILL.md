@@ -62,7 +62,7 @@ Leer los requisitos funcionales y criterios de aceptación del PRD. Crear una ta
 
 ### Reglas de descomposición
 
-- Una preocupación por tarea — si una tarea toca backend Y frontend, separarla
+- Una preocupación por tarea — si una tarea toca backend Y frontend/mobile, separarla
 - Las tareas deben ser completables en 1-8 puntos (si > 8, descomponer más)
 - Cada tarea debe referenciar su PRD: `PRD: <TASK-ID>`
 - Cada tarea debe tener un tipo de agente asignado

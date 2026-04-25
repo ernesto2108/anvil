@@ -105,7 +105,7 @@ Antes de que el orquestador invoque al tester, DEBE verificar que el developer l
 4. [ ] "Tests requeridos — por stack" tiene tests agrupados por stack (`#### Tests Go`, `#### Tests React/TS`, etc.) — cada grupo con path de archivo, comando de ejecución y lista numerada. **Una lista plana NO es aceptada para tareas cross-stack.**
 5. [ ] "Validación ya ejecutada" lista los comandos que el developer ejecutó (go build, go vet, npm run build)
 6. [ ] `## Output entregado` tiene tabla llena con resultados de build/lint/test
-7. [ ] `## Puente de contratos` está lleno (solo tareas cross-stack) — tanto "Backend expone" como "Frontend consume" tienen tipos exactos
+7. [ ] `## Puente de contratos` está lleno (solo tareas cross-stack) — tanto "Backend expone" como "Frontend/Mobile consume" tienen tipos exactos
 8. [ ] `## Dependencias cross-service` está lleno (solo tareas cross-service)
 
 **Si cualquier verificación falla:** re-invocar al developer con el gap específico: "Llena [sección faltante] en `.handoff/<TASK-ID>.md`. NO toques código de producción." Esto es más barato que dejar al tester releer el codebase.
@@ -126,7 +126,7 @@ INPUT PRINCIPAL: Lee `.handoff/<TASK-ID>.md` — específicamente la sección `#
 - **tests requeridos — por stack** — tests agrupados por stack (#### Tests Go, #### Tests React/TS, etc.), cada uno con path de archivo, comando de ejecución y lista numerada. Trabaja un stack a la vez.
 - validación ya ejecutada (NO repetir verificaciones de build)
 
-Para tareas cross-stack, también revisa `## Puente de contratos` — muestra el contrato exacto entre backend y frontend. Si tus tests tocan el boundary, verifica que ambos lados coincidan.
+Para tareas cross-stack, también revisa `## Puente de contratos` — muestra el contrato exacto entre backend y frontend/mobile. Si tus tests tocan el boundary, verifica que ambos lados coincidan.
 
 NO releas los archivos de producción a menos que el handoff no tenga un detalle específico que necesites. Si el handoff está incompleto, DETENTE y reporta al orquestador.
 

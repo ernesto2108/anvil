@@ -122,10 +122,10 @@ Al final de cada sesión (completa o no), agregar una fila a la tabla de **Token
 
 ## Tareas cross-stack
 
-Cuando una tarea toca múltiples stacks (ej. backend Go + frontend React):
+Cuando una tarea toca múltiples stacks (ej. backend Go + frontend React, o backend Go + mobile Flutter):
 
-1. Usar `## Fases` en lugar de `## Estado actual` — una fase por stack, ordenadas por dependencia (backend primero)
-2. Completar `## Puente de contratos` — el struct/DTO/interface exacto que conecta ambos lados, con JSON tags y tipos TypeScript lado a lado
+1. Usar `## Fases` en lugar de `## Estado actual` — una fase por stack, ordenadas por dependencia (backend primero, luego frontend/mobile)
+2. Completar `## Puente de contratos` — el struct/DTO/interface exacto que conecta ambos lados, con JSON tags y tipos TypeScript/Dart lado a lado
 3. Agrupar `### Tests requeridos — por stack` por stack — cada grupo con su propio file path, comando de ejecución y lista numerada de tests
 
 **Por qué importa:** los bugs cross-stack casi siempre ocurren en el límite del contrato. Si el struct Go tiene `json:"runId"` pero la interfaz TS espera `run_id`, un handoff plano no lo detectará. El puente de contratos hace visibles ambos lados en un solo lugar.

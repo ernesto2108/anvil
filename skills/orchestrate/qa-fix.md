@@ -19,7 +19,7 @@ El orquestador pasa `Mode: qa-fix` en el prompt del developer. En este modo el d
 3. **NO** recarga la skill de convención completa — el orquestador inyecta SOLO las reglas específicas que aplican a los archivos siendo corregidos (3-5 reglas inline, no el dispatcher completo)
 4. Lee **SOLO** los archivos listados en los hallazgos de QA, no el paquete completo ni todo el codebase
 5. Aplica correcciones QUIRÚRGICAS — sin refactors, sin limpiezas de "ya que estoy aquí"
-6. Re-ejecuta validación solo para los archivos tocados (`go vet -tags <tag> ./internal/<pkg>`, `npm run build` solo si cambió frontend)
+6. Re-ejecuta validación solo para los archivos tocados (`go vet -tags <tag> ./internal/<pkg>`, `npm run build` solo si cambió frontend, `flutter analyze` solo si cambió mobile)
 7. Actualiza `## Notas` en el handoff con una entrada de una línea por corrección aplicada
 8. NO reescribe `## Handoff para tester` a menos que una corrección haya cambiado la firma de una interfaz pública
 

@@ -33,7 +33,8 @@ Cada concern tiene su propio archivo.
 |---|---|
 | `architecture-backend.md` | Cualquier cambio de backend (Go, Rust, Python, etc.) |
 | `architecture-db.md` | Cualquier cambio de DB/schema |
-| `architecture-frontend.md` | Cualquier cambio de frontend/mobile (React, Flutter, etc.) |
+| `architecture-frontend.md` | Cualquier cambio de frontend web (React, Astro, etc.) |
+| `architecture-mobile.md` | Cualquier cambio de mobile (Flutter, React Native, Swift, Kotlin) |
 | `architecture-infra.md` | Cualquier cambio de infra/CI |
 | `architecture.md` | **Small:** único output. **Medium+:** suplemento overview (contexto, decisiones, concerns transversales) junto a las vistas de dominio |
 
@@ -47,20 +48,23 @@ Cada guía contiene el template + reglas de formato para una vista. Cargar SOLO 
 |---|---|---|
 | Overview | `guides/overview.md` | Siempre |
 | Backend | `guides/backend.md` | Trabajo de backend |
-| Frontend | `guides/frontend.md` | Trabajo de frontend |
+| Frontend web | `guides/frontend.md` | Trabajo de frontend web |
+| Mobile | `guides/mobile.md` | Trabajo de mobile (Flutter, RN, nativo) |
 | Base de datos | `guides/database.md` | Cambios de DB |
 | Infraestructura | `guides/infrastructure.md` | Cambios de infra |
 | **SPEC** | `guides/spec.md` | **Siempre — se genera ÚLTIMO, después de todas las vistas** |
 
-**Orden de generación (obligatorio):** overview → vistas de dominio (backend/db/frontend/infra) → spec.md. El spec referencia archivos de arquitectura — no puede escribirse antes.
+**Orden de generación (obligatorio):** overview → vistas de dominio (backend/db/frontend/mobile/infra) → spec.md. El spec referencia archivos de arquitectura — no puede escribirse antes.
 
 ## Consistencia de contratos cross-vista
 
 Cuando el architect genera múltiples vistas, los contratos DEBEN ser consistentes:
 
 1. **Schema OpenAPI backend ↔ Interface TypeScript frontend** — mismos nombres de campo, mismos tipos, mismo required/optional
-2. **Tipos de persistencia backend ↔ Schema intent DB** — mismas columnas, mismos tipos, mismas constraints
-3. **Env vars de infra ↔ Referencias de config backend** — mismos nombres de variables
+2. **Schema OpenAPI/gRPC backend ↔ Modelos Dart/Kotlin/Swift mobile** — mismos nombres de campo, mismos tipos
+3. **Tipos de persistencia backend ↔ Schema intent DB** — mismas columnas, mismos tipos, mismas constraints
+4. **Env vars de infra ↔ Referencias de config backend** — mismos nombres de variables
+5. **Push notification payloads infra/backend ↔ Handlers mobile** — misma estructura de payload
 
 **Regla:** Definir el contrato UNA VEZ en la vista primaria (usualmente backend), luego referenciar o derivar en vistas secundarias. Nunca duplicar con formas diferentes.
 

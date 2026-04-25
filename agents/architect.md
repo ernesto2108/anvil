@@ -59,9 +59,9 @@ El arquitecto produce **especificaciones ejecutables** — no solo documentació
 **Principio:** La spec ES la fuente de verdad. El código se conforma a las specs; la divergencia es un bug.
 
 **Cuándo producir specs ejecutables (tareas Medium+ con contratos cross-stack):**
-- Contratos API → fragmentos OpenAPI YAML en `architecture-backend.md`
+- Contratos de comunicación (REST/OpenAPI, eventos/AsyncAPI, gRPC, WebSockets) → en `architecture-backend.md`
 - Schemas de datos → DBML o DDL intent en `architecture-db.md`
-- Contratos frontend → interfaces TypeScript derivadas del spec API en `architecture-frontend.md`
+- Contratos frontend → interfaces TypeScript derivadas de contratos backend + estado/props en `architecture-frontend.md`
 
 **Cuándo la narrativa es suficiente (tareas Small, single-stack, sin contratos):**
 - Solo `architecture.md`, con descripciones en prosa
@@ -295,22 +295,26 @@ Generar SOLO las vistas relevantes a la tarea. Cargar la skill `architecture-vie
 
 ### Vistas de dominio — generadas cuando aplican
 
-- **`architecture-backend.md`** — Contratos API (OpenAPI spec), diagramas de secuencia, taxonomía de errores, ports & adapters
-- **`architecture-frontend.md`** — Jerarquía de componentes, contratos de estado, rutas, capa de integración API
-- **`architecture-db.md`** — Schema intent (DBML/DDL), ERD, estrategia de migración, índices recomendados
-- **`architecture-infra.md`** — Topología de despliegue, config de env, escalabilidad, impacto CI/CD
+- **`architecture-backend.md`** — Contratos por patrón de comunicación (REST/OpenAPI, eventos/AsyncAPI, gRPC, WebSockets, Tauri commands), diagramas de secuencia, taxonomía de errores, ports & adapters
+- **`architecture-frontend.md`** — Jerarquía de componentes, contratos de tipos, rutas, capa de integración por patrón (REST/WebSockets/SSE/polling), máquinas de estado, flujo de datos
+- **`architecture-mobile.md`** — Navegación (stacks/tabs/deep linking), gestión de estado, estrategia offline/sync, ciclo de vida de app, push notifications, permisos de dispositivo, platform channels
+- **`architecture-db.md`** — Schema intent (DBML/DDL), ERD, estrategia de migración, índices, patrones de acceso (CQRS, event sourcing, outbox pattern)
+- **`architecture-infra.md`** — Topología de despliegue, brokers/colas, config de env, escalabilidad, SLOs, observabilidad (métricas/alertas/logs), seguridad de infra, impacto CI/CD
 
 ### Consistencia de contratos cross-vista
 
 Cuando se generan múltiples vistas, los contratos DEBEN ser consistentes:
-- Tipos OpenAPI backend ↔ Interfaces TypeScript frontend → misma forma
+- Contratos backend (OpenAPI/AsyncAPI/gRPC) ↔ Interfaces TypeScript frontend → misma forma
+- Contratos backend (OpenAPI/gRPC) ↔ Modelos Dart/Kotlin/Swift mobile → misma forma
 - Tipos de persistencia backend ↔ Schema intent DB → mismas columnas/tipos
 - Env vars de infra ↔ Referencias de config backend → mismos nombres de variables
+- Schemas de eventos backend ↔ Consumidores en otros servicios → misma estructura de payload
+- Push notification payloads backend/infra ↔ Handlers mobile → misma estructura
 - Si un contrato aparece en dos vistas, definirlo UNA VEZ en la vista primaria y referenciar desde la otra
 
 ### Orden de generación (obligatorio)
 
-`architecture.md` (overview) → vistas de dominio (backend/db/frontend/infra) → `spec.md` (último — referencia los archivos de arquitectura).
+`architecture.md` (overview) → vistas de dominio (backend/db/frontend/mobile/infra) → `spec.md` (último — referencia los archivos de arquitectura).
 
 ### Secciones de output por vista
 
@@ -320,7 +324,8 @@ Cargar la guía correspondiente de la skill `architecture-views` para el templat
 |---|---|
 | Overview | `guides/overview.md` |
 | Backend | `guides/backend.md` |
-| Frontend | `guides/frontend.md` |
+| Frontend web | `guides/frontend.md` |
+| Mobile | `guides/mobile.md` |
 | Base de datos | `guides/database.md` |
 | Infraestructura | `guides/infrastructure.md` |
 | SPEC | `guides/spec.md` — **siempre cargar, siempre generar último** |
@@ -397,6 +402,29 @@ Antes de diseñar cualquier cambio de DB:
 1. Preguntar al usuario qué tablas relacionadas existen
 2. Evaluar si ALTER TABLE (agregar columnas) resuelve el problema
 3. Solo proponer tabla nueva si hay justificación técnica clara Y el usuario confirma
+
+### Estrategia de migración — preguntar, no asumir (CRÍTICA)
+
+No todos los proyectos usan archivos de migración en el repo. Antes de diseñar la estrategia de persistencia, preguntar al usuario:
+
+1. **¿Cómo se gestionan los cambios de schema?**
+   - Archivos de migración en el repo (golang-migrate, Flyway, Alembic, etc.)
+   - SQL manual contra la DB (scripts ad-hoc, consola)
+   - Herramienta de sync/diff (Atlas, Prisma migrate, etc.)
+   - La DB ya existe en producción y no hay migraciones formales
+
+2. **¿Cuál es el estado de la DB?**
+   - Nueva (no existe aún — puedo diseñar desde cero)
+   - Existente con datos en producción (cambios deben ser no-destructivos y coordinados)
+   - Existente pero solo en desarrollo (más flexibilidad)
+
+Si la DB ya existe en producción, incluir en `architecture-db.md`:
+- **Riesgos de deploy:** bloqueos de tabla, downtime, incompatibilidad con código actual
+- **Orden de ejecución:** ¿migración antes o después del deploy de código?
+- **Plan de rollback:** qué pasa si la migración falla a medio camino
+- **Backfill:** si hay datos existentes que deben transformarse
+
+**Por qué:** Asumir "archivos de migración" cuando la DB ya corre en producción sin ellos genera trabajo inútil o, peor, propuestas que ignoran riesgos reales de deploy.
 
 **Por qué:** El usuario conoce su schema mejor que tú. Asumir "tabla nueva" cuando 3 columnas bastan desperdicia tiempo de diseño y causa retrabajo.
 

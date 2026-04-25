@@ -158,7 +158,7 @@ En modo directo, el orquestador lee/escribe libremente. En modo agente:
 - **QA:** score < 7 → STOP, arreglar antes de continuar
 - **Security:** CVE critical/high → STOP, arreglar antes de continuar
 - **Backlog PM:** después de PRD → verificar tareas en sprint-current.md
-- **Sync cross-repo:** cambios en DTO/endpoint/auth backend → developer lista archivos frontend afectados
+- **Sync cross-repo:** cambios en DTO/endpoint/auth backend → developer lista archivos frontend/mobile afectados
 
 ---
 

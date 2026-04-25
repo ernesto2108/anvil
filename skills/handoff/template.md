@@ -32,7 +32,7 @@ Usar esta plantilla al crear un nuevo archivo de handoff en `.handoff/<TASK-ID o
 
 ## Fases
 
-<!-- CROSS-STACK: una fase por stack, ordenadas por dependencia (backend primero, luego frontend).
+<!-- CROSS-STACK: una fase por stack, ordenadas por dependencia (backend primero, luego frontend/mobile).
      Eliminar esta sección para tareas single-stack. -->
 
 ### Fase 1 — Backend (<stack>)
@@ -52,7 +52,7 @@ Usar esta plantilla al crear un nuevo archivo de handoff en `.handoff/<TASK-ID o
      que un stack expone y el otro consume. Esta es la fuente #1 de bugs en tareas cross-stack. -->
 
 ### Backend expone
-<!-- Struct/función Go exacta con JSON tags que el frontend va a consumir -->
+<!-- Struct/función Go exacta con JSON tags que el frontend/mobile va a consumir -->
 ```go
 // Ejemplo:
 type MetricsDTO struct {
@@ -69,6 +69,18 @@ interface MetricsDTO {
   runsCount: number
 }
 async function getMetrics(): Promise<MetricsDTO>
+```
+
+### Mobile consume — incluir si aplica
+<!-- Modelo Dart/Kotlin/Swift exacto que mapea al contrato del backend -->
+```dart
+// Ejemplo:
+class MetricsDTO {
+  final int runsCount;
+  MetricsDTO({required this.runsCount});
+  factory MetricsDTO.fromJson(Map<String, dynamic> json) =>
+    MetricsDTO(runsCount: json['runsCount'] as int);
+}
 ```
 
 ### Validación del contrato

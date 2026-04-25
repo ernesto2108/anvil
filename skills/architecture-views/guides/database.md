@@ -40,9 +40,13 @@ CREATE INDEX idx_runs_status ON runs(status);
 
 ## Estrategia de migración
 
+- **Tipo de gestión:** [migraciones en repo / SQL manual / sync tool / otro]
+- **Estado de la DB:** [nueva / existente en dev / existente en producción]
 - **Compatibilidad hacia atrás:** ...
+- **Orden de deploy:** [migración antes de código / código antes de migración / simultáneo]
 - **Plan de rollback:** ...
 - **Backfill de datos:** ...
+- **Riesgos de producción:** [bloqueos de tabla, downtime estimado, datos afectados]
 
 ## Índices recomendados
 
