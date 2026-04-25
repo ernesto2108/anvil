@@ -1,12 +1,16 @@
-# Feature with UI/UX — designer + architect + dev + tester + qa
+# Feature with UI/UX — designer (DTD) + architect + dev + tester + qa
+# DTD is a blocking artifact for the architect when the task involves UI
 nodes:
   - id: designer
     role: designer
+    gate: true
     timeout: 5m
+    outputs: [dtd.md]
   - id: arch
     role: architect
     depends_on: [designer]
     timeout: 5m
+    outputs: [architecture.md, spec.md]
   - id: dev
     role: developer
     depends_on: [arch]

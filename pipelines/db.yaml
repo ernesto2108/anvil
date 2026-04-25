@@ -1,8 +1,12 @@
 # Database change — dba + dev + tester
+# Covers relational (migrations), Redis (keyspace), vector (collections),
+# document (schema evolution), messaging (schema registry), search (mappings)
 nodes:
   - id: dba
     role: dba
+    gate: true
     timeout: 5m
+    outputs: [migrations/, keyspace-conventions.md, schema.avsc]
   - id: dev
     role: developer
     depends_on: [dba]
