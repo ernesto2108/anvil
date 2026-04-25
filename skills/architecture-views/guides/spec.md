@@ -94,6 +94,15 @@
 - **Métricas:** counters/gauges que esta feature expone (o "N/A — feature puramente UI")
 - **Spans / traces:** si hay operaciones distribuidas, qué spans se crean
 
+## Variables de entorno nuevas
+
+<!-- Listar SOLO las env vars que esta tarea introduce. Si no hay nuevas, escribir "Ninguna". -->
+<!-- El developer agrega estas al .env.example con valores placeholder. -->
+
+| Variable | Ejemplo | Secreto | Notas |
+|---|---|---|---|
+| `VAR_NAME` | `valor-placeholder` | Sí / No | Para qué se usa |
+
 ## Límites de implementación
 
 ### Siempre hacer
@@ -105,10 +114,12 @@
 ### Nunca hacer
 - ...
 
-## Tests esperados — por stack
+## Tests esperados
 
 <!-- Lista cerrada. El tester implementa exactamente estos — ni más, ni menos. -->
-<!-- Agrupar por stack. Cada uno con path de archivo y qué valida. -->
+<!-- Sección 1: unit/integration por stack. Sección 2: automatización (E2E, API, visual, a11y). -->
+
+### Unit / Integration — por stack
 
 #### Tests Go
 - `path/to/file_test.go` — `TestFunctionName`: valida que ...
@@ -118,6 +129,35 @@
 
 #### Tests React/TS
 - `src/features/.../file.test.tsx` — `"description"`: valida que ...
+
+### Automatización
+
+<!-- Evaluar cuáles aplican según la tabla. Si no aplica, escribir "N/A" con justificación. -->
+
+| Tipo | ¿Aplica? | Qué validar |
+|---|---|---|
+| **E2E web** (Playwright) | Sí / N/A | Flujos: login → ..., checkout → ... |
+| **E2E mobile** (Maestro) | Sí / N/A | Flows: ... |
+| **API contract** (Hurl) | Sí / N/A | Endpoints: POST /api/..., GET /api/... |
+| **Visual regression** | Sí / N/A | Páginas: landing, dashboard |
+| **Accesibilidad** (axe) | Sí / N/A | Páginas públicas: ... |
+
+<!-- Detalle de cada tipo que aplica: -->
+
+#### E2E web (si aplica)
+- `tests/e2e/feature.spec.ts` — flujo: ...
+
+#### E2E mobile (si aplica)
+- `.maestro/feature.yaml` — flow: ...
+
+#### API contract (si aplica)
+- `tests/api/resource/crud-flow.hurl` — valida: ...
+
+#### Visual regression (si aplica)
+- En test E2E correspondiente con `toHaveScreenshot()`
+
+#### Accesibilidad (si aplica)
+- En test E2E correspondiente con axe-core
 ```
 
 ---
@@ -130,5 +170,7 @@
 - La sección de pre-condiciones es obligatoria — si está vacía, escribir "Ninguna" explícitamente
 - El bridge de contratos cross-stack es obligatorio para cualquier tarea que toque 2+ stacks
 - La sección de observabilidad es obligatoria para tareas Medium+ — "N/A" requiere justificación explícita
+- La sección de variables de entorno es obligatoria — si la tarea no introduce env vars nuevas, escribir "Ninguna" explícitamente. Usar nombres estándar de la tabla en `backend.md` (ej. `REDIS_URL`, no `CACHE_ADDR`)
 - "Tests esperados" es la lista cerrada que el tester sigue — el architect define el scope, no el tester
+- La sección "Automatización" es obligatoria para tareas Medium+ — evaluar cada tipo y escribir "N/A" con justificación si no aplica. Criterios: nuevo endpoint → API contract, flujo de usuario nuevo → E2E, página pública → a11y, cambio visual → visual regression
 - Mantener spec.md bajo 150 líneas — si es más largo, se están duplicando contratos de archivos de arquitectura

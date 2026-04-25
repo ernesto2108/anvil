@@ -16,7 +16,7 @@
 ## Siempre cargar
 
 - `guides/testing/structure-tables.md` — naming, sufijo de paquete, patrón table-driven (requerido para TODOS los tests de Go)
-- `guides/testing/helpers-mocking.md` — mocks manuales, `t.Helper()`, sin mockery/gomock
+- `guides/testing/helpers-mocking.md` — mockery para generar mocks desde interfaces, `t.Helper()`
 
 ## Cargar cuando sea relevante
 
@@ -32,6 +32,6 @@
 - Table-driven por defecto — cualquier función con >1 escenario recibe un loop `tests []struct{name string, ...}`
 - Assertions: stdlib (`t.Fatalf`/`t.Errorf`) O testify (`require`/`assert`) — coincidir con lo que el proyecto ya usa, nunca mezclar
 - `require` (testify) / `t.Fatalf` (stdlib) para verificaciones fatales; `assert` / `t.Errorf` para no-fatales
-- Sin mockery, sin gomock — todos los mocks se escriben manualmente como structs que implementan la interfaz
+- Usar **mockery** para generar mocks desde interfaces — nunca escribir mocks manuales (pueden divergir de la interfaz real y esconder bugs)
 - `t.Helper()` en cada función helper de test
 - Las assertions de errores verifican el mensaje/tipo, no solo `err != nil`

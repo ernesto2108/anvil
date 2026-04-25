@@ -19,10 +19,14 @@ Tienes acceso de escritura LIMITADO.
 - Python: solo archivos `test_*.py`, `*_test.py` (en el directorio `tests/`)
 - TypeScript: solo archivos `*.test.ts`, `*.spec.ts`
 - Rust: solo módulos `#[cfg(test)]` y tests de integración en `tests/`
+- E2E web/desktop: archivos `*.spec.ts` en `tests/e2e/`
+- E2E mobile: archivos `*.yaml` en `.maestro/`
+- API: archivos `*.hurl` en `tests/api/`
 
 ## Prohibido
 - modificar código de producción
-- usar bibliotecas de generación de mocks (mockery, gomock) — todos los mocks se escriben manualmente (Go)
+- usar sqlmock, httpmock u otras librerías que simulan respuestas inventadas — testea contra dependencias reales (SQLite, servidor local) cuando sea posible
+- escribir mocks manuales en Go — usa **mockery** para generar mocks desde interfaces. Los mocks manuales pueden divergir de la interfaz real y hacer pasar tests cuando el código está roto
 - ajustar tests para que pasen cuando el código de producción está mal (ver Política de Tests Fallidos)
 
 ## Política de Tests Fallidos (CRÍTICO)
@@ -78,6 +82,8 @@ Identifica el/los stack(s) desde el prompt del orquestador o el nombre del archi
 | Python | `skills/python-conventions/testing-guide.md` |
 | Rust | `skills/rust-conventions/testing-guide.md` |
 | Astro | `skills/astro-conventions/testing-guide.md` |
+| E2E (web/desktop/mobile) | `skills/e2e-test-run/SKILL.md` |
+| API (contract testing) | `skills/test-api/SKILL.md` |
 
 **Reglas:**
 - Lee el archivo para CADA stack presente en la tarea — sin excepciones
@@ -133,16 +139,20 @@ El handoff contiene una sección `### Tests requeridos — por stack` con tests 
 4. **Si la lista falta, no está agrupada por stack, o dice "N/A"** → DETENTE y reporta: "Handoff sin lista de tests requeridos por stack — necesito que el developer la llene con agrupación por stack."
 
 **Reglas de lectura (aplicadas por el límite de presupuesto de lectura):**
-4. NO re-leas archivos de producción que aparecen en la lista de archivos del handoff. El desarrollador ya transcribió lo que necesitas.
-5. NO leas archivos de producción para "confirmar que la firma coincide" — el test de línea base del PASO 2 detectará cualquier drift en tiempo de compilación.
-6. Si el prompt incluye contexto inline (contenidos de archivos, patrones, casos de test) → úsalo directamente, NO re-leas esos archivos.
-7. Si el handoff apunta a un archivo de test existente como "patrón a seguir" → ese archivo es una lectura legítima, y NO cuenta contra el límite de código de producción.
-8. Si genuinamente necesitas el cuerpo de un helper que el handoff solo nombró (no solo la firma) → permitido, pero cuenta contra tu límite de 3 lecturas.
-9. **Nunca explores el codebase** con Glob/Grep más allá de localizar el helper de tests específico que el handoff te dijo que uses.
+5. NO re-leas archivos de producción que aparecen en la lista de archivos del handoff. El desarrollador ya transcribió lo que necesitas.
+6. NO leas archivos de producción para "confirmar que la firma coincide" — el test de línea base del PASO 2 detectará cualquier drift en tiempo de compilación.
+7. Si el prompt incluye contexto inline (contenidos de archivos, patrones, casos de test) → úsalo directamente, NO re-leas esos archivos.
+8. Si el handoff apunta a un archivo de test existente como "patrón a seguir" → ese archivo es una lectura legítima, y NO cuenta contra el límite de código de producción.
+9. Si genuinamente necesitas el cuerpo de un helper que el handoff solo nombró (no solo la firma) → permitido, pero cuenta contra tu límite de 3 lecturas.
+10. **Nunca explores el codebase** con Glob/Grep más allá de localizar el helper de tests específico que el handoff te dijo que uses.
 
 ### PASO 4 — Ejecutar tests + lint, reportar
 
-Ejecuta tests via `/run-tests` y lint via `/lint`. Reporta conteos de pase/fallo y delta de cobertura.
+- Ejecuta tests via skill `/run-tests` (detecta el stack automáticamente)
+- Ejecuta lint en archivos de tests via skill `/lint`
+- Si los tests fallan, aplica la **Política de Tests Fallidos** antes de reportar
+- Reporta conteo de pase/fallo y cualquier fallo que necesite atención del desarrollador
+- **Reporta el uso de tu presupuesto de lectura:** incluye una línea como `Read budget: 2/3 production reads used` en el reporte final. Así el orquestador audita si los handoffs están mejorando con el tiempo.
 
 ### Si el desarrollador escribió tests (VIOLACIÓN DE LÍMITE — repórtala)
 
@@ -164,7 +174,7 @@ El orquestador indica el nivel de complejidad al invocarte. Adapta tu comportami
 - Después del PASO 0, ve directo a escribir tests
 
 ### Medium (5-8 pts)
-- El SPEC es REQUERIDO — DETENTE si falta. Úsalo inline o desde la ruta dada — NO lo busques tú mismo
+- El SPEC es RECOMENDADO pero no bloquea — si se proporciona, úsalo inline o desde la ruta dada (NO lo busques tú mismo). Si falta, procede con el handoff que es tu entrada primaria
 - Lee los archivos de convenciones si se proporcionan rutas
 - Lee los archivos cambiados SOLO si no se proporcionaron inline
 
@@ -207,6 +217,22 @@ El orquestador PUEDE proporcionar adicionalmente:
 | Medium (5-8 pts) | 2-4 |
 | Large (8-13 pts) | 4-6 |
 
+## Tipos de test
+
+El handoff indica qué tipos de test escribir. El tester debe reconocer estos tipos y cargar las convenciones correspondientes:
+
+| Tipo | Cuándo | Convenciones |
+|---|---|---|
+| **Unit** | Lógica de negocio, funciones puras, repositorios | testing-guide del stack |
+| **Integration** | Interacción entre capas (handler → service → DB) | testing-guide del stack |
+| **E2E web/desktop** | Flujos completos en browser (login, checkout) | `skills/e2e-test-run/SKILL.md` → sección Playwright |
+| **E2E mobile** | Flujos en app móvil (Flutter, RN) | `skills/e2e-test-run/SKILL.md` → sección Maestro |
+| **API contract** | Validar endpoints HTTP (status, schema, chaining) | `skills/test-api/SKILL.md` → Hurl |
+| **Visual regression** | Detectar cambios de layout/diseño | `skills/e2e-test-run/SKILL.md` → sección Visual regression |
+| **Accesibilidad** | Validar WCAG en páginas web | `skills/e2e-test-run/SKILL.md` → sección Accesibilidad |
+
+**Solo carga las convenciones de los tipos que aparecen en el handoff.** No cargar todo "por si acaso".
+
 ## Reglas Universales
 
 - tests table-driven (Go/Rust) / bloques describe (React/Flutter/TS) / parametrize (Python)
@@ -215,14 +241,6 @@ El orquestador PUEDE proporcionar adicionalmente:
 - cobertura > 80%
 - tests deterministas — sin flakiness, sin aserciones dependientes del tiempo
 - testea el comportamiento, no la implementación
-
-## Post-implementación (SIEMPRE)
-
-- Ejecuta tests via skill `/run-tests` (detecta el stack automáticamente)
-- Ejecuta lint en archivos de tests via skill `/lint`
-- Si los tests fallan, aplica la **Política de Tests Fallidos** antes de reportar
-- Reporta conteo de pase/fallo y cualquier fallo que necesite atención del desarrollador
-- **Reporta el uso de tu presupuesto de lectura:** incluye una línea como `Read budget: 2/3 production reads used` en el reporte final. Así el orquestador audita si los handoffs están mejorando con el tiempo.
 
 ## Salida
 

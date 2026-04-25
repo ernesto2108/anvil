@@ -89,6 +89,41 @@ stateDiagram-v2
   Success --> [*]
 ```
 
+## Variables de entorno del cliente — incluir si aplica
+
+<!-- Env vars expuestas al browser/cliente. NUNCA secretos aquí — todo es público. -->
+
+| Variable | Ejemplo | Framework | Descripción |
+|---|---|---|---|
+| `VITE_API_URL` | `http://localhost:8080` | Vite | URL base de la API |
+
+### Convenciones por framework
+
+| Framework | Prefijo obligatorio | Acceso en código | Archivo |
+|---|---|---|---|
+| **Vite** | `VITE_` | `import.meta.env.VITE_*` | `.env`, `.env.local` |
+| **Next.js** | `NEXT_PUBLIC_` | `process.env.NEXT_PUBLIC_*` | `.env.local` |
+| **Create React App** | `REACT_APP_` | `process.env.REACT_APP_*` | `.env` |
+| **Astro** | `PUBLIC_` | `import.meta.env.PUBLIC_*` | `.env` |
+| **Nuxt** | `NUXT_PUBLIC_` | `useRuntimeConfig().public.*` | `.env` |
+
+**Reglas:**
+- Sin el prefijo del framework, la variable NO se expone al cliente — esto es intencional (seguridad)
+- **Nunca** poner API keys, secrets, o tokens en env vars del cliente — son visibles en el bundle
+- Env vars del cliente van en `.env.example` con el prefijo correcto
+- Variables server-side (SSR de Next/Nuxt) no necesitan prefijo público — tratarlas como backend
+
+### Variables comunes de frontend
+
+| Variable | Uso |
+|---|---|
+| `VITE_API_URL` / `NEXT_PUBLIC_API_URL` | URL base del backend |
+| `VITE_WS_URL` / `NEXT_PUBLIC_WS_URL` | URL del WebSocket |
+| `VITE_APP_ENV` | Entorno (development / staging / production) |
+| `VITE_SENTRY_DSN` | DSN de Sentry para error tracking del cliente |
+| `VITE_ANALYTICS_ID` | ID de Google Analytics / Plausible / etc. |
+| `VITE_FEATURE_*` | Feature flags del cliente |
+
 ## Rutas y navegación
 
 | Ruta | Componente | Guard | Lazy |
@@ -111,3 +146,5 @@ sequenceDiagram
 - Los contratos de props definen la API pública del componente — qué recibe y emite
 - La tabla de rutas incluye guards (auth, permisos) y estrategia de lazy loading
 - Si existe vista backend, las interfaces frontend se DERIVAN de esos contratos — no se definen independientemente
+- Las env vars del cliente son PÚBLICAS — nunca secretos. Si necesitas un secret en SSR (Next/Nuxt), documentarlo sin prefijo público y tratarlo como backend
+- Toda env var nueva debe agregarse al `.env.example` con el prefijo correcto del framework

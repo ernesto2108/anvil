@@ -91,9 +91,50 @@ void main() {
 }
 ```
 
-### Reglas
+### Mocking con mockito + build_runner (OBLIGATORIO)
 
-- Usar `mocktail` para mocking (sin necesidad de generación de código)
+**Nunca escribir mocks manuales ni usar mocktail.** Usar `mockito` con generación de código para que los mocks siempre coincidan con la interfaz real.
+
+#### Setup
+
+```yaml
+# pubspec.yaml
+dev_dependencies:
+  mockito: ^5.4.0
+  build_runner: ^2.4.0
+```
+
+#### Generar mocks
+
+```dart
+// En el archivo de test, anotar las clases a mockear
+@GenerateMocks([AuthRepository, UserService])
+import 'auth_bloc_test.mocks.dart'; // archivo generado
+```
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+
+#### Ejemplo
+
+```dart
+final mockRepo = MockAuthRepository();
+when(mockRepo.login(any, any)).thenAnswer((_) async => Result.ok(testUser));
+verify(mockRepo.login('a@b.com', '123')).called(1);
+```
+
+Si `AuthRepository` gana un nuevo método, el `MockAuthRepository` generado es obsoleto — `build_runner` lo regenera y cualquier stub faltante causa un error de compilación.
+
+#### Reglas
+
+- `@GenerateMocks([...])` en cada archivo de test que necesite mocks
+- Regenerar después de cambiar interfaces: `dart run build_runner build`
+- **Si build_runner falla** — NO recurrir a mocks manuales. Reportar al orquestador
+- Prohibido `mocktail` — no tiene codegen, los mocks pueden divergir
+
+### Reglas generales
+
 - Testear el patrón Result — tanto rutas `Ok` como `Error`
 - Agrupar tests relacionados con `group()`
 - `setUp`/`tearDown` para inicialización consistente
@@ -317,7 +358,7 @@ final testUsers = [testUser, User(id: '2', name: 'Jane', email: 'jane@test.com')
 |---|---|
 | Testear la implementación (internos del estado) | Testear la salida y comportamiento del widget |
 | Falta `pumpAndSettle` después de interacciones | Siempre hacer pump después de tap/enterText |
-| Sin mockear dependencias externas | Usar `mocktail` para repos/services |
+| Sin mockear dependencias externas | Usar `mockito` + `build_runner` para repos/services |
 | Tests de snapshot/golden para lógica | Los golden tests son solo visuales |
 | Integration tests para todo | Unit → Widget → Golden → Integration (pirámide) |
 | Tests inestables por problemas de timing | Usar `pumpAndSettle`, no `pump` con duraciones arbitrarias |

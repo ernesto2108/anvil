@@ -280,6 +280,14 @@ export { customRender as render }
 
 ---
 
+## Mocking de Servicios/Repositorios
+
+Para mockear interfaces TypeScript de servicios, hooks, o repositorios, usar `jest-mock-extended` (ver `typescript-conventions/guides/testing/vitest.md` para setup y ejemplos completos). Nunca crear objetos mock manuales con `vi.fn()` para interfaces — pueden divergir de la interfaz real.
+
+`vi.fn()` sigue siendo válido para callbacks de props (ej: `onSubmit`, `onClick`).
+
+---
+
 ## Anti-Patrones
 
 | Anti-Patrón | Corrección |
@@ -290,3 +298,4 @@ export { customRender as render }
 | Sin manejo async (falta `findBy`/`waitFor`) | Usar `findBy` para contenido async |
 | Testear internos de librerías (caché de TanStack Query) | Testear el componente que lo consume |
 | Tests de snapshot como estrategia principal | Usar solo para regresión visual, no para lógica |
+| Mocks manuales (`{ save: vi.fn() }`) para interfaces | Usar `mock<Interface>()` de jest-mock-extended |

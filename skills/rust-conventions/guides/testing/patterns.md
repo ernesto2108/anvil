@@ -50,27 +50,67 @@ async fn test_api() {
 }
 ```
 
-## Mocking Basado en Traits
+## Mocking Basado en Traits con mockall (OBLIGATORIO)
+
+**Nunca escribir mocks manuales.** Los mocks manuales pueden divergir del trait real — el test pasa verde pero el código está roto. Usar `mockall` que genera mocks desde traits via proc macros, garantizando que siempre coincidan.
+
+### Setup
+
+```toml
+# Cargo.toml
+[dev-dependencies]
+mockall = "0.13"
+```
+
+### Uso básico
 
 ```rust
-// RIGHT — trait at boundary, mock in tests
+use mockall::automock;
+
+#[automock]
 trait HttpClient: Send + Sync {
     async fn get(&self, url: &str) -> Result<Response>;
+    async fn post(&self, url: &str, body: &[u8]) -> Result<Response>;
 }
 
 #[cfg(test)]
-struct MockClient {
-    responses: std::collections::HashMap<String, Response>,
-}
+mod tests {
+    use super::*;
+    use mockall::predicate::*;
 
-#[cfg(test)]
-impl HttpClient for MockClient {
-    async fn get(&self, url: &str) -> Result<Response> {
-        self.responses.get(url).cloned()
-            .ok_or_else(|| anyhow!("not found"))
+    #[tokio::test]
+    async fn fetches_user_by_id() {
+        let mut mock = MockHttpClient::new();
+        mock.expect_get()
+            .with(eq("https://api.example.com/users/1"))
+            .returning(|_| Ok(Response::new(200, b"{\"id\":\"1\"}")))
+            .times(1);
+
+        let svc = UserService::new(mock);
+        let user = svc.get_user("1").await.unwrap();
+        assert_eq!(user.id, "1");
+    }
+
+    #[tokio::test]
+    async fn handles_http_error() {
+        let mut mock = MockHttpClient::new();
+        mock.expect_get()
+            .returning(|_| Err(anyhow!("connection refused")));
+
+        let svc = UserService::new(mock);
+        assert!(svc.get_user("1").await.is_err());
     }
 }
 ```
+
+### Reglas
+
+- `#[automock]` en cada trait que se vaya a mockear — genera `MockTraitName` automáticamente
+- Si el trait cambia, el mock se regenera en compilación — cualquier test desactualizado falla al compilar
+- Usar `mockall::predicate::*` para validar argumentos (`eq`, `str::contains`, `function`)
+- `.times(1)` / `.times(n)` para verificar cantidad de llamadas
+- Soporta `async_trait`, genéricos y métodos estáticos
+- **Si mockall no compila o falla** — NO recurrir a mocks manuales. Reportar al orquestador
 
 ## Testing Basado en Propiedades (proptest)
 
@@ -128,6 +168,7 @@ fn test_json() {
 
 ## Crates Clave
 
+- `mockall` 0.13.x — generación de mocks desde traits (OBLIGATORIO para mocking)
 - `proptest` 1.x — testing basado en propiedades
 - `criterion` 0.5.x — benchmarking
 - `insta` 1.x — snapshot testing

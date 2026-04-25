@@ -44,8 +44,18 @@ graph LR
 
 ## Variables de entorno y secretos
 
-| Variable | Tipo | Descripción | Requerida |
-|---|---|---|---|
+<!-- Usar los nombres estándar definidos en architecture-backend.md §Variables de entorno. -->
+<!-- Esta tabla es el contrato de deploy — lo que ops necesita configurar por entorno. -->
+
+| Variable | Tipo | Descripción | Requerida | Secreto |
+|---|---|---|---|---|
+
+### Reglas de env vars en infra
+
+- Los nombres DEBEN coincidir con los definidos en `architecture-backend.md` y `architecture-frontend.md` — si backend define `KAFKA_BROKERS`, infra configura `KAFKA_BROKERS`, no `KAFKA_BOOTSTRAP_SERVERS`
+- Separar ConfigMap (no-sensibles) de Secrets (sensibles) — la columna "Secreto" determina cuál
+- Documentar valores por entorno cuando difieren (dev: `localhost`, staging: `broker.staging`, prod: `broker.prod`)
+- Variables de frontend público (`VITE_*`, `NEXT_PUBLIC_*`) van en el build, no en runtime — documentar en qué paso del CI se inyectan
 
 ## Escalabilidad
 
@@ -84,5 +94,5 @@ graph LR
 - La sección de SLOs es requerida para tareas Medium+ — "N/A" solo si explícitamente es un job background sin impacto al usuario
 - La sección de observabilidad debe nombrar métricas específicas — "agregar logging" no es suficiente
 - El diagrama de despliegue muestra servicios y conexiones — no código interno
-- Cada env var debe especificar tipo (string, int, bool, secret) y si es requerida
-- Si existe vista backend, las env vars aquí deben coincidir con las referencias de config backend exactamente
+- Cada env var debe especificar tipo (string, int, bool, secret), si es requerida, y si es secreto
+- Los nombres de env vars DEBEN coincidir exactamente con los definidos en backend.md y frontend.md — infra no renombra variables

@@ -167,6 +167,26 @@ Firmas exactas de lo que se agregó o modificó. Copiar-pegar del código.
 
 <!-- Agregar más grupos según necesidad: Flutter, Python, Rust -->
 
+#### Tests de automatización
+<!-- Heredar de la sección "Automatización" del SPEC. Solo incluir los tipos marcados "Sí". -->
+
+- **E2E web** (Playwright): `tests/e2e/<feature>.spec.ts`
+  - Ejecutar: `npx playwright test tests/e2e/<feature>.spec.ts`
+  - Flujos:
+    1. <flujo> — qué valida
+- **E2E mobile** (Maestro): `.maestro/<feature>.yaml`
+  - Ejecutar: `maestro test .maestro/<feature>.yaml`
+  - Flows:
+    1. <flow> — qué valida
+- **API contract** (Hurl): `tests/api/<resource>/<scenario>.hurl`
+  - Ejecutar: `hurl --test tests/api/<resource>/`
+  - Scenarios:
+    1. <scenario> — qué valida
+- **Visual regression**: en test E2E con `toHaveScreenshot()`
+- **Accesibilidad**: en test E2E con axe-core
+
+<!-- Eliminar los tipos que no aplican según el SPEC. Si el SPEC no tiene sección de automatización, omitir este bloque. -->
+
 ### Validación ya ejecutada
 <!-- go build, go vet, npm run build, lint — comandos exactos y su estado de salida. El tester NO repite los checks de build. -->
 

@@ -132,6 +132,40 @@ stateDiagram-v2
 
 ---
 
+## Variables de entorno / configuración de runtime — incluir si aplica
+
+<!-- Mobile no usa .env como backend/web. La config se inyecta de formas distintas por plataforma. -->
+
+| Variable | Ejemplo | Mecanismo | Descripción |
+|---|---|---|---|
+| `API_BASE_URL` | `https://api.example.com` | Build flavor / scheme | URL base de la API |
+
+### Mecanismos por framework
+
+| Framework | Cómo se inyecta config | Archivo / herramienta |
+|---|---|---|
+| **Flutter** | `--dart-define=KEY=VALUE` en build, o `flutter_dotenv` | `.env` + `flutter_dotenv` package, o `--dart-define` |
+| **React Native** | `react-native-config` | `.env`, `.env.staging`, `.env.production` |
+| **Native iOS** | Xcode schemes + `Info.plist` / xcconfig | `.xcconfig` por environment |
+| **Native Android** | Build flavors + `BuildConfig` | `build.gradle` productFlavors |
+
+### Variables comunes de mobile
+
+| Variable | Uso |
+|---|---|
+| `API_BASE_URL` | URL base del backend |
+| `WS_URL` | URL del WebSocket |
+| `APP_ENV` | Entorno (dev / staging / prod) |
+| `SENTRY_DSN` | DSN de Sentry para crash reporting |
+| `ANALYTICS_KEY` | Key de analytics (Firebase, Amplitude, etc.) |
+| `FEATURE_*` | Feature flags |
+
+**Reglas:**
+- **Nunca** hardcodear URLs o keys en código fuente — siempre inyectar via config
+- Secrets (API keys privadas) van en secure storage del dispositivo o se obtienen post-auth — nunca en el bundle
+- Documentar en el `.env.example` del proyecto las variables que `flutter_dotenv` o `react-native-config` leen
+- Cada build flavor/scheme (dev, staging, prod) debe tener su propio set de variables
+
 ## Capa de integración con backend
 
 ### REST / gRPC
@@ -169,3 +203,5 @@ stateDiagram-v2
 - Deep linking debe mapear cada ruta a un screen con su guard de auth
 - Si existe vista backend, los modelos mobile se DERIVAN de esos contratos — no se definen independientemente
 - Ciclo de vida es obligatorio para features que usan streams, timers, o estado temporal
+- Toda config de runtime nueva debe documentarse con su mecanismo de inyección por framework
+- Secrets nunca en el bundle — solo en secure storage post-auth o via backend proxy

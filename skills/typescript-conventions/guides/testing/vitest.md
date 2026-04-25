@@ -111,17 +111,69 @@ describe("type assertions", () => {
 
 ## Estrategias de Mocking
 
-### Funciones mock con `vi.fn()`
+### Mocking de interfaces con jest-mock-extended (OBLIGATORIO)
+
+**Nunca crear objetos mock manuales para interfaces.** Los mocks manuales (`{ findById: vi.fn(), save: vi.fn() }`) pueden divergir de la interfaz real — el test pasa pero el código está roto. Usar `jest-mock-extended` que genera mocks type-safe desde interfaces TypeScript.
+
+#### Setup
+
+```bash
+pnpm add -D jest-mock-extended
+```
+
+#### Uso
 
 ```typescript
-import { vi, expect } from "vitest";
+import { mock, MockProxy } from "jest-mock-extended";
+import type { UserRepository } from "./user.repository.js";
 
-const mockFetch = vi.fn<typeof fetch>();
-mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ id: 1 })));
+describe("UserService", () => {
+  let repo: MockProxy<UserRepository>;
+  let service: UserService;
 
-// Valores de retorno de mock type-safe
-const mockSend = vi.fn<(msg: string) => Promise<void>>();
-mockSend.mockResolvedValue(undefined);
+  beforeEach(() => {
+    repo = mock<UserRepository>();
+    service = new UserService(repo);
+  });
+
+  it("returns user when found", async () => {
+    const user = { id: "u_1", name: "Alice", email: "alice@example.com" };
+    repo.findById.calledWith("u_1").mockResolvedValue(user);
+
+    const result = await service.getUser("u_1" as UserId);
+
+    expect(result).toEqual(user);
+    expect(repo.findById).toHaveBeenCalledWith("u_1");
+  });
+
+  it("returns null when not found", async () => {
+    repo.findById.mockResolvedValue(null);
+
+    const result = await service.getUser("u_missing" as UserId);
+
+    expect(result).toBeNull();
+  });
+});
+```
+
+Si `UserRepository` gana un nuevo método, `MockProxy<UserRepository>` lo incluye automáticamente — TypeScript falla al compilar si el mock no coincide.
+
+#### Reglas
+
+- `mock<Interface>()` para toda interfaz de servicio/repositorio — nunca objetos literales con `vi.fn()`
+- `.calledWith(args).mockReturnValue(val)` para respuestas condicionales
+- Funciona con Vitest sin configuración extra (compatible con la API de jest)
+- **Si jest-mock-extended no está instalado** — NO recurrir a mocks manuales. Reportar al orquestador
+
+### Funciones mock con `vi.fn()` (solo para callbacks y handlers)
+
+`vi.fn()` sigue siendo válido para callbacks simples (props de componentes, event handlers) donde no hay interfaz:
+
+```typescript
+const onSubmit = vi.fn();
+render(<LoginForm onSubmit={onSubmit} />);
+// ...
+expect(onSubmit).toHaveBeenCalledWith({ email: "test@test.com" });
 ```
 
 ### Mock de módulos con `vi.mock()`

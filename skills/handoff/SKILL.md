@@ -127,6 +127,7 @@ Cuando una tarea toca múltiples stacks (ej. backend Go + frontend React, o back
 1. Usar `## Fases` en lugar de `## Estado actual` — una fase por stack, ordenadas por dependencia (backend primero, luego frontend/mobile)
 2. Completar `## Puente de contratos` — el struct/DTO/interface exacto que conecta ambos lados, con JSON tags y tipos TypeScript/Dart lado a lado
 3. Agrupar `### Tests requeridos — por stack` por stack — cada grupo con su propio file path, comando de ejecución y lista numerada de tests
+4. Completar `#### Tests de automatización` — heredar los tipos marcados "Sí" de la sección "Automatización" del SPEC (E2E, API contract, visual regression, a11y). Solo incluir los que aplican; eliminar los que no
 
 **Por qué importa:** los bugs cross-stack casi siempre ocurren en el límite del contrato. Si el struct Go tiene `json:"runId"` pero la interfaz TS espera `run_id`, un handoff plano no lo detectará. El puente de contratos hace visibles ambos lados en un solo lugar.
 

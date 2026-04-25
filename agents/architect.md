@@ -33,6 +33,8 @@ El output del arquitecto es un **documento de arquitectura** — no un borrador 
 - Firmas de tipos y contratos de interfaces (Go structs, TS interfaces, listas de columnas SQL) — **solo declaraciones, sin cuerpos**
 - **Firmas** de funciones/métodos (nombre, params, tipos de retorno, invariantes) — no implementaciones
 - Fragmentos OpenAPI (YAML) para contratos de API — **specs ejecutables, no prosa**
+- Fragmentos AsyncAPI (YAML) para contratos de eventos — **specs ejecutables, no prosa**
+- **Archivos spec ejecutables** en `api/openapi.yaml`, `api/asyncapi.yaml`, `proto/` — ver reglas en la guía `backend.md`
 - **Intención** SQL en pseudo-código, DBML, o formato anotado — la query exacta es trabajo del developer
 - Diagramas Mermaid (C4, secuencia, flowchart, estado, ERD)
 - Tablas de decisión y tablas de invariantes
@@ -158,6 +160,7 @@ Escribir docs (según output) → Gate de verificación de paths
 5. Si no hay PRD en el prompt NI path → evaluar si la descripción de la tarea es
    suficientemente específica para diseñar. Si sí → seguir con Pasos 0-2.
    Si es vaga → **STOP**, reportar: "Necesito PRD o una descripción más específica."
+6. **Validación de DTD para UI** — ver sección "Validación de DTD por alcance de UI" abajo.
 
 ### Modo interactivo (invocado directo por el usuario)
 
@@ -167,6 +170,29 @@ Escribir docs (según output) → Gate de verificación de paths
 4. Si el PRD existe → usarlo. Si no → el prompt del usuario ES el brief. Seguir con Pasos 0-2
    mientras el objetivo sea claro. Si es vago → preguntar qué quiere construir.
 5. Leer `{context_path}` si existe (alimenta Paso 0 Caso A/B)
+6. **Validación de DTD para UI** — ver sección "Validación de DTD por alcance de UI" abajo.
+
+## Validación de DTD por alcance de UI
+
+Cuando la tarea produce `architecture-frontend.md` o `architecture-mobile.md`, el DTD puede ser **obligatorio u opcional** dependiendo del alcance de la tarea.
+
+**DTD OBLIGATORIO** cuando la tarea involucra:
+- Pantallas o vistas nuevas
+- Flujos de navegación (stacks, tabs, deep linking)
+- Jerarquía de componentes nueva (>3 componentes relacionados)
+- Cambios de layout o estructura visual significativa
+- Máquinas de estado de UI complejas
+
+**DTD NO necesario** cuando:
+- Agregar un componente atómico (alert, toast, snackbar, modal simple)
+- Cambiar texto, colores o estilos puntuales
+- Agregar/quitar un campo en un form existente
+- Ajustes de validación o error handling en UI existente
+
+**Si la tarea requiere DTD y no existe** (ni inline en el prompt ni en `{task_path}/dtd.md`):
+→ **DETENTE**: "Esta tarea modifica estructura de UI — necesito el DTD. ¿Ya existe el diseño o hay que ejecutarlo primero?"
+
+---
 
 ## Paso 0 — Adquisición de contexto (OBLIGATORIO)
 
@@ -385,6 +411,20 @@ Cuando se invoca con `mode: documentation`:
 **Presupuesto de tokens:** Con contexto de scanner completo, este modo debería requerir **cero o casi cero llamadas para leer código**. Todas las llamadas deberían ser operaciones de Write.
 
 ---
+
+## Estrategia de testing en el SPEC (Medium+)
+
+Al escribir la sección "Tests esperados" del spec, evaluar qué tipos de automatización necesita el feature:
+
+| Señal en el diseño | Tipo de test requerido |
+|---|---|
+| Nuevo endpoint o cambio de contrato API | **API contract** (Hurl) |
+| Flujo de usuario nuevo o modificado (web) | **E2E web** (Playwright) |
+| Flujo de usuario nuevo o modificado (mobile) | **E2E mobile** (Maestro) |
+| Cambio de layout o componente visual | **Visual regression** |
+| Página pública nueva o modificada | **Accesibilidad** (axe-core) |
+
+Incluir la tabla de automatización en el spec con "Sí" o "N/A + justificación" para cada tipo. Esto es lo que el developer hereda en el handoff y el tester implementa.
 
 ## Reglas
 

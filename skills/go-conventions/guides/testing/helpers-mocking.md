@@ -1,4 +1,4 @@
-# Helpers de Test y Mocking con Interfaces
+# Helpers de Test y Mocking con Mockery
 
 ## Helpers de Test
 
@@ -40,108 +40,95 @@ func newTestOrder(t *testing.T, opts ...func(*Order)) *Order {
 
 ---
 
-## Mocking con Interfaces
+## Mocking con Mockery (OBLIGATORIO)
 
-Sin frameworks de mocking. Definir interfaces, implementar test doubles escritos a mano.
+**Nunca escribir mocks manuales.** Los mocks manuales pueden divergir de la interfaz real — el test pasa verde pero el código está roto. Mockery genera mocks desde las interfaces Go, garantizando que siempre coincidan.
 
-### Patrón A: Function-pointer fakes
+### Prerequisito: instalar mockery
 
-Ideal para control fino — configurar comportamiento por caso de test:
+```bash
+brew install mockery    # macOS
+# o descargar el binario desde https://github.com/vektra/mockery/releases
+```
+
+### Configuración del proyecto
+
+Crear `.mockery.yaml` en la raíz del módulo Go (si no existe):
+
+```yaml
+packages:
+  github.com/tu/modulo:
+    config:
+      dir: "{{.InterfaceDir}}"
+      filename: "mock_{{.InterfaceName | snakecase}}_test.go"
+      pkgname: "{{.SrcPackageName}}_test"
+      inpackage: true
+      with-expecter: true
+```
+
+Campos clave:
+- `dir: "{{.InterfaceDir}}"` — genera el mock junto al código fuente
+- `pkgname: "..._test"` — el mock vive en el paquete de test (caja negra)
+- `with-expecter: true` — habilita la API `.EXPECT()` type-safe
+- `inpackage: true` — genera en el mismo directorio, no en carpeta `mocks/`
+
+### Generar mocks
+
+```bash
+mockery    # lee .mockery.yaml y genera todos los mocks configurados
+```
+
+Ejecutar cada vez que una interfaz cambie. Si el mock no compila, la interfaz cambió y el test lo detecta inmediatamente.
+
+### Usar mocks en tests
 
 ```go
-// Production interface (defined by consumer)
-type UserRepository interface {
-    Save(ctx context.Context, u *User) error
-    GetByID(ctx context.Context, id string) (*User, error)
-}
-
-// Function-pointer fake — each field controls one method
-type repoFake struct {
-    saveFn    func(ctx context.Context, u *User) error
-    getByIDFn func(ctx context.Context, id string) (*User, error)
-}
-
-func (f repoFake) Save(ctx context.Context, u *User) error {
-    if f.saveFn == nil {
-        return nil
-    }
-    return f.saveFn(ctx, u)
-}
-
-func (f repoFake) GetByID(ctx context.Context, id string) (*User, error) {
-    if f.getByIDFn == nil {
-        return nil, nil
-    }
-    return f.getByIDFn(ctx, id)
-}
-
-// Usage
 func Test_CreateUser_success(t *testing.T) {
-    repo := repoFake{
-        saveFn: func(_ context.Context, u *User) error {
-            if u.Email == "" {
-                t.Error("expected email to be set")
-            }
-            return nil
-        },
-    }
-    svc := NewUserService(repo)
+    mockRepo := NewMockUserRepository(t)  // auto-registra cleanup y AssertExpectations
+
+    mockRepo.EXPECT().
+        Save(mock.Anything, mock.MatchedBy(func(u *User) bool {
+            return u.Email == "test@example.com"
+        })).
+        Return(nil).
+        Once()
+
+    svc := NewUserService(mockRepo)
     err := svc.Create(context.Background(), "test@example.com", "Test")
-    if err != nil {
-        t.Fatalf("unexpected error: %v", err)
-    }
+    require.NoError(t, err)
 }
 
 func Test_CreateUser_repoError(t *testing.T) {
-    repo := repoFake{
-        saveFn: func(_ context.Context, _ *User) error {
-            return errors.New("mock error")
-        },
-    }
-    svc := NewUserService(repo)
+    mockRepo := NewMockUserRepository(t)
+
+    mockRepo.EXPECT().
+        Save(mock.Anything, mock.Anything).
+        Return(errors.New("db connection lost")).
+        Once()
+
+    svc := NewUserService(mockRepo)
     err := svc.Create(context.Background(), "test@example.com", "Test")
-    if err == nil {
-        t.Fatal("expected error, got nil")
-    }
+    require.Error(t, err)
+    assert.Contains(t, err.Error(), "db connection lost")
 }
 ```
 
-### Patrón B: Embedding + panic stubs
+### Patrones clave
 
-Ideal para seguridad en tiempo de compilación — garantiza que se noten los nuevos métodos de interfaz:
+| Patrón | Cuándo usar |
+|---|---|
+| `mock.Anything` | No te importa el valor exacto del argumento |
+| `mock.MatchedBy(fn)` | Verificar propiedades específicas del argumento |
+| `.Return(val)` | Configurar valor de retorno |
+| `.Once()` / `.Times(n)` | Verificar que se llamó exactamente N veces |
+| `.Maybe()` | La llamada puede o no ocurrir (no falla si no se llama) |
+| `NewMock*(t)` | Pasar `t` al constructor — auto-llama `AssertExpectations` en cleanup |
 
-```go
-// Base stub that panics on unimplemented methods
-type serviceMock struct{}
+### Reglas
 
-func (s serviceMock) Create(ctx context.Context, email, name string) (*User, error) {
-    panic("implement me")
-}
-func (s serviceMock) GetByID(ctx context.Context, id string) (*User, error) {
-    panic("implement me")
-}
-
-// Override only the methods you need — compiler catches missing ones
-type createMock struct {
-    serviceMock
-    createResp *User
-    createErr  error
-}
-
-func (m createMock) Create(_ context.Context, _, _ string) (*User, error) {
-    return m.createResp, m.createErr
-}
-
-// Usage
-func Test_Handler_Create_success(t *testing.T) {
-    mock := createMock{
-        createResp: &User{ID: "123", Email: "test@example.com"},
-    }
-    h := NewHandler(mock)
-    // ... test handler
-}
-```
-
-**Cuándo usar cuál:**
-- Function-pointer fakes → control por caso de test, nil = no-op por defecto
-- Embedding + panic stubs → seguridad en tiempo de compilación, los cambios de interfaz rompen rápido
+1. **Siempre pasar `t` al constructor del mock** — esto registra `AssertExpectations` automáticamente via `t.Cleanup()`
+2. **Usar `.EXPECT()`** (con expecter) en vez de `.On()` — es type-safe y el compilador detecta errores de firma
+3. **Un mock por interfaz** — no mockear structs concretos, solo interfaces
+4. **Regenerar después de cambiar interfaces** — ejecutar `mockery` antes de correr tests si tocaste una interfaz
+5. **Si mockery no está instalado o falla** — NO recurrir a mocks manuales. Reportar al orquestador: "Mockery no disponible — necesito que se instale antes de continuar." El developer o devops debe resolver la instalación
+6. **Prohibido sqlmock/httpmock** — para DB testear contra SQLite real; para HTTP usar `httptest.NewServer` de la stdlib
