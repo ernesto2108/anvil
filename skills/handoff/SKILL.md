@@ -79,13 +79,19 @@ Cuando el orquestador ya diseñó el plan en detalle en la conversación princip
 
 **Responsabilidad del orquestador:** ser honesto sobre la pre-aprobación. Si hay CUALQUIER duda de que el usuario aprobó explícitamente el plan (no solo dijo "continúa" o "sigue" sin ver los detalles), usar el flujo normal, no el atajo. En caso de duda, preguntar.
 
-### Actualizar (después de cada milestone)
+### Actualizar (continuo, no batch al final)
+
+El handoff es un **live document**. La actualización ocurre **después de cada paso**, no al cerrar la tarea. Si la sesión crashea entre paso N y paso N+1, el handoff debe reflejar el estado real.
 
 Actualizar incrementalmente — no reescribir todo el archivo, agregar o actualizar secciones:
-- Marcar como completados los pasos en "Estado actual"
-- Agregar nuevas entradas a "Archivos modificados"
-- Registrar decisiones en "Decisiones tomadas"
-- Actualizar "Siguiente paso" para reflejar el estado actual
+- Marcar como completados los pasos en "Estado actual" (o "Fases" si cross-stack)
+- Agregar nuevas entradas a "Archivos modificados" cada vez que tocas un archivo nuevo
+- Registrar decisiones en "Decisiones tomadas" en el momento que las tomas (no al final)
+- Actualizar "Siguiente paso" para reflejar dónde retomar si la sesión se corta
+
+**Anti-patrón:** dejar el handoff vacío hasta el cierre y volcar todo en los últimos minutos. Ver `agents/developer.md` § Checkpoint protocol para los tres momentos exactos donde se actualiza.
+
+El gate `scripts/verify-handoff.sh` (invocado por el orquestador después del developer) detecta handoffs incompletos y rebota la tarea — actualizar al final ya no es viable.
 
 ### Leer (al continuar una sesión)
 

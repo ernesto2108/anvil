@@ -55,17 +55,26 @@ Si se rechaza → el architect reescribe decisiones sin haber gastado tokens en 
 Verificación de arquitectura: al menos una vista de dominio debe existir (cuáles depende del scope de la tarea). Un solo `architecture.md` NO es válido para Medium+.
 
 **Después de Developer → antes de Tester (tareas Medium+)**
+
+Gate ejecutable, no declarativo. Ejecuta `scripts/verify-handoff.sh` desde el repo de anvil. Si exit ≠ 0, re-invocar developer con el output del script — NO preguntar al usuario hasta que el script devuelva exit 0.
+
+```bash
+bash <ANVIL_REPO>/scripts/verify-handoff.sh <PROJECT_ROOT> <TASK-ID>
+```
+
+El script valida en una sola corrida: archivo existe, secciones obligatorias presentes (`## Input recibido`, `## Estado actual`/`## Fases`, `## Archivos modificados`, `## Decisiones tomadas`, `## Handoff for tester`, `## Output entregado`), tabla de Output entregado tiene Build PASS y Lint PASS / 0 issues, y la lista de tests requeridos no está vacía.
+
+Después de que el script pase, presentar al usuario:
+
 ```
 ✅ Developer terminó — [TASK-ID]
-Verificando handoff:
-[✅/❌] .handoff/<TASK-ID>.md existe
-[✅/❌] Build pasa (go build / npm run build)
-[✅/❌] Lint 0 issues en archivos tocados
-[✅/❌] Sección "Handoff for tester" completa
+Handoff verificado: ✅ (verify-handoff.sh exit 0)
+Lint nuevos issues: 0 (gate bloqueante — re-invocaría developer si hubiera)
 
 ¿Paso al Tester? (sí / revisa / hasta aquí)
 ```
-Cualquier ❌ → re-invocar Developer con el gap específico antes de preguntar al usuario.
+
+**Re-invocación:** si el script falla, copia el mensaje BLOCKED del stderr al prompt del developer. El developer corrige el gap específico y re-cierra. NO consultar al usuario en este loop — es trabajo determinista.
 
 ---
 
@@ -144,7 +153,17 @@ En modo directo, el orquestador lee/escribe libremente. En modo agente:
 | tester | sin código testeable |
 | mkt-content | sin contenido de marketing |
 
-**Nunca saltar sin preguntar:** developer, tester. **Siempre ejecutar:** lint + run-tests.
+**Nunca saltar sin preguntar:** developer, tester.
+
+**Gates bloqueantes (no-skip, no-ask):**
+
+| Gate | Cuándo | Comando | Si falla |
+|---|---|---|---|
+| `lint` | Después del developer, antes del tester | skill `/lint` (auto-detecta stack) | Re-invocar developer con output inline. NO preguntar al usuario. 0 issues nuevos requeridos. |
+| `verify-handoff.sh` | Después del developer, antes del tester | `bash <ANVIL_REPO>/scripts/verify-handoff.sh <PROJECT_ROOT> <TASK-ID>` | Re-invocar developer con stderr inline. NO preguntar al usuario. |
+| `run-tests` | Después del tester, antes del qa | skill `/run-tests` | Re-invocar tester con output inline si los tests existentes rompen. |
+
+**Lógica del lint estricto:** un PR que falla en CI por lint = trabajo doble (rebote + re-implementación). Mejor bloquear localmente. Sin threshold de tolerancia — 0 issues nuevos en archivos tocados. Issues pre-existentes en otros archivos no cuentan.
 
 ### Reglas de QA
 
@@ -174,6 +193,29 @@ En modo directo, el orquestador lee/escribe libremente. En modo agente:
 - Contenido en contexto → inline. No en contexto → pasar path. Output de agente → inline al siguiente.
 - Nunca leer código fuente para relayarlo (anti-pattern #5).
 - Cada agente define sus campos requeridos internamente. El orquestador SOLO debe pasar los campos de la tabla de abajo — **no duplicar lógica ni reglas que ya viven en el agente.**
+
+### Inject, don't read — handoff a agentes downstream (CRÍTICO)
+
+El handoff en disco existe como **audit trail y para continuidad cross-session**. NO es el mecanismo primario de transferencia entre agentes. Los sub-agentes son lectores poco confiables — pueden skim, saltarse secciones, o priorizar otros archivos sobre el handoff.
+
+**Regla operativa:**
+1. El orquestador lee `<PROJECT_ROOT>/.handoff/<TASK-ID>.md` UNA vez
+2. Extrae la(s) sección(es) relevante(s) para el agente downstream
+3. Inyecta el contenido **inline en el prompt** del agente
+4. NO pasa solo el path — el agente no lee el handoff por su cuenta
+
+**Qué inyectar por agente:**
+
+| Agente | Secciones a extraer e inyectar inline |
+|---|---|
+| **tester** | `## Handoff for tester` completo + `### Validación ejecutada` (para que NO repita build/lint) |
+| **qa** | `## Decisiones tomadas` + `## Output entregado` + `## Archivos modificados` + `git diff` |
+| **developer (continuación / qa-fix)** | `## Estado actual` + `## Siguiente paso` + `## Archivos modificados` + `## Decisiones tomadas` |
+| **security** | `## Archivos modificados` + `git diff` (el handoff completo es secundario) |
+
+**Por qué importa:** tu queja "el agente no respeta el handoff" casi siempre es "el agente no lo leyó completo". Inyectando inline, el agente no decide qué leer — recibe exactamente lo que necesita. Bonus: ahorras tokens (extraes ~50 líneas de un handoff de 200).
+
+**Excepción:** si el handoff supera 500 líneas (raro), pasa el path COMO REFERENCIA en `## Notas` y aún así inyecta inline las secciones críticas. La referencia al path es para "consulta opcional", no para "lectura obligatoria".
 
 ## Input por agente (campos obligatorios del orquestador)
 

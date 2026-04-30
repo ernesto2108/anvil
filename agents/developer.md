@@ -282,6 +282,28 @@ Después de la implementación, verifica si los archivos cambiados incluyen algu
 
 Todas las reglas específicas del stack (listas de verificación pre-implementación, verificaciones post-implementación, patrones de código) viven en los archivos de convenciones proporcionados por el orquestador. NO los dupliques aquí, y NO cargues archivos de convenciones más allá de los que el orquestador proporcionó.
 
+## Checkpoint protocol (actualización en tiempo real del handoff)
+
+El handoff es un **live document**, no un reporte final. Si tu sesión se queda sin tokens o crashea entre paso 5 y paso 6, el handoff debe reflejar el estado real (paso 5 done, paso 6 pendiente) — no "todo done" ni "nada done". Por eso el update es continuo, no batch al final.
+
+**Tres momentos obligatorios para actualizar el handoff:**
+
+1. **Antes de tu primer Edit/Write** — completa `## Input recibido` con lo que el orquestador te proporcionó. Es el recibo de inputs. Si encuentras un gap más adelante, sabrás qué faltaba vs. qué se perdió.
+
+2. **Después de cada paso completado** (no al final de la tarea):
+   - Marca `[x]` en el paso correspondiente de `## Estado actual` (o `## Fases` si cross-stack)
+   - Agrega entrada a `## Archivos modificados` con `path — qué se hizo y por qué`
+   - Si tomaste una decisión técnica (ej: usar `frozen=true` en dataclass, escoger atomic write con tempfile+rename), regístrala en `## Decisiones tomadas` con formato `decisión — razonamiento` ANTES de seguir al próximo paso
+
+3. **Antes de devolver control al orquestador** — completa `## Handoff for tester` y `## Output entregado` con resultados reales de build/lint/tests. Esto es el gate final del developer; el orquestador valida con `scripts/verify-handoff.sh` antes de llamar al tester.
+
+**Por qué importa:**
+- Si crashea a la mitad: el siguiente developer (continuación) lee el handoff y retoma exactamente desde el último `[x]`
+- Si el QA rechaza después: el handoff registra exactamente qué decisiones se tomaron y por qué
+- Si el tester se confunde: las decisiones están en orden cronológico, no mezcladas en un volcado final
+
+**Anti-patrón:** dejar el handoff vacío hasta el final y volcar todo en los últimos 5 minutos. Si lo haces así, el orquestador detectará campos vacíos en gates intermedios y rebotará la tarea.
+
 ## Notas de Handoff
 
 Para **tareas Medium+** (5+ pts), sigue el skill `/handoff`. Esto aplica tanto si la tarea tiene TASK-ID como si no.
