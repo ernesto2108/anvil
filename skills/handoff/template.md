@@ -111,6 +111,20 @@ class MetricsDTO {
 ## Decisiones tomadas
 <!-- decisión — razonamiento -->
 
+## Verificación de ubicación
+<!--
+OBLIGATORIO. El developer NO decide ubicación de archivos NEW — eso es responsabilidad del architect en el SPEC.
+Esta sección documenta que el developer verificó que el SPEC trae justificación de ubicación para cada archivo CREATE
+y que el directorio destino existe. Si el SPEC no la traía, el developer escala al orquestador (no decide solo).
+Una línea por archivo NEW. No listar MODIFY/DELETE aquí.
+-->
+
+- `<path/al/archivo.ext>` — SPEC justificó: "<copiar la columna 'Ubicación: por qué aquí' del SPEC>". Confirmado en disco. ✓
+
+<!-- Si el SPEC tenía gap y se reinvocó al architect:
+- `<path>` — SPEC original sin justificación, architect reinvocado (run X). Ubicación final: <path> porque <razón del SPEC actualizado>.
+-->
+
 ## Siguiente paso
 <!-- Exactamente qué hacer a continuación para retomar el trabajo -->
 

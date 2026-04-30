@@ -68,10 +68,24 @@
 
 <!-- Plan a nivel de archivo. Acción = CREATE / MODIFY / DELETE. -->
 <!-- Esto es lo que el developer sigue — ser específico sobre qué cambia, no cómo. -->
+<!-- Para acción = CREATE: la columna "Ubicación: por qué aquí" es OBLIGATORIA y debe anclar -->
+<!-- la decisión en un archivo vecino existente o en el patrón del módulo. -->
 
-| Archivo | Acción | Qué cambia | Referencia | Fase |
-|---|---|---|---|---|
-| `path/to/file.go` | MODIFY | Agregar método `UpdateToolUseDuration` | architecture-backend.md §writer | 1 |
+| Archivo | Acción | Qué cambia | Ubicación: por qué aquí | Referencia | Fase |
+|---|---|---|---|---|---|
+| `internal/dashboard/store/runs.go` | MODIFY | Agregar método `UpdateToolUseDuration` | — (existente) | architecture-backend.md §writer | 1 |
+| `internal/dashboard/store/cache.go` | CREATE | Cache LRU de runs por proyecto | Sigue el patrón de `internal/dashboard/store/runs.go` (mismo bounded context — persistencia). NO va en `internal/cache/` porque es específico de runs, no util genérico. | architecture-backend.md §cache | 1 |
+
+### Utils a reutilizar (verificación previa OBLIGATORIA)
+
+<!-- Antes de proponer un util/helper nuevo, el architect ejecuta Grep en directorios -->
+<!-- de utilidades comunes (`internal/util/`, `pkg/util/`, `src/lib/`, `src/utils/`) -->
+<!-- y reporta el resultado. NO crear un util nuevo sin descartar primero los existentes. -->
+
+| Necesidad | Util existente reutilizable | Ubicación |
+|---|---|---|
+| Parsear duración ISO-8601 | `ParseDuration` | `internal/util/timefmt.go` |
+| Hash SHA-256 de payload | (ninguno encontrado — proponer `internal/util/hash.go`) | NEW |
 
 ## Criterios de aceptación
 
@@ -167,6 +181,9 @@
 - spec.md se genera DESPUÉS de todas las vistas de arquitectura — las referencia, no al revés
 - Cada AC debe ser testeable tal cual — "el sistema funciona correctamente" no es un AC
 - El mapa de implementación debe listar cada archivo que el developer tocará — sin sorpresas a mitad de tarea
+- **Cada archivo con acción CREATE debe tener "Ubicación: por qué aquí"** anclado en un archivo vecino existente o en el patrón del módulo. Sin esa columna llena → SPEC incompleto, el developer rebota la tarea ("SPEC sin justificación de ubicación para `X` — reinvocar architect")
+- **La sección "Utils a reutilizar" es obligatoria si el SPEC propone cualquier helper, parser, formatter, validator o util nuevo.** El architect debe ejecutar `Grep` en `internal/util/`, `pkg/util/`, `src/lib/`, `src/utils/` (o equivalente del stack) y reportar lo encontrado. Si existe un util equivalente → reusar (poner en la tabla); si no existe → marcar `NEW` y justificar
+- Decisiones de ubicación (en qué paquete/directorio va un archivo nuevo) son **decisión arquitectónica**, no detalle de implementación. El developer NO decide ubicación — solo verifica que el SPEC tenga justificación y que el path exista en disco
 - La sección de pre-condiciones es obligatoria — si está vacía, escribir "Ninguna" explícitamente
 - El bridge de contratos cross-stack es obligatorio para cualquier tarea que toque 2+ stacks
 - La sección de observabilidad es obligatoria para tareas Medium+ — "N/A" requiere justificación explícita

@@ -55,6 +55,7 @@ fi
 require_section "## Input recibido"
 require_section "## Archivos modificados"
 require_section "## Decisiones tomadas"
+require_section "## Verificación de ubicación"
 require_section "## Handoff for tester"
 require_section "## Output entregado"
 
@@ -91,6 +92,14 @@ if [ -z "$LINT_ROW" ]; then
 fi
 if ! echo "$LINT_ROW" | grep -iE '\|\s*(PASS|OK|✅|0( (new )?issues)?)\s*\|?\s*$' >/dev/null; then
   fail "Lint row in '## Output entregado' is not PASS / 0 issues. Developer must fix lint before tester."
+fi
+
+# 5b. La sección "Verificación de ubicación" tiene contenido real (no solo el header)
+LOC_BLOCK=$(awk '/^## Verificación de ubicación/{flag=1; next} /^## /{flag=0} flag' "$HANDOFF_PATH" || true)
+# Strip empty lines + lines that are only whitespace/comments
+LOC_CONTENT=$(echo "$LOC_BLOCK" | grep -vE '^\s*$' | grep -vE '^\s*<!--' || true)
+if [ -z "$LOC_CONTENT" ]; then
+  fail "'## Verificación de ubicación' section is empty. Developer must list every NEW file with the SPEC location justification confirmed."
 fi
 
 # 6. Tests requeridos: al menos 1 test enumerado en "Handoff for tester"

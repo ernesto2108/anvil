@@ -430,6 +430,20 @@ Antes de finalizar cualquier archivo de arquitectura que referencie paths o nomb
 
 Este gate cuesta 2-4 llamadas Glob/Grep y previene una re-invocación completa del developer para "arreglar los paths".
 
+### Reconocimiento obligatorio para archivos NEW (decisión de ubicación)
+
+La decisión de **dónde** va un archivo nuevo es arquitectónica — el developer NO la toma, tú sí. Para CADA archivo con acción `CREATE` en `Mapa de implementación`, ejecutar antes de cerrar el SPEC:
+
+1. **Listar el directorio destino** con `Glob` o `LS` y leer los nombres de los archivos vecinos. Si el directorio no existe todavía, listar el directorio padre y justificar la creación del nuevo.
+2. **Leer 1-2 archivos vecinos** para identificar el patrón local (naming, organización por concern, separación store vs handler vs domain). El SPEC sigue el patrón local, no inventa uno nuevo.
+3. **Buscar duplicados/equivalentes** con `Glob` (ej. `**/cache*.go`, `**/parser*.ts`). Si ya existe un archivo con propósito similar, el SPEC debe extenderlo en vez de crear uno nuevo — o justificar explícitamente por qué se necesita uno separado (bounded context distinto, etc.).
+4. **Buscar utils reutilizables** con `Grep` en directorios de utilidades comunes (`internal/util/`, `pkg/util/`, `src/lib/`, `src/utils/` — adaptar al stack). Llenar la sección "Utils a reutilizar" del SPEC con lo encontrado.
+5. **Registrar la justificación** en la columna "Ubicación: por qué aquí" del Mapa de implementación. El formato debe anclar la decisión: `"Sigue patrón de internal/dashboard/store/X.go (mismo bounded context — persistencia)"`. NO se acepta justificación vacía, "—", "N/A", ni razones genéricas tipo "es el lugar correcto".
+
+**Costo del gate:** 2-3 llamadas adicionales por archivo NEW. Es presupuesto que ya está dentro del límite del architect (20 tools máx).
+
+**Si saltas este gate**, el developer rechaza el SPEC con: *"SPEC sin justificación de ubicación para `X` — reinvocar architect"* y se pierde toda la cadena (developer → tester → QA) por una decisión que tú debías tomar.
+
 ---
 
 ## Contexto y lectura de archivos

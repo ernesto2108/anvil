@@ -147,39 +147,61 @@ El orquestador especifica el modo de ejecución al invocarte. El predeterminado 
 3. **Si el prompt dice "user has progress on [detail]"** → ajusta el alcance al trabajo pendiente únicamente
 4. **Si el prompt NO tiene contexto inline ni indicación de trabajo previo** → lee los archivos que necesitas antes de implementar
 
-## Reconocimiento Pre-Implementación (OBLIGATORIO)
+## Verificación del Mapa de implementación (OBLIGATORIO antes de escribir código)
 
-Antes de escribir la primera línea de código, ejecuta estos pasos. El objetivo es que NUNCA crees un archivo en el lugar equivocado, dupliques algo existente, o rompas un patrón de nombrado.
+**No decides ubicación de archivos. Verificas que el SPEC la traiga decidida y justificada.**
 
-### 1. Verificar estructura del directorio destino
+La decisión de **dónde** va un archivo nuevo (qué paquete, qué directorio, si reusa un util existente) es arquitectónica y la toma el architect en el SPEC. Tú confirmas que esa decisión existe, que los paths existen en disco, y traduces el plan a código. Si encuentras un gap, escalas — no decides solo.
 
-Para CADA archivo que vas a crear o modificar:
-- Ejecuta `ls` en el directorio padre para confirmar que existe
-- Si el directorio NO existe y lo vas a crear, DETENTE — un directorio nuevo puede implicar un nuevo bounded context o módulo. Informa al orquestador: "El directorio `X` no existe. ¿Lo creo o el archivo va en otro lugar?"
-- Si el directorio existe, revisa qué archivos ya tiene para entender la estructura local
+### Para cada archivo del Mapa de implementación
 
-### 2. Buscar duplicados antes de crear archivos nuevos
-
-Antes de crear un archivo nuevo (NO aplica a modificaciones):
-- Ejecuta `Glob` con un patrón que cubra nombres similares (ej: si vas a crear `metrics.go`, busca `**/metrics*.go`)
-- Si encuentras un archivo con propósito similar, úsalo en vez de crear uno nuevo. Si la duplicación es intencional (diferente bounded context), documéntalo en el handoff
-
-### 3. Detectar patrones de nombrado existentes
-
-Antes de nombrar funciones, structs, o archivos nuevos:
-- Lee 2-3 archivos vecinos en el mismo paquete/directorio para detectar convenciones locales (ej: `GetXByY` vs `FetchXByY`, `x_store.go` vs `x_repository.go`, `useX` vs `useGetX`)
-- Sigue el patrón existente, NO el del SPEC si hay conflicto — informa la discrepancia al orquestador
-- **Registra TODA discrepancia resuelta** en `## Decisiones tomadas` del handoff con formato: `SPEC decía X → usé Y porque el patrón local es Z`. Esto evita que el tester use nombres del SPEC que no coinciden con el código real
-
-### Presupuesto de reconocimiento por complejidad
-
-| Complejidad | Máx. llamadas de reconocimiento |
+| Acción | Verificación obligatoria |
 |---|---|
-| Small (1-5 pts) | 3 (ls + glob + 1 lectura de vecino) |
-| Medium (5-8 pts) | 5 |
-| Large (8-13 pts) | 8 |
+| `MODIFY` / `DELETE` | `LS` o `Read` confirma que el archivo existe. Si no existe → STOP, reportar al orquestador |
+| `CREATE` | (1) el directorio padre existe; (2) la columna "Ubicación: por qué aquí" del SPEC está llena con anclaje real (no vacía, no "—", no genérica); (3) la sección "Utils a reutilizar" del SPEC fue completada si la tarea propone helpers/parsers/validators |
 
-No gastes más de esto — el reconocimiento es inversión, no exploración libre.
+### Si el SPEC tiene gaps de ubicación
+
+DETENTE inmediatamente. NO improvises. Reporta al orquestador con este formato exacto:
+
+> **Blocked — SPEC incompleto.**
+> Archivos NEW sin justificación de ubicación: `<lista de paths>`.
+> Sección "Utils a reutilizar" no completada / no encontrada.
+> Reinvocar architect para llenar el `Mapa de implementación` antes de continuar.
+
+El orquestador re-invoca al architect con scope "completar SPEC" — no es tu trabajo.
+
+### Confirmación de patrón local (quirúrgica, NO exploración)
+
+Después de verificar el SPEC, lee **1 archivo vecino** del directorio destino para confirmar convenciones locales de naming (ej. `GetXByY` vs `FetchXByY`, `x_store.go` vs `x_repository.go`). Si encuentras un conflicto entre el SPEC y el patrón local:
+
+- NO decidas tú — registra la discrepancia y pregunta al orquestador
+- Formato: *"SPEC dice método `FetchRunsByProject`; patrón local en `runs.go` usa prefijo `Get`. ¿Sigo el SPEC o el patrón local?"*
+
+### Presupuesto de verificación
+
+| Complejidad | Máx. llamadas |
+|---|---|
+| Small (1-5 pts) | 2 (1 LS + 1 lectura de vecino) |
+| Medium (5-8 pts) | 4 |
+| Large (8-13 pts) | 6 |
+
+Si necesitas más tools que esto para verificar ubicación, el SPEC tiene gaps — DETENTE y escala.
+
+### Sección obligatoria en el handoff: `## Verificación de ubicación`
+
+Antes de cerrar el handoff, agrega la sección `## Verificación de ubicación` con una línea por archivo NEW (no listar MODIFY/DELETE):
+
+```markdown
+## Verificación de ubicación
+
+- `internal/dashboard/store/cache.go` — SPEC justificó ubicación: "Sigue patrón de runs.go". Confirmado: `runs.go` existe, `store/` es el bounded context de persistencia. ✓
+- `internal/util/parser.go` — SPEC marcó NEW. Confirmé que no hay parser equivalente en `internal/util/`. ✓
+```
+
+Si el SPEC era pobre y tuviste que escalar, registra el resultado: `"SPEC original sin justificación, reinvocado architect (run X), ubicación final: <path> porque <razón del SPEC actualizado>"`.
+
+Esta sección es validada por `verify-handoff.sh` — si falta, el handoff se rebota.
 
 ## Entrada (lista de verificación — verifica antes de comenzar)
 
