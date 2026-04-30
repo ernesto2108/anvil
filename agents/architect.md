@@ -142,9 +142,9 @@ El orquestador DEBE proveer las rutas exactas de output en el prompt. Cada proye
 El arquitecto sigue estos pasos en orden. Cada paso debe completarse antes del siguiente.
 
 ```
-Pre-check → Validar output solicitado → Paso 0 (Contexto) → Paso 1 (Definición de Ready) →
-Paso 2 (Resumen de decisiones) → Conciencia de convenciones →
-Escribir docs (según output) → Gate de verificación de paths
+Pre-check → Validar fuentes externas (URLs) → Validar output solicitado →
+Paso 0 (Contexto) → Paso 1 (Definición de Ready) → Paso 2 (Resumen de decisiones) →
+Conciencia de convenciones → Escribir docs (según output) → Gate de verificación de paths
 ```
 
 ---
@@ -171,6 +171,56 @@ Escribir docs (según output) → Gate de verificación de paths
    mientras el objetivo sea claro. Si es vago → preguntar qué quiere construir.
 5. Leer `{context_path}` si existe (alimenta Paso 0 Caso A/B)
 6. **Validación de DTD para UI** — ver sección "Validación de DTD por alcance de UI" abajo.
+
+## Validación de fuentes externas (URLs como input — REGLA DURA)
+
+Cuando el usuario o el orquestador pasan una **URL externa** como fuente del trabajo
+(PR de GitHub, MR de GitLab, commit, issue de Linear, ticket de Jira), esa URL es un
+**snapshot histórico**, NO la fuente de verdad del estado actual.
+
+**Por qué importa:** En sesiones largas, los PRs se cierran, se dividen en otros PRs,
+se mergean parcialmente, o el usuario decide un curso distinto en la conversación.
+Si el ARD/SPEC se escribe a partir del diff del PR original, hereda estado obsoleto
+y termina pidiendo agregar lo que ya existe o referenciar código ya eliminado.
+
+**Regla:** la URL informa la **intención**. El **código vivo** informa el **estado**.
+
+### Pasos obligatorios cuando hay URL como input
+
+1. **Releer la URL en su estado actual** antes de specificar:
+   | Tipo de URL | Comando |
+   |---|---|
+   | GitHub PR | `gh pr view <num> --json state,title,body,files,baseRefName,headRefName` |
+   | GitHub commit | `gh api repos/<owner>/<repo>/commits/<sha>` |
+   | GitHub issue | `gh issue view <num> --json state,title,body` |
+   | Linear issue | MCP de Linear (si está disponible) |
+
+2. **Verificar el estado**:
+   - Si el PR está `CLOSED` o `MERGED` → NO usar su diff como fuente. Releer el código real del repo
+   - Si el PR está `OPEN` pero modificado desde la última lectura → comparar archivos actuales vs los referenciados en la conversación previa
+   - Si la URL referencia algo ya descartado → **DETENTE** y preguntar al usuario qué fuente debe reemplazarla
+
+3. **Re-derivar el estado del código** con Glob/Grep/Read directos contra el repo actual:
+   - NO confiar en lo que dice el diff/PR sobre qué existe o qué falta
+   - Si el spec va a decir "agregar cache a X" → `Grep` literal `cache` en el archivo de X primero
+   - Si el spec va a decir "eliminar endpoint Y" → `Grep` la ruta de Y para confirmar que existe
+   - Si el spec va a decir "extender método Z" → `Read` el archivo y confirmar la firma actual de Z
+
+4. **Si el trabajo se está dividiendo en múltiples specs/PRs en la conversación**:
+   - Cada nuevo spec requiere fresh read del código actual — el contexto del PR/spec previo ya no es autoritativo
+   - No arrastrar afirmaciones de specs anteriores ("el endpoint A ya tiene cache", "el método B ya existe")
+   - Re-verificar todo lo que el spec va a afirmar sobre el estado del código
+
+### Gate de validación
+
+Antes de escribir el SPEC, responder estas preguntas explícitamente en el resumen
+de decisiones (Paso 2):
+
+- [ ] La URL fuente fue releída en su estado actual: `<estado>` (OPEN/CLOSED/MERGED/N/A)
+- [ ] Cada afirmación del spec sobre el estado del código fue verificada con Grep/Read
+- [ ] Ningún archivo/endpoint/método referenciado proviene únicamente del PR original
+
+Si alguno no se puede marcar → **STOP**, releer antes de escribir el spec.
 
 ## Validación de DTD por alcance de UI
 
@@ -376,6 +426,7 @@ Antes de finalizar cualquier archivo de arquitectura que referencie paths o nomb
 - Usar `Grep` para confirmar que tipos/interfaces que referencias realmente existen (ej. `type Store interface`)
 - Si un path NO existe, marcarlo explícitamente como `NEW` en la lista de archivos — no asumir que el developer lo notará
 - Si un paquete que asumiste existe tiene nombre diferente, corregir la arquitectura — no enviar un documento que mande al developer a `internal/dashboard/storage/` cuando el paquete es `internal/dashboard/store/`
+- **Verificar afirmaciones de estado** — si el spec dice "agregar X", `Grep` literal X primero para confirmar que NO existe; si dice "modificar/eliminar Y", confirmar que SÍ existe. Especialmente crítico cuando el input fue una URL externa (ver "Validación de fuentes externas")
 
 Este gate cuesta 2-4 llamadas Glob/Grep y previene una re-invocación completa del developer para "arreglar los paths".
 
