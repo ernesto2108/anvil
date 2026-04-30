@@ -37,12 +37,18 @@ func parseDigestsFlags(args []string) digestsFlags {
 }
 
 func cmdDigests(cfg *config.App, args []string) {
-	// Subcommand dispatch: `anvil digests show <run_id>` prints the full
-	// digest body (summary + decisions + edge cases + errors) so the user
-	// can see exactly what would be injected as memory in a future run.
-	if len(args) > 0 && args[0] == "show" {
-		cmdDigestsShow(args[1:])
-		return
+	// Subcommand dispatch:
+	//   `anvil digests show <run_id>`           — print full digest body
+	//   `anvil digests from-handoff <path>`     — ingest handoff as digest
+	if len(args) > 0 {
+		switch args[0] {
+		case "show":
+			cmdDigestsShow(args[1:])
+			return
+		case "from-handoff":
+			cmdDigestFromHandoff(cfg, args[1:])
+			return
+		}
 	}
 
 	flags := parseDigestsFlags(args)

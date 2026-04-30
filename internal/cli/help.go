@@ -33,8 +33,9 @@ func cmdHelp(appName string) {
 
   OTHER COMMANDS:
     migrate              Apply pending DB migrations and show schema version
-    digests              List run digests for current project
-    digests show <id>    Show full body of one digest (the memory injected)
+    digests                       List run digests for current project
+    digests show <id>             Show full body of one digest (the memory injected)
+    digests from-handoff <path>   Parse a handoff markdown file and save it as a digest
     export               Export digests to Markdown or JSON
     emit                 Ingest a Claude Code hook event (reads JSON from stdin)
     init                 First-time setup — show config and launch browser

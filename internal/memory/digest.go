@@ -16,7 +16,7 @@ type Digest struct {
 	Errors    []string
 	Embedding []float32 // nil when not generated
 	ModelUsed string
-	Source    string // 'auto' (digestCheckpointer) or 'manual' (dashboard)
+	Source    string // 'auto' (digestCheckpointer) | 'manual' (dashboard) | 'handoff' (parsed from .handoff/<TASK-ID>.md)
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

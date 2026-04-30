@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	cryptoRand "crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -16,6 +18,125 @@ import (
 	"github.com/ernesto2108/anvil/internal/memory"
 	"github.com/ernesto2108/anvil/internal/memory/ollama"
 )
+
+// digestFromHandoff parses a handoff markdown file and writes its content as a
+// digest to the runs.db. This closes the gap where handoffs created via Claude
+// Code (not the CLI runner) never produce memory — the orchestrator can call
+// this tool from the /task-complete flow to ensure every closed task seeds the
+// memory layer.
+func (s *Server) digestFromHandoff(ctx context.Context, args map[string]any) (string, error) {
+	db := s.db
+	if db == nil {
+		return "", fmt.Errorf("database not available")
+	}
+
+	path := strArg(args, "path", "")
+	if path == "" {
+		return "", fmt.Errorf("path is required")
+	}
+
+	workDir, _ := os.Getwd()
+	project := strArg(args, "project", filepath.Base(workDir))
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("read handoff %q: %w", path, err)
+	}
+
+	draft, taskID, err := memory.ParseHandoff(string(content), path)
+	if err != nil {
+		return "", fmt.Errorf("parse handoff: %w", err)
+	}
+
+	runID := "handoff_" + taskID
+	now := time.Now().UTC()
+
+	if err := upsertSyntheticHandoffRun(ctx, db, runID, taskID, draft.Summary, project, now); err != nil {
+		return "", fmt.Errorf("upsert synthetic run: %w", err)
+	}
+
+	// Auto-start Ollama if needed (KEEP_ALIVE=5m so models unload after idle).
+	_ = ollama.EnsureRunning(ctx, "5m")
+
+	// Best-effort embedding via Ollama.
+	var embedding []float32
+	embedder := ollama.NewClient("", "")
+	if embedder.Healthy(ctx) {
+		if emb, embErr := embedder.Embed(ctx, draft.Summary); embErr == nil {
+			embedding = emb
+		}
+	}
+
+	digestID, _ := newHandoffDigestID()
+	d := memory.Digest{
+		ID:        digestID,
+		RunID:     runID,
+		Project:   project,
+		Summary:   draft.Summary,
+		Decisions: draft.Decisions,
+		EdgeCases: draft.EdgeCases,
+		Errors:    draft.Errors,
+		Embedding: embedding,
+		ModelUsed: "handoff-parser",
+		Source:    "handoff",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	if err := memory.UpsertDigest(ctx, db, d); err != nil {
+		return "", fmt.Errorf("upsert digest: %w", err)
+	}
+
+	type result struct {
+		TaskID    string `json:"task_id"`
+		RunID     string `json:"run_id"`
+		Project   string `json:"project"`
+		Decisions int    `json:"decisions"`
+		EdgeCases int    `json:"edge_cases"`
+		Errors    int    `json:"errors"`
+		Embedded  bool   `json:"embedded"`
+	}
+
+	r := result{
+		TaskID:    taskID,
+		RunID:     runID,
+		Project:   project,
+		Decisions: len(draft.Decisions),
+		EdgeCases: len(draft.EdgeCases),
+		Errors:    len(draft.Errors),
+		Embedded:  embedding != nil,
+	}
+	out, _ := json.MarshalIndent(r, "", "  ")
+	return string(out), nil
+}
+
+// upsertSyntheticHandoffRun inserts a placeholder runs row for handoff-sourced
+// digests so the FK constraint on digests.run_id is satisfied. Marked with
+// task_source='handoff' so list_runs and similar can distinguish them.
+func upsertSyntheticHandoffRun(ctx context.Context, db *sql.DB, runID, taskID, summary, project string, now time.Time) error {
+	taskDesc := summary
+	if len(taskDesc) > 500 {
+		taskDesc = taskDesc[:497] + "..."
+	}
+	const q = `INSERT INTO runs (id, task_id, task_desc, status, started_at, ended_at, project, task_source)
+		VALUES (?, ?, ?, 'success', ?, ?, ?, 'handoff')
+		ON CONFLICT(id) DO UPDATE SET
+			task_desc = excluded.task_desc,
+			ended_at  = excluded.ended_at,
+			project   = excluded.project`
+	_, err := db.ExecContext(ctx, q, runID, taskID, taskDesc, now.Format(time.RFC3339Nano), now.Format(time.RFC3339Nano), project)
+	return err
+}
+
+// newHandoffDigestID mirrors newDigestIDForHandoff in cli — used here to keep
+// the mcp package independent of cli.
+func newHandoffDigestID() (string, error) {
+	var b [6]byte
+	if _, err := cryptoRand.Read(b[:]); err != nil {
+		return "", err
+	}
+	return "dh_" + hex.EncodeToString(b[:]), nil
+}
 
 // searchMemories searches past run digests by semantic similarity.
 func (s *Server) searchMemories(ctx context.Context, args map[string]any) (string, error) {
@@ -35,10 +156,16 @@ func (s *Server) searchMemories(ctx context.Context, args map[string]any) (strin
 		limit = 10
 	}
 
+	// Auto-start Ollama if needed (KEEP_ALIVE=5m so models unload after idle).
+	// EnsureRunning is a no-op when the daemon is already up, so the cost is
+	// only paid on the first call after a laptop restart.
+	_ = ollama.EnsureRunning(ctx, "5m")
+
 	// Use Ollama embedder (local) — same as the runner uses.
 	emb := ollama.NewClient("", "")
 	if !emb.Healthy(ctx) {
-		// Ollama not available — fall back to listing recent digests without ranking.
+		// Ollama still not available (start failed) — fall back to listing
+		// recent digests without semantic ranking.
 		return s.recentDigestsFallback(ctx, db, project, limit)
 	}
 

@@ -88,6 +88,14 @@ func (s *Server) buildRegistry() map[string]tool {
 		),
 		s.searchMemories)
 
+	add("digest_from_handoff",
+		"Parse a handoff markdown file and write its content as a digest to memory. Use after closing a task (e.g. from /task-complete) so handoff work seeds the memory layer even when the task did not run through the CLI runner.",
+		schema(
+			prop("path", "string", "Absolute path to the handoff markdown file (e.g. /path/to/.handoff/TASK-123.md)"),
+			optProp("project", "string", "Project name to associate the digest with (defaults to current directory name)"),
+		),
+		s.digestFromHandoff)
+
 	add("get_conventions",
 		"Load coding conventions for a given stack and topic. Returns relevant rules and patterns.",
 		schema(
