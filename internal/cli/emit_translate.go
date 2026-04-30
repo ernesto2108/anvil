@@ -74,8 +74,9 @@ type hookEnvelope struct {
 	LastAssistantMessage string `json:"last_assistant_message,omitempty"`
 
 	// PostToolUse / PreToolUse / PermissionDenied
-	ToolName  string          `json:"tool_name,omitempty"`
-	ToolInput json.RawMessage `json:"tool_input,omitempty"`
+	ToolName     string          `json:"tool_name,omitempty"`
+	ToolInput    json.RawMessage `json:"tool_input,omitempty"`
+	ToolResponse json.RawMessage `json:"tool_response,omitempty"`
 
 	// StopFailure
 	StopFailureReason string `json:"stop_failure_reason,omitempty"`
@@ -95,6 +96,21 @@ type toolInputFile struct {
 	OldString string `json:"old_string,omitempty"`
 	NewString string `json:"new_string,omitempty"`
 }
+
+// bashToolResponse mirrors the tool_response JSON Claude Code sends in
+// PostToolUse for the Bash tool. Used by handlePostToolUse to capture the
+// exit_code and a short excerpt for the verify-direct gate.
+type bashToolResponse struct {
+	Stdout      string `json:"stdout"`
+	Stderr      string `json:"stderr"`
+	ExitCode    int    `json:"exit_code"`
+	Interrupted bool   `json:"interrupted,omitempty"`
+}
+
+// maxBashExcerptBytes caps how much stdout+stderr we persist alongside the
+// exit_code. Long enough for a useful debug excerpt, short enough to keep the
+// SQLite row small.
+const maxBashExcerptBytes = 4 * 1024
 
 const maxOutputBytes = 100 * 1024 // 100 KB
 
@@ -123,7 +139,7 @@ func translateHook(raw []byte, w *writer.EventWriter) error {
 	case "PreToolUse":
 		return handlePreToolUse(w, env.SessionID, env.ToolName, env.ToolInput, env.CWD)
 	case "PostToolUse":
-		return handlePostToolUse(w, env.SessionID, env.ToolName, env.ToolInput, env.CWD)
+		return handlePostToolUse(w, env.SessionID, env.ToolName, env.ToolInput, env.ToolResponse, env.CWD)
 	case "StopFailure":
 		return handleStopFailure(w, env.SessionID, env.StopFailureReason)
 	case "TaskCreated":
@@ -311,7 +327,7 @@ func handleSubagentStop(w *writer.EventWriter, sessionID, agentID, lastMessage s
 	return w.WriteEvent(ev)
 }
 
-func handlePostToolUse(w *writer.EventWriter, sessionID, toolName string, toolInput json.RawMessage, cwd string) error {
+func handlePostToolUse(w *writer.EventWriter, sessionID, toolName string, toolInput, toolResponse json.RawMessage, cwd string) error {
 	// MCP tool path: calculate and persist duration_ms (best-effort).
 	if source, _ := classifyTool(toolName); source == "mcp" {
 		runID, err := resolveOrCreateRun(w, sessionID, cwd)
@@ -326,6 +342,26 @@ func handlePostToolUse(w *writer.EventWriter, sessionID, toolName string, toolIn
 		// Best-effort: ignore error from UpdateToolUseDuration.
 		_ = w.UpdateToolUseDuration(runID, toolName, agentID, durationMs)
 		return nil
+	}
+
+	// Native Bash: capture exit_code + output excerpt so the verify-direct
+	// gate can tell whether lint/test invocations actually passed.
+	if toolName == "Bash" {
+		runID, err := resolveOrCreateRun(w, sessionID, cwd)
+		if err != nil {
+			return err
+		}
+		agentID := envAgentID()
+		if agentID == "" {
+			agentID = w.ActiveAgentID(runID)
+		}
+		var resp bashToolResponse
+		if len(toolResponse) > 0 {
+			// Best-effort: a malformed tool_response shouldn't break the hook.
+			_ = json.Unmarshal(toolResponse, &resp)
+		}
+		excerpt := truncateBashExcerpt(resp.Stdout, resp.Stderr)
+		return w.UpdateToolUseResult(runID, "Bash", agentID, resp.ExitCode, excerpt)
 	}
 
 	if toolName != "Write" && toolName != "Edit" {
@@ -534,6 +570,25 @@ func classifyTool(toolName string) (source, mcpServer string) {
 		return "mcp", parts[1]
 	}
 	return "native", ""
+}
+
+// truncateBashExcerpt joins stdout+stderr separated by a tag and trims to
+// maxBashExcerptBytes so verify-direct has enough debug context without
+// blowing up the SQLite row.
+func truncateBashExcerpt(stdout, stderr string) string {
+	var combined string
+	switch {
+	case stdout != "" && stderr != "":
+		combined = stdout + "\n--stderr--\n" + stderr
+	case stderr != "":
+		combined = stderr
+	default:
+		combined = stdout
+	}
+	if len(combined) > maxBashExcerptBytes {
+		return combined[:maxBashExcerptBytes] + "\n... (truncated)"
+	}
+	return combined
 }
 
 func handleStopFailure(w *writer.EventWriter, sessionID, reason string) error {

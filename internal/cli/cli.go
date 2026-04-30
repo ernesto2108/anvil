@@ -32,6 +32,9 @@ func Run(args []string) {
 	case "emit":
 		cmdEmit(nil)
 		return
+	case "verify-direct":
+		cmdVerifyDirect(nil)
+		return
 	case "mcp-server":
 		repoDir := resolveRepoDir(appName)
 		cfg, err := config.Load(repoDir, appName)

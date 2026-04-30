@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"database/sql"
 	"encoding/json"
 	"testing"
 
@@ -56,7 +57,7 @@ func TestHandlePostToolUse_McpTool_SetsDuration(t *testing.T) {
 
 	// Build a PostToolUse envelope for the MCP tool.
 	toolInput, _ := json.Marshal(map[string]string{"query": "SELECT 1"})
-	err := handlePostToolUse(w, "sess-mcp", "mcp__postgres__query", toolInput, "/tmp")
+	err := handlePostToolUse(w, "sess-mcp", "mcp__postgres__query", toolInput, nil, "/tmp")
 	if err != nil {
 		t.Fatalf("handlePostToolUse MCP: %v", err)
 	}
@@ -100,7 +101,7 @@ func TestHandlePostToolUse_NonMcpTool_Unchanged(t *testing.T) {
 		"content":   "package main",
 	})
 
-	err := handlePostToolUse(w, "sess-write", "Write", toolInput, "/tmp")
+	err := handlePostToolUse(w, "sess-write", "Write", toolInput, nil, "/tmp")
 	if err != nil {
 		t.Fatalf("handlePostToolUse Write: %v", err)
 	}
@@ -123,5 +124,92 @@ func TestHandlePostToolUse_NonMcpTool_Unchanged(t *testing.T) {
 	db.QueryRow("SELECT COUNT(*) FROM tool_uses WHERE run_id = ? AND source = 'mcp'", "run-write").Scan(&mcpCount)
 	if mcpCount != 0 {
 		t.Errorf("expected 0 MCP tool_uses rows for Write tool, got %d", mcpCount)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestHandlePostToolUse_Bash_PersistsExitCode
+// ---------------------------------------------------------------------------
+// Verifies that handlePostToolUse extracts exit_code (and an excerpt) from
+// tool_response for native Bash invocations and persists them on the matching
+// tool_uses row created by the prior PreToolUse event.
+func TestHandlePostToolUse_Bash_PersistsExitCode(t *testing.T) {
+	w := makeWriterWithRun(t, "run-bash", "agent-1", "sess-bash")
+
+	// PreToolUse: a tool_uses row gets inserted with exit_code NULL.
+	cmdJSON, _ := json.Marshal(map[string]string{"command": "go test ./..."})
+	if err := w.WriteEvent(mustEmitEvent(t, "run-bash", instrumentation.EventToolUse, instrumentation.ToolUsePayload{
+		AgentID:   "agent-1",
+		ToolName:  "Bash",
+		ToolInput: cmdJSON,
+		Source:    "native",
+	})); err != nil {
+		t.Fatalf("WriteEvent ToolUse: %v", err)
+	}
+
+	// PostToolUse: tool_response carries exit_code + stdout/stderr.
+	respJSON, _ := json.Marshal(map[string]any{
+		"stdout":    "PASS\nok\tgithub.com/foo\t0.123s\n",
+		"stderr":    "",
+		"exit_code": 0,
+	})
+	if err := handlePostToolUse(w, "sess-bash", "Bash", cmdJSON, respJSON, "/tmp"); err != nil {
+		t.Fatalf("handlePostToolUse Bash: %v", err)
+	}
+
+	// Confirm the row now has exit_code = 0 and a non-empty excerpt.
+	db := w.DB()
+	var exitCode sql.NullInt64
+	var excerpt sql.NullString
+	err := db.QueryRow(
+		`SELECT exit_code, tool_output_excerpt FROM tool_uses
+		 WHERE run_id = ? AND tool_name = 'Bash' ORDER BY id DESC LIMIT 1`,
+		"run-bash",
+	).Scan(&exitCode, &excerpt)
+	if err != nil {
+		t.Fatalf("query tool_uses: %v", err)
+	}
+	if !exitCode.Valid {
+		t.Fatalf("expected exit_code to be set; got NULL")
+	}
+	if exitCode.Int64 != 0 {
+		t.Errorf("expected exit_code 0, got %d", exitCode.Int64)
+	}
+	if !excerpt.Valid || excerpt.String == "" {
+		t.Errorf("expected non-empty excerpt, got %q", excerpt.String)
+	}
+}
+
+// TestHandlePostToolUse_Bash_NonZeroExitCodePersisted ensures a failing lint
+// invocation is recorded with its non-zero exit_code so verify-direct can
+// distinguish it from a successful run.
+func TestHandlePostToolUse_Bash_NonZeroExitCodePersisted(t *testing.T) {
+	w := makeWriterWithRun(t, "run-bash-fail", "agent-1", "sess-bash-fail")
+
+	cmdJSON, _ := json.Marshal(map[string]string{"command": "golangci-lint run ./..."})
+	if err := w.WriteEvent(mustEmitEvent(t, "run-bash-fail", instrumentation.EventToolUse, instrumentation.ToolUsePayload{
+		AgentID: "agent-1", ToolName: "Bash", ToolInput: cmdJSON, Source: "native",
+	})); err != nil {
+		t.Fatalf("WriteEvent ToolUse: %v", err)
+	}
+
+	respJSON, _ := json.Marshal(map[string]any{
+		"stdout":    "",
+		"stderr":    "internal/foo.go:1:1: error\n",
+		"exit_code": 1,
+	})
+	if err := handlePostToolUse(w, "sess-bash-fail", "Bash", cmdJSON, respJSON, "/tmp"); err != nil {
+		t.Fatalf("handlePostToolUse Bash: %v", err)
+	}
+
+	var exitCode sql.NullInt64
+	if err := w.DB().QueryRow(
+		`SELECT exit_code FROM tool_uses WHERE run_id = ? AND tool_name = 'Bash' ORDER BY id DESC LIMIT 1`,
+		"run-bash-fail",
+	).Scan(&exitCode); err != nil {
+		t.Fatalf("query tool_uses: %v", err)
+	}
+	if !exitCode.Valid || exitCode.Int64 != 1 {
+		t.Errorf("expected exit_code 1, got valid=%v value=%d", exitCode.Valid, exitCode.Int64)
 	}
 }

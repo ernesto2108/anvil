@@ -362,6 +362,25 @@ func (w *EventWriter) UpdateToolUseDuration(runID, toolName, agentID string, dur
 	return nil
 }
 
+// UpdateToolUseResult sets exit_code and tool_output_excerpt on the most recent
+// tool_uses row that matches run_id + tool_name + agent_id and has exit_code
+// IS NULL. Best-effort: no-op if no matching row exists.
+func (w *EventWriter) UpdateToolUseResult(runID, toolName, agentID string, exitCode int, excerpt string) error {
+	const q = `
+		UPDATE tool_uses SET exit_code = ?, tool_output_excerpt = ?
+		WHERE rowid = (
+			SELECT rowid FROM tool_uses
+			WHERE run_id = ? AND tool_name = ? AND agent_id = ? AND exit_code IS NULL
+			ORDER BY timestamp DESC
+			LIMIT 1
+		)`
+	_, err := w.db.Exec(q, exitCode, excerpt, runID, toolName, agentID)
+	if err != nil {
+		return fmt.Errorf("dashboard/writer: actualizar exit_code en tool_uses: %w", err)
+	}
+	return nil
+}
+
 func handleUserPrompt(tx *sql.Tx, ev instrumentation.Event) error {
 	p, err := marshalPayload[instrumentation.UserPromptPayload](ev)
 	if err != nil {

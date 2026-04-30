@@ -38,6 +38,7 @@ func cmdHelp(appName string) {
     digests from-handoff <path>   Parse a handoff markdown file and save it as a digest
     export               Export digests to Markdown or JSON
     emit                 Ingest a Claude Code hook event (reads JSON from stdin)
+    verify-direct        Stop-hook gate: blocks if direct mode edited source without lint+test
     init                 First-time setup — show config and launch browser
     browse               Interactive TUI to manage agents/skills/commands
     update               Pull latest + rebuild binary
