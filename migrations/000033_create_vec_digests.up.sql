@@ -6,7 +6,7 @@
 -- without an extra IN clause. Embedding dimension is fixed at 768 — matches
 -- the Ollama nomic-embed-text model used by the runner. If the embedder ever
 -- changes dimension, this table must be recreated.
-CREATE VIRTUAL TABLE vec_digests USING vec0(
+CREATE VIRTUAL TABLE IF NOT EXISTS vec_digests USING vec0(
     digest_id TEXT PRIMARY KEY,
     project TEXT partition key,
     embedding float[768] distance_metric=cosine

@@ -10,11 +10,11 @@ INSTALL_DIR ?= $(HOME)/bin
 .PHONY: build install clean test vet
 
 build:
-	$(GO_CMD) build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/anvil/
+	$(GO_CMD) build -tags fts5 -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/anvil/
 
 install:
 	@mkdir -p $(INSTALL_DIR)
-	$(GO_CMD) build -o $(INSTALL_DIR)/$(BINARY_NAME) ./cmd/anvil/
+	$(GO_CMD) build -tags fts5 -o $(INSTALL_DIR)/$(BINARY_NAME) ./cmd/anvil/
 	@echo "Installed $(BINARY_NAME) → $(INSTALL_DIR)/$(BINARY_NAME)"
 
 clean:
@@ -47,7 +47,7 @@ dashboard-frontend: ## Build the React frontend into frontend/dist
 dashboard-build: dashboard-frontend ## Build anvil-full with embedded dashboard (requires CGO, macOS only for now)
 	CGO_ENABLED=1 \
 	CGO_LDFLAGS="-framework UniformTypeIdentifiers" \
-	$(GO_CMD) build -tags "dashboard production" -o $(DASHBOARD_BINARY) ./cmd/anvil/
+	$(GO_CMD) build -tags "dashboard production fts5" -o $(DASHBOARD_BINARY) ./cmd/anvil/
 	@echo ""
 	@echo "Built $(DASHBOARD_BINARY). Run it with: ./$(DASHBOARD_BINARY) dashboard"
 

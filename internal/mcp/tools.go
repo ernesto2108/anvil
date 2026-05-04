@@ -80,11 +80,12 @@ func (s *Server) buildRegistry() map[string]tool {
 	// ── Context ───────────────────────────────────────────────────────────────
 
 	add("search_memories",
-		"Search past run digests by semantic similarity. Returns the most relevant past decisions and edge cases.",
+		"Search past run digests. Supports semantic (vector KNN), keyword (BM25 FTS5), and hybrid (RRF fusion) modes. Returns the most relevant past decisions, edge cases, and errors.",
 		schema(
-			prop("query", "string", "Natural language query describing what you are looking for"),
+			prop("query", "string", "Search query — natural language for semantic/hybrid, or FTS5 MATCH syntax for keyword (e.g. 'sqlite-vec', 'BLT*', 'summary: embed')"),
 			optProp("project", "string", "Project name to search in (defaults to current directory name)"),
 			optProp("limit", "number", "Number of results to return (default 3, max 10)"),
+			optProp("mode", "string", "Search mode: 'hybrid' (default), 'semantic' (vector KNN only), or 'keyword' (BM25 FTS5 only — works without Ollama)"),
 		),
 		s.searchMemories)
 

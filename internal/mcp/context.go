@@ -138,7 +138,8 @@ func newHandoffDigestID() (string, error) {
 	return "dh_" + hex.EncodeToString(b[:]), nil
 }
 
-// searchMemories searches past run digests by semantic similarity.
+// searchMemories searches past run digests using semantic (vector KNN),
+// keyword (BM25 FTS5), or hybrid (RRF fusion) mode.
 func (s *Server) searchMemories(ctx context.Context, args map[string]any) (string, error) {
 	db := s.db
 	if db == nil {
@@ -155,6 +156,16 @@ func (s *Server) searchMemories(ctx context.Context, args map[string]any) (strin
 	if limit > 10 {
 		limit = 10
 	}
+	mode := strArg(args, "mode", "hybrid")
+
+	// keyword mode never needs Ollama — serve it immediately.
+	if mode == "keyword" {
+		results, err := memory.SearchKeyword(ctx, db, query, project, limit)
+		if err != nil {
+			return "", fmt.Errorf("search memories (keyword): %w", err)
+		}
+		return marshalSearchResults(results)
+	}
 
 	// Auto-start Ollama if needed (KEEP_ALIVE=5m so models unload after idle).
 	// EnsureRunning is a no-op when the daemon is already up, so the cost is
@@ -163,17 +174,37 @@ func (s *Server) searchMemories(ctx context.Context, args map[string]any) (strin
 
 	// Use Ollama embedder (local) — same as the runner uses.
 	emb := ollama.NewClient("", "")
-	if !emb.Healthy(ctx) {
-		// Ollama still not available (start failed) — fall back to listing
-		// recent digests without semantic ranking.
-		return s.recentDigestsFallback(ctx, db, project, limit)
+	ollamaOK := emb.Healthy(ctx)
+
+	if !ollamaOK {
+		// Ollama unavailable: fall back to keyword search so we still return
+		// something useful, or list recent digests if keyword yields nothing.
+		results, err := memory.SearchKeyword(ctx, db, query, project, limit)
+		if err != nil || len(results) == 0 {
+			return s.recentDigestsFallback(ctx, db, project, limit)
+		}
+		return marshalSearchResults(results)
 	}
 
-	results, err := memory.SearchSimilar(ctx, db, emb, query, project, limit, 0.5)
+	var (
+		results []memory.SearchResult
+		err     error
+	)
+	if mode == "semantic" {
+		results, err = memory.SearchSimilar(ctx, db, emb, query, project, limit, 0.5)
+	} else {
+		// default: hybrid
+		results, err = memory.SearchHybrid(ctx, db, emb, query, project, limit, 0.5)
+	}
 	if err != nil {
-		return "", fmt.Errorf("search memories: %w", err)
+		return "", fmt.Errorf("search memories (%s): %w", mode, err)
 	}
 
+	return marshalSearchResults(results)
+}
+
+// marshalSearchResults serializes a slice of SearchResult to JSON.
+func marshalSearchResults(results []memory.SearchResult) (string, error) {
 	type hit struct {
 		RunID     string   `json:"run_id"`
 		Score     float64  `json:"score"`
