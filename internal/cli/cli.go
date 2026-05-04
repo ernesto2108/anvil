@@ -35,6 +35,9 @@ func Run(args []string) {
 	case "verify-direct":
 		cmdVerifyDirect(nil)
 		return
+	case "clean-empty-runs":
+		cmdCleanEmptyRuns(nil, cmdArgs)
+		return
 	case "mcp-server":
 		repoDir := resolveRepoDir(appName)
 		cfg, err := config.Load(repoDir, appName)
