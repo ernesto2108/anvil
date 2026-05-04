@@ -277,6 +277,14 @@ Micro-interacciones, estados de carga, UX de manejo de errores, estados vacíos,
 
 Crea: `{task_path}/dtd.md`
 
+### DESIGN.md — artefacto adicional (OBLIGATORIO cuando hay sistema de diseño)
+
+Después de escribir `dtd.md` y construir en Pencil, genera `DESIGN.md` en la raíz del repo.
+
+`DESIGN.md` es el contrato portable del design system — cualquier agente AI lo lee automáticamente al abrir el repo, igual que leen `CLAUDE.md`. Elimina el onboarding manual de tokens en cada sesión.
+
+Cargar `reference/design-md.md` desde el skill `/design-system` para el template completo, reglas de cuándo generarlo y validación opcional con CLI.
+
 ```markdown
 # <TASK-ID>: UI Specification — <Title>
 

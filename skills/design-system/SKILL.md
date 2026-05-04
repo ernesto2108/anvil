@@ -273,6 +273,10 @@ Verifica categorías, identifica brechas, propone adiciones (no modifiques sin a
 
 Crea `{design_system_path}`. Ver `reference/output-template.md`.
 
+Adicionalmente, si este paso define o modifica tokens (colores, tipografía, espaciado, componentes), genera o actualiza `DESIGN.md` en la raíz del repo. Ver la sección **DESIGN.md** del agente `designer.md` para el formato completo.
+
+`DESIGN.md` es el contrato portable del design system — permite que cualquier agente AI lea los tokens automáticamente sin onboarding manual. Actualízalo siempre que cambien tokens.
+
 ## Reglas de Iteración (CRÍTICO)
 
 - **NUNCA borres trabajo para aplicar un cambio** — identifica qué cambió, modifica solo eso
@@ -339,3 +343,4 @@ Para wrapping de texto, armonía de grilla, limitaciones de i18n y otras restric
 | Guía de plataforma (web vs mobile vs both) | `reference/platform-guide.md` |
 | **Pencil** — variables, componentes, instancias | `reference/pencil-workflow.md` |
 | **Figma** — colecciones, modos, variantes, Dev Mode | `reference/figma-workflow.md` |
+| **DESIGN.md** — template, reglas de generación, validación CLI | `reference/design-md.md` |
