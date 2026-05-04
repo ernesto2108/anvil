@@ -8,11 +8,16 @@ import (
 	"testing"
 	"time"
 
+	sqlite_vec "github.com/asg017/sqlite-vec-go-bindings/cgo"
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 	"github.com/ernesto2108/anvil/internal/memory"
 )
+
+// checkpointVecOnce registers sqlite-vec exactly once for this test file so
+// the in-memory DBs can host a vec_digests virtual table.
+var checkpointVecOnce sync.Once
 
 // --- test doubles ---
 
@@ -69,6 +74,7 @@ func (nopSink) Emit(_ instrumentation.Event) {}
 
 func newCheckpointTestDB(t *testing.T) *sql.DB {
 	t.Helper()
+	checkpointVecOnce.Do(sqlite_vec.Auto)
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("open: %v", err)
@@ -106,6 +112,11 @@ CREATE TABLE digests (
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL,
     UNIQUE(run_id)
+);
+CREATE VIRTUAL TABLE vec_digests USING vec0(
+    digest_id TEXT PRIMARY KEY,
+    project TEXT partition key,
+    embedding float[3] distance_metric=cosine
 );`
 	if _, err := db.Exec(schema); err != nil {
 		t.Fatalf("schema: %v", err)

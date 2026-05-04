@@ -169,7 +169,7 @@ func (s *Server) searchMemories(ctx context.Context, args map[string]any) (strin
 		return s.recentDigestsFallback(ctx, db, project, limit)
 	}
 
-	results, err := memory.SearchSimilar(ctx, db, emb, query, project, limit, 0.3)
+	results, err := memory.SearchSimilar(ctx, db, emb, query, project, limit, 0.5)
 	if err != nil {
 		return "", fmt.Errorf("search memories: %w", err)
 	}

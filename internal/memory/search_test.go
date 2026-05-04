@@ -230,7 +230,7 @@ func TestSearchSimilar_EmbedError(t *testing.T) {
 }
 
 // TestSearchSimilar_DBError verifies that a database failure after a successful
-// embed is wrapped with the expected sentinel prefix "load digests".
+// embed is wrapped with the expected sentinel prefix.
 func TestSearchSimilar_DBError(t *testing.T) {
 	// Open and immediately close so any query returns "sql: database is closed".
 	db, err := sql.Open("sqlite3", ":memory:")
@@ -245,8 +245,8 @@ func TestSearchSimilar_DBError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !strings.Contains(err.Error(), "load digests") {
-		t.Errorf("error %q does not contain 'load digests'", err.Error())
+	if !strings.Contains(err.Error(), "vec_digests knn") {
+		t.Errorf("error %q does not contain 'vec_digests knn'", err.Error())
 	}
 }
 

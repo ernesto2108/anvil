@@ -201,7 +201,7 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 	// 6b. Pre-run memory injection: search for relevant digests from previous runs.
 	// Always emit a status line so the user can tell why memory was/wasn't loaded
 	// instead of guessing from silence.
-	const memoryThreshold = 0.35
+	const memoryThreshold = 0.5
 	ollamaClient := ollama.NewClient("", "")
 	var memoryCtx string
 	switch {

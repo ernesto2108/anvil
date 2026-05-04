@@ -3,16 +3,26 @@ package memory
 import (
 	"context"
 	"database/sql"
+	"sync"
 	"testing"
 	"time"
 
+	sqlite_vec "github.com/asg017/sqlite-vec-go-bindings/cgo"
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// vecAutoOnce mirrors the production guard in pkg/storage so tests register
+// sqlite-vec exactly once even when the suite spins up many in-memory DBs.
+var vecAutoOnce sync.Once
+
 // newTestDB creates an in-memory SQLite database with the minimal schema
-// required by digests (runs FK + digests table).
+// required by digests (runs FK + digests table + vec_digests virtual table).
+// vec_digests uses float[2] here to match the 2-D vectors used across the
+// test suite; production declares float[768] in migration 000033.
 func newTestDB(t *testing.T) *sql.DB {
 	t.Helper()
+	vecAutoOnce.Do(sqlite_vec.Auto)
+
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("open memory db: %v", err)
@@ -37,9 +47,15 @@ CREATE TABLE digests (
     errors      TEXT NOT NULL DEFAULT '[]',
     embedding   BLOB,
     model_used  TEXT NOT NULL DEFAULT 'claude-haiku-4-5',
+    source      TEXT NOT NULL DEFAULT 'auto',
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL,
     UNIQUE(run_id)
+);
+CREATE VIRTUAL TABLE vec_digests USING vec0(
+    digest_id TEXT PRIMARY KEY,
+    project TEXT partition key,
+    embedding float[2] distance_metric=cosine
 );`
 	if _, err := db.Exec(schema); err != nil {
 		t.Fatalf("apply schema: %v", err)
@@ -62,7 +78,7 @@ func TestUpsertDigest_InsertThenUpdate(t *testing.T) {
 		Decisions: []string{"chose option A"},
 		EdgeCases: []string{"empty input"},
 		Errors:    []string{},
-		Embedding: []float32{0.1, 0.2, 0.3},
+		Embedding: []float32{0.1, 0.2},
 		ModelUsed: "mistral",
 	}
 	if err := UpsertDigest(ctx, db, first); err != nil {
@@ -89,7 +105,7 @@ func TestUpsertDigest_InsertThenUpdate(t *testing.T) {
 		Decisions: []string{"chose option A", "added retry"},
 		EdgeCases: []string{"empty input", "timeout"},
 		Errors:    []string{"migration dirty"},
-		Embedding: []float32{0.4, 0.5, 0.6},
+		Embedding: []float32{0.4, 0.5},
 		ModelUsed: "claude-haiku-4-5",
 	}
 	if err := UpsertDigest(ctx, db, second); err != nil {

@@ -5,10 +5,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
+	sqlite_vec "github.com/asg017/sqlite-vec-go-bindings/cgo"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+// sqliteVecOnce ensures sqlite_vec.Auto() is called exactly once per process.
+// Auto() registers an autoextension hook so every connection opened afterward
+// has the vec0 module available — calling it multiple times is harmless but
+// cheaper to gate.
+var sqliteVecOnce sync.Once
 
 // OpenDB creates the database file (with restrictive permissions) and opens a
 // *sql.DB with WAL journal mode and foreign keys enabled. The caller is
@@ -28,6 +36,11 @@ func OpenDB(dbPath string) (*sql.DB, error) {
 		}
 		_ = f.Close()
 	}
+
+	// Register sqlite-vec as an autoextension before opening the connection.
+	// Once Auto() runs, every sql.Open("sqlite3", …) in the process gets vec0
+	// available — needed by the digests vector search path.
+	sqliteVecOnce.Do(sqlite_vec.Auto)
 
 	// busy_timeout avoids SQLITE_BUSY when anvil-emit writes concurrently.
 	dsn := dbPath + "?_busy_timeout=5000&_journal_mode=WAL"

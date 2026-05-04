@@ -8,7 +8,8 @@ import (
 	"time"
 )
 
-// SaveDigest inserts a new digest into SQLite.
+// SaveDigest inserts a new digest into SQLite. Mirrors the embedding into
+// vec_digests inside the same transaction (see UpsertDigest for the rationale).
 func SaveDigest(ctx context.Context, db *sql.DB, d Digest) error {
 	decisions, edgeCases, errors, embBlob, err := marshalDigest(d)
 	if err != nil {
@@ -28,18 +29,31 @@ func SaveDigest(ctx context.Context, db *sql.DB, d Digest) error {
 		source = "auto"
 	}
 
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("memory: begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
 	const q = `INSERT INTO digests (id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, source, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	_, err = db.ExecContext(ctx, q,
+	if _, err := tx.ExecContext(ctx, q,
 		d.ID, d.RunID, d.Project, d.Summary,
 		string(decisions), string(edgeCases), string(errors),
 		embBlob, d.ModelUsed, source,
 		d.CreatedAt.Format(time.RFC3339Nano),
 		d.UpdatedAt.Format(time.RFC3339Nano),
-	)
-	if err != nil {
+	); err != nil {
 		return fmt.Errorf("memory: insert digest: %w", err)
+	}
+
+	if err := upsertVecDigest(ctx, tx, d.ID, d.Project, embBlob); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("memory: commit save: %w", err)
 	}
 	return nil
 }
@@ -52,6 +66,11 @@ func SaveDigest(ctx context.Context, db *sql.DB, d Digest) error {
 // On conflict, id and created_at are preserved (the row keeps its identity and
 // original insertion time). summary/decisions/edge_cases/errors/embedding/
 // model_used/updated_at are all replaced.
+//
+// Double-write: the embedding (when present and well-formed) is also mirrored
+// into the vec_digests virtual table so SearchSimilar can use sqlite-vec's
+// KNN index instead of an in-Go linear scan. Both writes happen in the same
+// transaction — if vec_digests fails, the whole upsert rolls back.
 func UpsertDigest(ctx context.Context, db *sql.DB, d Digest) error {
 	decisions, edgeCases, errors, embBlob, err := marshalDigest(d)
 	if err != nil {
@@ -69,7 +88,13 @@ func UpsertDigest(ctx context.Context, db *sql.DB, d Digest) error {
 		source = "auto"
 	}
 
-	const q = `INSERT INTO digests (id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, source, created_at, updated_at)
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("memory: begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	const upsertQ = `INSERT INTO digests (id, run_id, project, summary, decisions, edge_cases, errors, embedding, model_used, source, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(run_id) DO UPDATE SET
 			summary    = excluded.summary,
@@ -81,15 +106,56 @@ func UpsertDigest(ctx context.Context, db *sql.DB, d Digest) error {
 			source     = excluded.source,
 			updated_at = excluded.updated_at`
 
-	_, err = db.ExecContext(ctx, q,
+	if _, err := tx.ExecContext(ctx, upsertQ,
 		d.ID, d.RunID, d.Project, d.Summary,
 		string(decisions), string(edgeCases), string(errors),
 		embBlob, d.ModelUsed, source,
 		d.CreatedAt.Format(time.RFC3339Nano),
 		d.UpdatedAt.Format(time.RFC3339Nano),
-	)
-	if err != nil {
+	); err != nil {
 		return fmt.Errorf("memory: upsert digest: %w", err)
+	}
+
+	// Resolve the actual stored row (id may differ from d.ID if a previous
+	// upsert won the conflict). The vec_digests entry must reference the
+	// surviving digest_id, not the input one.
+	var storedID string
+	if err := tx.QueryRowContext(ctx, `SELECT id FROM digests WHERE run_id = ?`, d.RunID).Scan(&storedID); err != nil {
+		return fmt.Errorf("memory: resolve stored digest id: %w", err)
+	}
+
+	if err := upsertVecDigest(ctx, tx, storedID, d.Project, embBlob); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("memory: commit upsert: %w", err)
+	}
+	return nil
+}
+
+// upsertVecDigest mirrors a digest's embedding into vec_digests. A nil or
+// empty blob means "no embedding yet" — we delete any stale row instead of
+// inserting garbage. sqlite-vec validates the byte length matches the column
+// dimension at insert time, so callers don't need to pre-validate.
+func upsertVecDigest(ctx context.Context, tx *sql.Tx, digestID, project string, embBlob []byte) error {
+	if len(embBlob) == 0 {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM vec_digests WHERE digest_id = ?`, digestID); err != nil {
+			return fmt.Errorf("memory: delete vec_digests for %q: %w", digestID, err)
+		}
+		return nil
+	}
+
+	// vec0 doesn't support ON CONFLICT, so we delete-then-insert. Both
+	// statements run inside the caller's transaction.
+	if _, err := tx.ExecContext(ctx, `DELETE FROM vec_digests WHERE digest_id = ?`, digestID); err != nil {
+		return fmt.Errorf("memory: delete vec_digests for %q: %w", digestID, err)
+	}
+	if _, err := tx.ExecContext(ctx,
+		`INSERT INTO vec_digests(digest_id, project, embedding) VALUES (?, ?, ?)`,
+		digestID, project, embBlob,
+	); err != nil {
+		return fmt.Errorf("memory: insert vec_digests for %q: %w", digestID, err)
 	}
 	return nil
 }
@@ -160,11 +226,22 @@ func ListDigestsByProject(ctx context.Context, db *sql.DB, project string) ([]Di
 	return results, nil
 }
 
-// DeleteDigest removes a digest by ID.
+// DeleteDigest removes a digest by ID, including its vec_digests mirror.
 func DeleteDigest(ctx context.Context, db *sql.DB, id string) error {
-	_, err := db.ExecContext(ctx, `DELETE FROM digests WHERE id = ?`, id)
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
+		return fmt.Errorf("memory: begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM vec_digests WHERE digest_id = ?`, id); err != nil {
+		return fmt.Errorf("memory: delete vec_digests for %q: %w", id, err)
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM digests WHERE id = ?`, id); err != nil {
 		return fmt.Errorf("memory: delete digest %q: %w", id, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("memory: commit delete: %w", err)
 	}
 	return nil
 }
