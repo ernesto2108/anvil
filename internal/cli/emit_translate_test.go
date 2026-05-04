@@ -10,6 +10,115 @@ import (
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 )
 
+// ---------------------------------------------------------------------------
+// TestTranslateHook_SessionStartIsNoOp
+// ---------------------------------------------------------------------------
+// Verifies that a SessionStart hook on its own does not insert a run. The run
+// is created lazily on first real activity (UserPromptSubmit/PreToolUse/etc.).
+// Prevents the empty-runs bug where opening claude and exiting without
+// interacting persisted a phantom run.
+func TestTranslateHook_SessionStartIsNoOp(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	w := writer.New(db, 0)
+
+	startJSON, _ := json.Marshal(map[string]string{
+		"session_id":      "sess-empty-001",
+		"hook_event_name": "SessionStart",
+		"cwd":             "/tmp",
+	})
+	if err := translateHook(startJSON, w); err != nil {
+		t.Fatalf("translateHook SessionStart: %v", err)
+	}
+
+	var count int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM runs WHERE session_id = ?`, "sess-empty-001").Scan(&count); err != nil {
+		t.Fatalf("query runs: %v", err)
+	}
+	if count != 0 {
+		t.Errorf("SessionStart created %d run(s); expected 0 (lazy creation)", count)
+	}
+}
+
+// TestTranslateHook_EmptySessionLeavesNoTrace verifies the full empty-session
+// lifecycle (SessionStart + SessionEnd, no activity in between) leaves the
+// store untouched.
+
+// ---------------------------------------------------------------------------
+// TestTranslateHook_EmptySessionLeavesNoTrace
+// ---------------------------------------------------------------------------
+// Full lifecycle of an empty session (SessionStart followed by SessionEnd
+// with no intermediate activity) must not persist any run.
+func TestTranslateHook_EmptySessionLeavesNoTrace(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	w := writer.New(db, 0)
+
+	startJSON, _ := json.Marshal(map[string]string{
+		"session_id":      "sess-empty-002",
+		"hook_event_name": "SessionStart",
+		"cwd":             "/tmp",
+	})
+	if err := translateHook(startJSON, w); err != nil {
+		t.Fatalf("SessionStart: %v", err)
+	}
+
+	endJSON, _ := json.Marshal(map[string]string{
+		"session_id":      "sess-empty-002",
+		"hook_event_name": "SessionEnd",
+	})
+	if err := translateHook(endJSON, w); err != nil {
+		t.Fatalf("SessionEnd: %v", err)
+	}
+
+	var runs int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM runs WHERE session_id = ?`, "sess-empty-002").Scan(&runs); err != nil {
+		t.Fatalf("query runs: %v", err)
+	}
+	if runs != 0 {
+		t.Errorf("empty session left %d run(s); expected 0", runs)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TestTranslateHook_FirstPromptCreatesRunWithDirectAgent
+// ---------------------------------------------------------------------------
+// Verifies that the first UserPromptSubmit lazily creates the run AND
+// registers the synthetic "direct" agent so the dashboard sees agents_count > 0.
+func TestTranslateHook_FirstPromptCreatesRunWithDirectAgent(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	w := writer.New(db, 0)
+
+	promptJSON, _ := json.Marshal(map[string]string{
+		"session_id":      "sess-active-001",
+		"hook_event_name": "UserPromptSubmit",
+		"prompt":          "hola",
+		"cwd":             "/tmp/myproject",
+	})
+	if err := translateHook(promptJSON, w); err != nil {
+		t.Fatalf("UserPromptSubmit: %v", err)
+	}
+
+	var runID, project string
+	if err := db.QueryRow(
+		`SELECT id, project FROM runs WHERE session_id = ?`, "sess-active-001",
+	).Scan(&runID, &project); err != nil {
+		t.Fatalf("expected run created lazily, got: %v", err)
+	}
+	if project != "myproject" {
+		t.Errorf("project = %q; want %q", project, "myproject")
+	}
+
+	var agentRole string
+	if err := db.QueryRow(
+		`SELECT agent_role FROM agents WHERE run_id = ? AND agent_id = ?`,
+		runID, "direct-sess-act",
+	).Scan(&agentRole); err != nil {
+		t.Fatalf("expected synthetic 'direct' agent, got: %v", err)
+	}
+	if agentRole != "direct" {
+		t.Errorf("agent_role = %q; want %q", agentRole, "direct")
+	}
+}
+
 // makeWriterWithRun creates an EventWriter with an in-memory DB and
 // inserts a run + agent ready for tool-use events.
 func makeWriterWithRun(t *testing.T, runID, agentID, sessionID string) *writer.EventWriter {

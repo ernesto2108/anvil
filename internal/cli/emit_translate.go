@@ -115,8 +115,10 @@ const maxBashExcerptBytes = 4 * 1024
 const maxOutputBytes = 100 * 1024 // 100 KB
 
 // translateHook parses the hook JSON and writes the corresponding Anvil events
-// to the store. It resolves the run by session_id, creating an orphan run if
-// needed (except for SessionStart which always creates a new run).
+// to the store. The run is created lazily on the first event that signals real
+// activity (UserPromptSubmit, PreToolUse, SubagentStart, TaskCreated). Sessions
+// that fire SessionStart and SessionEnd without intermediate activity leave no
+// trace in the store.
 func translateHook(raw []byte, w *writer.EventWriter) error {
 	var env hookEnvelope
 	if err := json.Unmarshal(raw, &env); err != nil {
@@ -129,7 +131,11 @@ func translateHook(raw []byte, w *writer.EventWriter) error {
 
 	switch env.HookEventName {
 	case "SessionStart":
-		return handleSessionStart(w, env.SessionID, env.CWD)
+		// No-op: the run is created lazily on first real activity (see
+		// resolveOrCreateRun). Avoids persisting empty runs when claude opens
+		// and exits without interaction (quick close, multiple projects in
+		// parallel where only one is used).
+		return nil
 	case "UserPromptSubmit":
 		return handleUserPromptSubmit(w, env.SessionID, env.Prompt, env.CWD)
 	case "SubagentStart":
@@ -159,36 +165,10 @@ func translateHook(raw []byte, w *writer.EventWriter) error {
 	}
 }
 
-// handleSessionStart creates a new run and registers a synthetic "direct"
-// agent so that standalone Claude Code sessions appear in the dashboard with
-// agents_count > 0, just like anvil-orchestrated pipeline runs.
-//
-// This only fires for top-level sessions (no ANVIL_PARENT_RUN_ID). Subprocesses
-// launched by `anvil run` already have their run/agent lifecycle managed by the
-// orchestrator.
-func handleSessionStart(w *writer.EventWriter, sessionID, cwd string) error {
-	if parentRunID() != "" {
-		return nil
-	}
-
-	runID, err := createRunForSession(w, sessionID, cwd)
-	if err != nil {
-		return err
-	}
-
-	agentID := fmt.Sprintf("direct-%s", sessionID[:8])
-	payload := instrumentation.AgentStartPayload{
-		AgentID:   agentID,
-		AgentRole: "direct",
-	}
-	ev, err := instrumentation.NewEvent(runID, instrumentation.EventAgentStart, payload)
-	if err != nil {
-		return err
-	}
-	return w.WriteEvent(ev)
-}
-
-// createRunForSession creates a new run linked to the given session.
+// createRunForSession creates a new run linked to the given session. For
+// standalone (non-orchestrated) sessions it also registers a synthetic
+// "direct" agent so the run appears in the dashboard with agents_count > 0,
+// matching anvil-orchestrated pipeline runs.
 func createRunForSession(w *writer.EventWriter, sessionID, cwd string) (string, error) {
 	runID, err := instrumentation.NewRunID()
 	if err != nil {
@@ -210,6 +190,23 @@ func createRunForSession(w *writer.EventWriter, sessionID, cwd string) (string, 
 	if err := w.WriteEvent(ev); err != nil {
 		return "", err
 	}
+
+	// Register the synthetic "direct" agent for standalone sessions.
+	// Subprocesses launched by `anvil run` are skipped (parentRunID != "")
+	// because the orchestrator owns their agent lifecycle.
+	if parentRunID() == "" && len(sessionID) >= 8 {
+		agentEv, err := instrumentation.NewEvent(runID, instrumentation.EventAgentStart, instrumentation.AgentStartPayload{
+			AgentID:   fmt.Sprintf("direct-%s", sessionID[:8]),
+			AgentRole: "direct",
+		})
+		if err != nil {
+			return "", err
+		}
+		if err := w.WriteEvent(agentEv); err != nil {
+			return "", err
+		}
+	}
+
 	return runID, nil
 }
 
