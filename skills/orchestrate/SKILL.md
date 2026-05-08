@@ -178,6 +178,47 @@ Bajar el threshold a 0.3 "para no perderse nada". Trae ruido, los agentes empiez
 
 ---
 
+## Paso 0.6 — Cargar Context Navigator (OBLIGATORIO si `.context/` existe)
+
+Inmediatamente después del recall de memoria, antes del primer agente:
+
+1. Verificar si `.context/NAVIGATOR.md` existe en el proyecto
+2. Si existe:
+   a. Leer `last_updated` y calcular staleness (ver `skills/context-nav/staleness.md`)
+   b. Leer siempre: `project.md`, `patterns.md`, `contracts.md`
+   c. Leer solo los dominios relevantes: mapear archivos que la tarea va a tocar a `domains/<name>.md`
+   d. Si hay decisiones relevantes a la tarea: leer los ADRs correspondientes en `decisions/`
+   e. **Si dominio relevante está STALE (> 3 días):** antes de advertir, intentar gap-filling con MCP memory:
+      ```
+      mcp__anvil__search_memories(query="<dominio> cambios decisiones", limit=3)
+      ```
+      - Si hay hits ≥ 0.5 → inyectar digests como contexto provisional + etiquetar como stale+memory
+      - Si no hay hits → advertir staleness normalmente
+3. Inyectar el contexto inline en el prompt del primer agente bajo:
+   ```
+   ## Contexto del sistema (Context Navigator)
+   [contenido de project.md]
+   [contenido de patterns.md]
+   [contenido de domains relevantes — fresh o complementados con memory si stale]
+   ```
+4. Si no existe `.context/NAVIGATOR.md`: agregar modificador `+scanner` al pipeline si no estaba ya — el scanner hará bootstrap.
+
+### Regla de inyección selectiva
+
+El orquestador decide qué dominios inyectar basándose en las palabras clave de la tarea:
+
+| Si la tarea menciona... | Cargar dominio... |
+|---|---|
+| "memoria", "digest", "sesión", "transcript" | `domains/memory.md` |
+| "pipeline", "run", "agente", "orchestration" | `domains/pipeline.md` |
+| "MCP", "tool", "server" | `domains/mcp.md` |
+| "dashboard", "UI", "pantalla" | `domains/dashboard.md` |
+| archivos en `internal/<X>/` | `domains/<X>.md` |
+
+Si hay duda: inyectar todos los dominios — el costo es bajo (< 300 líneas por dominio).
+
+---
+
 ## Regla de límites (solo modo orquestación)
 
 En modo directo, el orquestador lee/escribe libremente. En modo agente:
