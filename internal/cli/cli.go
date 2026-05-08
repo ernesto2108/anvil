@@ -38,6 +38,9 @@ func Run(args []string) {
 	case "clean-empty-runs":
 		cmdCleanEmptyRuns(nil, cmdArgs)
 		return
+	case "capture":
+		cmdCapture(nil, cmdArgs)
+		return
 	case "mcp-server":
 		repoDir := resolveRepoDir(appName)
 		cfg, err := config.Load(repoDir, appName)

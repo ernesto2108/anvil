@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,6 +15,9 @@ import (
 	"github.com/ernesto2108/anvil/internal/dashboard/imports"
 	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
+	"github.com/ernesto2108/anvil/internal/memory/capture"
+	"github.com/ernesto2108/anvil/internal/memory/haiku"
+	"github.com/ernesto2108/anvil/internal/memory/transcript"
 )
 
 // analyzerOnce guards singleton creation for the import Analyzer.
@@ -525,7 +529,85 @@ func handleSessionEnd(w *writer.EventWriter, sessionID string) error {
 		return err
 	}
 
-	return w.ComputeRunTotals(runID)
+	if err := w.ComputeRunTotals(runID); err != nil {
+		return err
+	}
+
+	// Best-effort transcript capture. All errors are logged and never
+	// propagated — a failing capture must never break the hook.
+	captureTranscriptForSession(sessionID, runID, w)
+	return nil
+}
+
+// captureTranscriptForSession tries to find and capture the JSONL transcript
+// for the given session. It runs inline (no goroutines) with a 5s timeout.
+// Any error is logged and silently discarded (D10, D1).
+func captureTranscriptForSession(sessionID, runID string, w *writer.EventWriter) {
+	transcriptPath := resolveTranscriptPath(sessionID)
+	if transcriptPath == "" {
+		return
+	}
+	if _, err := os.Stat(transcriptPath); err != nil {
+		// Transcript does not exist — skip silently.
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	td, err := transcript.ParseFile(transcriptPath)
+	if err != nil {
+		log.Printf("anvil/emit: parse transcript %s: %v", transcriptPath, err)
+		return
+	}
+
+	ok, err := capture.ShouldCapture(ctx, runID, td, "direct", w.DB())
+	if err != nil {
+		log.Printf("anvil/emit: should_capture: %v", err)
+		return
+	}
+	if !ok {
+		return
+	}
+
+	var summarizer capture.TranscriptSummarizer
+	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
+		summarizer = haiku.NewClient(apiKey, "")
+	}
+
+	if err := capture.Capture(ctx, runID, td, summarizer, w.DB(), "", false); err != nil {
+		if ctx.Err() != nil {
+			// Timeout: fall back to keywords-only on a fresh context.
+			bgCtx := context.Background()
+			if err2 := capture.Capture(bgCtx, runID, td, nil, w.DB(), "", true); err2 != nil {
+				log.Printf("anvil/emit: capture fallback: %v", err2)
+			}
+			return
+		}
+		log.Printf("anvil/emit: capture: %v", err)
+	}
+}
+
+// resolveTranscriptPath returns the path to the Claude Code JSONL transcript
+// for the given session. It first checks the CLAUDE_SESSION_FILE environment
+// variable; if unset, it constructs the standard path under ~/.claude.
+func resolveTranscriptPath(sessionID string) string {
+	if p := os.Getenv("CLAUDE_SESSION_FILE"); p != "" {
+		return p
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	// Standard path: ~/.claude/projects/<cwd-hash>/sessions/<sessionID>.jsonl
+	// The cwd hash is not available at this point, so we glob for the session
+	// file under any project directory.
+	pattern := filepath.Join(home, ".claude", "projects", "*", "sessions", sessionID+".jsonl")
+	matches, err := filepath.Glob(pattern)
+	if err != nil || len(matches) == 0 {
+		return ""
+	}
+	return matches[0]
 }
 
 func handlePreToolUse(w *writer.EventWriter, sessionID, toolName string, toolInput json.RawMessage, cwd string) error {

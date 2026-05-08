@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ernesto2108/anvil/internal/memory"
+	"github.com/ernesto2108/anvil/internal/memory/transcript"
 )
 
 const defaultModel = "claude-haiku-4-5"
@@ -104,6 +105,92 @@ func (c *Client) Summarize(ctx context.Context, agentOutputs []memory.AgentOutpu
 	}
 
 	return parseDraft(result.Content[0].Text)
+}
+
+// SummarizeTranscript sends a compact transcript digest to Haiku and returns
+// a structured DigestDraft. It reuses the same HTTP machinery and parseDraft
+// helper as Summarize — only the prompt differs.
+func (c *Client) SummarizeTranscript(ctx context.Context, td transcript.TranscriptDigest) (memory.DigestDraft, error) {
+	prompt := buildTranscriptPrompt(td)
+
+	reqBody, err := json.Marshal(messagesRequest{
+		Model:     c.model,
+		MaxTokens: 512,
+		Messages: []message{
+			{Role: "user", Content: prompt},
+		},
+	})
+	if err != nil {
+		return memory.DigestDraft{}, fmt.Errorf("haiku: marshal transcript request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.anthropic.com/v1/messages", bytes.NewReader(reqBody))
+	if err != nil {
+		return memory.DigestDraft{}, fmt.Errorf("haiku: create transcript request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", c.apiKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return memory.DigestDraft{}, fmt.Errorf("haiku: transcript request failed: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return memory.DigestDraft{}, fmt.Errorf("haiku: transcript unexpected status %d", resp.StatusCode)
+	}
+
+	var result messagesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return memory.DigestDraft{}, fmt.Errorf("haiku: decode transcript response: %w", err)
+	}
+
+	if len(result.Content) == 0 {
+		return memory.DigestDraft{}, fmt.Errorf("haiku: empty transcript response")
+	}
+
+	return parseDraft(result.Content[0].Text)
+}
+
+// buildTranscriptPrompt constructs a compact prompt for transcript summarization.
+func buildTranscriptPrompt(td transcript.TranscriptDigest) string {
+	var b strings.Builder
+	b.WriteString("You are a technical summarizer for a developer tool.\n\n")
+	b.WriteString("Given metadata from a Claude Code direct session, produce a structured summary.\n\n")
+	fmt.Fprintf(&b, "## Session Metadata\n\n")
+	fmt.Fprintf(&b, "- Session ID: %s\n", td.SessionID)
+	fmt.Fprintf(&b, "- Turns: %d\n", td.TurnCount)
+	fmt.Fprintf(&b, "- Had errors: %v\n", td.HasErrors)
+	if len(td.ToolsUsed) > 0 {
+		fmt.Fprintf(&b, "- Tools used: %s\n", strings.Join(td.ToolsUsed, ", "))
+	}
+	if len(td.Decisions) > 0 {
+		b.WriteString("\n## Decision Signals\n\n")
+		for _, d := range td.Decisions {
+			fmt.Fprintf(&b, "- %s\n", d)
+		}
+	}
+	b.WriteString(`
+## Instructions
+
+Produce a JSON object with exactly these fields:
+
+{
+  "summary": "2-3 sentence overview of the session based on the metadata",
+  "decisions": ["each significant decision inferred from the decision signals"],
+  "edge_cases": [],
+  "errors": []
+}
+
+Rules:
+- summary: factual, based only on provided metadata.
+- decisions: 1-5 items inferred from the decision signals above.
+- edge_cases and errors: use empty arrays unless obvious from metadata.
+- Respond ONLY with the JSON object, no markdown fences, no explanation.`)
+
+	return b.String()
 }
 
 func buildPrompt(outputs []memory.AgentOutput) string {
