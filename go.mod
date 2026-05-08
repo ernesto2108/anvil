@@ -3,16 +3,17 @@ module github.com/ernesto2108/anvil
 go 1.25.0
 
 require (
+	github.com/asg017/sqlite-vec-go-bindings v0.1.6
 	github.com/charmbracelet/bubbles v1.0.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/mattn/go-sqlite3 v1.14.42
+	google.golang.org/grpc v1.74.2
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/asg017/sqlite-vec-go-bindings v0.1.6 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/colorprofile v0.4.1 // indirect

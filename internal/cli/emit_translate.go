@@ -541,7 +541,7 @@ func handleSessionEnd(w *writer.EventWriter, sessionID string) error {
 }
 
 // captureTranscriptForSession tries to find and capture the JSONL transcript
-// for the given session. It runs inline (no goroutines) with a 5s timeout.
+// for the given session. It runs inline (no goroutines) with a 30s timeout.
 // Any error is logged and silently discarded (D10, D1).
 func captureTranscriptForSession(sessionID, runID string, w *writer.EventWriter) {
 	transcriptPath := resolveTranscriptPath(sessionID)
@@ -553,7 +553,7 @@ func captureTranscriptForSession(sessionID, runID string, w *writer.EventWriter)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	td, err := transcript.ParseFile(transcriptPath)

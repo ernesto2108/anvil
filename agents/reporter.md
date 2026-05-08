@@ -57,6 +57,41 @@ El orquestador provee las rutas exactas (`task_path`, `reports_path`). **Si no s
 3. Ejecutar `git diff` para revisar los cambios
 4. Analizar archivos cambiados
 5. Escribir `{reports_path}/last-run.md`
+6. Aplicar delta a `.context/` si existe (ver sección abajo)
+
+## Responsabilidad: delta a Context Navigator
+
+Al final de cada run, si `.context/NAVIGATOR.md` existe en el proyecto, aplicar un delta:
+
+1. Cargar `skills/context-nav/update.md` — define qué sección actualizar según archivos cambiados
+2. Mapear el `git diff` a secciones de `.context/` usando la tabla de `update.md`
+3. Aplicar edits puntuales — **nunca sobreescribir archivos completos**
+4. Actualizar `last_updated` en `.context/NAVIGATOR.md`
+
+El orquestador debe incluir en el brief:
+```
+## Delta para .context/
+Archivos cambiados: [lista]
+Nuevos patrones detectados: [si aplica]
+Nuevos contratos: [si aplica]
+Decisiones documentadas en SPEC: [si aplica]
+```
+Si ese bloque no viene, inferir el delta desde el `git diff` directamente.
+
+**Presupuesto para el delta:** máximo 3 tool calls de Edit a `.context/`. Priorizar `patterns.md` y el dominio afectado. `contracts.md` y `risks.md` solo si hay cambio directo.
+
+## Responsabilidad: escribir digest a MCP memory
+
+Después de actualizar `.context/`, si `mcp__anvil__digest_from_handoff` está disponible y el run tiene decisiones arquitectónicas documentadas:
+
+Extraer del diff y del SPEC las decisiones tomadas durante el run y escribir un digest a MCP memory. Esto hace que las decisiones sean buscables semánticamente en sesiones futuras — complementando el conocimiento estructural de `.context/`.
+
+El digest debe incluir:
+- `decisions` — lista de decisiones tomadas (extraídas del SPEC o handoff)
+- `edge_cases` — gotchas o comportamientos no obvios encontrados
+- `summary` — qué se implementó en 2-3 líneas
+
+**Solo escribir digest si hay al menos una decisión arquitectónica real.** No crear digests vacíos por cumplir. Un fix de typo no merece digest.
 
 ## Modo: Reporte de documentación
 

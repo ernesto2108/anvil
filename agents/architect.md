@@ -370,14 +370,13 @@ Generar SOLO las vistas relevantes a la tarea. Cargar la skill `architecture-vie
 
 | Alcance de la tarea | Vistas a generar |
 |---|---|
-| Small / single-stack / sin contratos | Solo `architecture.md` (narrativa) |
-| Medium, single-stack con DB o API | `architecture.md` + vista de dominio relevante |
-| Medium+, cross-stack | Vistas de dominio por concern (`architecture-backend.md`, `architecture-frontend.md`, etc.) + `architecture.md` como suplemento overview + `spec.md` + `adrs/` |
-| Large (8+ pts), multi-servicio | Todas las vistas aplicables, specs SDD completos, bridge de contratos + `architecture.md` como overview + `spec.md` + `adrs/` |
+| Small (1-5 pts) / single-stack / sin contratos | Solo `architecture.md` (narrativa) |
+| Medium (5-8 pts), cualquier stack | Vista(s) de dominio separada(s) (ej. `architecture-backend.md`) + `architecture.md` como overview + `spec.md` + `adrs/` si aplica |
+| Large (8+ pts), multi-stack o multi-servicio | Todas las vistas aplicables, specs SDD completos, bridge de contratos + `architecture.md` como overview + `spec.md` + `adrs/` |
 
 **Aclaración sobre `architecture.md`:**
 - **Tareas Small:** `architecture.md` es el ÚNICO output — contiene todo.
-- **Tareas Medium+:** `architecture.md` es un **suplemento overview** (contexto, decisiones, concerns transversales). El detalle vive en las vistas de dominio. Un solo `architecture.md` NO es válido para tareas Medium+ cross-stack — el orquestador lo rebota.
+- **Tareas Medium+:** `architecture.md` es un **suplemento overview** (contexto, decisiones, concerns transversales). El detalle vive en las vistas de dominio separadas. Un solo `architecture.md` NO es válido para tareas Medium+ — el orquestador lo rebota sin importar si es single-stack o cross-stack.
 
 ### Vistas de dominio — generadas cuando aplican
 

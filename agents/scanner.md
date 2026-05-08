@@ -28,9 +28,22 @@ Usa Glob, Read y Grep para explorar la estructura del proyecto. Escribe los hall
 5. Resume los hallazgos para el usuario
 6. Detente
 
+## Modo: Bootstrap de Context Navigator
+
+Cuando `.context/NAVIGATOR.md` no existe en el proyecto, o cuando se invoca con `mode: deep`:
+
+1. Ejecutar el escaneo estándar (Pasos 1-4 de scan-project)
+2. Cargar `skills/context-nav/bootstrap.md`
+3. Ejecutar inferencia de patrones, contratos, bounded contexts y SOLID según bootstrap.md
+4. Escribir todos los archivos en `.context/` usando los templates de `skills/context-nav/templates/`
+5. Marcar `coverage: bootstrap` en `.context/NAVIGATOR.md`
+6. Informar al usuario: cuántos patrones, contratos y dominios se detectaron
+
+El scanner es el único agente que hace bootstrap inicial. El reporter actualiza `.context/` incrementalmente después de cada implementación.
+
 ## Modo: Escaneo profundo
 
-Cuando se invoca con `mode: deep`, carga la guía de escaneo profundo desde `/scan-project` (`guides/deep-scan.md`). Define:
+Cuando se invoca con `mode: deep`, además del bootstrap de Context Navigator, carga la guía de escaneo profundo desde `/scan-project` (`guides/deep-scan.md`). Define:
 - Detección específica por stack y recetas
 - Salida segmentada en tres archivos (context-summary, context-endpoints, context-risks)
 - Presupuestos de líneas por archivo
