@@ -2,6 +2,9 @@ BINARY_NAME := anvil
 BUILD_DIR := .
 GO_CMD := go
 
+# 'make' with no args installs directly to INSTALL_DIR with all required build tags.
+.DEFAULT_GOAL := install
+
 # INSTALL_DIR must match the path used by Claude Code hooks in
 # ~/.claude/settings.json (default: $HOME/bin/anvil emit). Installing anywhere
 # else means the hooks will run a stale binary even after a fresh build.
@@ -11,6 +14,7 @@ INSTALL_DIR ?= $(HOME)/bin
 
 build:
 	$(GO_CMD) build -tags fts5 -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/anvil/
+	@echo "⚠️  Use 'make install' to deploy to $(INSTALL_DIR)/$(BINARY_NAME)"
 
 install:
 	@mkdir -p $(INSTALL_DIR)
