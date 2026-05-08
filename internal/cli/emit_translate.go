@@ -16,6 +16,7 @@ import (
 	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 	"github.com/ernesto2108/anvil/internal/memory/capture"
+	claudecli "github.com/ernesto2108/anvil/internal/memory/claude"
 	"github.com/ernesto2108/anvil/internal/memory/haiku"
 	"github.com/ernesto2108/anvil/internal/memory/transcript"
 )
@@ -571,7 +572,9 @@ func captureTranscriptForSession(sessionID, runID string, w *writer.EventWriter)
 	}
 
 	var summarizer capture.TranscriptSummarizer
-	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
+	if claudeAvailable() {
+		summarizer = claudecli.New()
+	} else if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
 		summarizer = haiku.NewClient(apiKey, "")
 	}
 

@@ -18,6 +18,7 @@ import (
 	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 	"github.com/ernesto2108/anvil/internal/memory"
+	claudecli "github.com/ernesto2108/anvil/internal/memory/claude"
 	"github.com/ernesto2108/anvil/internal/memory/haiku"
 	"github.com/ernesto2108/anvil/internal/memory/ollama"
 	"github.com/ernesto2108/anvil/internal/orchestrator"
@@ -364,10 +365,13 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 }
 
 // pickSummarizer selects the summarizer used for digest generation.
-// Haiku (remote) is preferred if ANTHROPIC_API_KEY is set; otherwise Ollama
-// (local) is used if healthy. Returns (nil, "", false) when neither is
-// available.
+// Claude CLI is preferred (no API key needed); falls back to Haiku if
+// ANTHROPIC_API_KEY is set, then Ollama if healthy.
 func pickSummarizer(ctx context.Context) (memory.Summarizer, string, bool) {
+	if claudeAvailable() {
+		client := claudecli.New()
+		return client, client.Model(), true
+	}
 	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
 		client := haiku.NewClient(apiKey, "")
 		return client, client.Model(), true
@@ -377,6 +381,12 @@ func pickSummarizer(ctx context.Context) (memory.Summarizer, string, bool) {
 		return nil, "", false
 	}
 	return s, s.Model(), true
+}
+
+// claudeAvailable reports whether the claude CLI is on PATH.
+func claudeAvailable() bool {
+	_, err := exec.LookPath("claude")
+	return err == nil
 }
 
 // summarizeAndUpsert summarizes the current agent outputs for runID and
