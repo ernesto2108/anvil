@@ -8,8 +8,6 @@
 --
 -- Execution order: run BEFORE deploying code that writes source='direct'.
 
-BEGIN;
-
 CREATE TABLE digests_new (
     id          TEXT PRIMARY KEY,
     run_id      TEXT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
@@ -52,5 +50,3 @@ END;
 CREATE TRIGGER IF NOT EXISTS fts_digests_ad AFTER DELETE ON digests BEGIN
     DELETE FROM fts_digests WHERE digest_id = old.id;
 END;
-
-COMMIT;

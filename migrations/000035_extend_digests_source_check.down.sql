@@ -5,8 +5,6 @@
 -- with RAISE(ABORT). No rows are deleted or modified — the caller must remove
 -- or reclassify those rows before running the rollback.
 
-BEGIN;
-
 -- Hard guard: abort if 'direct' rows exist to prevent data loss / silent
 -- constraint violations after the table is recreated without that value.
 SELECT RAISE(ABORT, 'Cannot roll back 000035: rows with source=''direct'' exist. Remove or reclassify them first.')
@@ -54,5 +52,3 @@ END;
 CREATE TRIGGER IF NOT EXISTS fts_digests_ad AFTER DELETE ON digests BEGIN
     DELETE FROM fts_digests WHERE digest_id = old.id;
 END;
-
-COMMIT;
