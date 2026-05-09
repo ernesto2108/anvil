@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+
 	"github.com/ernesto2108/anvil/internal/dashboard/writer"
 	"github.com/ernesto2108/anvil/internal/instrumentation"
 	"github.com/ernesto2108/anvil/internal/memory"
@@ -46,11 +47,14 @@ type runFlags struct {
 	concurrency  int
 	autoApprove  bool
 	forceMigrate bool
+	maxRetries   int
+	maxCost      float64
 }
 
-// parseRunFlags extracts --task, --model, --concurrency, -y, --force-migrate from args.
+// parseRunFlags extracts --task, --model, --concurrency, -y, --force-migrate,
+// --max-retries, --max-cost from args.
 func parseRunFlags(args []string) (runFlags, []string) {
-	f := runFlags{concurrency: 4}
+	f := runFlags{concurrency: 4, maxRetries: 2, maxCost: 0.50}
 	var rest []string
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
@@ -68,6 +72,16 @@ func parseRunFlags(args []string) (runFlags, []string) {
 			if i+1 < len(args) {
 				i++
 				fmt.Sscanf(args[i], "%d", &f.concurrency) //nolint:errcheck
+			}
+		case "--max-retries":
+			if i+1 < len(args) {
+				i++
+				fmt.Sscanf(args[i], "%d", &f.maxRetries) //nolint:errcheck
+			}
+		case "--max-cost":
+			if i+1 < len(args) {
+				i++
+				fmt.Sscanf(args[i], "%f", &f.maxCost) //nolint:errcheck
 			}
 		case "--auto-approve", "-y":
 			f.autoApprove = true
@@ -172,8 +186,12 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 		output.Warn("set busy_timeout: %s", err)
 	}
 
-	// 5. Emit run.start event so the dashboard picks it up.
+	// 4b. Persist run plan with budget params.
 	workDir, _ := os.Getwd()
+	project := filepath.Base(workDir)
+	persistRunPlan(context.Background(), s.DB(), runID, project, flags)
+
+	// 5. Emit run.start event so the dashboard picks it up.
 	agentIDs := make([]string, len(nodes))
 	for i, n := range nodes {
 		agentIDs[i] = n.ID
@@ -185,7 +203,7 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 			AgentsPlanned:   agentIDs,
 			Provider:        cfg.ActiveProvider(),
 			TriggeredBy:     "anvil-run",
-			Project:         filepath.Base(workDir),
+			Project:         project,
 		},
 	); err == nil {
 		if writeErr := s.WriteEvent(ev); writeErr != nil {
@@ -194,7 +212,6 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 	}
 
 	// 6. Ensure Ollama is running (auto-start if needed, models unload after 5m idle).
-	project := filepath.Base(workDir)
 	if err := ollama.EnsureRunning(context.Background(), "5m"); err != nil {
 		output.Warn("ollama: %s (memory features disabled)", err)
 	}
@@ -331,6 +348,9 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 		}
 	}
 
+	// 10b. Budget check: estimate cost from total_tokens and mark degraded if exceeded.
+	checkBudget(context.Background(), s.DB(), runID, flags.maxCost)
+
 	// 11. Post-run digest generation.
 	if state.FinalStatus == "success" || state.FinalStatus == "partial" {
 		generateDigest(ctx, s.DB(), ollamaClient, runID, project, flags.autoApprove)
@@ -361,6 +381,64 @@ func executeRun(cfg *config.App, nodes []orchestrator.Node, flags runFlags) {
 
 	if state.FinalStatus != "success" {
 		os.Exit(1)
+	}
+}
+
+// persistRunPlan writes a run_plans row and a seed plan.md to .context/runs/<run-id>/.
+// Both writes are best-effort; failures are logged as warnings, not fatal.
+func persistRunPlan(ctx context.Context, db *sql.DB, runID, project string, flags runFlags) {
+	now := time.Now().UTC().Format(time.RFC3339)
+	planID := "rp_" + runID
+	content := fmt.Sprintf("# Plan — %s\n\nlast_updated: %s\nbudget: { max_retries: %d, max_cost: $%.2f }\n\n## Objetivo\n(set by Leader Agent)\n\n## Pasos\n\n## Asunciones\n\n## Memoria consultada\n\n## Errores acumulados\n",
+		runID, now, flags.maxRetries, flags.maxCost)
+
+	_, err := db.ExecContext(ctx,
+		`INSERT OR IGNORE INTO run_plans (id, run_id, project, max_retries, max_cost_usd, content, created_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		planID, runID, project, flags.maxRetries, flags.maxCost, content, now)
+	if err != nil {
+		output.Warn("persist run plan: %s", err)
+	}
+
+	// Write plan.md to .context/runs/<run-id>/ for retry access.
+	cwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	planDir := filepath.Join(cwd, ".context", "runs", runID)
+	if mkErr := os.MkdirAll(planDir, 0o755); mkErr != nil {
+		output.Warn("create plan dir: %s", mkErr)
+		return
+	}
+	planPath := filepath.Join(planDir, "plan.md")
+	// Only write if not already present (Leader Agent may have written it first).
+	if _, statErr := os.Stat(planPath); os.IsNotExist(statErr) {
+		if writeErr := os.WriteFile(planPath, []byte(content), 0o644); writeErr != nil {
+			output.Warn("write plan.md: %s", writeErr)
+		}
+	}
+}
+
+// checkBudget estimates the USD cost from total_tokens and marks the run degraded
+// if it exceeded max_cost. Uses a conservative $3/M token rate (Haiku).
+// No-ops if maxCost <= 0 (unset).
+func checkBudget(ctx context.Context, db *sql.DB, runID string, maxCost float64) {
+	if maxCost <= 0 {
+		return
+	}
+	var totalTokens int64
+	if err := db.QueryRowContext(ctx, `SELECT COALESCE(total_tokens,0) FROM runs WHERE id=?`, runID).
+		Scan(&totalTokens); err != nil {
+		return
+	}
+	const costPerMToken = 3.0 // conservative Haiku rate: $3 per million tokens
+	estimated := float64(totalTokens) * costPerMToken / 1_000_000
+	if estimated > maxCost {
+		if _, err := db.ExecContext(ctx, `UPDATE runs SET degraded=1 WHERE id=?`, runID); err != nil {
+			output.Warn("mark run degraded: %s", err)
+			return
+		}
+		output.Warn("Budget exceeded: estimated $%.4f > limit $%.2f — run marked degraded", estimated, maxCost)
 	}
 }
 

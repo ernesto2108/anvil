@@ -49,7 +49,7 @@ Si se rechaza → el architect reescribe decisiones sin haber gastado tokens en 
 **Fase 2** — después de docs escritos, mostrar secciones del SPEC para aprobación:
 ```
 ✅ Architect terminó — [TASK-ID]
-📄 SPEC: [pegar: Contexto y objetivo, No-objetivos, Criterios de aceptación, Límites de implementación]
+📄 SPEC: [pegar: Contexto y objetivo, No-objetivos, Criterios de aceptación, Testing Strategy, Límites de implementación]
 ¿Apruebas y paso al Developer? (sí / ajusta / hasta aquí)
 ```
 Verificación de arquitectura: al menos una vista de dominio debe existir (cuáles depende del scope de la tarea). Un solo `architecture.md` NO es válido para Medium+.

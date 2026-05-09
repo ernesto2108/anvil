@@ -52,6 +52,8 @@ func (s *Server) buildRegistry() map[string]tool {
 			prop("pipeline", "string", "Pipeline preset name (e.g. bug, feat, quick, epic, db, infra, design)"),
 			prop("task", "string", "Task description to pass to the pipeline"),
 			optProp("stack", "string", "Stack hint (go, react, python, typescript, rust, flutter)"),
+			optProp("max_retries", "number", "Maximum agent retries before aborting (default 2)"),
+			optProp("max_cost", "number", "Maximum USD spend before marking the run degraded (default 0.50)"),
 		),
 		s.runPipeline)
 
@@ -262,6 +264,15 @@ func intArg(args map[string]any, key string, defVal int) int {
 			if n > 0 {
 				return n
 			}
+		}
+	}
+	return defVal
+}
+
+func floatArg(args map[string]any, key string, defVal float64) float64 {
+	if v, ok := args[key]; ok {
+		if n, ok := v.(float64); ok && n > 0 {
+			return n
 		}
 	}
 	return defVal

@@ -35,6 +35,14 @@
       "author": "ernesto2108"
     },
     {
+      "name": "leader",
+      "type": "agent",
+      "description": "Use this agent to coordinate auto-orchestrated runs — invokes pm, architect, developer, tester and reporter without intermediate human gates, manages budget (max_retries, max_cost), persists run plan in .context/runs/<run-id>/plan.md, and applies retry with error-signature + WebSearch after 2 failures. Replaces the orchestrate skill when the project's local CLAUDE.md is loaded. The ONLY agent allowed to invoke other agents.",
+      "version": "1.0.0",
+      "url": "https://raw.githubusercontent.com/ernesto2108/anvil/main/agents/leader.md",
+      "author": "ernesto2108"
+    },
+    {
       "name": "devops",
       "type": "agent",
       "description": "Use this agent to manage CI/CD pipelines, Docker, Kubernetes, Terraform, and infrastructure as code. The ONLY agent allowed to touch .github/workflows, Dockerfiles, and infrastructure configs.",
