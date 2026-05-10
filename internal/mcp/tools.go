@@ -169,6 +169,14 @@ func (s *Server) buildRegistry() map[string]tool {
 		),
 		s.loadOrchestration)
 
+	add("save_leader_log",
+		"Upsert the Leader's plan/progress log into run_plans.content for the given run. Call at the start of a run with the initial plan, and again whenever the plan is updated (after each sub-agent step, gate decision, or self-critique). Idempotent: safe to call multiple times; the latest content always replaces the previous one.",
+		schema(
+			prop("run_id", "string", "Run ID from start_orchestration (or an existing run_id)"),
+			prop("content", "string", "Full markdown content of the plan/progress log to persist"),
+		),
+		s.saveLeaderLog)
+
 	// ── Utilities ─────────────────────────────────────────────────────────────
 
 	add("switch_provider",

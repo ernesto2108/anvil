@@ -167,7 +167,7 @@ func (s *Server) getRunStatus(_ context.Context, args map[string]any) (string, e
 	if err != nil {
 		return "", fmt.Errorf("query agents: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var agents []agentRow
 	for rows.Next() {
@@ -217,7 +217,7 @@ func (s *Server) listRuns(_ context.Context, args map[string]any) (string, error
 	if err != nil {
 		return "", fmt.Errorf("query runs: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	type runSummary struct {
 		ID           string `json:"id"`
