@@ -161,8 +161,8 @@ func TestNewRunID_DateIsUTC(t *testing.T) {
 	if len(parts) < 2 {
 		t.Fatalf("unexpected run ID format: %s", id)
 	}
-	datePart := parts[1]                                       // YYYYMMDD
-	timePart := parts[2]                                       // HHmmss
+	datePart := parts[1] // YYYYMMDD
+	timePart := parts[2] // HHmmss
 	embedded, parseErr := time.ParseInLocation("20060102_150405",
 		datePart+"_"+timePart, time.UTC)
 	if parseErr != nil {
@@ -612,7 +612,7 @@ func TestEventEmitter_ConcurrentEmitters(t *testing.T) {
 	wg.Add(goroutines)
 
 	for g := 0; g < goroutines; g++ {
-		g := g
+
 		go func() {
 			defer wg.Done()
 			for i := 0; i < eventsPerGoroutine; i++ {
