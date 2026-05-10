@@ -1,7 +1,7 @@
 # Context Navigator — Anvil
 
 last_full_scan: 2026-05-08
-last_updated: 2026-05-08T14:35
+last_updated: 2026-05-10T13:15
 coverage: bootstrap
 
 ## Índice
@@ -24,7 +24,7 @@ coverage: bootstrap
 
 ### Decisiones arquitectónicas
 
-<!-- No hay evidencia explícita de decisiones con handoff/SPEC — se llenan on-demand -->
+- [001 — Reglas inviolables del Líder: delegación de specs de agentes y aislamiento de sub-agentes](decisions/001-leader-rules-agent-isolation.md)
 
 ## Notas para agentes
 

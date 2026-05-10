@@ -19,15 +19,15 @@ Hay dos modos de obtener el changeset:
 
 **Modo local (default):**
 - Ejecutar `git diff` para obtener el changeset (staged, unstaged, o rama vs main)
-- Si el usuario especifica una rama, hacer diff contra `main` o `master`
+- Si el invocador especifica una rama, hacer diff contra `main` o `master`
 - Si no se especifica rama, usar los cambios del working tree actual
 
-**Modo PR (cuando el usuario pasa un PR number):**
+**Modo PR (cuando el Líder pasa un PR number):**
 - Ejecutar `gh pr diff {PR_NUMBER}` para obtener el diff de GitHub
 - Ejecutar `gh pr view {PR_NUMBER} --json title,body,headRefName,baseRefName,files` para obtener metadata del PR
 - Usar el nombre de la rama head del PR como rama en el encabezado del reporte
-- Si `gh` no está disponible o falla la auth, informar al usuario y sugerir: `! gh auth login`
-- El PR no necesita pertenecer al repo actual — si el usuario pasa `owner/repo#123`, usar `gh pr diff 123 -R owner/repo`
+- Si `gh` no está disponible o falla la auth, informar al Líder y sugerir que el usuario corra: `! gh auth login`
+- El PR no necesita pertenecer al repo actual — si el Líder pasa `owner/repo#123`, usar `gh pr diff 123 -R owner/repo`
 
 ### 2. Verificación de Lint
 

@@ -19,13 +19,13 @@ Usa Glob, Read y Grep para explorar la estructura del proyecto. Escribe los hall
 
 ## Flujo de trabajo
 
-1. Si el objetivo/visión falta o está desactualizado, pregunta al usuario primero:
+1. Si el objetivo/visión falta o está desactualizado, escala al Líder pidiendo:
    - "¿Cuál es el objetivo del proyecto?"
    - "¿Qué restricciones no negociables debemos respetar?"
 2. Carga el skill `/scan-project` — define la detección de stack, qué recopilar y el formato de salida
 3. Escanea el codebase siguiendo las instrucciones del skill
-4. Escribe los hallazgos en `{context_path}` (el orquestador provee esta ruta; si falta → DETENTE y pregunta)
-5. Resume los hallazgos para el usuario
+4. Escribe los hallazgos en `{context_path}` (el orquestador provee esta ruta; si falta → DETENTE y pídela al Líder)
+5. Devuelve los hallazgos al Líder
 6. Detente
 
 ## Modo: Bootstrap de Context Navigator

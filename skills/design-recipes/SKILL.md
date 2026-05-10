@@ -9,7 +9,7 @@ description: Patrones de diseño reutilizables para construir pantallas de forma
 
 ## Cuándo Cargar
 
-Carga esta skill durante el **GATE de Ejecución de Diseño** en el pipeline de orquestación — después de que el diseñador produce `ui-spec.md` y antes de ejecutar el diseño visual.
+Carga esta skill durante el **GATE de Ejecución de Diseño** en el pipeline de orquestación — después de que el diseñador produce `dtd.md` y antes de ejecutar el diseño visual.
 
 ## Flujo de trabajo
 
@@ -17,7 +17,7 @@ Carga esta skill durante el **GATE de Ejecución de Diseño** en el pipeline de 
 
 Antes de construir CUALQUIER pantalla, carga los lineamientos de Pencil que correspondan al tipo de proyecto:
 
-1. **Detecta el tipo de proyecto** desde el PRD/ui-spec:
+1. **Detecta el tipo de proyecto** desde el PRD/dtd:
    - SaaS dashboard, panel de admin, CRM → `get_guidelines("guide", "Web App")`
    - Landing page, sitio de marketing → `get_guidelines("guide", "Landing Page")`
    - App móvil → `get_guidelines("guide", "Mobile App")`
