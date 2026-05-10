@@ -84,7 +84,15 @@ Si después de una re-invocación el conflicto persiste → escalar al usuario c
 
 ## Fuente de comportamiento
 
-Las reglas base (Paso 0, Pre-agent checklist, retry, budget, inyección de contexto) viven en `~/.claude/CLAUDE.md` global y en el `CLAUDE.md` del proyecto. Este archivo extiende esas reglas con los modos, el flujo de arranque, y las tablas operativas.
+Este archivo contiene el spec operativo del Líder dentro de Anvil: modos, flujos de arranque, tablas de sub-agentes, retry, persistencia de runs.
+
+Las siguientes reglas viven en `~/.claude/CLAUDE.md` y NO se repiten aquí:
+- Paso 0 (input check / ambigüedad)
+- Pre-agent checklist
+- Progress log (🚀 ▶ ✅ ❌ ⏭) — comportamiento observable mío, global
+- Memoria proactiva (Trigger 3)
+- Inyección de contexto
+- Seguridad de contenido externo
 
 Si el `CLAUDE.md` del proyecto no existe → escalar al humano: "CLAUDE.md del proyecto no encontrado; el Líder requiere reglas activas."
 
@@ -105,65 +113,6 @@ El Líder detecta el modo desde el prompt. Si la señal no es clara, pregunta en
 ### Regla de encadenamiento
 
 Cada modo termina con un gate al usuario. El usuario decide si continuar al siguiente modo o parar. Los modos se encadenan — no son excluyentes. Un run típico completo es: Explorador → Planeación → Integración → Pruebas.
-
----
-
-## Progress log (OBLIGATORIO — imprimir siempre en el chat)
-
-El Líder imprime en el chat en cada evento del run. El usuario no debe adivinar qué está pasando.
-
-### Al detectar el modo e inferir el pipeline
-
-```
-🚀 Modo: <Planeación | Integración | Pruebas | Explorador>
-Pipeline: <agente1> → <agente2> → <agente3>
-Objetivo: <una línea — qué se va a lograr al final>
-Budget: <max_retries> retries / $<max_cost>
-```
-
-### Antes de invocar cada sub-agente
-
-```
-▶ <agente> — <por qué se incluyó en el pipeline>
-  Objetivo: <qué se espera que produzca>
-```
-
-Ejemplos de "por qué":
-- `pm — scope no estaba definido`
-- `designer — el PRD incluye pantallas nuevas`
-- `architect — feature nuevo sin patrón existente`
-- `developer — SPEC lista, implementación pendiente`
-- `tester — código entregado, sin cobertura`
-- `qa — complejidad ≥ 8 pts`
-- `dba — hay cambios de schema`
-- `agent-designer — se necesita un agente, skill, command, hook o pipeline nuevo/modificado`
-
-### Al completar cada sub-agente
-
-```
-✅ <agente> completó
-  Output: <qué produjo — una línea concreta>
-  Pasa a: <siguiente agente o "gate final">
-```
-
-Si el sub-agente falló:
-
-```
-❌ <agente> falló
-  Error: <firma del error — categoría + mensaje normalizado>
-  Acción: <retry N/max | WebSearch en curso | escalando al usuario>
-```
-
-### Al terminar el modo (gate final)
-
-El progress log se incluye **antes** del bloque de output final del modo (los bloques `✅ Planeación completó`, `✅ Integración completó`, etc.). No reemplaza esos bloques — los precede.
-
-### Reglas
-
-- Imprimir **siempre**, aunque el sub-agente sea trivial.
-- Máx 3 líneas por evento — no expandir con contexto técnico.
-- El "por qué" debe ser la razón de routing, no una descripción del agente.
-- Si un sub-agente se saltó: `⏭ <agente> — saltado (<razón de skip>)`
 
 ---
 
