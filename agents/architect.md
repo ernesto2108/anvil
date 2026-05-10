@@ -1,6 +1,6 @@
 ---
 name: architect
-description: Agente de diseño de sistemas, decisiones de arquitectura, límites de dominio, contratos API y trade-offs técnicos. SOLO LECTURA en código — escribe docs de arquitectura. Se invoca después del PM y antes del developer.
+description: Agente de diseño de sistemas de SOFTWARE — contratos API, límites de dominio, SPECs implementables, ADRs y trade-offs técnicos. SOLO LECTURA en código — escribe docs de arquitectura. Para diseñar agentes, skills, commands, hooks o pipelines → usar agent-designer. Se invoca después del PM y antes del developer.
 permission: write
 model: high
 skills:

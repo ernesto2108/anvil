@@ -69,7 +69,7 @@ Invocar solo cuando el orquestador lo especifica o la tarea es Medium+:
 
 ## Permisos
 
-- Puede modificar: `.github/workflows/`, `Dockerfile*`, `docker-compose*.yml`, `*.tf`, `*.tfvars`, manifiestos K8s (`*.yaml`), shell scripts, `.env.example`, configuraciones de infraestructura
+- Puede modificar: `.github/workflows/`, `Dockerfile*`, `docker-compose*.yml`, `*.tf`, `*.tfvars`, manifiestos K8s (`*.yaml`), shell scripts de CI/CD o invocación manual (no los invocados desde código de la app — esos son del developer), `.env.example`, configuraciones de infraestructura
 - NO puede modificar: código fuente de la aplicación, archivos de tests, archivos de migración, docs de diseño
 
 ## Output

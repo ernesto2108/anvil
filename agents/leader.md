@@ -136,6 +136,7 @@ Ejemplos de "por qué":
 - `tester — código entregado, sin cobertura`
 - `qa — complejidad ≥ 8 pts`
 - `dba — hay cambios de schema`
+- `agent-designer — se necesita un agente, skill, command, hook o pipeline nuevo/modificado`
 
 ### Al completar cada sub-agente
 
@@ -472,6 +473,7 @@ Mostrar el pipeline inferido al usuario antes de arrancar: "Voy a ejecutar [modo
 | `qa` | Pruebas | SPEC inline, handoff, git diff | Score y hallazgos |
 | `security` | Pruebas | git diff, dependency paths | Hallazgos con severidad |
 | `dba` | Planeación | architecture-db.md inline, task_path | Schema, migraciones |
+| `agent-designer` | Planeación | Objetivo, artefacto target, nombre, contexto de necesidad, agentes relacionados | agents/*.md, skills/*/SKILL.md, commands/*.md, pipelines/*.yaml actualizados |
 | `reporter` | Cualquiera (si usuario pide) | Lista de TASK-IDs, handoffs | last-run.md |
 
 **Agentes fuera de scope actual** (escalar al humano si la tarea los requiere): `devops`, `mkt-content`, `tech-writer`.
@@ -567,6 +569,7 @@ El Pre-agent checklist del global aplica siempre. Adicionalmente:
 | `reviewer` | `git diff` inline (o PR number si hay PR en GitHub) |
 | `qa` | SPEC inline, `.handoff/<TASK-ID>.md` path, git diff inline, reporte del reviewer inline (si corrió) |
 | `dba` | `architecture-db.md` inline, `task_path` |
+| `agent-designer` | `objetivo` (una línea), `artefacto` (`agent`/`skill`/`command`/`hook`/`pipeline`), `nombre` propuesto, `contexto` de por qué se necesita, `agentes_relacionados` (si aplica) |
 
 ---
 
@@ -668,6 +671,7 @@ Después de cada sub-agente: llamar `mcp__anvil__save_step` con el output y deci
 | `designer` | Sin cambios de UI |
 | `architect` | Patrón existente, solo extender sin nuevas decisiones de diseño |
 | `dba` | Sin cambios de schema o queries |
+| `agent-designer` | La tarea no toca agents/, skills/, commands/, pipelines/ ni hooks |
 | `qa` | Medium (3-5 pts) + sin auth/DB/pagos/APIs públicas + usuario no lo pidió |
 | `reporter` | **Saltar por defecto** — ejecutar solo si: cross-service, incidente, release, o usuario pide explícito |
 | `tester` | Sin código testeable (solo docs, solo config) |
@@ -685,4 +689,4 @@ Después de cada sub-agente: llamar `mcp__anvil__save_step` con el output y deci
 - Saltar el handoff del developer al pasar al tester — el handoff es el contrato.
 - Pedir aprobación entre sub-agentes dentro de un modo — el gate es solo al final del modo.
 - Re-leer archivos de código fuente solo para relayearlos — pasas el path si no tienes el contenido, inline si ya lo tienes.
-- Activarte si el usuario dijo "hazlo directo" o "sin Líder" — en ese caso suspende todo y delega al flow normal.
+- Pedir aprobación entre sub-agentes dentro de un modo — el gate es solo al final del modo.
