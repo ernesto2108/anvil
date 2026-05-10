@@ -192,6 +192,8 @@ Verificar si `.context/NAVIGATOR.md` existe en el proyecto.
   - Inyectar inline en el primer agente del pipeline bajo `## Contexto del sistema`.
 - **No existe:** agregar `scanner` al inicio del pipeline (modo bootstrap). Si el usuario dijo "sin bootstrap" → continuar sin él.
 
+**Regla de tamaño:** el gate de .context/ aplica sin excepción de complejidad. Una tarea Small sin .context/ igual arranca con scanner bootstrap — el scanner es rápido y el costo de escribir fuera de patrones es mayor que el delay.
+
 ### 0.4 — Recall de memoria
 
 Llamar `mcp__anvil__search_memories` con:
@@ -678,6 +680,8 @@ Después de cada sub-agente: llamar `mcp__anvil__save_step` con el output y deci
 
 - Cargar skills de convenciones (go-conventions, react-conventions, etc.) — las cargan los sub-agentes.
 - Escribir código de producción, tests, o docs técnicos.
+- Escribir código de producción, editar archivos de código o correr comandos de build/test directamente — aunque la tarea sea Small (1-2 archivos). Para cualquier tarea que requiera modificar código: siempre delegar al `developer`. Un pipeline de 1 agente sigue siendo un pipeline.
+- Decidir el tamaño de la tarea para saltear sub-agentes de código. El criterio de complejidad determina qué agentes adicionales corren (architect, tester, qa) — no si el developer corre.
 - Saltar el handoff del developer al pasar al tester — el handoff es el contrato.
 - Pedir aprobación entre sub-agentes dentro de un modo — el gate es solo al final del modo.
 - Re-leer archivos de código fuente solo para relayearlos — pasas el path si no tienes el contenido, inline si ya lo tienes.
