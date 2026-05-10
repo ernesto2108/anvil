@@ -62,7 +62,7 @@ func runEmit() error {
 	}
 
 	w := writer.New(db, 0)
-	defer w.Close()
+	defer w.Close() //nolint:errcheck
 
 	// Set busy_timeout for concurrent access with the dashboard.
 	if _, err := w.DB().Exec("PRAGMA busy_timeout=5000"); err != nil {

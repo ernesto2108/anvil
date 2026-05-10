@@ -40,7 +40,7 @@ func openDashboardDB(dbPath string, forceMigrate bool) (*sql.DB, error) {
 		candidate := filepath.Join(dir, "migrations")
 		if isDirExists(candidate) {
 			if err := storage.RunMigrations(db, candidate); err != nil {
-				db.Close()
+				_ = db.Close()
 				return nil, err
 			}
 			return db, nil
@@ -53,7 +53,7 @@ func openDashboardDB(dbPath string, forceMigrate bool) (*sql.DB, error) {
 			candidate := filepath.Join(filepath.Dir(real), "..", "migrations")
 			if isDirExists(candidate) {
 				if err := storage.RunMigrations(db, candidate); err != nil {
-					db.Close()
+					_ = db.Close()
 					return nil, err
 				}
 				return db, nil
@@ -64,11 +64,11 @@ func openDashboardDB(dbPath string, forceMigrate bool) (*sql.DB, error) {
 	// 3. Fallback: embedded migrations (binary is self-contained)
 	subFS, err := fs.Sub(anvilroot.MigrationsFS, "migrations")
 	if err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("sub-filesystem de migraciones: %w", err)
 	}
 	if err := storage.RunMigrationsFS(db, subFS); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, err
 	}
 	return db, nil

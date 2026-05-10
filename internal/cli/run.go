@@ -628,7 +628,7 @@ func loadAgentOutputs(ctx context.Context, db *sql.DB, runID string) ([]memory.A
 	if err != nil {
 		return nil, fmt.Errorf("query agent outputs: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var results []memory.AgentOutput
 	for rows.Next() {
@@ -672,10 +672,10 @@ func showDigestApproval(draft memory.DigestDraft) string {
 	line, _ := reader.ReadString('\n')
 	line = strings.ToLower(strings.TrimSpace(line))
 
-	switch {
-	case line == "n" || line == "no":
+	switch line {
+	case "n", "no":
 		return "no"
-	case line == "e" || line == "editar" || line == "edit":
+	case "e", "editar", "edit":
 		return "edit"
 	default:
 		return "yes"
@@ -694,13 +694,13 @@ func editDigestSummary(summary string) string {
 		output.Warn("create temp file: %s", err)
 		return summary
 	}
-	defer os.Remove(tmpFile.Name())
+	defer os.Remove(tmpFile.Name()) //nolint:errcheck
 
 	if _, err := tmpFile.WriteString(summary); err != nil {
 		output.Warn("write temp file: %s", err)
 		return summary
 	}
-	tmpFile.Close()
+	tmpFile.Close() //nolint:errcheck
 
 	cmd := exec.Command(editor, tmpFile.Name())
 	cmd.Stdin = os.Stdin

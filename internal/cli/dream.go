@@ -37,6 +37,8 @@ func cmdDream(cfg *config.App, args []string) {
 	workDir, _ := os.Getwd()
 	project := filepath.Base(workDir)
 
+	output.Info("Dreaming: starting for project %q (last %d days, max %d retries).", project, days, maxRetries)
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		output.Error("resolve home dir: %s", err)
