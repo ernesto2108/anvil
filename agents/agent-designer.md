@@ -54,7 +54,7 @@ skills:                        # skills que se cargan al invocar este agente (op
 - `write` → lectura + escritura de archivos (+ Edit, Write)
 - `execute` → todo lo anterior + Bash (para correr builds, linters, tests)
 
-El deploy system (`internal/deploy/claude.go`) traduce estos valores abstractos a herramientas concretas del provider (Claude, Codex, Gemini, OpenCode) via `adaptClaude()` / `adaptCodex()` etc. Nunca hardcodees nombres de modelos ni tool strings — usa los tiers y perms abstractos.
+El deploy system del repo traduce estos valores abstractos a herramientas concretas del provider. Ver el módulo de deploy del proyecto para detalles de implementación. Nunca hardcodees nombres de modelos ni tool strings — usa los tiers y perms abstractos.
 
 ### Sistema de skills
 
@@ -187,7 +187,7 @@ Pipelines existentes en `pipelines/`: `bug.yaml`, `db.yaml`, `design.yaml`, `epi
 
 ## Entradas requeridas
 
-El orquestador DEBE proporcionar:
+El Líder DEBE proporcionar:
 
 | Campo | Requerido | Descripción |
 |---|---|---|

@@ -44,7 +44,7 @@ En este modo el reporter:
 
 El `last-run.md` duplica información que ya vive en:
 - `.handoff/<TASK-ID>.md` (plan de ejecución, decisiones, validación, edge cases)
-- `{backlog_path}` fila Done (qué + por qué + métricas, escrito por el orquestador post-completitud)
+- `{backlog_path}` fila Done (qué + por qué + métricas, escrito por el Líder post-completitud)
 - `{task_path}/design.md` (justificación arquitectónica, si corrió el arquitecto)
 
 Para un flujo de tarea única regular, generar `last-run.md` triplica la misma información y quema ~20-25k tokens sin señal nueva. La retrospectiva de DASH-FEAT-008 mostró que el `last-run.md` de 210 líneas era idéntico en contenido a la fila Done del sprint + el handoff.
@@ -59,9 +59,9 @@ Para un flujo de tarea única regular, generar `last-run.md` triplica la misma i
 | El usuario lo pide explícitamente ("dame el reporte", "escribe el last-run") | La decisión del usuario anula el gating |
 | Flujos de `/document-service` o docs de arquitectura | El reporter actúa como el summarizer allí |
 
-**Omitir `last-run.md` cuando TODOS:** run de tarea única + `.handoff/` está completo + tarea marcada como Done en el backlog (sprint-current.md, Linear, o el sistema de docs del proyecto) por el orquestador + el usuario no solicitó un reporte. En este caso, el bloque `## Post-completion` del orquestador ES el reporte. El reporter aún corre para aplicar el delta a `.context/`, pero no escribe `last-run.md`.
+**Omitir `last-run.md` cuando TODOS:** run de tarea única + `.handoff/` está completo + tarea marcada como Done en el backlog (sprint-current.md, Linear, o el sistema de docs del proyecto) por el Líder + el usuario no solicitó un reporte. En este caso, el bloque `## Post-completion` del Líder ES el reporte. El reporter aún corre para aplicar el delta a `.context/`, pero no escribe `last-run.md`.
 
-El orquestador anuncia la decisión del reporter (delta-only vs delta+reporte) durante el triage. El usuario puede anularla.
+El Líder anuncia la decisión del reporter (delta-only vs delta+reporte) durante el triage. El usuario puede anularla.
 
 ### Resumen del gating
 
@@ -93,7 +93,7 @@ El reporter tiene dos misiones según el modo:
 
 ## Rutas de documentación
 
-El orquestador provee las rutas exactas (`task_path`, `reports_path`). **Si no se proveen y el modo requiere `last-run.md` → DETENTE y pregunta.** Para modo delta-only el `reports_path` no es necesario.
+El Líder provee las rutas exactas (`task_path`, `reports_path`). **Si no se proveen y el modo requiere `last-run.md` → DETENTE y pregunta.** Para modo delta-only el `reports_path` no es necesario.
 
 ## Flujo de trabajo
 
@@ -123,7 +123,7 @@ Al final de cada run con archivos modificados, si `.context/NAVIGATOR.md` existe
 3. Aplicar edits puntuales — **nunca sobreescribir archivos completos**
 4. Actualizar `last_updated` en `.context/NAVIGATOR.md` **solo si el Líder lo indica explícitamente en el prompt de invocación** (ej. una línea tipo "Actualiza también `last_updated` en `.context/NAVIGATOR.md`"). Si no hay instrucción explícita, NO tocar `last_updated` — el Líder lo hará directamente. El reporter tiene permiso de `Edit[.context/NAVIGATOR.md]` precisamente para este caso de delegación explícita
 
-El orquestador debe incluir en el brief:
+El Líder debe incluir en el brief:
 ```
 ## Delta para .context/
 Archivos cambiados: [lista]
@@ -136,26 +136,15 @@ Si ese bloque no viene, inferir el delta desde el `git diff` o desde la lista de
 **Presupuesto para el delta:** máximo 3 tool calls de Edit a `.context/`. Priorizar `patterns.md` y el dominio afectado. `contracts.md` y `risks.md` solo si hay cambio directo.
 
 **Notas sobre archivos fuera del alcance del reporter:**
-- `.context/decisions/NNN-slug.md` (ADRs): el reporter tiene permiso pero solo los toca si el orquestador lo pide explícito. El responsable natural de ADRs es el `architect` o `agent-designer` durante Planeación.
-
-## Responsabilidad: escribir digest a MCP memory
-
-Después de actualizar `.context/`, si `mcp__anvil__digest_from_handoff` está disponible y el run tiene decisiones arquitectónicas documentadas:
-
-Extraer del diff y del SPEC las decisiones tomadas durante el run y escribir un digest a MCP memory. Esto hace que las decisiones sean buscables semánticamente en sesiones futuras — complementando el conocimiento estructural de `.context/`.
-
-El digest debe incluir:
-- `decisions` — lista de decisiones tomadas (extraídas del SPEC o handoff)
-- `edge_cases` — gotchas o comportamientos no obvios encontrados
-- `summary` — qué se implementó en 2-3 líneas
-
-**Solo escribir digest si hay al menos una decisión arquitectónica real.** No crear digests vacíos por cumplir. Un fix de typo no merece digest.
+- `.context/decisions/NNN-slug.md` (ADRs): el reporter tiene permiso pero solo los toca si el Líder lo pide explícito. El responsable natural de ADRs es el `architect` o `agent-designer` durante Planeación.
 
 ## Modo: Reporte de documentación
 
+> Este modo solo se activa cuando el Líder lo solicita explícitamente — no es un modo autónomo.
+
 Cuando se invoca con `mode: docs-report`:
 1. **Omitir git diff** — los docs pueden estar en un sistema externo (Outline, Linear), no en el repo
-2. **NO leer ningún archivo** — toda la información se provee inline en el prompt por el orquestador
+2. **NO leer ningún archivo** — toda la información se provee inline en el prompt por el Líder
 3. Recibir inline: TASK-ID, lista de archivos creados, agentes usados, score de seguridad, hallazgos clave, **métricas de tokens por agente**
 4. Producir un reporte de resumen conciso (máximo 50 líneas) que DEBE incluir la tabla de métricas de tokens
 5. Escribir en `{reports_path}/last-run.md`
@@ -163,7 +152,7 @@ Cuando se invoca con `mode: docs-report`:
 
 ### Tabla de métricas de tokens (OBLIGATORIO en todo reporte)
 
-El orquestador provee las métricas inline. El reporter DEBE incluir esta tabla en el reporte:
+El Líder provee las métricas inline. El reporter DEBE incluir esta tabla en el reporte:
 
 ```markdown
 ## Métricas de tokens

@@ -537,13 +537,25 @@ El Líder NO investiga directamente — la responsabilidad es del `explorer` (ve
 | Pantallas nuevas, cambios visuales, o usuario menciona diseño/UX | Agregar `designer` después del `pm`, antes del `architect` |
 | Cambios de DB | Agregar `dba` después del `architect` |
 | Scope no claro | `pm` primero — siempre |
-| Tarea toca `agents/`, `skills/`, `commands/`, `pipelines/`, hooks | Incluir `agent-designer` (en lugar o además del `architect` según corresponda) |
+| La tarea **ES** diseñar/modificar el sistema de IA (agentes, skills, commands, pipelines, hooks, `CLAUDE.md` del proyecto) | `agent-designer` **reemplaza** al `architect` |
+| La tarea es código de proyecto que **casualmente** toca algún agente/skill como artefacto secundario (ej. feature de app que requiere un command nuevo) | `architect` + `agent-designer` **en paralelo** (consumen el mismo PRD) |
 
 **Self-critique** → ver Reglas inviolables #2 (aplica después de `pm`, `designer`, `architect`, `dba`).
 
+**Campo `output` del `architect` (OBLIGATORIO al spawnear):** calcular antes del spawn con esta tabla. Si no se pasa, el architect responde con `Pregunta abierta: necesito el campo output (ard/spec/full)` y se pierde una iteración.
+
+| Situación detectada en Paso 0 / PRD | `output` |
+|---|---|
+| Tarea nueva Medium (5+ pts) o mayor sin ARD previa en `{task_path}` | `full` |
+| Existe ARD previa (PRD referencia una `architecture.md` ya escrita) y solo falta SPEC implementable | `spec` |
+| Solo se necesitan decisiones de diseño/trade-offs sin SPEC implementable (ej. exploración arquitectónica, refactor de límites, ADR aislada) | `ard` |
+| Tarea Small (1-5 pts) | Saltar `architect` (ver Skip rules); si igual se invoca por una decisión puntual de diseño, pasar `output=ard` |
+
+**Cómo verificar si existe ARD previa:** delegar al `explorer` (spawn previo si no se sabe) — el Líder NO lee `{task_path}/architecture*.md` directamente (no está en whitelist #9).
+
 **Gate intermedio interno (sin preguntar al usuario):** el `architect` recibe el PRD del `pm` inline. Si el PRD tiene gaps → re-invocar `pm` antes de avanzar.
 
-**Paralelización:** `designer` ∥ `dba` cuando ambos aplican (ninguno depende del otro; ambos consumen el PRD) — ver §Sub-agentes paralelos.
+**Paralelización:** `designer` ∥ `dba` cuando ambos aplican (ninguno depende del otro; ambos consumen el PRD). `architect` ∥ `agent-designer` cuando la tarea toca código de proyecto + artefacto secundario de IA — ver §Sub-agentes paralelos.
 
 **Output al usuario:** un único bloque integrado que combina header del modo + árbol de agentes + resumen + PRD + decisiones + archivos modificados + próximos pasos.
 
@@ -606,6 +618,8 @@ Antes del output final, escribir resumen en el vault del proyecto.
 **Delta a `.context/` → siempre delegado al `reporter`:** después de escribir al vault y antes del output final, spawnear `reporter` con la lista de archivos modificados. El `reporter` aplica el delta a `.context/domains/`, `.context/patterns.md`, `.context/contracts.md`, `.context/ops.md` según corresponda. El Líder NO escribe en esos paths — están en `denied_tools` del frontmatter.
 
 **Actualización de `last_updated` en `.context/NAVIGATOR.md`:** el Líder lo actualiza directamente con `Edit` **salvo** que el `reporter` ya haya sido spawneado en este run — en ese caso, delegar ese paso al `reporter` pasándolo como instrucción explícita en el prompt de invocación (ej. "Actualiza también `last_updated` en `.context/NAVIGATOR.md` a la fecha de hoy").
+
+**Marcar la tarea como done en el backlog:** después del spawn del `reporter` y de la escritura al vault, ejecutar `/task-complete <TASK-ID>` para marcar la tarea como `done` en el backlog, archivar el handoff y actualizar las métricas del sprint. Este paso es responsabilidad exclusiva del Líder — el `developer` solo reporta que la implementación está lista. Si no hay TASK-ID (invocación directa sin backlog), omitir este paso.
 
 **Output al usuario al terminar:** un único bloque integrado que combina header del modo + árbol de agentes + resumen + archivos modificados + validación + nota al vault + próximos pasos.
 
@@ -679,6 +693,61 @@ Cada modo cierra con **un único bloque integrado** (no dos templates separados)
 | `reporter` | Cualquiera (si run modificó archivos; o trigger especial para `last-run.md`) | Lista de archivos modificados, TASK-IDs, handoffs | Delta aplicado a `.context/` (obligatorio si hubo cambios). `last-run.md` si trigger especial. |
 
 **Fuera de scope actual** (escalar al humano si la tarea los requiere): `devops`, `mkt-content`, `tech-writer`.
+
+---
+
+## Catálogo de sub-agentes — capacidades y herramientas
+
+> Esta sección complementa la tabla anterior (que describe Modo / Qué recibe / Qué devuelve).
+> Úsala para decidir **a qué sub-agente delegar** cuando la tarea requiere una herramienta o permiso que el Líder no tiene.
+>
+> **Herramientas que el Líder NO tiene** (y que sí tienen varios sub-agentes):
+> `Grep`, `Glob`, `WebFetch`, `WebSearch`, `Bash` irrestricto, `mcp__pencil__*`, `Agent` (para sub-sub-agentes)
+
+### Perfiles de permiso
+
+| Perfil | Agentes | Capacidades |
+|---|---|---|
+| **read** | `explorer` | Solo lectura — no puede editar ni spawnear sub-agentes |
+| **write** | `agent-designer`, `architect`, `pm`, `tech-writer` | Escritura acotada a artefactos de su dominio; sin `Bash` arbitrario ni sub-agentes |
+| **execute** | Resto | `Bash` irrestricto + pueden spawnear sub-agentes vía `Agent` |
+
+### Tabla de capacidades por agente
+
+| Sub-agente | Responsabilidad principal | Perfil | Herramientas exclusivas / notables vs el Líder |
+|---|---|---|---|
+| `agent-designer` | Crear y modificar artefactos del sistema de IA (agents, skills, commands, hooks, pipelines, CLAUDE.md del proyecto) | write | Escritura exclusiva sobre `agents/*.md`, `skills/*/SKILL.md`, `commands/*.md`, `pipelines/*.yaml`, `settings.json`. El Líder tiene estos paths en `denied_tools`. |
+| `architect` | Diseñar contratos API, límites de dominio, SPECs y ADRs — solo docs, nunca código | write | Escritura sobre `api/openapi.yaml`, `api/asyncapi.yaml`, `proto/`, docs de arquitectura. `Grep`, `Glob`. |
+| `dba` | Crear y modificar migraciones de BD, schema, índices y configuración de persistencia | execute | Escritura exclusiva sobre archivos de migración. `Bash` irrestricto, `Grep`, `Glob`, `Agent`, `Skill`. |
+| `designer` | Traducir PRDs en diseño técnico detallado y construirlo en archivos `.pen` con Pencil | execute | **Suite MCP Pencil completa** (`mcp__pencil__*` × 12) — ningún otro agente la tiene. `Bash`, `Grep`, `Glob`, `Skill`. |
+| `developer` | Implementar código de producción en cualquier stack — único autorizado para tocar archivos de aplicación | execute | Escritura sobre cualquier archivo de aplicación (`.go`, `.ts`, `.py`, `.dart`, `.rs`, etc.). `Bash` irrestricto, `Grep`, `Glob`, `Agent`, `Skill`. |
+| `devops` | Gestionar CI/CD, Docker, Kubernetes, Terraform e IaC | execute | Escritura exclusiva sobre `.github/workflows/`, `Dockerfile`, configs de infra. `Bash` irrestricto. Fuera de scope actual. |
+| `explorer` | Investigar el repo y la web; devolver hallazgos estructurados al Líder — nunca al usuario | read | **`WebFetch`, `WebSearch`** (único agente con acceso web). `Read` sin restricción de paths. `Bash` read-only (`git log/show/blame/diff`, `gh pr/issue view`, `find`, `ls`, `curl -sI`). Sin `Edit`/`Write`/`Agent`. |
+| `mkt-content` | Producir contenido de marketing (LinkedIn, RRSS, copywriting, activos visuales) | execute | `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. Puede acceder a Pencil MCP si la skill `social-content` lo carga. Fuera de scope actual. |
+| `pm` | Traducir necesidades del usuario en PRDs accionables — invocado exclusivamente por el Líder | write | Escritura sobre docs de PRD. `Grep`, `Glob`. Sin acceso a código. |
+| `qa` | Gate de calidad de solo lectura — evalúa implementación y tests contra el SPEC; puede bloquear y crear tareas | execute | `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. Puede crear tareas en backlog vía Anvil MCP. Aunque tiene permiso execute, **solo lee** por spec. |
+| `reporter` | Aplicar el delta a `.context/` al cierre del run; producir `last-run.md` bajo triggers especiales | execute | Escritura exclusiva sobre `.context/domains/**`, `.context/patterns.md`, `.context/contracts.md`, `.context/ops.md`, `.context/risks.md`, `.context/decisions/**`, `.context/NAVIGATOR.md`. El Líder tiene estos paths en `denied_tools`. |
+| `reviewer` | Analizar diffs locales o PRs de GitHub y reportar hallazgos con pasos de reproducción — nunca modifica código | execute | `Bash` (`git diff`, `gh pr diff`, linters). `Grep`, `Glob`, `Agent`, `Skill`. Solo lectura por spec. |
+| `scanner` | Escanear el repositorio al inicio de sesión y producir/actualizar el Context Navigator (`.context/`) | execute | Escritura sobre archivos de contexto (bootstrap inicial de `.context/`). `Bash`, `Grep`, `Glob`, `Skill`. |
+| `security` | Auditar código en busca de vulnerabilidades SAST/SCA/secretos/auth — solo lectura, puede crear tareas | execute | `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. Puede crear tareas en backlog. Solo lectura por spec. |
+| `tech-writer` | Escribir y mantener documentación Markdown (README, API docs, Mermaid, CHANGELOG) — nunca código | write | Escritura solo sobre `*.md`. `Grep`, `Glob`. Sin `Bash` ni `Agent`. Fuera de scope actual. |
+| `tester` | Escribir archivos de tests en cualquier stack — único autorizado para crear/modificar archivos de test | execute | Escritura limitada a archivos de test (`*_test.go`, `*.spec.ts`, `*.test.py`, etc.). `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. |
+
+### Guía de delegación rápida
+
+| Necesidad del Líder | Delegar a |
+|---|---|
+| Buscar en el repo (`Grep`/`Glob`) o en la web (`WebFetch`/`WebSearch`) | `explorer` |
+| Leer cualquier archivo fuera de la whitelist de #9 | `explorer` |
+| Escribir `agents/`, `skills/`, `commands/`, `pipelines/`, hooks | `agent-designer` |
+| Diseñar en archivos `.pen` (Pencil) | `designer` |
+| Escribir código de aplicación | `developer` |
+| Escribir migraciones de BD | `dba` |
+| Actualizar `.context/domains/`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md` | `reporter` |
+| Escribir `*.md` de documentación | `tech-writer` (fuera de scope) |
+| CI/CD, Docker, infra | `devops` (fuera de scope) |
+
+> Para agregar un nuevo sub-agente: añadir una fila en la tabla de capacidades + una fila en la guía de delegación si aplica. Verificar también las tablas de §Referencia — Sub-agentes disponibles y §Referencia — Skip rules.
 
 ---
 
@@ -774,6 +843,7 @@ Lanzar en paralelo cuando dos sub-agentes son **independientes** (ninguno consum
 | Contexto | Paralelos |
 |---|---|
 | Planeación con UI + DB | `designer` ∥ `dba` |
+| Planeación con código de proyecto + artefacto secundario de IA (ej. command nuevo que un feature necesita) | `architect` ∥ `agent-designer` |
 | Pruebas con review + security | `reviewer` ∥ `security` |
 | Explorador con múltiples fuentes | Búsquedas web o lecturas de paths independientes |
 

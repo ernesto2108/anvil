@@ -1,7 +1,7 @@
 # Context Navigator — Anvil
 
 last_full_scan: 2026-05-08
-last_updated: 2026-05-10T13:15
+last_updated: 2026-05-10T14:00
 coverage: bootstrap
 
 ## Índice
@@ -25,6 +25,7 @@ coverage: bootstrap
 ### Decisiones arquitectónicas
 
 - [001 — Reglas inviolables del Líder: delegación de specs de agentes y aislamiento de sub-agentes](decisions/001-leader-rules-agent-isolation.md)
+- [002 — Restricción del toolset del Líder y creación del agente `explorer`](decisions/002-leader-toolset-restriction.md)
 
 ## Notas para agentes
 

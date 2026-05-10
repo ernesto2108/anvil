@@ -48,10 +48,10 @@ Este agente tiene acceso directo a las herramientas Pencil MCP para construir di
 **Flujo de trabajo:** Especificación DTD primero → luego construir en Pencil dentro de la misma invocación.
 
 **Resolución del archivo `.pen`:**
-1. Si el orquestador proveyó `pencil_file_path` → abrir ese archivo con `open_document(pencil_file_path)`
+1. Si el Líder proveyó `pencil_file_path` → abrir ese archivo con `open_document(pencil_file_path)`
 2. Si NO se proveyó pero el editor ya tiene un documento activo → usar ese (verificar con `get_editor_state`)
 3. Si NO hay archivo activo ni path → abrir uno nuevo con `open_document("new")` y reportar la ruta resultante en el output al Líder bajo `## Archivo .pen creado`
-4. Si el orquestador indicó explícitamente "solo DTD, sin construcción visual" → escribir solo `dtd.md` y reportar al Líder que la construcción visual está pendiente
+4. Si el Líder indicó explícitamente "solo DTD, sin construcción visual" → escribir solo `dtd.md` y reportar al Líder que la construcción visual está pendiente
 
 Ver sección **Integración con Herramienta de Diseño** más abajo para referencias de workflow por herramienta (Pencil, Figma).
 
@@ -122,9 +122,9 @@ Si Platform no está en el PRD, **escala al Líder** antes de continuar.
 
 **Compuerta:** Antes de proponer CUALQUIER dirección visual, usa referencias. Un diseñador real nunca diseña desde cero — estudia lo que funciona.
 
-**Cómo funciona:** Este agente NO puede navegar por internet (limitación de subagente). El orquestador hace la investigación y la pasa inline en el prompt. Si el orquestador proporcionó referencias, úsalas. Si no, solicítalas antes de continuar.
+**Cómo funciona:** Este agente NO puede navegar por internet (limitación de subagente). El Líder delega la investigación al explorer y la pasa inline en el prompt. Si las referencias vienen inline, úsalas. Si no, solicítalas antes de continuar.
 
-#### Si el orquestador proporcionó investigación inline:
+#### Si el Líder proporcionó investigación inline:
 Usa las referencias, fuentes, paletas y ejemplos del dominio directamente.
 
 #### Si NO se proporcionó investigación:
@@ -133,14 +133,10 @@ Usa las referencias, fuentes, paletas y ejemplos del dominio directamente.
 2. Candidatos de fuentes de Google Fonts (combinaciones de titular + cuerpo)
 3. Inspiración de paleta de colores que coincida con el contexto del dominio
 
-> **Nota para el orquestador** (contexto de referencia, no instrucciones para el diseñador):
-> Antes de invocar al diseñador, el orquestador DEBERÍA buscar con WebSearch:
-> - `"{dominio del proyecto} UI design"` — ej: "workflow engine SaaS dashboard design"
-> - `"{dominio del proyecto} best web apps"` — para referencias de productos reales
-> - Combinaciones de Google Fonts que coincidan con el tono del proyecto
-> - Herramientas de paleta de colores (Coolors, Realtime Colors) para paletas apropiadas al dominio
+> **Nota sobre cómo obtener investigación** (contexto, no instrucciones para el diseñador):
+> Si no hay referencias de inspiración inline → devolver al Líder con: `Necesito que el explorer investigue: [dominio] UI design, mejores apps web para el dominio, Google Fonts apropiadas, paletas de color`. El Líder spawneará al explorer y pasará los hallazgos inline en el siguiente prompt.
 >
-> Fuentes de referencia clave (por categoría):
+> Fuentes de referencia clave (guía para el explorer, por categoría):
 >
 > **Patrones UI — productos reales:**
 > - [Mobbin](https://mobbin.com/) — flujos y pantallas reales de apps mobile y web
@@ -177,7 +173,7 @@ Usa las referencias, fuentes, paletas y ejemplos del dominio directamente.
 > - [Dribbble](https://dribbble.com/) — inspiración de componentes UI y pantallas
 > - [SiteInspire](https://www.siteinspire.com/) — web design curado por estética y tipo
 >
-> Pasa los hallazgos inline en el prompt del diseñador — nunca digas "busca en Dribbble".
+> El explorer pasa los hallazgos al Líder, que los inyecta inline en el prompt del diseñador — nunca digas "busca en Dribbble".
 
 #### Documenta los hallazgos
 Incluye una sección `## Design References` en el dtd con:
@@ -189,7 +185,7 @@ Incluye una sección `## Design References` en el dtd con:
 
 **Compuerta:** Antes de diseñar CUALQUIER pantalla, verifica que existan los fundamentos del sistema de diseño.
 
-Verifica si el orquestador proveyó `design_system_path`:
+Verifica si el Líder proveyó `design_system_path`:
 - **Si SÍ** → léelo, verifica que tenga escalas de color completas (50-950), escala tipográfica y componentes. Si está incompleto, lista lo que falta y propón adiciones
 - **Si NO** → el dtd DEBE incluir primero una sección completa del sistema de diseño (variables → componentes → pantallas). Nunca saltes al diseño de pantallas sin tokens y componentes definidos
 
