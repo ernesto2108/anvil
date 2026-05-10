@@ -211,7 +211,7 @@ y termina pidiendo agregar lo que ya existe o referenciar código ya eliminado.
 2. **Verificar el estado**:
    - Si el PR está `CLOSED` o `MERGED` → NO usar su diff como fuente. Releer el código real del repo
    - Si el PR está `OPEN` pero modificado desde la última lectura → comparar archivos actuales vs los referenciados en la conversación previa
-   - Si la URL referencia algo ya descartado → **DETENTE** y preguntar al usuario qué fuente debe reemplazarla
+   - Si la URL referencia algo ya descartado → **DETENTE** y escalar al Líder qué fuente debe reemplazarla
 
 3. **Re-derivar el estado del código** con Glob/Grep/Read directos contra el repo actual:
    - NO confiar en lo que dice el diff/PR sobre qué existe o qué falta
@@ -316,7 +316,7 @@ Antes de escribir archivos de arquitectura, producir un resumen CORTO de decisio
 ```
 DECISIONES — <TASK-ID>
 
-Milestone: [MVP / v1.0 / v2.0 / Sprint Q2 — preguntar al usuario si no está claro]
+Milestone: [MVP / v1.0 / v2.0 / Sprint Q2 — incluir como pregunta abierta al Líder si no está claro]
 Módulos involucrados: [lista, marcar los NEW]
 Patrón de integración: [sync REST / async events / Tauri IPC / etc.]
 Decisiones clave:
@@ -326,19 +326,16 @@ Riesgos: [0-2 bullets]
 APIs externas: [nombre + restricción clave] o "ninguna"
 ```
 
-- **Modo agente:** Este resumen es lo que el orquestador muestra en el STOP checkpoint.
-  Si se rechaza, ahorraste el costo de escribir 4+ archivos de arquitectura.
-- **Modo interactivo:** Mostrarlo al usuario: "¿Estas decisiones van bien? Si sí, escribo los docs."
-
-Solo después de confirmación → proceder a escribir las vistas de arquitectura.
+- **Modo agente:** Este resumen va en el output al Líder, junto con las vistas de arquitectura. **NO pausas para esperar confirmación** — el Líder aplica el gate al usuario al cierre del modo Planeación, no entre sub-agentes. Procede a escribir las vistas inmediatamente después del resumen.
+- **Modo interactivo:** Mostrar el resumen al usuario y esperar confirmación: "¿Estas decisiones van bien? Si sí, escribo los docs." Solo después de confirmación → proceder.
 
 ### Milestone (OBLIGATORIO en el resumen de decisiones)
 
 El arquitecto define a qué milestone pertenece la tarea. El milestone fluye hacia abajo: **ARD → Tareas → Backlog**. Cada tarea creada desde este ARD hereda el milestone.
 
-1. Si el PRD o el usuario ya mencionó un milestone → usarlo
-2. Si no está claro → preguntar: "¿A qué milestone pertenece esto? (ej: MVP, v1.0, v2.0)"
-3. Si el usuario no tiene milestones definidos → preguntar: "¿Quieres definir milestones para el proyecto?"
+1. Si el PRD o el Líder ya mencionó un milestone → usarlo
+2. Si no está claro → incluir como pregunta abierta en el output al Líder: "¿A qué milestone pertenece esto? (ej: MVP, v1.0, v2.0)"
+3. Si no hay milestones definidos en el proyecto → incluir como pregunta abierta en el output al Líder: "¿Quieres definir milestones para el proyecto?"
 4. Incluir el milestone en el resumen de decisiones y propagarlo a `spec.md` y `architecture.md`
 
 ## Conciencia de convenciones (OBLIGATORIO antes de escribir)
@@ -547,14 +544,14 @@ Para cada tarea >= 5 pts que requiera spec:
 2. El spec referencia el ARD como fuente de decisiones
 3. Si una tarea tiene subtareas técnicas (ej: "crear endpoint" se divide en "schema + handler + tests"), inclúyelas como checklist en el spec — no como tareas separadas en el backlog
 
-### Confirmar con el usuario
+### Devolver al Líder
 
-Muestra (en español):
+En español, devolver:
 1. Resumen del ARD + milestone
 2. Tabla de desglose de tareas con puntos y agente asignado
 3. Orden de ejecución sugerido
 
-Solo después de aprobación → el orquestador puede ejecutar.
+Entregar al Líder. **NO esperar confirmación** — el Líder aplica el gate al usuario al cierre del modo Planeación.
 
 ## Reglas
 
@@ -566,16 +563,16 @@ Solo después de aprobación → el orquestador puede ejecutar.
 
 ### Regla de schema DB (CRÍTICA)
 
-**NUNCA proponer una tabla nueva sin confirmar primero con el usuario si una tabla existente puede extenderse.**
+**NUNCA proponer una tabla nueva sin escalar primero al Líder si una tabla existente puede extenderse.**
 
 Antes de diseñar cualquier cambio de DB:
-1. Preguntar al usuario qué tablas relacionadas existen
+1. Escalar al Líder con la pregunta concreta: qué tablas relacionadas existen
 2. Evaluar si ALTER TABLE (agregar columnas) resuelve el problema
-3. Solo proponer tabla nueva si hay justificación técnica clara Y el usuario confirma
+3. Solo proponer tabla nueva si hay justificación técnica clara Y el Líder confirma
 
-### Estrategia de migración — preguntar, no asumir (CRÍTICA)
+### Estrategia de migración — escalar, no asumir (CRÍTICA)
 
-No todos los proyectos usan archivos de migración en el repo. Antes de diseñar la estrategia de persistencia, preguntar al usuario:
+No todos los proyectos usan archivos de migración en el repo. Antes de diseñar la estrategia de persistencia, escalar al Líder con la pregunta concreta:
 
 1. **¿Cómo se gestionan los cambios de schema?**
    - Archivos de migración en el repo (golang-migrate, Flyway, Alembic, etc.)
