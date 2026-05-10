@@ -97,14 +97,21 @@ Registra las respuestas en el PRD bajo una sección **Scope**:
 
 Esta sección es la que el orquestador lee para decidir qué agentes omitir.
 
-### Paso 2 — Confirmar con el usuario
+### Paso 2 — Entregar al Líder (Modo agente) / Confirmar con el usuario (Modo interactivo)
 
-Muestra al usuario (en español):
+**Modo agente:** Devolver al Líder con el PRD completo. Incluir:
+1. Resumen del PRD
+2. Criterios de aceptación clave
+3. Preguntas abiertas (si las hay) — el Líder decide si escalar al usuario o continuar
+
+El Líder presenta el resultado al usuario al final del modo Planeación completo (después del Architect). El PM no interrumpe al usuario directamente.
+
+**Modo interactivo:** Muestra al usuario (en español):
 1. Resumen del PRD
 2. Criterios de aceptación clave
 3. Preguntas abiertas (si las hay)
 
-Solo después de que el usuario apruebe el PRD, el orquestador pasa al arquitecto.
+Obtén aprobación explícita antes de continuar — en modo interactivo el usuario es el gate.
 
 **Nota:** La descomposición en tareas, asignación de milestone y gestión del backlog son responsabilidad del **arquitecto** — ocurren después del ARD, cuando la complejidad técnica ya está definida.
 

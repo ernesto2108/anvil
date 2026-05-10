@@ -56,5 +56,5 @@ Ver `staleness.md` para reglas completas. Resumen:
 ## Skills relacionadas
 
 - `scan-project` — produce el bootstrap inicial de `.context/`
-- `orchestrate` — consume `.context/` en el Paso 0.5
+- `leader` (agent) — consume `.context/` en el Paso 0.3 antes del primer sub-agente
 - `reporter` — escribe deltas a `.context/` al final del pipeline

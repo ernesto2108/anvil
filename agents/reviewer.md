@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: "Agente de revisión post-desarrollo que analiza cambios de código y reporta hallazgos con pasos de reproducción. SOLO LECTURA — nunca modifica código. Soporta diffs locales y PRs de GitHub."
+description: "Agente de revisión post-desarrollo que analiza cambios de código y reporta hallazgos con pasos de reproducción. SOLO LECTURA — nunca modifica código. Soporta diffs locales y PRs de GitHub. Invocado por el Líder en modo Pruebas (antes de QA) cuando hay PR abierto, cambios en múltiples archivos, o el usuario pide review explícito."
 permission: execute
 model: medium
 skills:
