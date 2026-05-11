@@ -19,6 +19,10 @@ allowed_tools:
   - Edit[.context/decisions/**]
   - Write[.context/NAVIGATOR.md]
   - Edit[.context/NAVIGATOR.md]
+
+  # Memoria — consulta previa para evitar duplicar decisiones + cierre del ciclo
+  - mcp__anvil__search_memories
+  - mcp__anvil__digest_from_handoff
 ---
 
 # Rol: Reporter
@@ -101,7 +105,8 @@ El Líder provee las rutas exactas (`task_path`, `reports_path`). **Si no se pro
 
 1. Recibir del Líder: lista de archivos modificados (inline en el prompt)
 2. Aplicar delta a `.context/` (ver sección "Responsabilidad: delta a Context Navigator")
-3. Devolver al Líder: lista de archivos de `.context/` actualizados
+3. **Persistir handoff en memoria (cierre del ciclo, OBLIGATORIO si hay handoff)** — ver sección "Cierre del ciclo" abajo
+4. Devolver al Líder: lista de archivos de `.context/` actualizados
 
 ### Modo delta + reporte
 
@@ -111,6 +116,21 @@ El Líder provee las rutas exactas (`task_path`, `reports_path`). **Si no se pro
 4. Analizar archivos cambiados
 5. Aplicar delta a `.context/` (ver sección abajo)
 6. Escribir `{reports_path}/last-run.md`
+7. **Persistir handoff en memoria (cierre del ciclo, OBLIGATORIO si hay handoff)** — ver sección "Cierre del ciclo" abajo
+
+## Cierre del ciclo: persistir handoff en memoria
+
+Si el Líder pasó en el prompt el path de un `.handoff/<TASK-ID>.md` producido en este run, llamar **como último paso del flujo**:
+
+```
+mcp__anvil__digest_from_handoff(path=<path al .handoff/<TASK-ID>.md>)
+```
+
+Esto parsea el handoff y lo escribe como digest en la capa de memoria, cerrando el ciclo: lo que se implementó en este run queda disponible para `search_memories` en runs futuros.
+
+Este paso es **obligatorio, no opcional**, cuando el Líder pasa el path del handoff. Saltarlo deja el trabajo del run invisible para runs siguientes.
+
+Si el Líder no pasó el path (ej. run sin handoff porque no hubo implementación del developer), omitir este paso silenciosamente.
 
 ## Responsabilidad: delta a Context Navigator (PRINCIPAL)
 
@@ -134,6 +154,8 @@ Decisiones documentadas en SPEC: [si aplica]
 Si ese bloque no viene, inferir el delta desde el `git diff` o desde la lista de archivos inline.
 
 **Presupuesto para el delta:** máximo 3 tool calls de Edit a `.context/`. Priorizar `patterns.md` y el dominio afectado. `contracts.md` y `risks.md` solo si hay cambio directo.
+
+**Consulta previa a memoria antes de escribir `decisions/`:** si el delta requiere crear o actualizar un ADR en `.context/decisions/`, llamar primero `mcp__anvil__search_memories(query=<tema de la decisión>, mode='keyword', limit=3)` para verificar si ya existe una decisión documentada en runs anteriores. Si hay hit, NO duplicar — referenciar el ADR existente o actualizarlo en lugar de crear uno nuevo. Sin hit, continuar y crear el ADR.
 
 **Notas sobre archivos fuera del alcance del reporter:**
 - `.context/decisions/NNN-slug.md` (ADRs): el reporter tiene permiso pero solo los toca si el Líder lo pide explícito. El responsable natural de ADRs es el `architect` o `agent-designer` durante Planeación.

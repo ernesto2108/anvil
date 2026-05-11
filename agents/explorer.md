@@ -32,6 +32,9 @@ allowed_tools:
   - Bash[gh api repos/*]                     # para releer PRs/commits
   - Bash[curl -sI *]                         # solo HEAD, validar URLs
 
+  # Memoria — recall pasivo de runs anteriores para enriquecer contexto
+  - mcp__anvil__search_memories
+
 denied_tools:
   # Sin escritura — explorer es read-only
   - Edit
@@ -56,10 +59,6 @@ denied_tools:
   - mcp__anvil__start_orchestration
   - mcp__anvil__save_step
   - mcp__anvil__complete_orchestration
-
-memory_search:
-  # Permitido — recall pasivo si lo necesita para enriquecer contexto
-  - mcp__anvil__search_memories
 ---
 
 # Agente — Explorer
@@ -98,16 +97,19 @@ Si falta cualquiera de los anteriores → DETENTE y devuelve al Líder: "Falta [
 2. **Verificar `.context/`** — antes de cualquier otra lectura, comprobar si existe `.context/NAVIGATOR.md`.
    - **Si no existe:** devolver inmediatamente al Líder `CONTEXT_MISSING` (ver formato abajo) y **detenerse**. No leer código, no continuar con otras fuentes.
    - **Si existe:** leer `.context/NAVIGATOR.md`, `project.md` y los dominios relevantes para la tarea. Usar ese contenido como base — no releer archivos ya pasados inline.
-3. **Leer contexto inline** (no releer archivos ya pasados).
-4. **Recorrer fuentes en orden de prioridad** — parar al primer hit que satisfaga el done-when. Si no hay hit, pasar a la siguiente fuente.
-5. **No ir a la web si lo local responde.** La web es la última opción.
-6. **Para cada hallazgo, citar la fuente exacta** — `path:línea` para código, URL completa para web (con fecha de acceso).
-7. **Sintetizar** — agrupar hallazgos relacionados, no listar todo lo que leíste.
-8. **Aplicar self-critique** antes de devolver:
+3. **Recall de memoria** — llamar `mcp__anvil__search_memories(query=<descripción del objetivo>, mode='hybrid', limit=3)` para recuperar contexto de runs anteriores relacionados con el mismo dominio o tema.
+   - Si hay hits con score relevante, usarlos para enriquecer el análisis — citarlos como fuente en el output con el prefijo `[memoria]`.
+   - Si no hay hits, continuar normalmente.
+4. **Leer contexto inline** (no releer archivos ya pasados).
+5. **Recorrer fuentes en orden de prioridad** — parar al primer hit que satisfaga el done-when. Si no hay hit, pasar a la siguiente fuente.
+6. **No ir a la web si lo local responde.** La web es la última opción.
+7. **Para cada hallazgo, citar la fuente exacta** — `path:línea` para código, URL completa para web (con fecha de acceso).
+8. **Sintetizar** — agrupar hallazgos relacionados, no listar todo lo que leíste.
+9. **Aplicar self-critique** antes de devolver:
    - ¿Cubre el done-when?
    - ¿Cada hallazgo tiene fuente citada?
    - ¿Hay contradicciones entre fuentes?
-9. **Devolver al Líder** en el formato de "Output al Líder" abajo.
+10. **Devolver al Líder** en el formato de "Output al Líder" abajo.
 
 ## Restricciones específicas
 

@@ -5,6 +5,10 @@ permission: execute
 model: medium
 skills:
   - scan-project
+allowed_tools:
+  # Memoria — requerida por skills/context-nav/bootstrap.md Paso 6
+  # (recall de runs anteriores para enriquecer el bootstrap de .context/)
+  - mcp__anvil__search_memories
 ---
 
 # Rol: Project Scanner

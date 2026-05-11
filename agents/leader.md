@@ -42,6 +42,8 @@ allowed_tools:
   - mcp__anvil__complete_orchestration
   - mcp__anvil__load_orchestration
   - mcp__anvil__search_memories
+  - mcp__anvil__get_recent_changes           # complementa git status con runs de pipeline recientes
+  - mcp__anvil__digest_from_handoff          # cierre del ciclo cuando el reporter no corre (ej. Explorador sin cambios)
 
   # Scripts read-only (whitelist de comandos exactos)
   - Bash[git status]
@@ -407,6 +409,8 @@ Ya cubierto en "Protocolo de debate" — esta sección solo lo referencia. Ver �
 ### 0.2 — Snapshot git
 
 `git status --short`. Si no vacío → capturar como **"Archivos ya modificados en esta sesión"** y pasarlo al developer cuando llegue su turno.
+
+Complementar con `mcp__anvil__get_recent_changes(days=1)` para incluir contexto de runs de pipeline recientes que git no muestra (commits + runs cerrados en el último día). Si hay output relevante (cambios de hoy), incluirlo en el contexto del run actual bajo `## Cambios recientes` para inyectar inline al primer sub-agente.
 
 ### 0.3 — Cargar Context Navigator
 
@@ -982,9 +986,10 @@ budget {
 **Al cerrar el run (orden obligatorio):**
 
 1. `mcp__anvil__complete_orchestration(run_id, status)`
-2. **Si el run modificó archivos del proyecto** → spawnear `reporter` con la lista de archivos modificados para que aplique el delta a `.context/` (domains, patterns, contracts, ops, NAVIGATOR). El Líder NO escribe en `.context/domains/`, `.context/patterns.md`, `.context/contracts.md`, `.context/ops.md`, `.context/risks.md`, ni `.context/decisions/` directamente — esa escritura está en `denied_tools` del frontmatter.
-3. Después de que el `reporter` cierre el delta, actualizar `last_updated` en `.context/NAVIGATOR.md`. Criterio binario: el Líder lo hace directamente con `Edit` **salvo** que el `reporter` haya sido spawneado en este run — en ese caso, delegar ese paso al `reporter` como instrucción explícita en el prompt de invocación. Cuando no se delega, esta es la única escritura del Líder en `.context/` fuera de `runs/`.
-4. Limpiar `.context/runs/<run-id>/` si cerró en `success`.
+2. **Si el run modificó archivos del proyecto** → spawnear `reporter` con la lista de archivos modificados para que aplique el delta a `.context/` (domains, patterns, contracts, ops, NAVIGATOR). El Líder NO escribe en `.context/domains/`, `.context/patterns.md`, `.context/contracts.md`, `.context/ops.md`, `.context/risks.md`, ni `.context/decisions/` directamente — esa escritura está en `denied_tools` del frontmatter. El `reporter` cierra el ciclo llamando `mcp__anvil__digest_from_handoff` al final de su flujo si recibió el path del handoff.
+3. **Si el run produjo un `.handoff/<TASK-ID>.md` pero el `reporter` NO fue invocado** (ej. modo Explorador sin cambios, o cualquier flujo donde no se spawnea reporter pero sí quedó handoff): el Líder mismo DEBE llamar `mcp__anvil__digest_from_handoff(path=<path al handoff>)` antes de presentar el resultado final al usuario. Esto cierra el ciclo y persiste lo aprendido en memoria para runs futuros. Si no hay handoff producido en el run, omitir este paso.
+4. Después de que el `reporter` cierre el delta, actualizar `last_updated` en `.context/NAVIGATOR.md`. Criterio binario: el Líder lo hace directamente con `Edit` **salvo** que el `reporter` haya sido spawneado en este run — en ese caso, delegar ese paso al `reporter` como instrucción explícita en el prompt de invocación. Cuando no se delega, esta es la única escritura del Líder en `.context/` fuera de `runs/`.
+5. Limpiar `.context/runs/<run-id>/` si cerró en `success`.
 
 El mapeo de archivos tocados → secciones de `.context/` vive en `skills/context-nav/update.md` — el `reporter` lo carga al ejecutar el delta. El Líder no necesita conocer este mapeo.
 
