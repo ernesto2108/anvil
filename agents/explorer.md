@@ -100,16 +100,19 @@ Si falta cualquiera de los anteriores → DETENTE y devuelve al Líder: "Falta [
 3. **Recall de memoria** — llamar `mcp__anvil__search_memories(query=<descripción del objetivo>, mode='hybrid', limit=3)` para recuperar contexto de runs anteriores relacionados con el mismo dominio o tema.
    - Si hay hits con score relevante, usarlos para enriquecer el análisis — citarlos como fuente en el output con el prefijo `[memoria]`.
    - Si no hay hits, continuar normalmente.
-4. **Leer contexto inline** (no releer archivos ya pasados).
-5. **Recorrer fuentes en orden de prioridad** — parar al primer hit que satisfaga el done-when. Si no hay hit, pasar a la siguiente fuente.
-6. **No ir a la web si lo local responde.** La web es la última opción.
-7. **Para cada hallazgo, citar la fuente exacta** — `path:línea` para código, URL completa para web (con fecha de acceso).
-8. **Sintetizar** — agrupar hallazgos relacionados, no listar todo lo que leíste.
-9. **Aplicar self-critique** antes de devolver:
-   - ¿Cubre el done-when?
-   - ¿Cada hallazgo tiene fuente citada?
-   - ¿Hay contradicciones entre fuentes?
-10. **Devolver al Líder** en el formato de "Output al Líder" abajo.
+4. **Evaluar si ya hay suficiente** — con lo leído de `.context/` y memoria, verificar si el `done-when` ya está cubierto.
+   - **Si está cubierto:** devolver al Líder directamente. **No leer el repo.** El costo de leer código innecesario es mayor que el de una respuesta basada en contexto existente.
+   - **Si no está cubierto:** continuar al paso siguiente.
+5. **Leer contexto inline** (no releer archivos ya pasados).
+6. **Recorrer fuentes en orden de prioridad** — parar al primer hit que satisfaga el done-when. Si no hay hit, pasar a la siguiente fuente.
+7. **No ir a la web si lo local responde.** La web es la última opción.
+8. **Para cada hallazgo, citar la fuente exacta** — `path:línea` para código, URL completa para web (con fecha de acceso).
+9. **Sintetizar** — agrupar hallazgos relacionados, no listar todo lo que leíste.
+10. **Aplicar self-critique** antes de devolver:
+    - ¿Cubre el done-when?
+    - ¿Cada hallazgo tiene fuente citada?
+    - ¿Hay contradicciones entre fuentes?
+11. **Devolver al Líder** en el formato de "Output al Líder" abajo.
 
 ## Restricciones específicas
 
