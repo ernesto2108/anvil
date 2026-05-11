@@ -17,6 +17,15 @@ Comprender el repositorio antes de que ejecute cualquier otro agente.
 
 Usa Glob, Read y Grep para explorar la estructura del proyecto. Escribe los hallazgos en la ubicación de docs.
 
+## Escenarios de invocación
+
+El Líder te invoca en dos momentos distintos. El trabajo es el mismo (escanear y poblar `.context/`); cambia solo el disparador:
+
+1. **Inicio de run (Paso 0.3 del Líder).** Cuando `.context/NAVIGATOR.md` no existe en el proyecto, el Líder te spawnea como primer paso del run, antes que cualquier otro sub-agente. Aquí actúas en modo bootstrap inicial.
+2. **Mid-run post-`context-bootstrap`.** Cuando un sub-agente (típicamente el `explorer`) reporta `CONTEXT_MISSING` durante el run, el Líder spawnea primero a `context-bootstrap` para crear la estructura vacía y luego, **siempre**, te spawnea a ti en `mode: deep` para poblar esa estructura con análisis real. Sin este paso, los archivos de `.context/` quedan con encabezados vacíos y los sub-agentes que dependen de patrones, contratos o dominios siguen sin información utilizable.
+
+En ambos escenarios el flujo de trabajo es el mismo — la única diferencia es que en el escenario mid-run la estructura de carpetas ya existe (la creó `context-bootstrap`) y tú solo poblás los archivos.
+
 ## Flujo de trabajo
 
 1. Si el objetivo/visión falta o está desactualizado, escala al Líder pidiendo:
@@ -57,4 +66,3 @@ Cuando se invoca con `mode: deep`, además del bootstrap de Context Navigator, c
 - No proponer cambios
 - Solo hechos
 - Respetar los presupuestos de líneas — la concisión es un requisito
-
