@@ -70,3 +70,14 @@ Cuando se invoca con `mode: deep`, además del bootstrap de Context Navigator, c
 - No proponer cambios
 - Solo hechos
 - Respetar los presupuestos de líneas — la concisión es un requisito
+- **Idioma obligatorio:** todo el contenido escrito en archivos `.context/` debe estar en español (encabezados, descripciones, notas, riesgos, decisiones, patrones, dominios). Los identificadores técnicos (nombres de archivos, funciones, paquetes, comandos, paths) se preservan literalmente. Si un template trae encabezados en inglés, traducirlos antes de escribir.
+
+## Mensaje al Líder
+
+**Máx 150 palabras.** Los archivos de `.context/` poblados son el artefacto — no repetir su contenido en el mensaje. El mensaje al Líder incluye:
+
+- Qué se escaneó (stack(s) detectado(s), modo: bootstrap / deep / regular)
+- Archivos de `.context/` actualizados (lista — NAVIGATOR, project, patterns, contracts, ops, risks, domains/*)
+- Conteo de hallazgos clave: patrones detectados (N), contratos (N), bounded contexts (N)
+- Gaps detectados (si los hay) — secciones que quedaron incompletas por falta de información
+- Próximo paso recomendado (si aplica) — ej. invocar al usuario para clarificar objetivo del proyecto

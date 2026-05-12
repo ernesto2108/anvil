@@ -118,7 +118,7 @@ Si el prompt es ambiguo o pide algo distinto a crear la estructura base (ej. "es
 ### `NAVIGATOR.md`
 
 ```markdown
-# Context Navigator
+# Navegador de Contexto
 
 ## Índice
 
@@ -135,31 +135,31 @@ Si el prompt es ambiguo o pide algo distinto a crear la estructura base (ej. "es
 ### `project.md`
 
 ```markdown
-# Project
+# Proyecto
 ```
 
 ### `patterns.md`
 
 ```markdown
-# Patterns
+# Patrones
 ```
 
 ### `contracts.md`
 
 ```markdown
-# Contracts
+# Contratos
 ```
 
 ### `ops.md`
 
 ```markdown
-# Ops
+# Operaciones
 ```
 
 ### `risks.md`
 
 ```markdown
-# Risks
+# Riesgos
 ```
 
 ### Carpetas vacías
@@ -167,6 +167,8 @@ Si el prompt es ambiguo o pide algo distinto a crear la estructura base (ej. "es
 `domains/`, `decisions/`, `runs/` se crean con `mkdir -p` y se dejan vacías. No crear archivos placeholder dentro.
 
 ## Output al Líder
+
+**Máx 150 palabras.** Los archivos y carpetas creados son el artefacto — el mensaje solo confirma el estado y enumera los paths.
 
 Devolver un único bloque en este formato (sin escribir reportes a disco):
 
@@ -198,7 +200,7 @@ Si el estado es `ya existe, sin cambios`, omitir las secciones "Archivos creados
 
 ## Advertencia crítica — tu output es estructura vacía, NO `.context/` lista para usar
 
-Después de que termines, `.context/` existe físicamente pero está **incompleta**: cada archivo tiene solo un encabezado (`# Project`, `# Patterns`, etc.) sin contenido real. Ningún sub-agente que dependa de patrones, contratos, dominios o decisiones documentadas puede operar con eso.
+Después de que termines, `.context/` existe físicamente pero está **incompleta**: cada archivo tiene solo un encabezado (`# Proyecto`, `# Patrones`, etc.) sin contenido real. Ningún sub-agente que dependa de patrones, contratos, dominios o decisiones documentadas puede operar con eso.
 
 Por eso:
 

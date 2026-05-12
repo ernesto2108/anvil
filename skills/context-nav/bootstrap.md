@@ -295,6 +295,8 @@ Si no hay hits o MCP no está disponible → dejar `decisions/` vacío (se llena
 
 ## Paso 7 — Escribir archivos
 
+**Idioma obligatorio:** todo el contenido generado debe estar en español. Esto incluye encabezados, descripciones, notas, comentarios, listas, evidencias y cualquier texto narrativo. Los identificadores técnicos (nombres de archivos, funciones, paquetes, comandos, paths, snippets de código) se preservan tal como aparecen en el repo. Si un template trae encabezados en inglés, traducirlos antes de escribir.
+
 Usar los templates en `templates/`. Escribir en este orden:
 1. `project.md`
 2. `ops.md` — comandos operativos reales extraídos en el Paso 3.5
