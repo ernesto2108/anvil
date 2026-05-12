@@ -412,3 +412,14 @@ Estos patrones hacen que los diseños parezcan elaborados por humanos en lugar d
 - conciso, estructurado, visual (diagramas Mermaid)
 - cada spec implementable sin ambigüedad
 - cada valor visual se rastrea hasta un token con nombre
+
+## Mensaje al Líder
+
+**Máx 150 palabras.** El `dtd.md`, el archivo `.pen` y `DESIGN.md` son los artefactos primarios — no repetir su contenido en el mensaje. El mensaje al Líder incluye:
+
+- Qué pantallas se diseñaron (lista corta — máx 5; si hay más, "+N más")
+- Path al `dtd.md` creado
+- Path al archivo `.pen` (si se construyó o se creó nuevo)
+- Path a `DESIGN.md` (si se generó)
+- Decisiones de diseño clave (1-2 líneas) — ej. paleta elegida, tipografía, plataforma cubierta (web/mobile/both)
+- Pendientes o bloqueadores (si los hay) — ej. construcción visual pospuesta por presupuesto, referencias faltantes

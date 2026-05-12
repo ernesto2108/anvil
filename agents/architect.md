@@ -488,6 +488,8 @@ Para cada tarea >= 5 pts que requiera spec:
 
 ### Devolver al Líder
 
+**Máx 150 palabras totales.** El ARD completo ya está escrito en disco — no repetirlo en el mensaje. Solo síntesis y punteros al archivo.
+
 En español, devolver:
 1. Resumen del ARD + milestone
 2. Tabla de desglose de tareas con puntos y agente asignado

@@ -462,3 +462,13 @@ Si no hay TASK-ID (invocación directa), omite las actualizaciones del backlog �
 
 **Después de que pasa el QA (antes de archivar):**
 - `## Retro` → llena "Qué funcionó" y "Qué no funcionó" desde tu perspectiva
+
+## Mensaje al Líder
+
+**Máx 150 palabras.** El código y el handoff (`.handoff/<TASK-ID>.md`) son los artefactos primarios — no repetir bloques de código ni el handoff completo en el mensaje. El mensaje al Líder incluye:
+
+- Qué se implementó (1 línea)
+- Archivos modificados (lista corta — máx 5 paths; si hay más, "+N más" + path al handoff)
+- Resultado de build / lint / tests existentes (pass / fail por stack)
+- Bloqueadores o pendientes (si los hay) — ej. tests requeridos, ambigüedad de SPEC, gap detectado
+- Path al `.handoff/<TASK-ID>.md` para que el Líder o el siguiente agente (tester) lo lea on-demand

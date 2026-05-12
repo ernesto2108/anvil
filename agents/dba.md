@@ -240,6 +240,8 @@ Carga `/db-engines` antes de escribir cualquier migración o cambio de schema pa
 
 ## Salida
 
+**Máx 150 palabras al Líder.** Los archivos de migración son el artefacto — no repetir todo el schema en el mensaje. Solo lista los archivos creados y los puntos críticos (rollback, impacto, dependencias).
+
 ### Para motores relacionales
 - Archivos de migración `.up.sql` + `.down.sql`
 - Configuración del runner de migración si aún no existe (usa las herramientas de `/db-engines`)

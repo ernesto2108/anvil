@@ -112,6 +112,8 @@ Escribe el PRD en español en `task_path`, siguiendo la estructura de `prd-templ
 
 ### Paso 4 — Devolver al Líder
 
+**Máx 150 palabras totales.** El PRD completo ya está escrito en `task_path` — no repetir su contenido en el mensaje. Solo síntesis y punteros.
+
 Devuelve al Líder con:
 
 1. **Resumen del PRD** (3-5 líneas)

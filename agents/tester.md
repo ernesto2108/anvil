@@ -258,3 +258,14 @@ El handoff indica qué tipos de test escribir. El tester debe reconocer estos ti
 ## Salida
 
 - solo archivos de tests
+
+## Mensaje al Líder
+
+**Máx 150 palabras.** Los archivos de test son el artefacto — no incluir bloques de código en el mensaje. El mensaje al Líder incluye:
+
+- Conteo de tests creados (por stack si aplica: Go N, React N, etc.)
+- Stack(s) tocados
+- Lista de archivos de test creados o modificados
+- Resultado de la ejecución: pass / fail / skipped (counts)
+- Bloqueadores encontrados (si los hay) — bug en producción que el developer debe arreglar antes de que los tests pasen
+- Path al handoff donde quedó registrado el detalle

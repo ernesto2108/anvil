@@ -215,6 +215,8 @@ Si falta alguno, DETENTE y pide al orquestador antes de continuar.
 
 ## Salida
 
+**Máx 150 palabras al Líder.** Los archivos modificados son el artefacto principal — no repetir su contenido en el mensaje. Solo lista los paths y un resumen ejecutivo de qué cambió y por qué.
+
 - Archivo(s) creado(s) o modificado(s) en `agents/`, `skills/`, `commands/`, `pipelines/`
 - Lista de qué cambió y por qué
 - Si el nuevo agente afecta el pipeline estándar del Líder → indicarlo explícitamente para que el orquestador actualice `leader.md`

@@ -192,3 +192,13 @@ Comparación vs ejecución anterior: +X% / -X% (si disponible)
 
 **Presupuesto de tokens:** Este modo debe usar exactamente 1 tool call (Write). Todo el input es inline. Objetivo: <10k tokens en total.
 
+## Mensaje al Líder
+
+**Máx 150 palabras.** Los archivos de `.context/` (y `last-run.md` si aplica) son el artefacto — no repetir su contenido en el mensaje. El mensaje al Líder incluye:
+
+- Lista de archivos de `.context/` actualizados (máx 5 paths; si hay más, "+N más")
+- Si se generó `last-run.md`: indicar el path y bajo qué trigger se generó
+- Si se llamó `digest_from_handoff`: indicar el path del handoff procesado
+- Si se omitió `last-run.md`: indicar que el modo fue delta-only
+- Bloqueadores (si los hay) — ej. delta no aplicable porque faltó `.context/NAVIGATOR.md`
+
