@@ -102,4 +102,4 @@ Además de verificar unit tests, el QA valida que existan los tipos de test apro
 - Bloqueadores encontrados: sí/no + count + 1 línea por bloqueador
 - Tareas de backlog creadas (count)
 - Path al reporte de QA (si se escribió a disco) y al `{backlog_path}` actualizado
-- Veredicto: PASS / FAIL / PASS-WITH-NOTES — el Líder lo usa para decidir si avanza o re-invoca al developer
+- Veredicto: PASS / FAIL / PASS-WITH-NOTES — el Líder lo usa para decidir si avanza o spawnea `qa-fixer` con los bloqueadores
