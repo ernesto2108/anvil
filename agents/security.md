@@ -156,6 +156,16 @@ Incluir:
 ### Actualizaciones de backlog (OBLIGATORIO cuando existen problemas)
 Agregar tareas de seguridad a `{backlog_path}` con etiqueta `[security]`.
 
+### Mensaje al Líder
+
+**Máx 150 palabras.** El reporte completo vive en `{task_path}/security-audit.md` — no repetirlo en el mensaje. El mensaje al Líder incluye:
+
+- Score de Seguridad (1–10) y Nivel de Riesgo
+- Conteo de vulnerabilidades por severidad (critical/high/medium/low)
+- Lista corta de bloqueadores (si los hay)
+- Path al reporte completo y al backlog actualizado
+- Tareas de backlog creadas (count)
+
 ## Modo: Full Audit (servicio existente)
 
 Cuando se invoca con `mode: full-audit`:

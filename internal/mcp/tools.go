@@ -52,6 +52,8 @@ func (s *Server) buildRegistry() map[string]tool {
 			prop("pipeline", "string", "Pipeline preset name (e.g. bug, feat, quick, epic, db, infra, design)"),
 			prop("task", "string", "Task description to pass to the pipeline"),
 			optProp("stack", "string", "Stack hint (go, react, python, typescript, rust, flutter)"),
+			optProp("max_retries", "number", "Maximum agent retries before aborting (default 2)"),
+			optProp("max_cost", "number", "Maximum USD spend before marking the run degraded (default 0.50)"),
 		),
 		s.runPipeline)
 
@@ -167,6 +169,14 @@ func (s *Server) buildRegistry() map[string]tool {
 		),
 		s.loadOrchestration)
 
+	add("save_leader_log",
+		"Upsert the Leader's plan/progress log into run_plans.content for the given run. Call at the start of a run with the initial plan, and again whenever the plan is updated (after each sub-agent step, gate decision, or self-critique). Idempotent: safe to call multiple times; the latest content always replaces the previous one.",
+		schema(
+			prop("run_id", "string", "Run ID from start_orchestration (or an existing run_id)"),
+			prop("content", "string", "Full markdown content of the plan/progress log to persist"),
+		),
+		s.saveLeaderLog)
+
 	// ── Utilities ─────────────────────────────────────────────────────────────
 
 	add("switch_provider",
@@ -262,6 +272,15 @@ func intArg(args map[string]any, key string, defVal int) int {
 			if n > 0 {
 				return n
 			}
+		}
+	}
+	return defVal
+}
+
+func floatArg(args map[string]any, key string, defVal float64) float64 {
+	if v, ok := args[key]; ok {
+		if n, ok := v.(float64); ok && n > 0 {
+			return n
 		}
 	}
 	return defVal

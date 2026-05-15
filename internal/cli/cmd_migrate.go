@@ -25,7 +25,7 @@ func cmdMigrate(forceMigrate bool) {
 		output.Error("migrate: %s", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 
 	var version int
 	if err := db.QueryRow("SELECT version FROM schema_migrations LIMIT 1").Scan(&version); err != nil {

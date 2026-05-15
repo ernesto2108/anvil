@@ -93,3 +93,13 @@ Además de verificar unit tests, el QA valida que existan los tipos de test apro
 - Si score < 7 → crear tareas en el backlog (incluye tests faltantes)
 - Si se encuentra un problema crítico → marcar como BLOQUEADOR
 - Nunca ignorar riesgos
+
+## Mensaje al Líder
+
+**Máx 150 palabras.** El reporte completo de QA y las tareas creadas en el backlog son el artefacto — no incluir el reporte completo en el mensaje. El mensaje al Líder incluye:
+
+- Score de calidad (1–10) y nivel de riesgo
+- Bloqueadores encontrados: sí/no + count + 1 línea por bloqueador
+- Tareas de backlog creadas (count)
+- Path al reporte de QA (si se escribió a disco) y al `{backlog_path}` actualizado
+- Veredicto: PASS / FAIL / PASS-WITH-NOTES — el Líder lo usa para decidir si avanza o spawnea `qa-fixer` con los bloqueadores

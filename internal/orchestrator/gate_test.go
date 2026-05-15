@@ -14,10 +14,10 @@ func Test_CLIGateHandler_RequestApproval(t *testing.T) {
 	node := Node{ID: "gate-node", Role: "reviewer"}
 
 	tests := []struct {
-		name       string
-		input      string
+		name         string
+		input        string
 		wantDecision GateDecision
-		wantErr    bool
+		wantErr      bool
 	}{
 		{
 			name:         "input approve → GateApproved",
@@ -57,7 +57,7 @@ func Test_CLIGateHandler_RequestApproval(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 

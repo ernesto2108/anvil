@@ -2,10 +2,12 @@
 
 Usa esta plantilla al escribir `{context_path}`. Incluye solo las secciones para los stacks detectados. Elimina las secciones de stack que no apliquen.
 
+**Idioma:** todo el contenido del archivo generado debe estar en español (encabezados, descripciones, notas). Los identificadores técnicos (nombres de paquetes, paths, comandos, dependencias) se preservan literalmente.
+
 ---
 
 ```markdown
-# <Project Name> — Project Context
+# <Nombre del Proyecto> — Contexto del Proyecto
 
 ## Objetivo del producto (Canónico)
 <resumen breve — qué es el producto y qué problema resuelve>

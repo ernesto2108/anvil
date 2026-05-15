@@ -150,7 +150,7 @@ Antes de escribir el copy final o diseñar el visual, presenta un mock rápido a
 2. **Mock visual** — describe en 1-2 oraciones cómo se verá la imagen: tipo de visual (statement card, split layout, etc.), color dominante, texto clave en la imagen, composición
 3. **Confirmación de idioma** — confirma que se usará el idioma del Tema 9
 
-**Compuerta:** NO continúes al Paso 4 hasta que el usuario apruebe el mock. Si solicita cambios, ajusta y vuelve a presentar. Esto previene esfuerzo desperdiciado en contenido que el usuario rechazaría.
+**Compuerta:** NO continúes al Paso 4 hasta que el Líder confirme aprobación (el Líder consulta al usuario). Si solicita cambios, ajusta y vuelve a presentar. Esto previene esfuerzo desperdiciado en contenido que el usuario rechazaría.
 
 **Excepción modo agente:** Si el orquestador pasa `skip_mock: true`, omite este paso.
 
@@ -217,7 +217,7 @@ Consulta el skill `/social-content` sección 4.1. Coincide el tipo de visual con
 
 #### 5b. Decisión del elemento humano
 
-- Si el post es personal/historia/testimonial → pide al usuario una foto real. Las caras humanas obtienen 38% más engagement
+- Si el post es personal/historia/testimonial → pide al Líder una foto real. Las caras humanas obtienen 38% más engagement
 - Si no hay foto disponible → usa texto/gráfico. NUNCA uses fotos de stock genéricas
 - Si el usuario tiene activos de marca → úsalos
 

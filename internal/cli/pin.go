@@ -51,7 +51,7 @@ func cmdPin(cfg *config.App, git *gitutil.Repo, args []string) {
 	}
 
 	targetPath := filepath.Join(paths.Claude, component)
-	fileutil.CleanPath(targetPath)
+	_ = fileutil.CleanPath(targetPath)
 	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
 		output.Error("create dir: %s", err)
 		os.Exit(1)
@@ -87,7 +87,9 @@ func cmdPin(cfg *config.App, git *gitutil.Repo, args []string) {
 	output.Info("Pinned %s to %s", output.Cyan(component), output.Yellow(version))
 
 	st.SetPin(component, version)
-	st.Save()
+	if err := st.Save(); err != nil {
+		output.Warn("save state: %s", err)
+	}
 }
 
 func cmdUnpin(cfg *config.App, git *gitutil.Repo, args []string) {
@@ -107,7 +109,7 @@ func cmdUnpin(cfg *config.App, git *gitutil.Repo, args []string) {
 	}
 
 	targetPath := filepath.Join(paths.Claude, component)
-	fileutil.CleanPath(targetPath)
+	_ = fileutil.CleanPath(targetPath)
 	st.RemovePin(component)
 
 	if strings.Contains(component, "/") {
@@ -159,5 +161,7 @@ func cmdUnpin(cfg *config.App, git *gitutil.Repo, args []string) {
 		output.Info("Unpinned %s", output.Cyan(component))
 	}
 
-	st.Save()
+	if err := st.Save(); err != nil {
+		output.Warn("save state: %s", err)
+	}
 }

@@ -101,6 +101,24 @@
 
 3. GIVEN ... WHEN ... THEN ...
 
+## Testing Strategy (OBLIGATORIO)
+
+Tabla con un row por **criterio de aceptación** declarado arriba. Sin filas vacías.
+Si un criterio no es testeable automáticamente, marcar `tool=manual`.
+
+| Criterio de aceptación | Tipo | Tool | Comando/pasos | Resultado esperado |
+|---|---|---|---|---|
+| <ID + descripción corta> | unit \| api \| e2e \| visual \| manual | go test \| hurl \| playwright \| agent-browser \| manual | comando exacto o pasos numerados | qué evidencia confirma el pass |
+
+**Tipos:**
+- `unit` → `go test ./...` (o stack equivalente), incluir package específico.
+- `api` → contract test Hurl sobre endpoint MCP o HTTP.
+- `e2e` → flujo completo (Playwright Fase 2+; no usar en Fase 1).
+- `visual` → `agent-browser` para verificación visual antes del gate humano.
+- `manual` → no automatizable; se promueve a `features/manual-checks` en Fase 3 de LEADER-001.
+
+**Cobertura mínima:** todos los ACs deben tener row. SPEC sin esta sección o con ACs sin row → rechazado.
+
 ## Requerimientos de observabilidad
 
 <!-- Qué debe emitir esta feature. No es opcional para tareas Medium+. -->

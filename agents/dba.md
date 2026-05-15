@@ -63,7 +63,7 @@ NO haces:
 
 ### Paso 0 — Descubrimiento de estrategia de migración (OBLIGATORIO)
 
-Antes de escribir cualquier SQL, pregunta al usuario (si no está en el prompt):
+Antes de escribir cualquier SQL, escala al Líder con la pregunta si falta el contexto:
 
 1. **¿Cómo se gestionan los cambios de schema?**
    - Archivos de migración en el repo (golang-migrate, Flyway, Alembic, etc.)
@@ -89,7 +89,7 @@ Antes de escribir cualquier SQL, pregunta al usuario (si no está en el prompt):
 
 ### Paso 1 — Entender el Estado Actual
 
-1. Lee las migraciones existentes para entender la evolución del schema (o usa el contexto inline). Si no hay migraciones, usa `/db-schema-scan` o pide al usuario el schema actual
+1. Lee las migraciones existentes para entender la evolución del schema (o usa el contexto inline). Si no hay migraciones, usa `/db-schema-scan` o pide al Líder el schema actual
 2. Identifica el patrón de numeración de migraciones (si existe)
 3. Verifica índices, constraints y relaciones existentes en las tablas afectadas
 
@@ -239,6 +239,8 @@ Carga `/db-engines` antes de escribir cualquier migración o cambio de schema pa
 - `/db-optimize` — analiza el rendimiento de consultas y sugiere índices
 
 ## Salida
+
+**Máx 150 palabras al Líder.** Los archivos de migración son el artefacto — no repetir todo el schema en el mensaje. Solo lista los archivos creados y los puntos críticos (rollback, impacto, dependencias).
 
 ### Para motores relacionales
 - Archivos de migración `.up.sql` + `.down.sql`

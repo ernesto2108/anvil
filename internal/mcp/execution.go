@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -25,6 +26,8 @@ func (s *Server) runPipeline(_ context.Context, args map[string]any) (string, er
 		return "", fmt.Errorf("task is required")
 	}
 	stack := strArg(args, "stack", "")
+	maxRetries := intArg(args, "max_retries", 2)
+	maxCost := floatArg(args, "max_cost", 0.50)
 
 	// Validate pipeline exists — only allow names from pipelines/ directory.
 	pipelineFile := filepath.Join(s.cfg.RepoDir, "pipelines", pipeline+".yaml")
@@ -39,7 +42,10 @@ func (s *Server) runPipeline(_ context.Context, args map[string]any) (string, er
 	}
 
 	// Build the command. -y auto-approves gates so the pipeline runs unattended.
-	cmdArgs := []string{"run", pipeline, "--task", task, "-y"}
+	cmdArgs := []string{"run", pipeline, "--task", task, "-y",
+		"--max-retries", strconv.Itoa(maxRetries),
+		"--max-cost", strconv.FormatFloat(maxCost, 'f', 4, 64),
+	}
 	if stack != "" {
 		cmdArgs = append(cmdArgs, "--stack", stack)
 	}
@@ -61,11 +67,13 @@ func (s *Server) runPipeline(_ context.Context, args map[string]any) (string, er
 	go func() { _ = cmd.Wait() }()
 
 	result := map[string]any{
-		"status":   "launched",
-		"pipeline": pipeline,
-		"task":     task,
-		"pid":      cmd.Process.Pid,
-		"note":     "Pipeline running in background. Use list_runs to check status.",
+		"status":      "launched",
+		"pipeline":    pipeline,
+		"task":        task,
+		"pid":         cmd.Process.Pid,
+		"max_retries": maxRetries,
+		"max_cost":    maxCost,
+		"note":        "Pipeline running in background. Use list_runs to check status.",
 	}
 	b, _ := json.MarshalIndent(result, "", "  ")
 	return string(b), nil
@@ -111,6 +119,7 @@ func (s *Server) getRunStatus(_ context.Context, args map[string]any) (string, e
 		FilesTouched int     `json:"files_touched"`
 		AgentsCount  int     `json:"agents_count"`
 		QAScore      float64 `json:"qa_score,omitempty"`
+		Degraded     bool    `json:"degraded,omitempty"`
 	}
 
 	var r runRow
@@ -118,13 +127,14 @@ func (s *Server) getRunStatus(_ context.Context, args map[string]any) (string, e
 	var durationMs sql.NullInt64
 	var filesTouched, agentsCount sql.NullInt64
 	var qaScore sql.NullFloat64
+	var degraded sql.NullInt64
 
 	err := db.QueryRowContext(context.Background(),
 		`SELECT id, task_desc, status, complexity, provider, project,
-		        started_at, ended_at, duration_ms, files_touched, agents_count, qa_score
+		        started_at, ended_at, duration_ms, files_touched, agents_count, qa_score, degraded
 		 FROM runs WHERE id = ?`, runID).
 		Scan(&r.ID, &r.TaskDesc, &r.Status, &complexity, &provider, &project,
-			&r.StartedAt, &endedAt, &durationMs, &filesTouched, &agentsCount, &qaScore)
+			&r.StartedAt, &endedAt, &durationMs, &filesTouched, &agentsCount, &qaScore, &degraded)
 	if err == sql.ErrNoRows {
 		return fmt.Sprintf(`{"error": "run %q not found"}`, runID), nil
 	}
@@ -139,6 +149,7 @@ func (s *Server) getRunStatus(_ context.Context, args map[string]any) (string, e
 	r.FilesTouched = int(filesTouched.Int64)
 	r.AgentsCount = int(agentsCount.Int64)
 	r.QAScore = qaScore.Float64
+	r.Degraded = degraded.Int64 == 1
 
 	// Load agents for this run.
 	type agentRow struct {
@@ -156,7 +167,7 @@ func (s *Server) getRunStatus(_ context.Context, args map[string]any) (string, e
 	if err != nil {
 		return "", fmt.Errorf("query agents: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var agents []agentRow
 	for rows.Next() {
@@ -206,7 +217,7 @@ func (s *Server) listRuns(_ context.Context, args map[string]any) (string, error
 	if err != nil {
 		return "", fmt.Errorf("query runs: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	type runSummary struct {
 		ID           string `json:"id"`

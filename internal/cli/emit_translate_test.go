@@ -126,10 +126,10 @@ func makeWriterWithRun(t *testing.T, runID, agentID, sessionID string) *writer.E
 	db := testutil.OpenTestDB(t)
 	w := writer.New(db, 0)
 
-	w.WriteEvent(mustEmitEvent(t, runID, instrumentation.EventRunStart, instrumentation.RunStartPayload{
+	_ = w.WriteEvent(mustEmitEvent(t, runID, instrumentation.EventRunStart, instrumentation.RunStartPayload{
 		SessionID: sessionID,
 	}))
-	w.WriteEvent(mustEmitEvent(t, runID, instrumentation.EventAgentStart, instrumentation.AgentStartPayload{
+	_ = w.WriteEvent(mustEmitEvent(t, runID, instrumentation.EventAgentStart, instrumentation.AgentStartPayload{
 		AgentID: agentID, AgentRole: "dev",
 	}))
 	return w
@@ -157,7 +157,7 @@ func TestHandlePostToolUse_McpTool_SetsDuration(t *testing.T) {
 	w := makeWriterWithRun(t, "run-mcp-dur", "agent-1", "sess-mcp")
 
 	// First emit a PreToolUse (tool.use event) so the row exists in tool_uses.
-	w.WriteEvent(mustEmitEvent(t, "run-mcp-dur", instrumentation.EventToolUse, instrumentation.ToolUsePayload{
+	_ = w.WriteEvent(mustEmitEvent(t, "run-mcp-dur", instrumentation.EventToolUse, instrumentation.ToolUsePayload{
 		AgentID:   "agent-1",
 		ToolName:  "mcp__postgres__query",
 		MCPServer: "postgres",
@@ -200,7 +200,7 @@ func TestHandlePostToolUse_NonMcpTool_Unchanged(t *testing.T) {
 	db := testutil.OpenTestDB(t)
 	w := writer.New(db, 0)
 
-	w.WriteEvent(mustEmitEvent(t, "run-write", instrumentation.EventRunStart, instrumentation.RunStartPayload{
+	_ = w.WriteEvent(mustEmitEvent(t, "run-write", instrumentation.EventRunStart, instrumentation.RunStartPayload{
 		SessionID: "sess-write",
 	}))
 
@@ -230,7 +230,7 @@ func TestHandlePostToolUse_NonMcpTool_Unchanged(t *testing.T) {
 
 	// Verify no duration_ms was set in tool_uses (table should have 0 MCP rows).
 	var mcpCount int
-	db.QueryRow("SELECT COUNT(*) FROM tool_uses WHERE run_id = ? AND source = 'mcp'", "run-write").Scan(&mcpCount)
+	_ = db.QueryRow("SELECT COUNT(*) FROM tool_uses WHERE run_id = ? AND source = 'mcp'", "run-write").Scan(&mcpCount)
 	if mcpCount != 0 {
 		t.Errorf("expected 0 MCP tool_uses rows for Write tool, got %d", mcpCount)
 	}
