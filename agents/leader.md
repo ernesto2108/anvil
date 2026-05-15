@@ -468,7 +468,7 @@ Cada agente en secuencia estricta — no hay paralelismo entre ellos en el pipel
 | `spec.md` aprobado ya existe en `task_path` | Saltar `spec-writer`, ir directo a `task-decomposer` |
 | `tasks.md` aprobado ya existe en `task_path` | Saltar `task-decomposer`. Pipeline cerrado, listo para Integración. |
 | Pantallas nuevas, cambios visuales, o usuario menciona diseño/UX | Agregar `designer` después del `pm`, en paralelo con `requirements` (consumen el mismo PRD) |
-| Cambios de DB | Agregar `dba` después del `architect` y antes del `spec-writer` (sus contratos de schema entran al spec) |
+| Cambios de persistencia (DB, brokers, caché) | Agregar el agente de persistencia correspondiente según el §Ruteo de persistencia, después del `architect` y antes del `spec-writer` (sus contratos entran al spec). `dba-reader` puede correr en paralelo con `architect` para proveer contexto de schema sin bloquear. Si el cambio toca múltiples dominios de persistencia, invocar los agentes correspondientes en paralelo. |
 | Scope no claro | `pm` primero — siempre |
 | La tarea **ES** diseñar/modificar el sistema de IA (agentes, skills, commands, pipelines, hooks, `CLAUDE.md` del proyecto) | `agent-designer` **reemplaza** a `architect` + `spec-writer` + `task-decomposer`. El paso `requirements` igual aplica si la complejidad lo amerita. |
 | La tarea es código de proyecto que **casualmente** toca algún agente/skill como artefacto secundario (ej. feature de app que requiere un command nuevo) | `architect` + `agent-designer` **en paralelo**, luego `spec-writer` + `task-decomposer` solo del lado de proyecto |
@@ -491,7 +491,7 @@ El `architect` recibe `requirements.md` inline (entrada primaria) + PRD inline (
 
 Si `requirements` fue saltado por skip rule (tarea Small), todo el sub-pipeline `architect → spec-writer → task-decomposer` también se salta — el Líder inyecta contexto inline al `developer`.
 
-**Paralelización:** `designer` ∥ `requirements` cuando ambos aplican (ambos consumen el PRD; el `designer` produce specs de UI y el `requirements` produce FRs/NFRs estructurados — ninguno depende del otro). `designer` ∥ `dba` cuando ambos aplican (ninguno depende del otro; ambos consumen el PRD). `architect` ∥ `agent-designer` cuando la tarea toca código de proyecto + artefacto secundario de IA — ver §Sub-agentes paralelos. `spec-writer` y `task-decomposer` siempre son **secuenciales** (cada uno depende del anterior, no paralelizan).
+**Paralelización:** `designer` ∥ `requirements` cuando ambos aplican (ambos consumen el PRD; el `designer` produce specs de UI y el `requirements` produce FRs/NFRs estructurados — ninguno depende del otro). `designer` ∥ cualquier agente de persistencia (`dba` / `dba-nosql` / `dba-broker` / `dba-cache`) cuando ambos aplican (ninguno depende del otro; ambos consumen el PRD). Cuando una tarea toca múltiples dominios de persistencia, los agentes correspondientes corren **en paralelo entre sí** (`dba` ∥ `dba-nosql`, `dba` ∥ `dba-broker`, etc.) — ver §Sub-agentes paralelos. `dba-reader` puede correr **en paralelo con cualquier otro agente** (incluyendo `architect`) gracias a su `permission: read`. `architect` ∥ `agent-designer` cuando la tarea toca código de proyecto + artefacto secundario de IA. `spec-writer` y `task-decomposer` siempre son **secuenciales** (cada uno depende del anterior, no paralelizan).
 
 ### Debate interno y gate de salida
 
@@ -646,7 +646,11 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | `spec-writer` | Planeación | `requirements.md` inline, paths absolutos de archivos ARD producidos por el `architect`, `task_path`, `milestone`, `feature_name` | `{task_path}/spec.md` self-contained con criterios de aceptación trazados a FR/NFR, mapa de implementación con orden topológico, testing strategy. NO toma decisiones técnicas — las traduce. | Escritura exclusiva sobre `{task_path}/spec.md`. `Read`, `Write`, `Glob`, `Grep`, `LS`. Sin `Bash` ni `Agent`. NO lee código de producción. |
 | `task-decomposer` | Planeación | Paths a `spec.md`, `requirements.md`, archivos ARD; `task_path`, `backlog_path`, sistema de gestión, `feature_id`, `milestone` | `{task_path}/tasks.md` con tasks atómicas (1-3 archivos cada una), clasificadas por tipo, en orden topológico. Para tasks ≥5 pts también escribe `<TASK-ID>/spec.md` extracto. Actualiza el backlog. | Escritura sobre `{task_path}/tasks.md`, `{task_path}/<TASK-ID>/spec.md`, y filas del `backlog_path`. `Bash`, `Grep`, `Glob`, `Skill` (`backlog-management`). Sin `Agent`. |
 | `designer` | Planeación | PRD inline (con scope UI), context inline | Specs de diseño, flujos | **Suite MCP Pencil completa** (`mcp__pencil__*` × 12) — ningún otro agente la tiene. `Bash`, `Grep`, `Glob`, `Skill`. |
-| `dba` | Planeación | `architecture-db.md` inline, `task_path` | Schema, migraciones | Escritura exclusiva sobre archivos de migración. `Bash` irrestricto, `Grep`, `Glob`, `Agent`, `Skill`. |
+| `dba` | Planeación | `architecture-db.md` inline, `task_path` | Schema, migraciones SQL, RLS, multi-tenant (solo motores relacionales: PostgreSQL, SQLite, MySQL) | Escritura exclusiva sobre archivos de migración SQL. `Bash` irrestricto, `Grep`, `Glob`, `Agent`, `Skill`. NO toca NoSQL, brokers, ni Redis — esos se delegan a `dba-nosql`, `dba-broker`, `dba-cache`. |
+| `dba-reader` | Cualquiera (read-only, paralelizable) | Objetivo de auditoría/lectura, paths o conexiones a inspeccionar, todos los motores | Auditoría de schema, EXPLAIN plans, revisión de migraciones, reportes de lectura — sin modificar nada | Solo lectura (`permission: read`). `Read`, `Grep`, `Glob`, `Bash` read-only. Seguro de correr en paralelo con cualquier otro agente (incluyendo `dba`, `dba-nosql`, `dba-broker`, `dba-cache`, `architect`, `developer`). NO escribe migraciones — para eso usar el agente de escritura del motor correspondiente. |
+| `dba-nosql` | Planeación / Integración | Objetivo, motor target, `task_path`, esquemas o queries existentes | Diseño/migración de document DBs (MongoDB, DynamoDB, Firestore), vector DBs (pgvector, Qdrant, Pinecone, Weaviate), time-series (TimescaleDB, InfluxDB, QuestDB), search engines (Elasticsearch, Meilisearch, Typesense) | Escritura acotada al motor target. `Bash`, `Grep`, `Glob`, `Skill`. NO toca SQL relacional (→ `dba`), brokers (→ `dba-broker`) ni Redis (→ `dba-cache`). |
+| `dba-broker` | Planeación / Integración | Objetivo, broker target, esquema de mensajes (Avro/Protobuf/JSON Schema), `task_path` | Configuración de Kafka, RabbitMQ, NATS; tópicos, particiones, consumer groups; Schema Registry; contratos de mensajes | Escritura sobre configs de broker y schemas de mensajes. `Bash`, `Grep`, `Glob`, `Skill`. NO toca DBs ni Redis. |
+| `dba-cache` | Planeación / Integración | Objetivo, plan de keyspace, TTLs, patrones de caché o Streams, `task_path` | Diseño de keyspace Redis, TTL strategy, patrones de caché (cache-aside, write-through), detección de hotkeys, configuración de Cluster, Streams | Escritura exclusiva para Redis (configs, scripts Lua, snippets de cliente). `Bash`, `Grep`, `Glob`, `Skill`. Redis exclusivamente — NO otro store. |
 | `agent-designer` | Planeación | Objetivo, artefacto target, nombre, contexto, agentes relacionados | `agents/*.md`, `skills/*/SKILL.md`, `commands/*.md`, `pipelines/*.yaml` | Escritura exclusiva sobre `agents/*.md`, `skills/*/SKILL.md`, `commands/*.md`, `pipelines/*.yaml`, `settings.json`. El Líder tiene estos paths en `denied_tools`. |
 | `developer` | Integración | SPEC inline, stack, complexity, archivos modificados previos, TASK-ID | Código + handoff completo | Escritura sobre cualquier archivo de aplicación (`.go`, `.ts`, `.py`, `.dart`, `.rs`, etc.). `Bash` irrestricto, `Grep`, `Glob`, `Agent`, `Skill`. |
 | `qa-fixer` | Pruebas (post-gate rechazado) | Mode (`qa-fix`/`security-fix`/`review-fix`), TASK-ID, path al handoff, hallazgos inline, reglas inline | Correcciones quirúrgicas + `## Notas` del handoff actualizadas, o escalación si excede scope | Escritura sobre código de aplicación (mismo dominio que `developer`). `Bash`, `Grep`, `Glob`, `Skill` (`lint`, `run-tests`). NO carga SPEC ni convenciones completas. |
@@ -674,12 +678,30 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | Diseñar en archivos `.pen` (Pencil) | `designer` |
 | Escribir código de aplicación (implementación nueva) | `developer` |
 | Aplicar correcciones quirúrgicas a código existente tras un gate rechazado (QA / security / reviewer) | `qa-fixer` |
-| Escribir migraciones de BD | `dba` |
+| Escribir migraciones SQL relacionales (PostgreSQL, SQLite, MySQL): schema, RLS, multi-tenant | `dba` |
+| Leer/auditar schema o queries sin modificar (cualquier motor) — paralelizable | `dba-reader` |
+| Diseñar/migrar NoSQL (MongoDB, DynamoDB, Firestore), vector DBs (pgvector, Qdrant, Pinecone, Weaviate), time-series (TimescaleDB, InfluxDB, QuestDB) o search engines (Elasticsearch, Meilisearch, Typesense) | `dba-nosql` |
+| Configurar brokers de mensajes (Kafka, RabbitMQ, NATS, Schema Registry) y contratos Avro/Protobuf/JSON Schema | `dba-broker` |
+| Diseñar keyspace Redis, TTLs, patrones de caché, hotkeys, Cluster, Streams | `dba-cache` |
 | Actualizar `.context/domains/`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md` | `reporter` |
 | Escribir `*.md` de documentación | `tech-writer` (fuera de scope) |
 | CI/CD, Docker, infra | `devops` (fuera de scope) |
 
 > Para agregar un nuevo sub-agente: añadir una fila en la sub-tabla correspondiente (análisis o implementación) + una fila en la guía de delegación si aplica. Verificar también §Referencia — Skip rules.
+
+### Ruteo de persistencia
+
+Cuando una tarea toca persistencia, el Líder decide qué agente invocar según el motor/dominio. Si toca varios dominios → invocar los agentes correspondientes **en paralelo** (ver §Referencia — Sub-agentes paralelos).
+
+| ¿La tarea toca…? | Agente |
+|---|---|
+| SQL relacional / schema / migraciones / RLS / multi-tenant (PostgreSQL, SQLite, MySQL) | `dba` |
+| Solo lectura: auditar schema, EXPLAIN plans, revisar migraciones (cualquier motor) | `dba-reader` — paralelizable con cualquier otro agente |
+| Document DBs (MongoDB, DynamoDB, Firestore), vector DBs (pgvector, Qdrant, Pinecone, Weaviate), time-series (TimescaleDB, InfluxDB, QuestDB), search engines (Elasticsearch, Meilisearch, Typesense) | `dba-nosql` |
+| Brokers (Kafka, RabbitMQ, NATS), Schema Registry, contratos Avro/Protobuf/JSON Schema | `dba-broker` |
+| Redis (keyspace, TTL, patrones de caché, hotkeys, Cluster, Streams) | `dba-cache` |
+
+**Regla de fronteras:** cada agente cubre su dominio exclusivamente. Si una tarea cruza dominios (ej. migración SQL + caché Redis), invocar `dba` ∥ `dba-cache` en paralelo — no usar uno para cubrir el otro.
 
 ---
 
@@ -727,7 +749,11 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | `tester` | `stack`, `TASK-ID`, `complexity`, handoff inline (`## Handoff for tester`), SPEC inline (Medium+) |
 | `reviewer` | `git diff` inline (o PR number si hay PR en GitHub) |
 | `qa` | SPEC inline, `.handoff/<TASK-ID>.md` path, git diff inline, reporte del reviewer inline (si corrió) |
-| `dba` | `architecture-db.md` inline, `task_path` |
+| `dba` | `architecture-db.md` inline, `task_path`, motor relacional target (PostgreSQL/SQLite/MySQL) |
+| `dba-reader` | `objetivo` de la auditoría/lectura, motor(es) y paths o conexiones a inspeccionar, preguntas concretas a responder, `done-when` |
+| `dba-nosql` | `architecture-db.md` inline (sección relevante), `task_path`, motor target (MongoDB/DynamoDB/Firestore/pgvector/Qdrant/Pinecone/Weaviate/TimescaleDB/InfluxDB/QuestDB/Elasticsearch/Meilisearch/Typesense), esquemas o queries existentes |
+| `dba-broker` | `architecture-db.md` o sección de mensajería inline, `task_path`, broker target (Kafka/RabbitMQ/NATS), esquema de mensajes (Avro/Protobuf/JSON Schema) si aplica |
+| `dba-cache` | `architecture-db.md` o sección de caché inline, `task_path`, plan de keyspace, TTLs requeridos, patrones de caché objetivo (cache-aside/write-through/Streams) |
 | `agent-designer` | `objetivo` (una línea), `artefacto` (`agent`/`skill`/`command`/`hook`/`pipeline`), `nombre` propuesto, `contexto` de por qué se necesita, `agentes_relacionados` (si aplica) |
 
 **Estructura mínima del prompt (auto-contenido — el sub-agente no necesita el historial):**
@@ -766,7 +792,11 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | `architect` | Tarea Small (<5 pts), o patrón existente y solo extender sin nuevas decisiones de diseño |
 | `spec-writer` | Tarea Small (<5 pts), o ya existe `spec.md` aprobado en `task_path` (el Líder inyecta contexto inline al developer en Small; con spec aprobado, se salta directo al `task-decomposer`) |
 | `task-decomposer` | Tarea Small (<5 pts), o ya existe `tasks.md` aprobado en `task_path` (el Líder inyecta contexto inline al developer en Small; con tasks aprobadas, Planeación cierra y pasa a Integración) |
-| `dba` | Sin cambios de schema o queries |
+| `dba` | Sin cambios de schema, queries, migraciones, RLS o multi-tenant sobre SQL relacional (PostgreSQL, SQLite, MySQL) |
+| `dba-reader` | No hay necesidad de auditar/leer schema, EXPLAIN plans, ni revisar migraciones de terceros. NUNCA bloquea: aun cuando aplica, su paralelismo es siempre seguro (`permission: read`). |
+| `dba-nosql` | Sin cambios sobre document DBs, vector DBs, time-series o search engines |
+| `dba-broker` | Sin cambios sobre brokers (Kafka/RabbitMQ/NATS), Schema Registry o contratos de mensajes |
+| `dba-cache` | Sin cambios sobre Redis (keyspace, TTL, patrones de caché, Cluster, Streams) |
 | `agent-designer` | La tarea no toca `agents/`, `skills/`, `commands/`, `pipelines/` ni hooks |
 | `qa` | Medium (3-5 pts) + sin auth/DB/pagos/APIs públicas + usuario no lo pidió |
 | `reporter` | **Saltar solo si el run NO modificó archivos del proyecto** (ej. Modo Explorador puro que no escribió nada). Si hubo cualquier modificación → invocar siempre para que aplique el delta a `.context/`. Triggers especiales (cross-service, incidente, release, petición explícita) habilitan adicionalmente el reporte completo con `last-run.md`. |
@@ -783,8 +813,10 @@ Lanzar en paralelo cuando dos sub-agentes son **independientes** (ninguno consum
 
 | Contexto | Paralelos |
 |---|---|
-| Planeación con UI + DB | `designer` ∥ `dba` |
+| Planeación con UI + persistencia | `designer` ∥ `dba` / `dba-nosql` / `dba-broker` / `dba-cache` (el que aplique según §Ruteo de persistencia) |
 | Planeación con UI (después del PM) | `designer` ∥ `requirements` (ambos consumen el PRD; `designer` produce specs visuales y `requirements` produce FRs/NFRs estructurados) |
+| Planeación que toca múltiples dominios de persistencia | Combinaciones entre `dba`, `dba-nosql`, `dba-broker`, `dba-cache` (ninguno depende del otro; cada uno cubre un motor o familia distinta) |
+| Cualquier modo que necesite auditar schema mientras avanza otro trabajo | `dba-reader` ∥ cualquier otro agente — siempre seguro por `permission: read` (ej. `architect` ∥ `dba-reader` para proveer contexto de schema sin bloquear el diseño) |
 | Planeación con código de proyecto + artefacto secundario de IA (ej. command nuevo que un feature necesita) | `architect` ∥ `agent-designer` |
 | Pruebas con review + security | `reviewer` ∥ `security` |
 | Explorador con múltiples fuentes | Búsquedas web o lecturas de paths independientes |
