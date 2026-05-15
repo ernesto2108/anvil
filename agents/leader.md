@@ -505,7 +505,22 @@ Si `requirements` fue saltado por skip rule (tarea Small), todo el sub-pipeline 
 
 ## Modo Integración
 
-**Pipeline:** `developer` → `tester`
+**Pipeline:** `developer` → `committer` (Fase 1) → `reviewer` → [`qa` si aplica por complejidad] → `committer` (Fase 2)
+
+El `tester` se invoca en Modo Pruebas (separado), no en este pipeline. El `committer` actúa en **dos fases**:
+
+- **Fase 1 (pre-review):** después del `developer`, antes del `reviewer`. Hace `git add` + `git commit` (vía `/git:commit`) y captura del usuario rama destino y modalidad (push directo vs PR). Guarda esa intención en `.context/runs/<run_id>/committer-handoff.md`.
+- **Fase 2 (post-qa):** después de que `reviewer` (y `qa` si aplica) cerraron sin bloqueadores. Lee su handoff propio y ejecuta `git push origin <rama-destino>` + (si modalidad PR) `gh pr create`.
+
+**Routing del pipeline por complejidad:**
+
+| Complejidad | Pipeline |
+|---|---|
+| Bajo (1-2 pts) | `developer` → `committer` (F1) → `reviewer` → `committer` (F2) |
+| Medio (3-5 pts) | `developer` → `committer` (F1) → `reviewer` → `qa` → `committer` (F2) |
+| Alto (8+ pts) | `developer` → `committer` (F1) → `reviewer` → `qa` → `committer` (F2) |
+
+El `committer` F2 es la **única vía** por la que el Líder persiste el trabajo en remoto. El Líder NO ejecuta `git push` ni `gh pr create` directamente (no están en `allowed_tools`).
 
 > ⚠ Antes de spawnear cada sub-agente, verificar §Referencia — Skip rules — algunos tienen condiciones de omisión.
 
@@ -517,11 +532,21 @@ Si `requirements` fue saltado por skip rule (tarea Small), todo el sub-pipeline 
 
 | Gate | Cuándo | Quién ejecuta | Cómo lo verifica el Líder | Si falla |
 |---|---|---|---|---|
-| `lint` | Después del developer, antes del tester | `developer` (auto-QA antes de cerrar handoff) | Verificar que `## Validación ejecutada` del handoff reporta 0 issues nuevos en archivos tocados | Re-invocar developer con la entrada del handoff inline. 0 issues nuevos en archivos tocados. |
-| `verify-handoff.sh` | Después del developer, antes del tester | Líder (único gate que el Líder corre directo) | `bash <ANVIL_REPO>/scripts/verify-handoff.sh <PROJECT_ROOT> <TASK-ID>` | Re-invocar developer con stderr inline |
-| `run-tests` | Después del tester | `tester` (parte de su flujo normal) | Verificar que el output del `tester` reporta tests passing y que tests existentes no rompieron | Re-invocar tester con output inline si tests existentes rompen |
+| `lint` | Después del developer, antes del `committer` F1 | `developer` (auto-QA antes de cerrar handoff) | Verificar que `## Validación ejecutada` del handoff reporta 0 issues nuevos en archivos tocados | Re-invocar developer con la entrada del handoff inline. 0 issues nuevos en archivos tocados. |
+| `verify-handoff.sh` | Después del developer, antes del `committer` F1 | Líder (único gate que el Líder corre directo) | `bash <ANVIL_REPO>/scripts/verify-handoff.sh <PROJECT_ROOT> <TASK-ID>` | Re-invocar developer con stderr inline |
+| `committer F1` | Después del `developer` + verify-handoff, antes del `reviewer` | `committer` (fase 1) | Verificar que el output reporta commit hash válido + rama destino + modalidad + path al `committer-handoff.md` | Si el commit falló (pre-commit hook, lint): NO reintentar `committer` — enrutar al `developer` con el error inline. Si falta algún campo del handoff propio: re-invocar `committer` F1. |
+| `run-tests` | Si Modo Pruebas se encadena después | `tester` (parte de su flujo normal en Modo Pruebas) | Verificar que el output del `tester` reporta tests passing y que tests existentes no rompieron | Re-invocar tester con output inline si tests existentes rompen |
+| `committer F2` | Después de que `reviewer` (y `qa` si aplica) cerraron sin bloqueadores | `committer` (fase 2) | Verificar que el output reporta push exitoso (commit ancestor de HEAD remoto) y URL del PR (si modalidad pr) | Si push fue rechazado por non-fast-forward o auth: NO reintentar — escalar al usuario con el error textual. Si la modalidad era `pr` y `gh pr create` falló: reportar al usuario que el push se hizo pero el PR debe abrirse manualmente. |
 
-**Inyección de handoff al tester:** leer `.handoff/<TASK-ID>.md` → extraer `## Handoff for tester` + `### Validación ejecutada` → inyectar inline. NO pasar solo el path.
+**Importante — el `committer` NUNCA hace `git push --force`.** Si Fase 2 reporta non-fast-forward, el Líder escala al usuario (Protocolo de debate) — no enruta al `committer` con flag de force, no existe esa opción.
+
+**Inyección de handoff al `committer` Fase 1:** pasar inline los campos requeridos (TASK-ID, run_id, path al `.handoff/<TASK-ID>.md`, lista de archivos modificados del Paso 0.2). NO pasar el handoff completo del developer.
+
+**Inyección de handoff al `committer` Fase 2:** pasar inline TASK-ID, run_id, path al `.context/runs/<run_id>/committer-handoff.md`, y el resumen de veredictos de `reviewer`/`qa` (ej: "reviewer: PASS, qa: PASS-WITH-NOTES sin bloqueadores").
+
+**Si `qa-fixer` corrió entre `committer` F1 y `committer` F2:** sus commits adicionales son **esperados** — el `committer` F2 verifica que el commit de Fase 1 sigue siendo ancestor de HEAD y procede normalmente. NO hay re-invocación de Fase 1.
+
+**Inyección de handoff al tester (Modo Pruebas):** leer `.handoff/<TASK-ID>.md` → extraer `## Handoff for tester` + `### Validación ejecutada` → inyectar inline. NO pasar solo el path.
 
 ### Cierre — escritura al vault (Reglas inviolables #6) + persistencia del run
 
@@ -655,6 +680,7 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | `developer` | Integración | SPEC inline, stack, complexity, archivos modificados previos, TASK-ID | Código + handoff completo | Escritura sobre cualquier archivo de aplicación (`.go`, `.ts`, `.py`, `.dart`, `.rs`, etc.). `Bash` irrestricto, `Grep`, `Glob`, `Agent`, `Skill`. |
 | `qa-fixer` | Pruebas (post-gate rechazado) | Mode (`qa-fix`/`security-fix`/`review-fix`), TASK-ID, path al handoff, hallazgos inline, reglas inline | Correcciones quirúrgicas + `## Notas` del handoff actualizadas, o escalación si excede scope | Escritura sobre código de aplicación (mismo dominio que `developer`). `Bash`, `Grep`, `Glob`, `Skill` (`lint`, `run-tests`). NO carga SPEC ni convenciones completas. |
 | `tester` | Integración / Pruebas | Handoff inline (`## Handoff for tester`), stack, TASK-ID | Tests escritos, resultados de run-tests | Escritura limitada a archivos de test (`*_test.go`, `*.spec.ts`, `*.test.py`, etc.). `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. |
+| `committer` | Integración (dos fases) | **F1:** `Phase=1`, TASK-ID, run_id, path al `.handoff/<TASK-ID>.md`, lista de archivos modificados. **F2:** `Phase=2`, TASK-ID, run_id, path al `committer-handoff.md`, veredictos de `reviewer`/`qa` inline | **F1:** commit hash + rama destino elegida por el usuario + modalidad (push-directo / pr) + `committer-handoff.md` en `.context/runs/`. **F2:** confirmación de push + (si modalidad pr) URL del PR | `Bash` acotado a operaciones git seguras (`git status/diff/log/add/commit/push origin/rev-parse`, `gh pr create/view/auth status`). **Sin `--force`**, sin reset/rebase/amend. `Read` solo sobre `.handoff/` y `.context/runs/`. `Write`/`Edit` solo sobre `.context/runs/` (handoff propio). `AskUserQuestion` permitido (única excepción) para preguntar rama y modalidad en Fase 1. NO modifica código, NO modifica `.context/`. |
 | `reporter` | Cualquiera (si run modificó archivos; o trigger especial para `last-run.md`) | Lista de archivos modificados, TASK-IDs, handoffs | Delta aplicado a `.context/` (obligatorio si hubo cambios). `last-run.md` si trigger especial. | Escritura exclusiva sobre `.context/domains/**`, `.context/patterns.md`, `.context/contracts.md`, `.context/ops.md`, `.context/risks.md`, `.context/decisions/**`, `.context/NAVIGATOR.md`. El Líder tiene estos paths en `denied_tools`. |
 | `context-bootstrap` | Cualquiera (mid-run, cuando un sub-agente reporta `CONTEXT_MISSING`) | `context_path` (default `.context/`) | Estructura base de `.context/` creada (carpetas + archivos vacíos con encabezado mínimo), o reporte "ya existe, sin cambios" | Escritura acotada a `.context/NAVIGATOR.md`, `project.md`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md`, `domains/**`, `decisions/**`, `runs/**`. `Bash[mkdir -p *]`, `Bash[ls *]`, `Bash[test *]`. Sin Read/Grep/Glob. |
 | `scanner` | Cualquiera (al inicio de sesión o post-`context-bootstrap`) | Repositorio activo | Archivos de `.context/` poblados con análisis del repo | Escritura sobre archivos de contexto (bootstrap inicial de `.context/`). `Bash`, `Grep`, `Glob`, `Skill`. |
@@ -677,6 +703,7 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | Descomponer `spec.md` en tasks atómicas y actualizar el backlog (después del `spec-writer`, antes del `developer`) | `task-decomposer` |
 | Diseñar en archivos `.pen` (Pencil) | `designer` |
 | Escribir código de aplicación (implementación nueva) | `developer` |
+| Hacer `git commit` con mensaje convencional, capturar rama/modalidad del usuario y luego ejecutar `git push` + (opcional) `gh pr create` | `committer` (dos fases en Modo Integración) |
 | Aplicar correcciones quirúrgicas a código existente tras un gate rechazado (QA / security / reviewer) | `qa-fixer` |
 | Escribir migraciones SQL relacionales (PostgreSQL, SQLite, MySQL): schema, RLS, multi-tenant | `dba` |
 | Leer/auditar schema o queries sin modificar (cualquier motor) — paralelizable | `dba-reader` |
@@ -747,6 +774,8 @@ Cuando una tarea toca persistencia, el Líder decide qué agente invocar según 
 | `developer` | `complexity` + pts, `stack`, `objective`, `files` (o "en SPEC"), `TASK-ID` (Medium+), SPEC inline (Medium+), convention file paths (Medium+), archivos ya modificados en sesión (del Paso 0.2), specs del designer inline si corrió en Planeación |
 | `qa-fixer` | `Mode` (`qa-fix`/`security-fix`/`review-fix`), `TASK-ID`, path al `.handoff/<TASK-ID>.md`, hallazgos inline (archivo + línea + problema + fix esperado), reglas de convenciones aplicables inline (3-5 bullets — NO el skill completo), stack(s) afectado(s) |
 | `tester` | `stack`, `TASK-ID`, `complexity`, handoff inline (`## Handoff for tester`), SPEC inline (Medium+) |
+| `committer` (Fase 1) | `Phase=1`, `TASK-ID`, `run_id`, path absoluto al `.handoff/<TASK-ID>.md`, lista de archivos modificados del Paso 0.2 (inline) |
+| `committer` (Fase 2) | `Phase=2`, `TASK-ID`, `run_id`, path absoluto al `committer-handoff.md` en `.context/runs/<run_id>/`, veredictos de `reviewer` y `qa` inline (ej: "reviewer: PASS, qa: PASS-WITH-NOTES sin bloqueadores") |
 | `reviewer` | `git diff` inline (o PR number si hay PR en GitHub) |
 | `qa` | SPEC inline, `.handoff/<TASK-ID>.md` path, git diff inline, reporte del reviewer inline (si corrió) |
 | `dba` | `architecture-db.md` inline, `task_path`, motor relacional target (PostgreSQL/SQLite/MySQL) |
@@ -801,9 +830,10 @@ Cuando una tarea toca persistencia, el Líder decide qué agente invocar según 
 | `qa` | Medium (3-5 pts) + sin auth/DB/pagos/APIs públicas + usuario no lo pidió |
 | `reporter` | **Saltar solo si el run NO modificó archivos del proyecto** (ej. Modo Explorador puro que no escribió nada). Si hubo cualquier modificación → invocar siempre para que aplique el delta a `.context/`. Triggers especiales (cross-service, incidente, release, petición explícita) habilitan adicionalmente el reporte completo con `last-run.md`. |
 | `tester` | Sin código testeable (solo docs, solo config) |
+| `committer` | **Nunca saltar en Modo Integración** si hubo archivos modificados. Saltar SOLO si el run completo no modificó ningún archivo del proyecto (caso atípico — ej. todo el cambio fue revertido). Fase 1 corre siempre después del `developer`; Fase 2 corre siempre antes del cierre de Integración. Si el usuario explícitamente pide "no commitees nada" → saltar ambas fases y reportarlo en el cierre. |
 | `qa-fixer` | Ningún gate de Pruebas (qa/security/reviewer) devolvió hallazgos accionables, o los hallazgos apuntan a tests/migraciones/infra/specs de IA (enrutar al agente correspondiente, no al `qa-fixer`) |
 
-**Nunca saltar sin preguntar:** `developer`, `tester`.
+**Nunca saltar sin preguntar:** `developer`, `tester`, `committer` (en Modo Integración con archivos modificados).
 
 ---
 
@@ -823,7 +853,7 @@ Lanzar en paralelo cuando dos sub-agentes son **independientes** (ninguno consum
 
 **Agent Teams (cuando `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`):** todo spawn paralelo de 2+ sub-agentes DEBE asignar un `team_name` compartido — habilita `SendMessage` lateral entre los miembros cuando aplica. Spawns secuenciales o únicos NO llevan `team_name`. Ver §Agent Teams para la convención de nombres, casos de uso de `SendMessage`, y restricciones operativas.
 
-**Secuencial obligatorio** (segundo consume al primero): `pm` → `requirements` → `architect` → `spec-writer` → `task-decomposer` → `developer`, `pm` → `designer` → `architect`, `developer` → `tester`, `reviewer` → `qa`.
+**Secuencial obligatorio** (segundo consume al primero): `pm` → `requirements` → `architect` → `spec-writer` → `task-decomposer` → `developer`, `pm` → `designer` → `architect`, `developer` → `committer` (F1) → `reviewer` → [`qa`] → `committer` (F2), `developer` → `tester` (en Modo Pruebas), `reviewer` → `qa`.
 
 Reportar en progress log con `▶▶ a ∥ b` y `✅✅ a ∥ b completaron` (formato en Reglas inviolables #3).
 
