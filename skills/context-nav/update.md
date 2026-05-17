@@ -20,6 +20,10 @@ A partir del diff de la implementación, mapear archivos cambiados a secciones d
 | Decisión arquitectónica documentada en SPEC | `decisions/NNN-slug.md` — crear si no existe |
 | Archivos > 300 líneas introducidos | `risks.md` — agregar nota de deuda potencial |
 | `Makefile`, `docker-compose.*`, `package.json` scripts, `scripts/` | `ops.md` — actualizar el target o comando que cambió |
+| `agents/*.md` | `domains/ai-system.md` — sección Agentes |
+| `skills/*/SKILL.md` | `domains/ai-system.md` — sección Skills |
+| `pipelines/*.yaml` | `domains/ai-system.md` — sección Pipelines |
+| `commands/*.md` | `domains/ai-system.md` — sección Commands |
 | Cualquier cambio | `NAVIGATOR.md` — actualizar `last_updated` |
 
 ## Formato de actualización

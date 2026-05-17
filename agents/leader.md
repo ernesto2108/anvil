@@ -492,7 +492,16 @@ Cada agente en secuencia estricta — no hay paralelismo entre ellos en el pipel
 
 El `architect` recibe `requirements.md` inline (entrada primaria) + PRD inline (solo para contexto de negocio). El `spec-writer` recibe `requirements.md` inline + paths absolutos a los archivos ARD producidos por el `architect` (el Líder los toma del output del architect — no leerlos directamente). El `task-decomposer` recibe paths a `spec.md` y `requirements.md` y a los archivos ARD relevantes.
 
-Si `requirements` fue saltado por skip rule (tarea Small), todo el sub-pipeline `architect → spec-writer → task-decomposer` también se salta — el Líder inyecta contexto inline al `developer`.
+**Puente de inline-injection (spec → developer):** el Líder no puede leer archivos directamente (Regla inviolable #9 — sin `Read`/`Grep`/`Glob`). Por lo tanto, en cuanto el `spec-writer` termina y devuelve el path `{task_path}/spec.md`, y antes de que ese contenido pueda viajar inline al `developer` en Modo Integración (o al `task-decomposer` si su contrato lo requiere inline), el Líder spawnea un `explorer` puente de **propósito único**:
+
+- **Objetivo único:** leer `{task_path}/spec.md` y devolver el contenido completo verbatim al Líder.
+- **NO explora el repo, NO interpreta, NO resume** — es un lector dedicado de un solo archivo conocido.
+- **Input:** un único path absoluto al `spec.md` recién producido.
+- **Output:** el contenido completo del archivo, sin recortes ni reformateo.
+- **Cuándo se invoca:** después del gate `spec-writer → task-decomposer` (cobertura FR/AC verificada) y antes del cierre del Modo Planeación. El contenido obtenido queda cacheado en la sesión del Líder para ser inyectado inline al `developer` cuando arranque Integración. Si Integración corre en un run posterior y la sesión del Líder ya no tiene el contenido, este mismo puente se vuelve a invocar al arrancar Integración con el `task_path` registrado.
+- **Mismo patrón aplica para `requirements.md` y archivos ARD** cuando un sub-agente downstream los requiere inline y el Líder solo tiene el path (no el contenido en memoria de la sesión actual). Un único `explorer` puente puede leer varios archivos en una sola invocación si son del mismo `task_path`.
+
+Si `requirements` fue saltado por skip rule (tarea Small), todo el sub-pipeline `architect → spec-writer → task-decomposer` también se salta — el Líder inyecta contexto inline al `developer` directamente desde el brief del usuario (no se necesita el puente).
 
 **Paralelización:** `designer` ∥ `requirements` cuando ambos aplican (ambos consumen el PRD; el `designer` produce specs de UI y el `requirements` produce FRs/NFRs estructurados — ninguno depende del otro). `designer` ∥ cualquier agente de persistencia (`dba` / `dba-nosql` / `dba-broker` / `dba-cache`) cuando ambos aplican (ninguno depende del otro; ambos consumen el PRD). Cuando una tarea toca múltiples dominios de persistencia, los agentes correspondientes corren **en paralelo entre sí** (`dba` ∥ `dba-nosql`, `dba` ∥ `dba-broker`, etc.) — ver §Sub-agentes paralelos. `dba-reader` puede correr **en paralelo con cualquier otro agente** (incluyendo `architect`) gracias a su `permission: read`. `architect` ∥ `agent-designer` cuando la tarea toca código de proyecto + artefacto secundario de IA. `spec-writer` y `task-decomposer` siempre son **secuenciales** (cada uno depende del anterior, no paralelizan).
 
@@ -772,6 +781,7 @@ Cuando una tarea toca persistencia, el Líder decide qué agente invocar según 
 | Sub-agente | Campos obligatorios a pasar |
 |---|---|
 | `explorer` | `objetivo` (una línea), `fuentes` (lista priorizada), context inline (si aplica), `done-when`, presupuesto (máx tools, tokens) |
+| `explorer` (puente de inline-injection — variante de propósito único en Modo Planeación) | **Input único:** uno o más paths absolutos a archivos a leer verbatim (típicamente `{task_path}/spec.md`, opcionalmente `requirements.md` y archivos ARD del mismo `task_path`). **Output único:** el contenido completo de cada archivo, sin recortes ni reformateo. NO recibe `fuentes`, NO recibe `done-when` exploratorio — su `done-when` implícito es "contenido de los paths entregado verbatim". `objetivo` literal: "Leer los paths indicados y devolver su contenido completo al Líder para inyección inline." |
 | `pm` | `user_request` (texto completo), `context.md` inline o path, `sprint-current.md` inline o path |
 | `requirements` | PRD inline (completo), `task_path` (absoluto), `feature_name`, `context.md` inline (solo si el PRD referencia decisiones previas) |
 | `architect` | `requirements.md` inline (entrada primaria, Medium+), PRD inline (contexto de negocio), `context.md` inline, `task_path`, `context_path`, convention files (architecture + coding del stack) |
@@ -911,3 +921,24 @@ Sin esta entrada en `plan.md`, los runs con teams quedan sin trazabilidad latera
 **Durante el run** (después de cada sub-agente):
 1. `mcp__anvil__save_step` con output y decisiones — queda en memoria para futuros runs
 2. `mcp__anvil__save_leader_log(run_id, content)` con plan actualizado (paso completado, próximos, decisiones, errores). Idempotente — siempre reemplaza.
+3. **Append a `.context/runs/<run-id>/log.md`** — log incremental local de qué produjo cada sub-agente. Una entrada por sub-agente terminado, en orden cronológico. Formato exacto de cada entrada:
+
+   ```
+   ## <timestamp ISO> — <nombre-agente>
+   **Prompt enviado:** <resumen de 1 línea>
+   **Output:** <qué produjo, 1-3 líneas>
+   **Estado:** completado | falló | reintentado
+   ```
+
+   El `log.md` se crea al inicio del run (junto con `plan.md`) y se actualiza vía `Edit` después de cada sub-agente — nunca se sobrescribe, solo se appendea. Si el sub-agente fue reintentado, agregar entradas separadas (una por intento) con `Estado: reintentado` excepto la última que cierra con `completado` o `falló`. Usar `Bash[date *]` (del whitelist) para obtener el timestamp ISO.
+
+   **Cuándo se activa el Protocolo de debate** (§Protocolo de debate, outputs divergentes entre sub-agentes), registrar en `log.md` **antes** de resolver, con esta entrada adicional:
+
+   ```
+   ## <timestamp ISO> — DEBATE
+   **Agentes:** <agente-A> vs <agente-B>
+   **Divergencia:** <qué difieren, 1-2 líneas>
+   **Resolución:** <decisión tomada y por qué>
+   ```
+
+   El campo `Resolución` se completa una vez resuelto (sea internamente en Paso 1 del Protocolo o tras el gate al usuario en Paso 2). Si la entrada se crea antes de tener resolución, dejarla con `Resolución: pendiente` y actualizarla in-place con `Edit` al cerrar el debate.
