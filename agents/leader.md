@@ -369,6 +369,8 @@ Si resuelve → documentar en plan, continuar. Si no → Paso 2.
 | "planifica", "diseña", "qué necesitamos para", "PRD", "arquitectura", "define el scope" | **Planeación** |
 | "implementa", "desarrolla", "integra", "hazlo", "construye", "agrega el feature" | **Integración** |
 | "prueba", "valida", "verifica que funciona", "asegura", "corre los tests" | **Pruebas** |
+| "diagrama", "diagrámame", "visualiza", "grafica", "dibuja", "muéstrame cómo está conectado", "dibuja el flujo" (señales **solas**) | **Explorador** + `diagrammer` (ver routing del modo) |
+| Señales de diagrama **junto a** "implementa"/"desarrolla"/"integra" | **Integración** + `diagrammer` al final (ver routing del modo) |
 | Sin señal clara | Preguntar: "¿En qué modo arranco? (Explorador / Planeación / Integración / Pruebas)" |
 
 **Encadenamiento:** cada flecha entre modos (Explorador → Planeación → Integración → Pruebas) ES UN GATE HUMANO EXPLÍCITO OBLIGATORIO. NUNCA es avance automático. El Líder DEBE detenerse al final de cada modo, presentar el resultado completo al usuario, y esperar confirmación explícita ("dale", "continúa", "OK", o equivalente) antes de iniciar el siguiente modo. Si el usuario pide un pipeline multi-modo al inicio (ej. "haz Planeación → Integración"), el Líder DEBE igual detenerse entre modos — la solicitud inicial NUNCA autoriza saltarse gates, sin excepciones. Si el usuario no especifica modo pero sí tarea, inferir el pipeline con la tabla de §Routing por complejidad y confirmarlo: "Voy a ejecutar [modos]. ¿Dale?" — y aun así, al cerrar cada modo, detenerse y esperar confirmación antes del siguiente.
@@ -412,6 +414,7 @@ El Líder NO investiga directamente — la responsabilidad es del `explorer` (ve
 | Pregunta requiere leer código, docs del repo (README, agents/, skills/, etc.), o web | Spawn `explorer` siempre |
 | Pregunta requiere `.context/domains/`, `.context/decisions/` u otros archivos de `.context/` | Spawn `explorer` (es el único agente autorizado a leer `.context/`) |
 | Múltiples fuentes independientes (web ∥ repo local) | Un solo spawn de `explorer` con la lista — el `explorer` paraleliza internamente sus llamadas |
+| Prompt incluye señal de diagrama ("diagrama", "visualiza", "grafica", "muéstrame cómo está conectado", "dibuja el flujo") | Spawn `diagrammer` para producir el `.drawio`. Si la pregunta requiere investigar primero (no hay contexto suficiente inline) → `explorer` → `diagrammer` secuencial (el `explorer` entrega hallazgos, el `diagrammer` los traduce a XML). Si ya hay contexto suficiente (paths a `architecture.md`, hallazgos previos inline) → `explorer` ∥ `diagrammer` en paralelo, o `diagrammer` solo si no hace falta investigar. |
 | `explorer` reporta `CONTEXT_MISSING` mid-run (no había `.context/` cuando lo necesitaba) | Spawn `context-bootstrap` para crear la estructura base vacía → re-invocar `explorer` con los mismos inputs. El Líder NO crea carpetas ni archivos él mismo — solo orquesta. Ver §Manejo de `CONTEXT_MISSING` |
 
 **Fuentes en orden de prioridad** (las pasa el Líder al `explorer` en su prompt):
@@ -525,6 +528,8 @@ El `committer` F2 es la **única vía** por la que el Líder persiste el trabajo
 > ⚠ Antes de spawnear cada sub-agente, verificar §Referencia — Skip rules — algunos tienen condiciones de omisión.
 
 **Inyección de specs del designer:** si en Planeación corrió el `designer`, su output (specs, flujos, componentes) va inline al `developer` bajo `## Specs de diseño`. NO pasar solo el path — el developer no decide visual por su cuenta.
+
+**Diagrama técnico del feature implementado:** si el prompt original incluye una señal de diagrama ("diagrama", "visualiza", "grafica", "muéstrame cómo está conectado", "dibuja el flujo") junto a la instrucción de implementación, spawnear `diagrammer` **en paralelo con `reviewer`** al final del pipeline (después del `committer` F1, antes del `committer` F2). Ambos consumen el mismo input (diff + handoff + paths a archivos modificados) y son independientes entre sí, por lo que paralelizan de forma segura. El `diagrammer` produce los `.drawio` en `{task_path}/diagrams/`. Si el usuario NO pidió diagrama, NO invocar — el `diagrammer` no corre por defecto en Integración.
 
 **Self-critique** → ver Reglas inviolables #2 (aplica después de cada sub-agente).
 
@@ -677,6 +682,7 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | `dba-broker` | Planeación / Integración | Objetivo, broker target, esquema de mensajes (Avro/Protobuf/JSON Schema), `task_path` | Configuración de Kafka, RabbitMQ, NATS; tópicos, particiones, consumer groups; Schema Registry; contratos de mensajes | Escritura sobre configs de broker y schemas de mensajes. `Bash`, `Grep`, `Glob`, `Skill`. NO toca DBs ni Redis. |
 | `dba-cache` | Planeación / Integración | Objetivo, plan de keyspace, TTLs, patrones de caché o Streams, `task_path` | Diseño de keyspace Redis, TTL strategy, patrones de caché (cache-aside, write-through), detección de hotkeys, configuración de Cluster, Streams | Escritura exclusiva para Redis (configs, scripts Lua, snippets de cliente). `Bash`, `Grep`, `Glob`, `Skill`. Redis exclusivamente — NO otro store. |
 | `agent-designer` | Planeación | Objetivo, artefacto target, nombre, contexto, agentes relacionados | `agents/*.md`, `skills/*/SKILL.md`, `commands/*.md`, `pipelines/*.yaml` | Escritura exclusiva sobre `agents/*.md`, `skills/*/SKILL.md`, `commands/*.md`, `pipelines/*.yaml`, `settings.json`. El Líder tiene estos paths en `denied_tools`. |
+| `diagrammer` | Explorador / Integración (on-demand) | Objetivo, contexto (hallazgos del `explorer` inline o paths a archivos ARD), `task_path`, tipo de diagrama (opcional), `done-when` | Archivos `.drawio` en `{task_path}/diagrams/` + resumen al Líder con la lista de archivos generados y asunciones | Escritura exclusiva sobre `**/*.drawio`. `Read`, `Glob`, `Grep`, `LS`, `Bash[mkdir -p *]`, `Skill` (`drawio`). Sin `Agent`, sin web, sin código de aplicación. |
 | `developer` | Integración | SPEC inline, stack, complexity, archivos modificados previos, TASK-ID | Código + handoff completo | Escritura sobre cualquier archivo de aplicación (`.go`, `.ts`, `.py`, `.dart`, `.rs`, etc.). `Bash` irrestricto, `Grep`, `Glob`, `Agent`, `Skill`. |
 | `qa-fixer` | Pruebas (post-gate rechazado) | Mode (`qa-fix`/`security-fix`/`review-fix`), TASK-ID, path al handoff, hallazgos inline, reglas inline | Correcciones quirúrgicas + `## Notas` del handoff actualizadas, o escalación si excede scope | Escritura sobre código de aplicación (mismo dominio que `developer`). `Bash`, `Grep`, `Glob`, `Skill` (`lint`, `run-tests`). NO carga SPEC ni convenciones completas. |
 | `tester` | Integración / Pruebas | Handoff inline (`## Handoff for tester`), stack, TASK-ID | Tests escritos, resultados de run-tests | Escritura limitada a archivos de test (`*_test.go`, `*.spec.ts`, `*.test.py`, etc.). `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. |
@@ -702,6 +708,7 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | Producir `spec.md` implementable a partir de ARD + requirements (después del `architect`, antes del `task-decomposer`) | `spec-writer` |
 | Descomponer `spec.md` en tasks atómicas y actualizar el backlog (después del `spec-writer`, antes del `developer`) | `task-decomposer` |
 | Diseñar en archivos `.pen` (Pencil) | `designer` |
+| Generar diagramas técnicos (NO UX) en formato `.drawio`: flujos de datos, conexiones entre servicios, pipelines de mensajería, despliegue | `diagrammer` |
 | Escribir código de aplicación (implementación nueva) | `developer` |
 | Hacer `git commit` con mensaje convencional, capturar rama/modalidad del usuario y luego ejecutar `git push` + (opcional) `gh pr create` | `committer` (dos fases en Modo Integración) |
 | Aplicar correcciones quirúrgicas a código existente tras un gate rechazado (QA / security / reviewer) | `qa-fixer` |
@@ -827,6 +834,7 @@ Cuando una tarea toca persistencia, el Líder decide qué agente invocar según 
 | `dba-broker` | Sin cambios sobre brokers (Kafka/RabbitMQ/NATS), Schema Registry o contratos de mensajes |
 | `dba-cache` | Sin cambios sobre Redis (keyspace, TTL, patrones de caché, Cluster, Streams) |
 | `agent-designer` | La tarea no toca `agents/`, `skills/`, `commands/`, `pipelines/` ni hooks |
+| `diagrammer` | El prompt no incluye señal de diagrama ("diagrama"/"visualiza"/"grafica"/"muéstrame cómo está conectado"/"dibuja el flujo"). NO corre por defecto en ningún modo — solo cuando el usuario lo pide explícitamente o cuando una señal de diagrama aparece en el prompt. |
 | `qa` | Medium (3-5 pts) + sin auth/DB/pagos/APIs públicas + usuario no lo pidió |
 | `reporter` | **Saltar solo si el run NO modificó archivos del proyecto** (ej. Modo Explorador puro que no escribió nada). Si hubo cualquier modificación → invocar siempre para que aplique el delta a `.context/`. Triggers especiales (cross-service, incidente, release, petición explícita) habilitan adicionalmente el reporte completo con `last-run.md`. |
 | `tester` | Sin código testeable (solo docs, solo config) |
@@ -850,6 +858,8 @@ Lanzar en paralelo cuando dos sub-agentes son **independientes** (ninguno consum
 | Planeación con código de proyecto + artefacto secundario de IA (ej. command nuevo que un feature necesita) | `architect` ∥ `agent-designer` |
 | Pruebas con review + security | `reviewer` ∥ `security` |
 | Explorador con múltiples fuentes | Búsquedas web o lecturas de paths independientes |
+| Explorador con señal de diagrama y contexto suficiente inline | `explorer` ∥ `diagrammer` (cuando no hay que esperar nueva investigación); si hace falta investigar primero, va secuencial `explorer` → `diagrammer` |
+| Integración con señal de diagrama en el prompt original | `reviewer` ∥ `diagrammer` al final del pipeline (ambos consumen diff + handoff, no dependen entre sí) |
 
 **Agent Teams (cuando `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`):** todo spawn paralelo de 2+ sub-agentes DEBE asignar un `team_name` compartido — habilita `SendMessage` lateral entre los miembros cuando aplica. Spawns secuenciales o únicos NO llevan `team_name`. Ver §Agent Teams para la convención de nombres, casos de uso de `SendMessage`, y restricciones operativas.
 
