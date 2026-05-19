@@ -5,6 +5,18 @@ description: Analizar cambios staged y escribir un mensaje de commit convenciona
 
 Eres un experto en mensajes de commit Git. Analiza los cambios staged y escribe un mensaje de commit convencional de alta calidad.
 
+## Paso 0: Detectar modo de ejecución
+
+Inspeccionar los argumentos recibidos por el command. Si entre los argumentos aparece el flag `--non-interactive` (o el equivalente estructurado `non_interactive: true`), activar **modo no-interactivo** para el resto del flujo. En caso contrario, operar en **modo interactivo** (comportamiento por defecto).
+
+**Efectos del modo no-interactivo:**
+
+- En el **Paso 5** (referencia a ticket/issue): NO invocar `AskUserQuestion`. Asumir directamente "Sin ticket" — el footer del commit no incluye `Refs`/`Fixes` salvo que ya se haya detectado una referencia clara en el nombre de la rama (en cuyo caso se respeta esa referencia automáticamente, sin preguntar).
+- En el **Paso 6** (confirmación final): NO preguntar "¿Hago commit con este mensaje?". Ejecutar directamente `git commit` con el mensaje generado, usando el heredoc descrito en ese paso.
+- El resto del flujo (Pasos 1–4: diff, análisis, selección de tipo, redacción del mensaje) se ejecuta idéntico al modo interactivo.
+
+Este modo está pensado para cuando el command es invocado por un sub-agente (ej. el `committer`) que no tiene usuario interactivo en sesión. Si el flag NO está presente, el flujo es completamente interactivo como antes.
+
 ## Paso 1: Verificar cambios staged
 
 Ejecutar `git diff --cached --stat` para ver qué archivos están staged. Si no hay nada staged, decir al usuario "No se encontraron cambios staged. Primero agrega archivos con `git add`." y parar.
@@ -81,6 +93,8 @@ Seguir estas reglas estrictamente:
 
 ## Paso 5: Preguntar por referencia a ticket/issue
 
+**Modo interactivo** (default):
+
 Antes de presentar el mensaje final, usar la herramienta AskUserQuestion para preguntar:
 
 **Pregunta:** "¿Este commit pertenece a un ticket o issue?"
@@ -94,15 +108,25 @@ Si el usuario proporciona una referencia a ticket:
 - Si el commit es un fix, usar `Fixes <TICKET-ID>` en su lugar
 - Si ya se detectó una referencia a issue del nombre de la rama, mostrar ambas y dejar al usuario confirmar cuál mantener
 
-## Paso 6: Presentar al usuario
+**Modo no-interactivo** (flag `--non-interactive` detectado en Paso 0):
+
+OMITIR la llamada a `AskUserQuestion`. Asumir "Sin ticket" — el mensaje queda sin footer `Refs`/`Fixes` salvo que el Paso 2 ya haya detectado automáticamente una referencia clara en el nombre de la rama; en ese caso se agrega esa referencia al footer sin preguntar.
+
+## Paso 6: Presentar al usuario y ejecutar el commit
 
 Mostrar el mensaje de commit completo en un bloque de código. Formatearlo exactamente como aparecerá en git.
 
-Luego preguntar: **"¿Hago commit con este mensaje? (sí/editar/cancelar)"**
+**Modo interactivo** (default):
+
+Preguntar: **"¿Hago commit con este mensaje? (sí/editar/cancelar)"**
 
 - Si el usuario dice **sí**: ejecutar `git commit -m "$(cat <<'EOF'\n<mensaje completo aquí>\nEOF\n)"` usando un heredoc para formato correcto
 - Si el usuario dice **editar** o proporciona cambios: revisar el mensaje y preguntar de nuevo
 - Si el usuario dice **cancelar**: parar sin hacer commit
+
+**Modo no-interactivo** (flag `--non-interactive` detectado en Paso 0):
+
+NO preguntar confirmación. Ejecutar directamente `git commit -m "$(cat <<'EOF'\n<mensaje completo aquí>\nEOF\n)"` con el mensaje generado, usando el mismo heredoc. Reportar al invocador el resultado del comando (exit code + commit hash via `git rev-parse HEAD` si el commit fue exitoso).
 
 ## Ejemplos de buenos mensajes de commit
 

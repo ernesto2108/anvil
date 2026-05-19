@@ -124,17 +124,19 @@ Cuando tu prompt incluye una sección `## Contexto de debate`, el Líder te est�
 
 ## Entrada requerida — Fase 1 (pre-review)
 
-El Líder DEBE proporcionar estos campos al spawnear Fase 1. Si falta alguno, DETENTE y pídelos antes de continuar.
+El Líder normalmente proporciona estos campos al spawnear Fase 1. Sin embargo, en spawns ad-hoc (sin pipeline completo) puede faltar alguno. **No detenerte por campos faltantes**: aplicar la tabla de fallbacks de abajo y continuar.
 
-| Campo | Requerido | Notas |
+| Campo | Esperado | Fallback si falta |
 |---|---|---|
-| `Phase` | siempre | `1` (literal — distingue del spawn de Fase 2) |
-| `TASK-ID` | siempre | Para resolver `.handoff/<TASK-ID>.md` (lectura) y nombrar el handoff propio |
-| `run_id` | siempre | El run_id de Anvil MCP activo — usado para ubicar el handoff propio en `.context/runs/<run_id>/` |
-| `ANVIL_REPO` | siempre | Ruta absoluta al repo de Anvil — necesaria para ejecutar `bash <ANVIL_REPO>/scripts/verify-handoff.sh` en el Paso 1.0 |
-| `PROJECT_ROOT` | siempre | Raíz del proyecto activo — segundo argumento de `verify-handoff.sh` (típicamente `.`) |
-| Path al handoff del developer | siempre | `.handoff/<TASK-ID>.md` — para confirmar archivos modificados antes de stagear |
-| Lista de archivos modificados | siempre (puede ser "tomar de `git status`") | El Líder ya tiene esta lista del Paso 0.2; si la inyecta inline, usarla en vez de `git status` |
+| `Phase` | `1` (literal — distingue del spawn de Fase 2) | Asumir `Phase: 1`. |
+| `TASK-ID` | Para resolver `.handoff/<TASK-ID>.md` (lectura) y nombrar el handoff propio | OMITIR el Paso 1.0 (`verify-handoff.sh` no se corre porque no hay handoff de developer que verificar). Continuar al Paso 1.1 (`git status`). Anotar en el output final: "Corrí sin TASK-ID — gate de handoff omitido". |
+| `run_id` | El run_id de Anvil MCP activo — usado para ubicar el handoff propio en `.context/runs/<run_id>/` | Usar `ad-hoc` como segmento de path. El handoff propio (Paso 1.5) se escribe en `.context/runs/ad-hoc/committer-handoff.md`. Anotar en el output: "run_id ausente — handoff propio en `ad-hoc/`". |
+| `ANVIL_REPO` | Ruta absoluta al repo de Anvil — necesaria para `bash <ANVIL_REPO>/scripts/verify-handoff.sh` en Paso 1.0 | OMITIR el Paso 1.0 (no se puede invocar el script sin la ruta). Continuar al Paso 1.1. Anotar en el output: "ANVIL_REPO ausente — gate de handoff omitido". |
+| `PROJECT_ROOT` | Raíz del proyecto activo — segundo argumento de `verify-handoff.sh` (típicamente `.`) | OMITIR el Paso 1.0 (mismo razonamiento que `ANVIL_REPO`). Anotar en el output. |
+| Path al handoff del developer | `.handoff/<TASK-ID>.md` — para confirmar archivos modificados antes de stagear | OMITIR la validación contra handoff. Trabajar directamente con `git status --porcelain` en el Paso 1.1. Anotar en el output: "Sin handoff del developer — staging basado en `git status` puro". |
+| Lista de archivos modificados | El Líder ya tiene esta lista del Paso 0.2; si la inyecta inline, usarla en vez de `git status` | Caer a `git status --porcelain` y stagear los archivos modificados que reporte (Paso 1.2). Sin lista del Líder no hay validación cruzada — proceder con lo que muestre el working tree. |
+
+**Regla general:** los fallbacks degradan funcionalidad opcional (verificación de handoff, validación cruzada), nunca afectan la operación core del commit. Si después de aplicar fallbacks no hay nada que commitear (working tree limpio), seguir el comportamiento del Paso 1.1 y reportar al Líder sin commit. Si hay cambios reales, continuar al commit aunque falten campos.
 
 ## Entrada requerida — Fase 2 (post-qa)
 
@@ -152,7 +154,9 @@ El Líder DEBE proporcionar estos campos al spawnear Fase 2. Si falta alguno, DE
 
 ### Paso 1.0 — Gate de entrada: verificar integridad del handoff
 
-**Primer paso de Fase 1, antes de cualquier operación git.** Ejecutar el script de verificación del handoff del developer:
+**Precondición:** este paso solo corre cuando los TRES campos `ANVIL_REPO`, `PROJECT_ROOT` y `TASK-ID` están presentes. Si **cualquiera** de ellos falta (spawn ad-hoc sin pipeline completo), **omitir este paso por completo** según la tabla de fallbacks y saltar directamente al Paso 1.1, anotando la omisión en el output final.
+
+Cuando los tres campos están presentes, ejecutar el script de verificación del handoff del developer:
 
 ```
 bash <ANVIL_REPO>/scripts/verify-handoff.sh <PROJECT_ROOT> <TASK-ID>
@@ -188,11 +192,15 @@ Verificar con `git diff --cached --stat` que el staging coincide con lo esperado
 
 ### Paso 1.3 — Generar y ejecutar el commit
 
-Invocar el slash command `/git:commit`. El command:
+Invocar el slash command `/git:commit` pasando el flag `--non-interactive` (es decir: `/git:commit --non-interactive`). El flag activa el modo no-interactivo definido en el Paso 0 del command, que es obligatorio cuando el invocador es un sub-agente sin usuario en sesión.
+
+En modo no-interactivo el command:
 1. Lee el diff staged
 2. Genera el mensaje convencional
-3. Pregunta al usuario por referencia a ticket (esto es parte del flujo del command, no tuyo)
-4. Ejecuta el commit si el usuario confirma
+3. **NO** pregunta por referencia a ticket — asume "Sin ticket" salvo que el nombre de la rama contenga una referencia detectable, que se respeta automáticamente
+4. **NO** pregunta confirmación — ejecuta `git commit` directamente con el mensaje generado
+
+**Importante:** nunca invocar `/git:commit` sin el flag desde el committer. Hacerlo dejaría al command esperando input del usuario que nunca llegará y bloquearía la fase.
 
 **Si `/git:commit` falla** (pre-commit hook, lint, build, formato):
 - NO reintentar automáticamente
