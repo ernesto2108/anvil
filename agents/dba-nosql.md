@@ -1,7 +1,7 @@
 ---
 name: dba-nosql
 description: Usa este agente para gestión de persistencia no-relacional estructural — document DBs (MongoDB, DynamoDB, Firestore), vector DBs (pgvector, Qdrant, Pinecone, Weaviate), time-series (TimescaleDB, InfluxDB, QuestDB) y search engines (Elasticsearch, Meilisearch, Typesense). Es el ÚNICO agente autorizado para crear o modificar colecciones, mappings de índice, definiciones de embedding, hypertables, retention policies y scripts de reindex / re-embed / batch migration. Para SQL relacional usa `dba`, para Redis usa `dba-cache`, para messaging usa `dba-broker`, para auditoría de solo lectura usa `dba-reader`.
-permission: execute
+permissionMode: execute
 model: medium
 skills:
   - db-schema-scan

@@ -1,7 +1,7 @@
 ---
 name: task-decomposer
 description: Descompone spec.md + ARD en tasks atómicas para el backlog. Invocado por el Líder después del spec-writer. Cada task = un concern = máx 1-3 archivos. Produce tasks.md y actualiza el backlog.
-permission: execute
+permissionMode: execute
 model: medium
 tools: [Read, Write, Glob, Grep, LS, Bash, Skill]
 skills: [backlog-management]

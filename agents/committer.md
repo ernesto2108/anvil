@@ -1,83 +1,83 @@
 ---
 name: committer
 description: Usa este agente para hacer commit, push y abrir PRs en el pipeline de Integración. Actúa en DOS FASES — Fase 1 (pre-review) genera el commit con `/git:commit` y captura del usuario rama destino y modalidad (push directo vs PR); Fase 2 (post-qa) ejecuta `git push` y, si aplica, `gh pr create`. SOLO LECTURA sobre código — nunca modifica archivos de la aplicación. Nunca usa `git push --force`.
-permission: execute
+permissionMode: auto
 model: low
 skills:
   - handoff
-allowed_tools:
+tools:
   # Lectura del handoff del developer y del repo (solo metadatos git, no código)
-  - Read[.handoff/**]
-  - Read[.context/runs/**]
+  - Read(.handoff/**)
+  - Read(.context/runs/**)
 
   # Workspace propio del committer (handoff entre Fase 1 y Fase 2)
-  - Write[.context/runs/**]
-  - Edit[.context/runs/**]
+  - Write(.context/runs/**)
+  - Edit(.context/runs/**)
 
   # Operaciones git (whitelist explícita — sin force, sin destructivos)
-  - Bash[git status*]
-  - Bash[git diff*]
-  - Bash[git log*]
-  - Bash[git branch*]
-  - Bash[git add*]
-  - Bash[git commit*]
-  - Bash[git push origin *]
-  - Bash[git rev-parse*]
-  - Bash[git config*]
-  - Bash[gh pr create*]
-  - Bash[gh pr view*]
-  - Bash[gh auth status*]
+  - Bash(git status*)
+  - Bash(git diff*)
+  - Bash(git log*)
+  - Bash(git branch*)
+  - Bash(git add*)
+  - Bash(git commit*)
+  - Bash(git push origin *)
+  - Bash(git rev-parse*)
+  - Bash(git config*)
+  - Bash(gh pr create*)
+  - Bash(gh pr view*)
+  - Bash(gh auth status*)
 
   # Pregunta interactiva al usuario (vía Líder — único caso permitido por contrato)
   - AskUserQuestion
 
   # Commands de git para generar el mensaje de commit
-  - SlashCommand[/git:commit]
+  - SlashCommand(/git:commit)
 
-denied_tools:
+disallowedTools:
   # Prohibido — nunca force push
-  - Bash[git push --force*]
-  - Bash[git push -f*]
-  - Bash[git push --force-with-lease*]
+  - Bash(git push --force*)
+  - Bash(git push -f*)
+  - Bash(git push --force-with-lease*)
 
   # Prohibido — nada de reescribir historia
-  - Bash[git reset*]
-  - Bash[git rebase*]
-  - Bash[git commit --amend*]
-  - Bash[git filter-branch*]
-  - Bash[git push --delete*]
+  - Bash(git reset*)
+  - Bash(git rebase*)
+  - Bash(git commit --amend*)
+  - Bash(git filter-branch*)
+  - Bash(git push --delete*)
 
   # Prohibido — escritura sobre código o specs (es solo-lectura sobre el repo)
-  - Edit[**/*.go]
-  - Write[**/*.go]
-  - Edit[**/*.ts]
-  - Write[**/*.ts]
-  - Edit[**/*.tsx]
-  - Write[**/*.tsx]
-  - Edit[**/*.py]
-  - Write[**/*.py]
-  - Edit[**/*.dart]
-  - Write[**/*.dart]
-  - Edit[**/*.rs]
-  - Write[**/*.rs]
-  - Edit[agents/**]
-  - Write[agents/**]
-  - Edit[skills/**]
-  - Write[skills/**]
-  - Edit[commands/**]
-  - Write[commands/**]
-  - Edit[pipelines/**]
-  - Write[pipelines/**]
-  - Edit[.context/NAVIGATOR.md]
-  - Write[.context/NAVIGATOR.md]
-  - Edit[.context/domains/**]
-  - Write[.context/domains/**]
-  - Edit[.context/decisions/**]
-  - Write[.context/decisions/**]
-  - Edit[.context/patterns.md]
-  - Edit[.context/contracts.md]
-  - Edit[.context/ops.md]
-  - Edit[.context/risks.md]
+  - Edit(**/*.go)
+  - Write(**/*.go)
+  - Edit(**/*.ts)
+  - Write(**/*.ts)
+  - Edit(**/*.tsx)
+  - Write(**/*.tsx)
+  - Edit(**/*.py)
+  - Write(**/*.py)
+  - Edit(**/*.dart)
+  - Write(**/*.dart)
+  - Edit(**/*.rs)
+  - Write(**/*.rs)
+  - Edit(agents/**)
+  - Write(agents/**)
+  - Edit(skills/**)
+  - Write(skills/**)
+  - Edit(commands/**)
+  - Write(commands/**)
+  - Edit(pipelines/**)
+  - Write(pipelines/**)
+  - Edit(.context/NAVIGATOR.md)
+  - Write(.context/NAVIGATOR.md)
+  - Edit(.context/domains/**)
+  - Write(.context/domains/**)
+  - Edit(.context/decisions/**)
+  - Write(.context/decisions/**)
+  - Edit(.context/patterns.md)
+  - Edit(.context/contracts.md)
+  - Edit(.context/ops.md)
+  - Edit(.context/risks.md)
 
   # Prohibido — exploración fuera de su dominio
   - Grep

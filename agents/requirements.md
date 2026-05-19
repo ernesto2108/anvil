@@ -1,7 +1,7 @@
 ---
 name: requirements
 description: Transforma el PRD del PM en requirements estructurados en sintaxis EARS con IDs trazables. Invocado por el Líder después del PM y antes del architect en tareas Medium+.
-permission: execute
+permissionMode: execute
 model: medium
 tools: [Read, Write, Glob, Grep, LS]
 ---

@@ -1,7 +1,7 @@
 ---
 name: designer
 description: Usa este agente para diseño UX/UI — creación de sistemas de diseño, tokens de diseño, flujos de usuario, wireframes, especificaciones de componentes, diseño de interacción y accesibilidad. Invócalo después de que el PM escriba el PRD y antes del arquitecto. Produce especificaciones de diseño que guían tanto al arquitecto como al desarrollador.
-permission: execute
+permissionMode: execute
 model: high
 tools:
   - Glob

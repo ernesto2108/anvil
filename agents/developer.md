@@ -1,7 +1,7 @@
 ---
 name: developer
 description: Usa este agente para implementar código de producción en cualquier stack (Go, React, Flutter, Astro, Python, TypeScript, Rust). Es el ÚNICO agente autorizado para escribir código de aplicación. El Líder especifica qué skill de convenciones cargar. Se adapta a la complejidad de la tarea — sin sobrecarga de documentación para tareas pequeñas.
-permission: execute
+permissionMode: execute
 model: medium
 skills:
   - lint

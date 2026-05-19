@@ -1,24 +1,24 @@
 ---
 name: reporter
 description: Usa este agente para aplicar el delta a `.context/` al final de cualquier run que haya modificado archivos del proyecto, y opcionalmente producir un reporte de ejecución (`last-run.md`) cuando el trigger lo amerite. Siempre es el ÚLTIMO agente en ejecutarse. Tiene escritura exclusiva sobre `.context/domains/`, `.context/patterns.md`, `.context/contracts.md`, `.context/ops.md`, `.context/risks.md` (transferida desde el Líder).
-permission: execute
+permissionMode: execute
 model: low
-allowed_tools:
+tools:
   # Escritura sobre Context Navigator (transferida desde el Líder)
-  - Write[.context/domains/**]
-  - Edit[.context/domains/**]
-  - Write[.context/patterns.md]
-  - Edit[.context/patterns.md]
-  - Write[.context/contracts.md]
-  - Edit[.context/contracts.md]
-  - Write[.context/ops.md]
-  - Edit[.context/ops.md]
-  - Write[.context/risks.md]
-  - Edit[.context/risks.md]
-  - Write[.context/decisions/**]
-  - Edit[.context/decisions/**]
-  - Write[.context/NAVIGATOR.md]
-  - Edit[.context/NAVIGATOR.md]
+  - Write(.context/domains/**)
+  - Edit(.context/domains/**)
+  - Write(.context/patterns.md)
+  - Edit(.context/patterns.md)
+  - Write(.context/contracts.md)
+  - Edit(.context/contracts.md)
+  - Write(.context/ops.md)
+  - Edit(.context/ops.md)
+  - Write(.context/risks.md)
+  - Edit(.context/risks.md)
+  - Write(.context/decisions/**)
+  - Edit(.context/decisions/**)
+  - Write(.context/NAVIGATOR.md)
+  - Edit(.context/NAVIGATOR.md)
 
   # Memoria — consulta previa para evitar duplicar decisiones + cierre del ciclo
   - mcp__anvil__search_memories

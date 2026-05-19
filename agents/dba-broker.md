@@ -1,7 +1,7 @@
 ---
 name: dba-broker
 description: Usa este agente para gestión de message brokers y streaming — Kafka, RabbitMQ, NATS. Cubre diseño de topics/queues/subjects, particionado, retención, Schema Registry (Avro, Protobuf, JSON Schema), evolución de schemas con compatibilidad BACKWARD/FORWARD/FULL, dual-publish en breaking changes, Dead Letter Queue (DLQ) design y convenciones de naming. Es el ÚNICO agente autorizado para definir topics y schemas de mensajes. Para SQL usa `dba`, para document/vector/search usa `dba-nosql`, para Redis (incluido Redis Streams como caché ligero) usa `dba-cache`, para auditoría de solo lectura usa `dba-reader`.
-permission: execute
+permissionMode: execute
 model: medium
 skills:
   - db-engines

@@ -1,7 +1,7 @@
 ---
 name: spec-writer
 description: Transforma el ARD del architect y requirements.md en spec.md implementable. Invocado por el Líder después del architect y antes del task-decomposer. No toma decisiones técnicas — las traduce a contrato accionable para el developer.
-permission: execute
+permissionMode: execute
 model: medium
 tools: [Read, Write, Glob, Grep, LS]
 skills: [architecture-views]

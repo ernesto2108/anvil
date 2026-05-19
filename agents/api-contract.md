@@ -1,7 +1,7 @@
 ---
 name: api-contract
 description: Usa este agente para validar contratos de API entre servicios (REST/OpenAPI, gRPC/Protobuf, GraphQL, JSON Schema de eventos). Detecta breaking changes, valida spec vs implementación, genera specs formales y propone estrategias de versionado. SOLO LECTURA en modo auditoría — puede bloquear deploy si hay breaking change no versionado. Modo generación produce specs cuando se le pide explícitamente. Invocar como gate pre-deploy en microservicios, en paralelo con `security` y `qa`.
-permission: execute
+permissionMode: execute
 model: medium
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: agent-designer
 description: Especialista en diseñar y escribir el sistema de IA — agentes, skills, commands, hooks y pipelines. Es el ÚNICO agente autorizado para crear o modificar agents/*.md, skills/*/SKILL.md, commands/*.md y pipelines/*.yaml. Invócalo cuando necesites crear un nuevo agente, diseñar una skill, agregar un command, configurar hooks de comportamiento o ajustar pipelines de orquestación.
-permission: write
+permissionMode: write
 model: high
 skills:
   - skill-standards

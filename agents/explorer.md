@@ -1,86 +1,86 @@
 ---
 name: explorer
 description: Agente de exploración e investigación. Único responsable de Modo Explorador. Lee código y docs locales, hace web research (WebFetch/WebSearch), busca con Grep/Glob, ejecuta comandos read-only de inspección (find, ls, file). Devuelve hallazgos estructurados al Líder — nunca habla con el usuario directamente. Invocado por el Líder cuando la tarea requiere investigar antes de planificar/implementar.
-permission: read
+permissionMode: read
 model: medium
 skills:
   - read-files
-allowed_tools:
+tools:
   # Lectura amplia
-  - Read[**]                                 # cualquier path del repo
+  - Read(**)                                 # cualquier path del repo
   - Glob
   - Grep
 
   # Escritura acotada — solo resumen de run en scratchpad propio del Líder
-  - Write[.context/runs/**]                  # explorer-<topic>.md (resumen obligatorio al cierre)
-  - Edit[.context/runs/**]
-  - Bash[mkdir -p .context/runs/*]           # crear el directorio del run si no existe
+  - Write(.context/runs/**)                  # explorer-<topic>.md (resumen obligatorio al cierre)
+  - Edit(.context/runs/**)
+  - Bash(mkdir -p .context/runs/*)           # crear el directorio del run si no existe
 
   # Web research
   - WebFetch
   - WebSearch
 
   # Inspección read-only del filesystem
-  - Bash[ls *]
-  - Bash[find . *]                           # find desde ., nunca desde /
-  - Bash[file *]
-  - Bash[wc *]
-  - Bash[head *]                             # head de archivos para previews — Read es preferido
-  - Bash[tail *]                             # solo para previews
-  - Bash[cat *]                              # ÚLTIMA opción — preferir Read
-  - Bash[git log *]
-  - Bash[git show *]
-  - Bash[git blame *]
-  - Bash[git diff *]
-  - Bash[gh pr view *]
-  - Bash[gh issue view *]
-  - Bash[gh api repos/*]                     # para releer PRs/commits
-  - Bash[curl -sI *]                         # solo HEAD, validar URLs
+  - Bash(ls *)
+  - Bash(find . *)                           # find desde ., nunca desde /
+  - Bash(file *)
+  - Bash(wc *)
+  - Bash(head *)                             # head de archivos para previews — Read es preferido
+  - Bash(tail *)                             # solo para previews
+  - Bash(cat *)                              # ÚLTIMA opción — preferir Read
+  - Bash(git log *)
+  - Bash(git show *)
+  - Bash(git blame *)
+  - Bash(git diff *)
+  - Bash(gh pr view *)
+  - Bash(gh issue view *)
+  - Bash(gh api repos/*)                     # para releer PRs/commits
+  - Bash(curl -sI *)                         # solo HEAD, validar URLs
 
   # Memoria — recall pasivo de runs anteriores para enriquecer contexto
   - mcp__anvil__search_memories
 
 denied_tools:
   # Escritura prohibida en todo el repo EXCEPTO el scratchpad de runs (allowlist arriba)
-  - Edit[**/*.go]
-  - Edit[**/*.ts]
-  - Edit[**/*.tsx]
-  - Edit[**/*.py]
-  - Edit[**/*.dart]
-  - Edit[**/*.rs]
-  - Edit[**/*.md]                            # incluye agents/, skills/, docs/ — excepto .context/runs/ (allowlisted)
-  - Edit[**/*.yaml]
-  - Edit[**/*.yml]
-  - Edit[**/*.json]
-  - Edit[**/Makefile]
-  - Edit[**/Dockerfile]
-  - Write[**/*.go]
-  - Write[**/*.ts]
-  - Write[**/*.tsx]
-  - Write[**/*.py]
-  - Write[**/*.dart]
-  - Write[**/*.rs]
-  - Write[**/*.md]
-  - Write[**/*.yaml]
-  - Write[**/*.yml]
-  - Write[**/*.json]
-  - Write[**/Makefile]
-  - Write[**/Dockerfile]
+  - Edit(**/*.go)
+  - Edit(**/*.ts)
+  - Edit(**/*.tsx)
+  - Edit(**/*.py)
+  - Edit(**/*.dart)
+  - Edit(**/*.rs)
+  - Edit(**/*.md)                            # incluye agents/, skills/, docs/ — excepto .context/runs/ (allowlisted)
+  - Edit(**/*.yaml)
+  - Edit(**/*.yml)
+  - Edit(**/*.json)
+  - Edit(**/Makefile)
+  - Edit(**/Dockerfile)
+  - Write(**/*.go)
+  - Write(**/*.ts)
+  - Write(**/*.tsx)
+  - Write(**/*.py)
+  - Write(**/*.dart)
+  - Write(**/*.rs)
+  - Write(**/*.md)
+  - Write(**/*.yaml)
+  - Write(**/*.yml)
+  - Write(**/*.json)
+  - Write(**/Makefile)
+  - Write(**/Dockerfile)
 
   # Sin spawn — solo el Líder spawnea
   - Agent
 
   # Sin bash arbitrario
-  - Bash[*]                                  # cualquier patrón fuera del allowlist
-  - Bash[rm *]
-  - Bash[mv *]
-  - Bash[git add *]
-  - Bash[git commit *]
-  - Bash[git push *]
-  - Bash[git checkout *]
-  - Bash[git reset *]
-  - Bash[curl -X POST *]
-  - Bash[curl -d *]
+  - Bash(*)                                  # cualquier patrón fuera del allowlist
+  - Bash(rm *)
+  - Bash(mv *)
+  - Bash(git add *)
+  - Bash(git commit *)
+  - Bash(git push *)
+  - Bash(git checkout *)
+  - Bash(git reset *)
+  - Bash(curl -X POST *)
+  - Bash(curl -d *)
 
   # Sin MCP de modificación
   - mcp__anvil__start_orchestration

@@ -1,7 +1,7 @@
 ---
 name: devops
 description: Usa este agente para gestionar pipelines de CI/CD, Docker, Kubernetes, Terraform e infraestructura como código. El ÚNICO agente autorizado a tocar .github/workflows, Dockerfiles y configuraciones de infraestructura.
-permission: execute
+permissionMode: execute
 model: medium
 skills:
   - devops-conventions

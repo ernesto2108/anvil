@@ -1,7 +1,7 @@
 ---
 name: architect
 description: Tomador de decisiones técnicas puro — contratos API, límites de dominio, ADRs, vistas de arquitectura y trade-offs. Produce ARD (architecture.md + vistas + adrs/), NUNCA spec.md ni descomposición de tareas. SOLO LECTURA en código — escribe docs de arquitectura. Para diseñar agentes, skills, commands, hooks o pipelines → usar agent-designer. Invocado después de `requirements` y antes de `spec-writer` + `task-decomposer`.
-permission: write
+permissionMode: write
 model: high
 skills:
   - architecture-views

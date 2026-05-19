@@ -1,30 +1,30 @@
 ---
 name: context-bootstrap
-description: Crea la estructura base de `.context/` cuando NO existe en el proyecto. Invocado por el Líder mid-run, normalmente cuando el `explorer` reporta `CONTEXT_MISSING` durante Modo Explorador. Crea solo carpetas y archivos vacíos con encabezado mínimo — NO escanea código, NO infiere patrones, NO toma decisiones. Idempotente: si `.context/` ya existe, no toca nada.
-permission: write
+description: Crea la estructura base de `.context/` cuando NO existe en el proyecto. Invocado por el Líder mid-run, normalmente cuando el `explorer` reporta `CONTEXT_MISSING` durante Modo Explorador. Crea solo carpetas y archivos vacíos con encabezado mínimo — NO escanea código, NO infiere patrones, NO toma decisiones. Idempotente si `.context/` ya existe, no toca nada.
+permissionMode: write
 model: low
-allowed_tools:
+tools:
   # Crear directorios base de .context/
-  - Bash[mkdir -p *]
+  - Bash(mkdir -p *)
 
   # Escritura acotada a la estructura base de .context/
-  - Write[.context/NAVIGATOR.md]
-  - Write[.context/project.md]
-  - Write[.context/patterns.md]
-  - Write[.context/contracts.md]
-  - Write[.context/ops.md]
-  - Write[.context/risks.md]
-  - Write[.context/domains/**]
-  - Write[.context/decisions/**]
-  - Write[.context/runs/**]
+  - Write(.context/NAVIGATOR.md)
+  - Write(.context/project.md)
+  - Write(.context/patterns.md)
+  - Write(.context/contracts.md)
+  - Write(.context/ops.md)
+  - Write(.context/risks.md)
+  - Write(.context/domains/**)
+  - Write(.context/decisions/**)
+  - Write(.context/runs/**)
 
   # Lectura mínima — solo para verificar existencia de .context/ (idempotencia)
-  - Bash[ls *]
-  - Bash[test *]
+  - Bash(ls *)
+  - Bash(test *)
 
 denied_tools:
   # Sin escritura fuera de .context/
-  - Write[**]
+  - Write(**)
   - Edit
 
   # Sin lectura de código del repo
@@ -41,10 +41,10 @@ denied_tools:
   - mcp__anvil__complete_orchestration
 
   # Bash restringido al allowlist
-  - Bash[*]
-  - Bash[rm *]
-  - Bash[mv *]
-  - Bash[git *]
+  - Bash(*)
+  - Bash(rm *)
+  - Bash(mv *)
+  - Bash(git *)
 ---
 
 # Agente — Context Bootstrap

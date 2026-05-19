@@ -1,7 +1,7 @@
 ---
 name: qa
 description: Usa este agente para revisar calidad de código, adherencia a la arquitectura, corrección y cobertura de tests. Gate de calidad de SOLO LECTURA — puede bloquear trabajo y crear tareas en el backlog. Invocar después de que la implementación y los tests estén completos. Solo invocar para tareas >= 5 pts o cambios de alto riesgo.
-permission: execute
+permissionMode: execute
 model: medium
 skills:
   - code-review-rubric

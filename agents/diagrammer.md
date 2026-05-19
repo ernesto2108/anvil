@@ -1,11 +1,11 @@
 ---
 name: diagrammer
 description: Agente especializado en generar diagramas técnicos (NO UX) en formato `.drawio`. Recibe hallazgos del `explorer` o ARD del `architect` y produce archivos `.drawio` editables. flujos de datos, conexiones entre servicios, pipelines de mensajería (productor → broker → consumidor), arquitecturas de despliegue, diagramas de dependencia. Invocado por el Líder cuando el prompt incluye "diagrama", "visualiza", "grafica", "muéstrame cómo está conectado", "dibuja el flujo" — solo o combinado con otros agentes. No escribe documentación (eso es `tech-writer`), no diseña UI (eso es `designer`).
-permission: execute
+permissionMode: execute
 model: medium
 skills:
   - drawio
-allowed_tools:
+tools:
   # Lectura — input (hallazgos del explorer, ARDs del architect, handoffs)
   - Read
   - Glob
@@ -13,39 +13,39 @@ allowed_tools:
   - LS
 
   # Escritura acotada — solo archivos .drawio
-  - Write[**/*.drawio]
-  - Edit[**/*.drawio]
-  - Bash[mkdir -p *]                          # crear {task_path}/diagrams/ si no existe
-  - Bash[/Applications/draw.io.app/Contents/MacOS/draw.io --export *]  # auto-validación visual (paso 10.5)
-  - Bash[rm /tmp/diagram_preview*.png]        # limpieza de previews entre iteraciones
+  - Write(**/*.drawio)
+  - Edit(**/*.drawio)
+  - Bash(mkdir -p *)                          # crear {task_path}/diagrams/ si no existe
+  - Bash(/Applications/draw.io.app/Contents/MacOS/draw.io --export *)  # auto-validación visual (paso 10.5)
+  - Bash(rm /tmp/diagram_preview*.png)        # limpieza de previews entre iteraciones
 
   # Skills
   - Skill
 
 denied_tools:
   # Sin escritura de código de proyecto
-  - Write[**/*.go]
-  - Edit[**/*.go]
-  - Write[**/*.ts]
-  - Edit[**/*.ts]
-  - Write[**/*.tsx]
-  - Edit[**/*.tsx]
-  - Write[**/*.py]
-  - Edit[**/*.py]
-  - Write[**/*.dart]
-  - Edit[**/*.dart]
-  - Write[**/*.rs]
-  - Edit[**/*.rs]
+  - Write(**/*.go)
+  - Edit(**/*.go)
+  - Write(**/*.ts)
+  - Edit(**/*.ts)
+  - Write(**/*.tsx)
+  - Edit(**/*.tsx)
+  - Write(**/*.py)
+  - Edit(**/*.py)
+  - Write(**/*.dart)
+  - Edit(**/*.dart)
+  - Write(**/*.rs)
+  - Edit(**/*.rs)
 
   # Sin escritura de specs del sistema de IA
-  - Write[agents/**]
-  - Edit[agents/**]
-  - Write[skills/**]
-  - Edit[skills/**]
-  - Write[commands/**]
-  - Edit[commands/**]
-  - Write[pipelines/**]
-  - Edit[pipelines/**]
+  - Write(agents/**)
+  - Edit(agents/**)
+  - Write(skills/**)
+  - Edit(skills/**)
+  - Write(commands/**)
+  - Edit(commands/**)
+  - Write(pipelines/**)
+  - Edit(pipelines/**)
 
   # Sin escritura de documentación o configs
   - Write[**/*.md]

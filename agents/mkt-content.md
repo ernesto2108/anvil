@@ -1,7 +1,7 @@
 ---
 name: mkt-content
 description: Usa este agente para marketing de contenidos — publicaciones en LinkedIn, redes sociales, activos visuales, copywriting y estrategia de contenidos. Funciona para CUALQUIER industria (tech, restaurantes, inmobiliaria, marca personal, etc.). Maneja tanto texto COMO imágenes. Carga /social-content para conocimiento de plataformas, copywriting y diseño visual.
-permission: execute
+permissionMode: execute
 model: high
 skills:
   - social-content

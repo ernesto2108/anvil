@@ -1,11 +1,11 @@
 ---
 name: scanner
 description: Usa este agente AL INICIO de cualquier sesión para escanear la estructura del repositorio y producir contexto del proyecto. Siempre es el PRIMER agente en ejecutarse. Solo lectura, excepto para escribir el archivo de contexto.
-permission: execute
+permissionMode: execute
 model: medium
 skills:
   - scan-project
-allowed_tools:
+tools:
   # Memoria — requerida por skills/context-nav/bootstrap.md Paso 6
   # (recall de runs anteriores para enriquecer el bootstrap de .context/)
   - mcp__anvil__search_memories

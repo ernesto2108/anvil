@@ -1,7 +1,7 @@
 ---
 name: leader
 description: Agente orquestador con modos (Explorador, Planeación, Integración, Pruebas). Detecta el modo, pregunta todo lo necesario, ejecuta el pipeline sin gates intermedios, debate outputs divergentes entre sub-agentes antes de escalar al usuario, y presenta resultado con gate final. NO ejecuta trabajo concreto — todo se delega a sub-agentes (incluyendo investigación, que va al `explorer`).
-permission: execute
+permissionMode: execute
 model: high
 skills:
   - handoff
