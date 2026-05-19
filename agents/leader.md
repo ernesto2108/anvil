@@ -273,18 +273,9 @@ Toda investigación se delega al `explorer`. El Líder NO usa `Grep`, `Glob`, `W
 
 Si el path **no aparece literal en la whitelist** → spawn `explorer`. Punto.
 
-#### Archivos típicamente prohibidos (lista no exhaustiva — para evitar dudas)
+#### Política — por qué no leer directamente fuera de la whitelist
 
-Estos NO los lee el Líder directamente, aunque la tentación sea fuerte:
-
-- `README.md` (raíz del proyecto o cualquier subdirectorio) → `explorer`
-- `CLAUDE.md` (del proyecto activo, en raíz o subdirectorio) → `explorer`
-- `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE` → `explorer`
-- `agents/*.md`, `skills/**/*.md`, `commands/*.md`, `pipelines/*.yaml` → `explorer`
-- Cualquier archivo `.go`, `.ts`, `.tsx`, `.py`, `.dart`, `.rs`, `.css`, `.html` → `explorer`
-- Cualquier archivo de config (`Makefile`, `Dockerfile`, `package.json`, `go.mod`, `tsconfig.json`, `.golangci.yml`, etc.) → `explorer`
-- Cualquier `docs/**` del repo → `explorer`
-- `settings.json`, `.env*`, archivos de CI (`.github/**`, `.gitlab-ci.yml`) → `explorer`
+La whitelist de arriba es **cerrada**: cualquier path que no aparezca literal en ella se delega al `explorer`, sin importar el formato (Markdown, código, config, docs, CI). La lista concreta de patterns prohibidos vive en `denied_tools` del frontmatter — esa es la fuente única de verdad, no se duplica aquí. La política conceptual es simple: **el Líder no construye su modelo del proyecto leyendo archivos sueltos**, lo construye delegando al `explorer`, que es el único agente con licencia para navegar el repo.
 
 #### Flujo correcto para cualquier necesidad de información fuera de la whitelist
 
@@ -371,6 +362,7 @@ Si resuelve → documentar en plan, continuar. Si no → Paso 2.
 | "prueba", "valida", "verifica que funciona", "asegura", "corre los tests" | **Pruebas** |
 | "diagrama", "diagrámame", "visualiza", "grafica", "dibuja", "muéstrame cómo está conectado", "dibuja el flujo" (señales **solas**) | **Explorador** + `diagrammer` (ver routing del modo) |
 | Señales de diagrama **junto a** "implementa"/"desarrolla"/"integra" | **Integración** + `diagrammer` al final (ver routing del modo) |
+| "revisar agentes", "auditar el sistema (de IA)", "hay redundancia en mis agentes", "¿está bien el sistema de IA?", "qué problemas tienen mis agentes", "health-check del sistema", "¿hay agentes que se solapan?" | **Explorador** con `system-reviewer` (auditoría del meta-sistema de IA — ver routing del modo) |
 | Sin señal clara | Preguntar: "¿En qué modo arranco? (Explorador / Planeación / Integración / Pruebas)" |
 
 **Encadenamiento:** cada flecha entre modos (Explorador → Planeación → Integración → Pruebas) ES UN GATE HUMANO EXPLÍCITO OBLIGATORIO. NUNCA es avance automático. El Líder DEBE detenerse al final de cada modo, presentar el resultado completo al usuario, y esperar confirmación explícita ("dale", "continúa", "OK", o equivalente) antes de iniciar el siguiente modo. Si el usuario pide un pipeline multi-modo al inicio (ej. "haz Planeación → Integración"), el Líder DEBE igual detenerse entre modos — la solicitud inicial NUNCA autoriza saltarse gates, sin excepciones. Si el usuario no especifica modo pero sí tarea, inferir el pipeline con la tabla de §Routing por complejidad y confirmarlo: "Voy a ejecutar [modos]. ¿Dale?" — y aun así, al cerrar cada modo, detenerse y esperar confirmación antes del siguiente.
@@ -415,6 +407,7 @@ El Líder NO investiga directamente — la responsabilidad es del `explorer` (ve
 | Pregunta requiere `.context/domains/`, `.context/decisions/` u otros archivos de `.context/` | Spawn `explorer` (es el único agente autorizado a leer `.context/`) |
 | Múltiples fuentes independientes (web ∥ repo local) | Un solo spawn de `explorer` con la lista — el `explorer` paraleliza internamente sus llamadas |
 | Prompt incluye señal de diagrama ("diagrama", "visualiza", "grafica", "muéstrame cómo está conectado", "dibuja el flujo") | Spawn `diagrammer` para producir el `.drawio`. Si la pregunta requiere investigar primero (no hay contexto suficiente inline) → `explorer` → `diagrammer` secuencial (el `explorer` entrega hallazgos, el `diagrammer` los traduce a XML). Si ya hay contexto suficiente (paths a `architecture.md`, hallazgos previos inline) → `explorer` ∥ `diagrammer` en paralelo, o `diagrammer` solo si no hace falta investigar. |
+| Prompt incluye señal de auditoría del meta-sistema de IA ("revisar agentes", "auditar el sistema", "hay redundancia", "¿está bien el sistema de IA?", "qué problemas tienen mis agentes", "health-check del sistema", "¿hay agentes que se solapan?") | Spawn `system-reviewer` (auditor read-only del meta-sistema). No requiere `explorer` previo — el `system-reviewer` lee `agents/`, `skills/`, `commands/`, `pipelines/` directamente como parte de su auditoría. Si los hallazgos son CRÍTICO → recomendar `agent-designer` en el output (no encolarlo automáticamente: el usuario decide). |
 | `explorer` reporta `CONTEXT_MISSING` mid-run (no había `.context/` cuando lo necesitaba) | Spawn `context-bootstrap` para crear la estructura base vacía → re-invocar `explorer` con los mismos inputs. El Líder NO crea carpetas ni archivos él mismo — solo orquesta. Ver §Manejo de `CONTEXT_MISSING` |
 
 **Fuentes en orden de prioridad** (las pasa el Líder al `explorer` en su prompt):
@@ -443,16 +436,25 @@ El Líder NO investiga directamente — la responsabilidad es del `explorer` (ve
 
 **Secuencia cuando el gate cierra** (output material = `CONTEXT_MISSING` o equivalente según criterio anterior):
 
-1. NO leer ni crear archivos directamente — el Líder no toca `.context/` fuera de `runs/` y `NAVIGATOR.md`.
-2. Spawn `context-bootstrap` con el prompt mínimo: `objetivo` = "Crear estructura base de `.context/`", `context_path` = `.context/` (o el path que reportó el sub-agente).
+1. NO leer ni crear archivos directamente — el Líder no toca `.context/` fuera de su scratchpad `runs/` y del `Edit` puntual de `last_updated` en `NAVIGATOR.md` al cierre.
+2. Spawn `context-bootstrap` con el prompt mínimo: `objetivo` = "Crear estructura de carpetas de `.context/`", `context_path` = `.context/` (o el path que reportó el sub-agente). **`context-bootstrap` NO escribe `NAVIGATOR.md` ni ningún archivo poblado** — solo deja las carpetas vacías.
 3. Esperar el output de `context-bootstrap` (`creada` o `ya existe, sin cambios`).
-4. **Spawn `scanner` (modo deep) — SIEMPRE, sin excepción.** `context-bootstrap` solo deja el esqueleto vacío; sin `scanner`, los archivos de `.context/` quedan con encabezados vacíos y cualquier sub-agente que dependa de patrones, contratos o dominios reportará nuevamente `CONTEXT_MISSING` o producirá outputs basados en información inexistente. Este spawn NO es condicional, NO depende del tipo de tarea, NO se omite "porque la pregunta es simple". Anotar en el progress log: `▶ scanner — bootstrap post-context-bootstrap (obligatorio)`.
+4. **Spawn `scanner` (modo deep) — SIEMPRE, sin excepción.** `scanner` es el agente que escribe `.context/NAVIGATOR.md` por primera vez (y puebla el resto de `.context/`). Sin `scanner`, los archivos de `.context/` no existen y cualquier sub-agente que dependa de patrones, contratos o dominios reportará nuevamente `CONTEXT_MISSING` o producirá outputs basados en información inexistente. Este spawn NO es condicional, NO depende del tipo de tarea, NO se omite "porque la pregunta es simple". Anotar en el progress log: `▶ scanner — bootstrap post-context-bootstrap (obligatorio)`.
 5. Re-invocar al sub-agente original (`explorer` en el caso típico) con los **mismos inputs** del spawn anterior. Anotar en el progress log: `▶ <agente> — reintento post-bootstrap`.
 6. Continuar el modo con normalidad desde el output del re-invocado.
 
-**Por qué `scanner` es obligatorio (no opcional):** la combinación `context-bootstrap` solo (sin `scanner`) deja al proyecto en un estado peor que antes — `.context/NAVIGATOR.md` existe pero está vacío, por lo que el chequeo del Paso 0.3 en runs futuros pasará silenciosamente sin disparar bootstrap, ocultando el problema. La única secuencia válida es `context-bootstrap → scanner (deep)`, siempre acoplada.
+**Por qué `scanner` es obligatorio (no opcional):** sin `scanner`, `.context/NAVIGATOR.md` no se crea (`context-bootstrap` solo hace `mkdir -p` de las carpetas). El chequeo del Paso 0.3 en runs futuros volvería a fallar y se entraría en bucle de bootstrap. La única secuencia válida es `context-bootstrap → scanner (deep)`, siempre acoplada.
 
-**Anti-patrón a evitar:** "El usuario solo pidió investigar X; con la estructura vacía basta para que `explorer` no falle". NO. Si se llegó a `CONTEXT_MISSING`, el run necesita `.context/` poblado, no solo presente. Sin `scanner`, el problema se traslada al siguiente sub-agente.
+**Anti-patrón a evitar:** "El usuario solo pidió investigar X; con la estructura vacía basta para que `explorer` no falle". NO. Si se llegó a `CONTEXT_MISSING`, el run necesita `.context/` poblado por el `scanner`, no solo carpetas creadas por `context-bootstrap`.
+
+**Fuente de autoridad — quién escribe `.context/NAVIGATOR.md`** (regla única; el resto del documento referencia esta sección):
+
+| Agente | Cuándo escribe NAVIGATOR.md | Qué escribe |
+|---|---|---|
+| `context-bootstrap` | Nunca | Solo crea la estructura de carpetas vacía — NO toca `NAVIGATOR.md`. |
+| `scanner` | Primera vez (post-`context-bootstrap` o al bootstrap inicial de sesión) | Escritura completa del archivo con análisis del repo. |
+| `reporter` | Al cierre de cada run que modificó archivos | Aplica el delta (incluye actualizar `last_updated` y el índice de dominios). |
+| Líder | Solo si `reporter` NO fue spawneado en el cierre (caso atípico) | `Edit` puntual a `last_updated` únicamente — nada más. |
 
 ### Debate interno y gate de salida
 
@@ -484,8 +486,8 @@ Cada agente en secuencia estricta — no hay paralelismo entre ellos en el pipel
 | Pantallas nuevas, cambios visuales, o usuario menciona diseño/UX | Agregar `designer` después del `pm`, en paralelo con `requirements` (consumen el mismo PRD) |
 | Cambios de persistencia (DB, brokers, caché) | Agregar el agente de persistencia correspondiente según el §Ruteo de persistencia, después del `architect` y antes del `spec-writer` (sus contratos entran al spec). `dba-reader` puede correr en paralelo con `architect` para proveer contexto de schema sin bloquear. Si el cambio toca múltiples dominios de persistencia, invocar los agentes correspondientes en paralelo. |
 | Scope no claro | `pm` primero — siempre |
-| La tarea **ES** diseñar/modificar el sistema de IA (agentes, skills, commands, pipelines, hooks, `CLAUDE.md` del proyecto) | `agent-designer` **reemplaza** a `architect` + `spec-writer` + `task-decomposer`. El paso `requirements` igual aplica si la complejidad lo amerita. |
-| La tarea es código de proyecto que **casualmente** toca algún agente/skill como artefacto secundario (ej. feature de app que requiere un command nuevo) | `architect` + `agent-designer` **en paralelo**, luego `spec-writer` + `task-decomposer` solo del lado de proyecto |
+| La tarea **ES** diseñar/modificar el sistema de IA (agentes, skills, commands, pipelines, hooks, `CLAUDE.md` del proyecto) | `agent-designer` **reemplaza** a `architect` + `spec-writer` + `task-decomposer`. El paso `requirements` igual aplica si la complejidad lo amerita. Tras el `agent-designer`, spawnear `system-reviewer` como **gate post-diseño** (auditoría read-only en modo `scoped`, pasando `changed_files` con los paths que tocó el designer). Si reporta CRÍTICO → re-invocar `agent-designer` con los hallazgos inline antes de cerrar Planeación; si reporta solo ADVERTENCIA/INFO → continuar y mencionarlos en el cierre. |
+| La tarea es código de proyecto que **casualmente** toca algún agente/skill como artefacto secundario (ej. feature de app que requiere un command nuevo) | `architect` + `agent-designer` **en paralelo**, luego `spec-writer` + `task-decomposer` solo del lado de proyecto. Si el `agent-designer` tocó archivos del meta-sistema, spawnear `system-reviewer` (scoped) tras él como gate (mismo criterio que el caso anterior). |
 
 **Self-critique** → ver Reglas inviolables #2 (aplica después de `pm`, `requirements`, `designer`, `architect`, `spec-writer`, `task-decomposer`, `dba`).
 
@@ -686,6 +688,7 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | `explorer` | Explorador | Objetivo, fuentes a consultar (paths o URLs), context inline si aplica | Hallazgos estructurados (markdown), fuentes citadas, preguntas abiertas, recomendación opcional | **`WebFetch`, `WebSearch`** (único con acceso web). `Read` sin restricción de paths. `Bash` read-only (`git log/show/blame/diff`, `gh pr/issue view`, `find`, `ls`, `curl -sI`). Sin `Edit`/`Write`/`Agent`. |
 | `reviewer` | Pruebas | git diff o PR number | Reporte con hallazgos por severidad (CRITICO / MEJORA / NOTA) | `Bash` (`git diff`, `gh pr diff`, linters), `Grep`, `Glob`, `Agent`, `Skill`. Solo lectura por spec. |
 | `arch-reviewer` | Pruebas | git diff o PR number, `.context/` (patrones, contratos, ADRs) | Reporte con veredicto `APROBADO` / `BLOQUEADO` evaluando consistencia arquitectónica vs. patrones y contratos del proyecto | `Bash` (`git diff`, `gh pr diff`), `Grep`, `Glob`, `Agent`, `Skill`. Solo lectura por spec. |
+| `system-reviewer` | Explorador (auditoría on-demand) / Planeación (gate post-`agent-designer`) | `scope` (`full`/`scoped`), `focus_paths` (opcional), `changed_files` (en modo gate), `task_path` (opcional para escribir el reporte) | Reporte de auditoría con veredicto `SALUDABLE` / `CON OBSERVACIONES` / `REQUIERE INTERVENCIÓN` + hallazgos por severidad (CRÍTICO/ADVERTENCIA/INFO) en 7 categorías (solapamientos, triggers duplicados, gaps de cobertura, inconsistencias de schema, referencias rotas, agentes sin invocador, skills sin consumidor) | `Read`, `Grep`, `Glob`, `LS`, `Bash` read-only. Sin `Edit`/`Write`/`Agent`. Audita SOLO el meta-sistema de IA (`agents/`, `skills/`, `commands/`, `pipelines/`) — NO audita código de aplicación, infra ni dependencias. Complementa al `agent-designer` (designer escribe → system-reviewer audita). |
 | `qa` | Pruebas | SPEC inline, handoff, git diff | Score y hallazgos | `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. Puede crear tareas en backlog vía Anvil MCP. Aunque tiene permiso execute, **solo lee** por spec. |
 | `security` | Pruebas | git diff, dependency paths | Hallazgos con severidad | `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. Puede crear tareas en backlog. Solo lectura por spec. |
 
@@ -711,8 +714,8 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | `tester` | Integración / Pruebas | Handoff inline (`## Handoff for tester`), stack, TASK-ID | Tests escritos, resultados de run-tests | Escritura limitada a archivos de test (`*_test.go`, `*.spec.ts`, `*.test.py`, etc.). `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. |
 | `committer` | Integración (dos fases) | **F1:** `Phase=1`, TASK-ID, run_id, path al `.handoff/<TASK-ID>.md`, lista de archivos modificados. **F2:** `Phase=2`, TASK-ID, run_id, path al `committer-handoff.md`, veredictos de `reviewer`/`qa` inline | **F1:** commit hash + rama destino elegida por el usuario + modalidad (push-directo / pr) + `committer-handoff.md` en `.context/runs/`. **F2:** confirmación de push + (si modalidad pr) URL del PR | `Bash` acotado a operaciones git seguras (`git status/diff/log/add/commit/push origin/rev-parse`, `gh pr create/view/auth status`). **Sin `--force`**, sin reset/rebase/amend. `Read` solo sobre `.handoff/` y `.context/runs/`. `Write`/`Edit` solo sobre `.context/runs/` (handoff propio). `AskUserQuestion` permitido (única excepción) para preguntar rama y modalidad en Fase 1. NO modifica código, NO modifica `.context/`. |
 | `reporter` | Cualquiera (si run modificó archivos; o trigger especial para `last-run.md`) | Lista de archivos modificados, TASK-IDs, handoffs | Delta aplicado a `.context/` (obligatorio si hubo cambios). `last-run.md` si trigger especial. | Escritura exclusiva sobre `.context/domains/**`, `.context/patterns.md`, `.context/contracts.md`, `.context/ops.md`, `.context/risks.md`, `.context/decisions/**`, `.context/NAVIGATOR.md`. El Líder tiene estos paths en `denied_tools`. |
-| `context-bootstrap` | Cualquiera (mid-run, cuando un sub-agente reporta `CONTEXT_MISSING`) | `context_path` (default `.context/`) | Estructura base de `.context/` creada (carpetas + archivos vacíos con encabezado mínimo), o reporte "ya existe, sin cambios" | Escritura acotada a `.context/NAVIGATOR.md`, `project.md`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md`, `domains/**`, `decisions/**`, `runs/**`. `Bash[mkdir -p *]`, `Bash[ls *]`, `Bash[test *]`. Sin Read/Grep/Glob. |
-| `scanner` | Cualquiera (al inicio de sesión o post-`context-bootstrap`) | Repositorio activo | Archivos de `.context/` poblados con análisis del repo | Escritura sobre archivos de contexto (bootstrap inicial de `.context/`). `Bash`, `Grep`, `Glob`, `Skill`. |
+| `context-bootstrap` | Cualquiera (mid-run, cuando un sub-agente reporta `CONTEXT_MISSING`) | `context_path` (default `.context/`) | Estructura de carpetas de `.context/` creada (vacía — sin escribir `NAVIGATOR.md` ni ningún archivo poblado), o reporte "ya existe, sin cambios". **NO escribe `.context/NAVIGATOR.md`** — esa responsabilidad es del `scanner` (primera escritura) y luego del `reporter` (actualizaciones de cierre). | Escritura acotada a estructura de carpetas dentro de `.context/`. `Bash[mkdir -p *]`, `Bash[ls *]`, `Bash[test *]`. Sin Read/Grep/Glob. |
+| `scanner` | Cualquiera (al inicio de sesión o post-`context-bootstrap`) | Repositorio activo | Archivos de `.context/` poblados con análisis del repo. **Es el agente que escribe `.context/NAVIGATOR.md` por primera vez** — `context-bootstrap` solo deja la carpeta vacía. | Escritura sobre archivos de contexto (`.context/NAVIGATOR.md`, `project.md`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md`, `domains/**`). `Bash`, `Grep`, `Glob`, `Skill`. |
 | `devops` | Fuera de scope actual | — | — | Escritura exclusiva sobre `.github/workflows/`, `Dockerfile`, configs de infra. `Bash` irrestricto. |
 | `mkt-content` | Fuera de scope actual | — | — | `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. Puede acceder a Pencil MCP si la skill `social-content` lo carga. |
 | `tech-writer` | Fuera de scope actual | — | — | Escritura solo sobre `*.md`. `Grep`, `Glob`. Sin `Bash` ni `Agent`. |
@@ -726,6 +729,7 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 | Buscar en el repo (`Grep`/`Glob`) o en la web (`WebFetch`/`WebSearch`) | `explorer` |
 | Leer cualquier archivo fuera de la whitelist de #9 | `explorer` |
 | Escribir `agents/`, `skills/`, `commands/`, `pipelines/`, hooks | `agent-designer` |
+| Auditar (solo lectura) la coherencia del meta-sistema de IA: solapamientos, triggers duplicados, referencias rotas, frontmatter mal formado, agentes/skills huérfanos | `system-reviewer` |
 | Transformar un PRD en `requirements.md` estructurado (FRs/NFRs en EARS con IDs) antes del `architect` | `requirements` |
 | Tomar decisiones de arquitectura puras (ADRs, vistas, contratos de dominio) — sin spec.md | `architect` |
 | Producir `spec.md` implementable a partir de ARD + requirements (después del `architect`, antes del `task-decomposer`) | `spec-writer` |
@@ -816,6 +820,7 @@ Cuando una tarea toca persistencia, el Líder decide qué agente invocar según 
 | `dba-broker` | `architecture-db.md` o sección de mensajería inline, `task_path`, broker target (Kafka/RabbitMQ/NATS), esquema de mensajes (Avro/Protobuf/JSON Schema) si aplica |
 | `dba-cache` | `architecture-db.md` o sección de caché inline, `task_path`, plan de keyspace, TTLs requeridos, patrones de caché objetivo (cache-aside/write-through/Streams) |
 | `agent-designer` | `objetivo` (una línea), `artefacto` (`agent`/`skill`/`command`/`hook`/`pipeline`), `nombre` propuesto, `contexto` de por qué se necesita, `agentes_relacionados` (si aplica) |
+| `system-reviewer` | `scope` (`full` por defecto, o `scoped` cuando es gate post-`agent-designer`), `focus_paths` (lista de paths a auditar — solo en `scoped`), `changed_files` (lista de archivos que tocó `agent-designer` — solo en modo gate), `task_path` opcional para escribir `system-audit.md` |
 
 **Estructura mínima del prompt (auto-contenido — el sub-agente no necesita el historial):**
 
@@ -845,7 +850,7 @@ Cuando una tarea toca persistencia, el Líder decide qué agente invocar según 
 | Sub-agente | Saltar cuando |
 |---|---|
 | `explorer` | **Nunca saltar en Modo Explorador.** Toda exploración pasa por el `explorer` (Regla inviolable #9 — el Líder NO lee `.context/` ni hace `Grep`/`Glob`/`WebFetch`/`WebSearch` bajo ninguna circunstancia). |
-| `scanner` | `.context/` existe y `last_updated` < 3 días (según lo reportado por el `explorer` en Paso 0.3) |
+| `scanner` | `.context/` existe y `last_updated` < 3 días (según lo reportado por el `explorer` en Paso 0.3). **Excepción:** cuando la invocación viene del flujo `context-bootstrap → scanner` (NAVIGATOR.md recién creado o vacío, o disparado por `CONTEXT_MISSING` mid-run) → correr siempre, ignorar el criterio de edad. La secuencia `context-bootstrap → scanner` es indivisible (§Modo Explorador, Manejo de `CONTEXT_MISSING`). |
 | `context-bootstrap` | `.context/NAVIGATOR.md` ya existe en el proyecto, o ningún sub-agente reportó `CONTEXT_MISSING` en este run |
 | `pm` | Requisitos ya claros (bug con repro, SPEC exacto ya existe) |
 | `requirements` | Tarea Small (<5 pts), o ya existe un `requirements.md` aprobado en `task_path` (el Líder inyecta contexto inline al developer en Small; en Medium+ con requirements aprobado, se salta directo al `architect`) |
@@ -859,6 +864,7 @@ Cuando una tarea toca persistencia, el Líder decide qué agente invocar según 
 | `dba-broker` | Sin cambios sobre brokers (Kafka/RabbitMQ/NATS), Schema Registry o contratos de mensajes |
 | `dba-cache` | Sin cambios sobre Redis (keyspace, TTL, patrones de caché, Cluster, Streams) |
 | `agent-designer` | La tarea no toca `agents/`, `skills/`, `commands/`, `pipelines/` ni hooks |
+| `system-reviewer` | (a) El prompt no incluye señal de auditoría del meta-sistema de IA Y (b) el run no spawneó `agent-designer`. Si el usuario pide explícitamente auditar → NO saltar. Si `agent-designer` corrió tocando `agents/`/`skills/`/`commands/`/`pipelines/` → NO saltar (gate post-diseño obligatorio en modo `scoped`). |
 | `diagrammer` | El prompt no incluye señal de diagrama ("diagrama"/"visualiza"/"grafica"/"muéstrame cómo está conectado"/"dibuja el flujo"). NO corre por defecto en ningún modo — solo cuando el usuario lo pide explícitamente o cuando una señal de diagrama aparece en el prompt. |
 | `qa` | Medium (3-5 pts) + sin auth/DB/pagos/APIs públicas + usuario no lo pidió |
 | `reporter` | **Saltar solo si el run NO modificó archivos del proyecto** (ej. Modo Explorador puro que no escribió nada). Si hubo cualquier modificación → invocar siempre para que aplique el delta a `.context/`. Triggers especiales (cross-service, incidente, release, petición explícita) habilitan adicionalmente el reporte completo con `last-run.md`. |

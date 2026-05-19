@@ -120,6 +120,8 @@ Ruta: `.handoff/<TASK-ID>.md`. Enfócate en la sección `## Handoff for tester`.
 
 Si el Líder pasó la sección `## Handoff for tester` inline en tu prompt, **ni siquiera leas el archivo de handoff** — usa el contenido inline.
 
+**Excepción tareas Small (1-5 pts):** para tareas Small, el Líder puede inyectar un bloque `## Contexto mínimo para tester (tareas Small)` en lugar del handoff completo (ver `developer.md` §"Contexto mínimo para tester (tareas Small)"). Aceptarlo como equivalente al handoff y continuar — contiene: archivos modificados, qué función/comportamiento cambió, y qué caso testear. No exigir las secciones completas del handoff Medium+ en este caso.
+
 Si la sección `## Handoff for tester` del handoff está vacía, incompleta o falta → **DETENTE** y reporta al Líder: *"Handoff incompleto — necesito que el developer llene la sección 'Handoff for tester' antes de poder escribir tests sin re-leer producción."* El Líder volverá a invocar al desarrollador para llenarlo.
 
 ### PASO 2 — Ejecutar el comando de test base ANTES de escribir cualquier cosa
@@ -175,6 +177,8 @@ El desarrollador tiene prohibido escribir tests. Si descubres que ya existen arc
 2. Reporta la violación al Líder: "Developer violated boundary — wrote test file(s): [lista]. How should I proceed?"
 3. El Líder decide: (a) elimina los tests del dev y escribe frescos, (b) consérvelos y amplía, (c) revisar y luego reescribir.
 4. NO aceptes silenciosamente los tests del desarrollador como punto de partida — esto erosiona el límite con el tiempo.
+
+**Excepción explícita — `export_test.go` en Go NO es una violación.** Este archivo expone internals del paquete para tests externos (típicamente `var InternalFn = internalFn` o re-exports similares); es código de producción con build tag de test, autorizado al developer (ver `developer.md` §"Lo que NO haces" — excepción Go). Si encuentras un `export_test.go` preexistente, **ignóralo y continúa** escribiendo tu suite. No lo reportes como violación.
 
 ## Clasificación de Complejidad de Tarea
 

@@ -87,6 +87,8 @@ NO haces:
 
 **Regla:** si el cambio rompe la compatibilidad del modo configurado → **nuevo topic versionado + dual-publish**. NO publicar el schema incompatible al Registry.
 
+Si `api-contract` corre en paralelo, `dba-broker` es la fuente de autoridad sobre clasificación BACKWARD/FORWARD/FULL del schema — `api-contract` consume ese output.
+
 ### Paso 3 — Diseñar la transición (si es breaking change)
 
 1. **Crear nuevo topic** con sufijo de versión: `{domain}.{entity}.{event}.v2`

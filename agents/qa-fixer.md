@@ -117,6 +117,15 @@ NO modifiques otras secciones del handoff salvo:
 - **`## Output entregado`** — actualizar el estado a "post-qa-fix" + comandos de validación re-ejecutados
 - **`## Handoff for tester`** — SOLO si una corrección cambió una firma pública. En ese caso, actualizar la firma específica, no la sección completa
 
+### Paso 6 — Solicitar commit de los fixes al Líder (OBLIGATORIO antes de cerrar)
+
+Tras aplicar todos los fixes y validar lint/build, **no haces commit tú mismo** (no tienes permiso de git). Reportar al Líder en tu mensaje final:
+
+1. La lista de archivos modificados (paths exactos, tal cual `git status --porcelain`)
+2. La solicitud explícita: **"Solicito al Líder invocar al `committer` en mini-Fase-1 para commitear estos fixes antes de continuar con la Fase 2 de push."**
+
+El Líder entiende este protocolo: invoca al `committer` con `Phase: 1` sobre el scope acotado (solo los archivos del qa-fix), captura un nuevo commit hash, y solo después continúa con la Fase 2 de push del committer original. Sin esta solicitud explícita, el Líder podría omitir el commit y el push de Fase 2 fallaría o dejaría los fixes sin persistir.
+
 ## Protocolo de escalación al Líder
 
 Si los hallazgos exceden el scope quirúrgico, DETENTE inmediatamente y devuelve al Líder con este formato exacto:

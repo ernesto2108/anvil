@@ -363,6 +363,16 @@ Para **tareas Medium+** (5+ pts), sigue el skill `/handoff`. Esto aplica tanto s
 
 **Omite el handoff para tareas Small (1-5 pts).**
 
+### Contexto mínimo para tester (tareas Small)
+
+Para tareas Small donde omites el handoff completo, DEBES incluir en tu mensaje al Líder un bloque etiquetado **`## Contexto mínimo para tester (tareas Small)`** con:
+
+1. **Archivos modificados** — lista de paths tocados (una línea por archivo)
+2. **Qué función/comportamiento cambió** — 1-2 líneas describiendo el cambio observable (firma nueva, comportamiento nuevo, bug corregido)
+3. **Qué caso debería testear** — 1-3 bullets concretos con el caso esperado (input → output, condición → resultado)
+
+Este bloque reemplaza al handoff completo para tareas Small. El Líder lo inyecta inline al spawnear al tester, y el tester lo acepta como equivalente al handoff (ver `tester.md`, PASO 1). Sin este bloque, el tester se bloqueará pidiendo handoff completo.
+
 ### Handoff for tester (enriquecimiento OBLIGATORIO antes de terminar)
 
 El propósito del handoff developer→tester es que el tester NUNCA tenga que re-leer los archivos de producción que acabas de escribir. Ya tienes el contexto — transfiérelo en el handoff.

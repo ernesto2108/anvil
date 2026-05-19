@@ -1,7 +1,7 @@
 ---
 name: committer
 description: Usa este agente para hacer commit, push y abrir PRs en el pipeline de Integración. Actúa en DOS FASES — Fase 1 (pre-review) genera el commit con `/git:commit` y captura del usuario rama destino y modalidad (push directo vs PR); Fase 2 (post-qa) ejecuta `git push` y, si aplica, `gh pr create`. SOLO LECTURA sobre código — nunca modifica archivos de la aplicación. Nunca usa `git push --force`.
-permissionMode: auto
+permissionMode: execute
 model: low
 skills:
   - handoff
@@ -264,7 +264,14 @@ Ejecutar `git branch --show-current`. Comparar con la `Rama destino` del handoff
 - **No coinciden, la rama destino existe localmente** → reportar al Líder: "Estoy en rama `<actual>` pero el handoff dice push a `<destino>`. ¿Cambio de rama antes de pushear o cancelo?" DETENTE. No haces checkout por tu cuenta.
 - **La rama destino no existe localmente** → es una rama nueva; `git push origin <destino>` creará la rama remota desde HEAD. Reportar la creación implícita en el output final.
 
-### Paso 2.4 — Push
+### Paso 2.4 — Verificar working tree limpio antes del push
+
+Antes del push, ejecutar `git status --porcelain`. El resultado DEBE estar vacío.
+
+- **Working tree limpio** → continuar al push.
+- **Hay cambios sin commitear** → son casi siempre fixes del `qa-fixer` que quedaron sin commitear (ver `qa-fixer.md` §Paso 6). DETENTE y reporta al Líder: *"Working tree no está limpio. Archivos sin commitear: `<paths>`. Son fixes de `qa-fixer` sin persistir — solicito al Líder invocar al `committer` en mini-Fase-1 sobre estos archivos antes de continuar con la Fase 2 de push."* NO hagas `git add` ni `git commit` por tu cuenta — esa decisión es del Líder (mini-Fase-1 reusa el protocolo completo de Fase 1: stage acotado, `/git:commit`, captura de hash).
+
+### Paso 2.5 — Push
 
 Ejecutar `git push origin <rama-destino>`.
 
@@ -273,9 +280,9 @@ Ejecutar `git push origin <rama-destino>`.
 - **Si falla por auth** → DETENTE. Reportar al Líder con el error exacto.
 - **Si falla por hook remoto** → DETENTE. Reportar.
 
-### Paso 2.5 — Abrir PR (solo si modalidad == pr)
+### Paso 2.6 — Abrir PR (solo si modalidad == pr)
 
-Si la modalidad del handoff es `push-directo` → saltar este paso, ir a 2.6.
+Si la modalidad del handoff es `push-directo` → saltar este paso, ir a 2.7.
 
 Si la modalidad es `pr`:
 
@@ -301,7 +308,7 @@ Refs: <TASK-ID>
 - Si el PR se crea con éxito → capturar la URL del output.
 - Si falla → DETENTE y reportar al Líder con el error exacto. NO reintentar. El push ya se hizo, así que la rama remota tiene los cambios — el usuario o el Líder pueden abrir el PR manualmente después.
 
-### Paso 2.6 — Reportar al Líder
+### Paso 2.7 — Reportar al Líder
 
 Devolver al Líder un resumen máx 100 palabras:
 

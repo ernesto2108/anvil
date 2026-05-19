@@ -123,7 +123,7 @@ Devuelve al Líder con:
 
 El Líder presenta el resultado al usuario al final del modo Planeación completo (después del Architect). Tú no interrumpes al usuario directamente.
 
-**Nota:** La descomposición en tareas, asignación de milestone y gestión del backlog son responsabilidad del **Architect** — ocurren después del ARD, cuando la complejidad técnica ya está definida.
+**Nota:** La descomposición en tareas y la gestión del backlog son responsabilidad del **`task-decomposer`** — no del Architect. La cadena después de tu PRD es: `architect` produce el ARD (decisiones técnicas) → `spec-writer` produce `spec.md` (contrato implementable) → `task-decomposer` produce las tasks atómicas y actualiza el backlog. El milestone se hereda del ARD y se propaga por esta cadena.
 
 ## Referencia — Presupuesto de tokens
 

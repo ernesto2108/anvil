@@ -105,6 +105,8 @@ El núcleo del trabajo es clasificar cada cambio observado entre la versión ant
 - Agregar `required` a un campo existente → BREAKING para consumidores que producen el evento
 - Cambiar `additionalProperties: true` → `false` → BREAKING
 
+Para schemas de eventos registrados en Schema Registry, `api-contract` audita la compatibilidad del contrato desde la perspectiva del consumidor. Si `dba-broker` ya corrió en el mismo pipeline, leer su reporte y no re-clasificar lo que ya fue clasificado.
+
 ## Modos de operación
 
 El orquestador indica el modo al invocarte.

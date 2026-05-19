@@ -37,7 +37,7 @@ Cada agente en `agents/*.md` tiene este frontmatter:
 ---
 name: <slug>                  # minúsculas, guiones, coincide con el nombre de archivo
 description: <texto>          # qué hace + cuándo invocarlo — controla el ruteo del Líder
-permission: read | write | execute  # nivel de acceso a tools
+permissionMode: read | write | execute  # nivel de acceso a tools
 model: low | medium | high    # tier de modelo (se resuelve via config.yaml del provider)
 skills:                        # skills que se cargan al invocar este agente (opcional)
   - skill-name
@@ -83,7 +83,7 @@ Un command es un slash command del CLI. Frontmatter:
 ---
 name: command-name
 description: Qué hace
-allowed-tools: Agent, Read, Glob, Grep, Bash, Edit, Write  # tools permitidas
+tools: Agent, Read, Glob, Grep, Bash, Edit, Write  # tools permitidas
 ---
 ```
 

@@ -37,7 +37,7 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran vulnerabilidade
 ## Responsabilidades
 
 - **Análisis Estático (SAST):** buscar patrones de seguridad comunes (SQLi, XSS, CSRF, hashing inseguro)
-- **Auditoría de Dependencias (SCA):** verificar vulnerabilidades conocidas en librerías de terceros
+- **Auditoría de CVEs en dependencias de terceros → delegar a `dependency-auditor`.** `security` no ejecuta `pnpm audit` ni `govulncheck` cuando `dependency-auditor` corre en paralelo o ya fue invocado.
 - **Detección de Secretos:** escanear secretos hardcodeados, claves, tokens y credenciales
 - **Revisión de Auth:** validar lógica de autenticación y autorización (RBAC/ABAC)
 - **Seguridad de API:** validar seguridad de endpoints (rate limiting, CORS, headers, manejo de tokens)

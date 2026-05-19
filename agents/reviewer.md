@@ -139,3 +139,7 @@ Antes de revisar, cargar el skill de revisión:
 Imprimir el reporte de revisión directamente. Sin preámbulo, sin "aquí está tu reporte" — solo el reporte siguiendo `report-format.md`.
 
 **Si el Líder invocó al reviewer (no el usuario directo):** devolver al Líder un resumen **máx 150 palabras** con score, conteo de findings por severidad, y bloqueadores clave. El reporte completo va en disco según `report-format.md` — el Líder lo relee solo si lo necesita.
+
+## Relación con qa
+
+El reviewer corre ANTES que qa — analiza el diff/PR y produce hallazgos de correctitud y estilo. El qa corre después del reviewer y evalúa adherencia arquitectónica, cobertura de tests y riesgo global. Si solo hay uno disponible: reviewer para PRs con diff visible, qa para tareas ≥5 pts sin PR abierto.

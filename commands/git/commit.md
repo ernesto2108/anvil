@@ -1,4 +1,5 @@
 ---
+name: git:commit
 description: Analizar cambios staged y escribir un mensaje de commit convencional
 ---
 
