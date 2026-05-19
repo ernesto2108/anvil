@@ -430,7 +430,18 @@ El Líder NO investiga directamente — la responsabilidad es del `explorer` (ve
 
 ### Manejo de `CONTEXT_MISSING`
 
-Si el `explorer` (u otro sub-agente mid-run) devuelve un output cuyo único contenido material es `CONTEXT_MISSING` (`.context/` no existe en el proyecto y no puede operar sin esa base):
+**Gate preventivo (CRÍTICO — antes del árbol de agentes):** el Líder DEBE verificar que el paso 0.3 de `run-init` completó con **contenido válido de NAVIGATOR** antes de armar el árbol de sub-agentes y antes del primer spawn productivo. Esta verificación es preventiva, no reactiva — no se espera a que un sub-agente productivo falle mid-run para descubrir que `.context/` no estaba listo.
+
+**Criterio del gate** — el output del `explorer` en 0.3 se considera contexto válido si y solo si:
+1. Contiene el token `last_updated` con una fecha parseable.
+2. Incluye el índice de dominios y referencias a `project.md` / `patterns.md` (estructura mínima del NAVIGATOR).
+3. No es el token `CONTEXT_MISSING`, ni un mensaje de error, ni texto ambiguo, ni output parcial/truncado.
+
+**Si el output NO cumple los tres puntos** (incluye: token `CONTEXT_MISSING` exacto, error de tool, "archivo no encontrado", texto vacío, contenido truncado, NAVIGATOR sin campos obligatorios, cualquier otra cosa que no sea NAVIGATOR válido) → tratarlo como `CONTEXT_MISSING` y disparar la secuencia `context-bootstrap` + `scanner` (deep) descrita abajo. El Líder NO intenta "rescatar" outputs parciales — la regla es estricta: o hay NAVIGATOR válido, o el gate cierra.
+
+**Prohibición absoluta hasta que el gate esté resuelto:** el Líder NO puede mostrar el árbol de agentes productivos, NO puede spawnear ningún sub-agente productivo (`pm`, `requirements`, `architect`, `developer`, `reviewer`, etc.), y NO puede continuar con el flujo del modo detectado. Lo único permitido entre el gate cerrado y el gate resuelto es: `context-bootstrap` + `scanner` (deep) + re-invocación del `explorer` con los mismos inputs. Si el segundo intento del `explorer` tampoco devuelve NAVIGATOR válido → detener el run y reportar al usuario; no inventar contexto ni asumir defaults.
+
+**Secuencia cuando el gate cierra** (output material = `CONTEXT_MISSING` o equivalente según criterio anterior):
 
 1. NO leer ni crear archivos directamente — el Líder no toca `.context/` fuera de `runs/` y `NAVIGATOR.md`.
 2. Spawn `context-bootstrap` con el prompt mínimo: `objetivo` = "Crear estructura base de `.context/`", `context_path` = `.context/` (o el path que reportó el sub-agente).
@@ -580,7 +591,7 @@ Antes del output final, ejecutar el cierre completo del modo Integración: escri
 
 ## Modo Pruebas
 
-**Pipeline:** `tester` → `reviewer` (si aplica) → `qa` (si aplica) → `security` (si aplica) → [`qa-fixer` condicionalmente]
+**Pipeline:** `tester` → (`reviewer` ∥ `arch-reviewer`) (si aplica) → `qa` (si aplica) → `security` (si aplica) → [`qa-fixer` condicionalmente]
 
 > El `qa-fixer` se invoca **solo cuando** `qa`, `security` o `reviewer` devuelven hallazgos accionables que requieren cambios de código (ver §Ruteo de hallazgos rechazados más abajo). No es parte del pipeline base — es una rama de corrección activada por veredicto.
 
@@ -609,11 +620,13 @@ Procedimiento obligatorio:
 | | contratos API públicos | |
 | | usuario lo pidió explícito | |
 
-**Orden:** `reviewer` antes que `qa` — sus hallazgos (CRITICO/MEJORA) alimentan al `qa` para no repetir análisis.
+`arch-reviewer` se incluye **en paralelo con `reviewer`** bajo los mismos disparadores (PR abierto en GitHub, usuario pide "review del código", o cambios en múltiples archivos sin PR). Cubre integridad estructural (capas, duplicación, fronteras de dominio) que `reviewer` no evalúa.
 
-**Self-critique** → ver Reglas inviolables #2 (aplica después de `tester`, `reviewer`, `qa`, `security`).
+**Orden:** `reviewer` y `arch-reviewer` antes que `qa` — sus hallazgos (CRITICO/MEJORA) alimentan al `qa` para no repetir análisis.
 
-**Paralelización:** `reviewer` ∥ `security` (ambos leen el diff, no dependen entre sí). `qa` siempre después del `reviewer` (consume su output).
+**Self-critique** → ver Reglas inviolables #2 (aplica después de `tester`, `reviewer`, `arch-reviewer`, `qa`, `security`).
+
+**Paralelización:** `reviewer` ∥ `arch-reviewer` ∥ `security` (los tres leen el diff, no dependen entre sí). `qa` siempre después del `reviewer` y `arch-reviewer` (consume sus outputs).
 
 ### Ruteo de hallazgos rechazados — usar `qa-fixer`, NO re-invocar `developer`
 
@@ -672,6 +685,7 @@ Cuando `qa`, `security` o `reviewer` devuelven hallazgos que requieren cambios d
 |---|---|---|---|---|
 | `explorer` | Explorador | Objetivo, fuentes a consultar (paths o URLs), context inline si aplica | Hallazgos estructurados (markdown), fuentes citadas, preguntas abiertas, recomendación opcional | **`WebFetch`, `WebSearch`** (único con acceso web). `Read` sin restricción de paths. `Bash` read-only (`git log/show/blame/diff`, `gh pr/issue view`, `find`, `ls`, `curl -sI`). Sin `Edit`/`Write`/`Agent`. |
 | `reviewer` | Pruebas | git diff o PR number | Reporte con hallazgos por severidad (CRITICO / MEJORA / NOTA) | `Bash` (`git diff`, `gh pr diff`, linters), `Grep`, `Glob`, `Agent`, `Skill`. Solo lectura por spec. |
+| `arch-reviewer` | Pruebas | git diff o PR number, `.context/` (patrones, contratos, ADRs) | Reporte con veredicto `APROBADO` / `BLOQUEADO` evaluando consistencia arquitectónica vs. patrones y contratos del proyecto | `Bash` (`git diff`, `gh pr diff`), `Grep`, `Glob`, `Agent`, `Skill`. Solo lectura por spec. |
 | `qa` | Pruebas | SPEC inline, handoff, git diff | Score y hallazgos | `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. Puede crear tareas en backlog vía Anvil MCP. Aunque tiene permiso execute, **solo lee** por spec. |
 | `security` | Pruebas | git diff, dependency paths | Hallazgos con severidad | `Bash`, `Grep`, `Glob`, `Agent`, `Skill`. Puede crear tareas en backlog. Solo lectura por spec. |
 
@@ -794,6 +808,7 @@ Cuando una tarea toca persistencia, el Líder decide qué agente invocar según 
 | `committer` (Fase 1) | `Phase=1`, `TASK-ID`, `run_id`, path absoluto al `.handoff/<TASK-ID>.md`, lista de archivos modificados del Paso 0.2 (inline) |
 | `committer` (Fase 2) | `Phase=2`, `TASK-ID`, `run_id`, path absoluto al `committer-handoff.md` en `.context/runs/<run_id>/`, veredictos de `reviewer` y `qa` inline (ej: "reviewer: PASS, qa: PASS-WITH-NOTES sin bloqueadores") |
 | `reviewer` | `git diff` inline (o PR number si hay PR en GitHub) |
+| `arch-reviewer` | `git diff` inline (o PR number si hay PR en GitHub), paths a `.context/` relevantes (`patterns.md`, `contracts.md`, `decisions/**`, `domains/**`) — produce reporte con veredicto `APROBADO` / `BLOQUEADO` |
 | `qa` | SPEC inline, `.handoff/<TASK-ID>.md` path, git diff inline, reporte del reviewer inline (si corrió) |
 | `dba` | `architecture-db.md` inline, `task_path`, motor relacional target (PostgreSQL/SQLite/MySQL) |
 | `dba-reader` | `objetivo` de la auditoría/lectura, motor(es) y paths o conexiones a inspeccionar, preguntas concretas a responder, `done-when` |

@@ -37,13 +37,23 @@ Complementar con `mcp__anvil__get_recent_changes(days=1)` para incluir contexto 
 
 **Flujo:**
 
-1. Spawnear `explorer` con prompt: "Lee `.context/NAVIGATOR.md`, `.context/project.md`, `.context/patterns.md` y los dominios relevantes a [objetivo del run]. Devuelve el contenido condensado más el valor de `last_updated`. Si `.context/NAVIGATOR.md` no existe, responde `CONTEXT_MISSING`."
+1. Spawnear `explorer` con prompt: "Lee `.context/NAVIGATOR.md`, `.context/project.md`, `.context/patterns.md` y los dominios relevantes a [objetivo del run]. Devuelve el contenido condensado más el valor de `last_updated`.
+
+   **Contrato estricto de respuesta (sin excepciones):** DEBES devolver exactamente el token `CONTEXT_MISSING` y nada más (sin explicaciones, sin disculpas, sin texto adicional, sin markdown, sin envoltorios) si se cumple cualquiera de estas condiciones:
+   - `.context/NAVIGATOR.md` no existe o no se puede abrir (archivo no encontrado, permisos, path inválido).
+   - `.context/NAVIGATOR.md` existe pero está vacío o solo contiene whitespace.
+   - El contenido no es un NAVIGATOR válido: faltan los campos obligatorios (`last_updated`, índice de dominios, referencias a `project.md`/`patterns.md`), o el header no identifica al archivo como Context Navigator.
+   - El contenido se devolvió truncado, corrupto, o no se pudo parsear de manera confiable.
+   - Tuviste un error de tool, timeout, o cualquier otra falla que te impida garantizar que el contexto cargado es válido y completo.
+
+   En cualquiera de esos casos: una sola línea, sin formato, sin más texto → `CONTEXT_MISSING`. Si dudas entre devolver contenido parcial o `CONTEXT_MISSING`, devuelve `CONTEXT_MISSING`."
 2. Recibir el output del `explorer`:
-   - **Devolvió contenido + `last_updated`:** calcular días desde esa fecha.
+   - **Devolvió contenido válido + `last_updated`:** calcular días desde esa fecha.
      - `>3 días` → etiquetar "⚠️ puede estar stale" pero continuar.
      - `>7 días` → recomendar correr `scanner` antes (no auto-spawnear; gate al usuario).
      - Inyectar el contenido devuelto inline en el primer agente productivo bajo `## Contexto del sistema`. NO releer los archivos — el contenido ya está inline.
-   - **Devolvió `CONTEXT_MISSING`:** agregar `context-bootstrap` + `scanner` (modo deep) al inicio del pipeline (ver §Manejo de `CONTEXT_MISSING` en `leader.md`). Excepción solo si el usuario dijo "sin bootstrap".
+   - **Devolvió `CONTEXT_MISSING` (token exacto, único contenido material):** agregar `context-bootstrap` + `scanner` (modo deep) al inicio del pipeline (ver §Manejo de `CONTEXT_MISSING` en `leader.md`). Excepción solo si el usuario dijo "sin bootstrap".
+   - **Devolvió cualquier otra cosa (texto ambiguo, error, mensaje "archivo no encontrado", output parcial, formato inesperado):** tratarlo como `CONTEXT_MISSING` y seguir la rama anterior. El Líder NO intenta interpretar outputs no conformes — un output que no es contenido válido de NAVIGATOR es, por definición, contexto faltante.
 
 **Sin excepción de complejidad:** una tarea Small sin `.context/` igual arranca con `context-bootstrap` + `scanner`. El Líder nunca abre `.context/` por su cuenta para "ahorrar un spawn" — la regla #9 no admite atajos.
 
