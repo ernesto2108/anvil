@@ -69,7 +69,8 @@ Hits con `score >= 0.5` → inyectar inline en primer agente bajo `## Memorias r
 
 1. `mcp__anvil__start_orchestration(objetivo, pipeline)` → obtener `run-id`
 2. Escribir `.context/runs/<run-id>/plan.md` (formato en la skill `leader/output-formats`, sección `## plan.md del run`)
-3. `mcp__anvil__save_leader_log(run_id, content)` con plan inicial completo
+3. Escribir `.context/runs/<run-id>/log.md` con encabezado mínimo `# Log del run <run-id>` (archivo donde el Líder irá apendando entradas del run en orden cronológico)
+4. `mcp__anvil__save_leader_log(run_id, content)` con plan inicial completo
 
 ## Output disponible para el Líder al terminar
 

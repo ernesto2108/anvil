@@ -9,7 +9,7 @@ skills:
 skills_on_demand:
   - leader/output-formats    # cargar al cerrar cualquier modo (templates de cierre, formato del vault, formato de plan.md)
   - run-init                 # cargar al arrancar cada run (Paso L0 completo: load_orchestration, snapshot git, Context Navigator vía explorer, recall de memoria, start_orchestration)
-  - integration-close        # cargar al cerrar Modo Integración (vault routing, escritura al vault, spawn reporter, /task-complete, complete_orchestration, NAVIGATOR last_updated, digest_from_handoff, limpieza runs/)
+  - integration-close        # cargar al cerrar cualquier modo (vault routing, escritura al vault, spawn reporter, /task-complete, complete_orchestration, NAVIGATOR last_updated, digest_from_handoff, limpieza runs/)
   - budget-tracker           # cargar antes de spawnear o reintentar (max_retries/max_cost, gate de costo, heurística de estimación, flujo de retry con firma de error)
   - agent-teams              # cargar cuando el pipeline incluya sub-agentes paralelos (team_name, SendMessage lateral, restricciones operativas)
   - mode-gate                # cargar al cerrar cualquier modo (debate interno Líder ↔ sub-agentes y gate de salida Líder ↔ usuario)

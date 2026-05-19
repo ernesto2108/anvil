@@ -1,18 +1,20 @@
 ---
 name: integration-close
-description: Cierre completo del modo Integración del Líder — resuelve vault path desde project-registry, escribe nota al vault según tipo de cambio, spawnea reporter para aplicar delta a `.context/`, ejecuta `/task-complete`, cierra la orquestación en Anvil MCP, actualiza `last_updated` en NAVIGATOR, llama `digest_from_handoff` cuando no corrió reporter, y limpia `.context/runs/`. Cárgalo cuando el Líder esté por cerrar Modo Integración. Reemplaza las secciones de cierre de Integración y de Persistencia de runs del leader.md.
+description: Cierre completo de cualquier modo del Líder (Explorador, Planeación, Integración, Pruebas) — resuelve vault path desde project-registry, escribe nota al vault según tipo de cambio, spawnea reporter para aplicar delta a `.context/`, ejecuta `/task-complete`, cierra la orquestación en Anvil MCP, actualiza `last_updated` en NAVIGATOR, llama `digest_from_handoff` cuando no corrió reporter, y limpia `.context/runs/`. Cárgalo cuando el Líder esté por cerrar cualquier modo. Reemplaza las secciones de cierre y de Persistencia de runs del leader.md.
 user-invocable: false
 ---
 
 # integration-close
 
-Secuencia de cierre del Modo Integración que el Líder ejecuta antes de presentar el output final al usuario. Cubre las dos responsabilidades acopladas: (a) escritura al vault del proyecto (Regla inviolable #6 del `leader.md`) y (b) persistencia/limpieza del run (Anvil MCP + `.context/runs/`).
+Secuencia de cierre que el Líder ejecuta antes de presentar el output final al usuario en **cualquier modo** (Explorador, Planeación, Integración, Pruebas). Cubre las dos responsabilidades acopladas: (a) escritura al vault del proyecto (Regla inviolable #6 del `leader.md`) y (b) persistencia/limpieza del run (Anvil MCP + `.context/runs/`).
+
+El nombre `integration-close` es histórico — la skill nació para Modo Integración pero su flujo de cierre y persistencia aplica a todos los modos que llegan al cierre del run. Pasos que no apliquen al modo activo (ej. escritura al vault cuando el modo no produjo cambios materiales) se omiten siguiendo las reglas de cada paso.
 
 El orden es **obligatorio** — saltarse o reordenar pasos rompe la trazabilidad del run y la consistencia de `.context/`.
 
 ## Cuándo se ejecuta
 
-Inmediatamente antes del output final al usuario en Modo Integración, después de que todos los gates internos (`lint`, `verify-handoff.sh`, `run-tests`) hayan pasado y los sub-agentes productivos (`developer`, `tester`) hayan cerrado.
+Inmediatamente antes del output final al usuario al cerrar cualquier modo, después de que todos los gates internos (`lint`, `verify-handoff.sh`, `run-tests` cuando apliquen) hayan pasado y los sub-agentes productivos (`explorer`, `developer`, `tester`, etc., según el modo) hayan cerrado.
 
 ## Flujo (orden estricto)
 
@@ -53,6 +55,8 @@ Después de escribir al vault y antes del output final, spawnear `reporter` con 
 **Saltar `reporter` solo si el run NO modificó archivos del proyecto** (caso atípico en Integración, pero posible si todo el cambio fue revertido). Si hubo cualquier modificación → invocar siempre.
 
 **Instrucción adicional al `reporter`:** incluir explícitamente en el prompt "Actualiza también `last_updated` en `.context/NAVIGATOR.md` a la fecha de hoy" — esto delega el paso 6 al `reporter` y evita que el Líder lo haga después por separado.
+
+**Inyección obligatoria del path del handoff:** si el run produjo un `.handoff/<TASK-ID>.md`, el Líder DEBE incluir en el prompt al `reporter` la línea `handoff_path: .context/runs/<run-id>/committer-handoff.md` (ajustando el path al archivo de handoff real del run). Sin este path, el `reporter` no puede llamar `mcp__anvil__digest_from_handoff` al final de su flujo y el ciclo queda sin cerrar (forzando que el Líder lo haga en el paso 7).
 
 ### 4 — Ejecutar `/task-complete <TASK-ID>`
 
