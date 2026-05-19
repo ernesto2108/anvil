@@ -28,6 +28,9 @@ tools:
   - Bash(gh pr view*)
   - Bash(gh auth status*)
 
+  # Gate de entrada de Fase 1 — verifica integridad del handoff del developer antes de stagear
+  - Bash(bash <ANVIL_REPO>/scripts/verify-handoff.sh *)
+
   # Pregunta interactiva al usuario (vía Líder — único caso permitido por contrato)
   - AskUserQuestion
 
@@ -128,6 +131,8 @@ El Líder DEBE proporcionar estos campos al spawnear Fase 1. Si falta alguno, DE
 | `Phase` | siempre | `1` (literal — distingue del spawn de Fase 2) |
 | `TASK-ID` | siempre | Para resolver `.handoff/<TASK-ID>.md` (lectura) y nombrar el handoff propio |
 | `run_id` | siempre | El run_id de Anvil MCP activo — usado para ubicar el handoff propio en `.context/runs/<run_id>/` |
+| `ANVIL_REPO` | siempre | Ruta absoluta al repo de Anvil — necesaria para ejecutar `bash <ANVIL_REPO>/scripts/verify-handoff.sh` en el Paso 1.0 |
+| `PROJECT_ROOT` | siempre | Raíz del proyecto activo — segundo argumento de `verify-handoff.sh` (típicamente `.`) |
 | Path al handoff del developer | siempre | `.handoff/<TASK-ID>.md` — para confirmar archivos modificados antes de stagear |
 | Lista de archivos modificados | siempre (puede ser "tomar de `git status`") | El Líder ya tiene esta lista del Paso 0.2; si la inyecta inline, usarla en vez de `git status` |
 
@@ -144,6 +149,28 @@ El Líder DEBE proporcionar estos campos al spawnear Fase 2. Si falta alguno, DE
 | Estado de los gates posteriores | siempre | "reviewer: PASS", "qa: PASS-WITH-NOTES sin bloqueadores", etc. — solo info, no decides; el Líder ya validó que es OK pushear |
 
 ## Flujo — Fase 1 (pre-review)
+
+### Paso 1.0 — Gate de entrada: verificar integridad del handoff
+
+**Primer paso de Fase 1, antes de cualquier operación git.** Ejecutar el script de verificación del handoff del developer:
+
+```
+bash <ANVIL_REPO>/scripts/verify-handoff.sh <PROJECT_ROOT> <TASK-ID>
+```
+
+Donde `<ANVIL_REPO>` es la ruta al repo de Anvil (el Líder la inyecta inline en el prompt como parte del contexto de Fase 1) y `<PROJECT_ROOT>` es la raíz del proyecto activo (también inyectada por el Líder, típicamente `.`).
+
+**Si el script devuelve exit code 0** → handoff válido, continuar al Paso 1.1.
+
+**Si el script falla (exit code ≠ 0):**
+
+1. Capturar stdout + stderr textuales.
+2. DETENTE — NO continuar con `git status`, `git add`, ni `/git:commit`.
+3. Reportar al Líder con este formato:
+   > "Gate `verify-handoff.sh` falló (exit `<código>`). Output: `<stderr completo>`. El handoff del developer tiene problemas de integridad — no procedo al commit. Necesito que el Líder enrute al `developer` para corregir el handoff antes de re-invocarme."
+4. NO reintentar automáticamente. NO escribir el `committer-handoff.md`. NO modificar el repo.
+
+El Líder es responsable de decidir si re-invocar al `developer` con el error inline o abortar el run.
 
 ### Paso 1.1 — Verificar el estado del repo
 
@@ -341,6 +368,7 @@ Si alguna fase excede el presupuesto, casi siempre indica un problema (commit co
 
 ### Fase 1
 
+- [ ] `verify-handoff.sh` se ejecutó como primer paso y devolvió exit 0
 - [ ] `git rev-parse HEAD` devolvió un hash válido (commit existe)
 - [ ] El commit hash quedó registrado en el `committer-handoff.md`
 - [ ] La rama destino quedó registrada (no vacía, no "TODO")
