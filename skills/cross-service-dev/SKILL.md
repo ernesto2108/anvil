@@ -36,8 +36,13 @@ Adicionalmente, el orquestador debe:
 2. **Resolver rutas de servicio desde service-map.yaml:**
    ```
    full_path = projects_root + "/" + service.local_path
-   Verificar que cada ruta existe en disco. Si falta → advertir al usuario, pedir la ruta.
    ```
+   Verificar que cada ruta existe en disco y aplicar la siguiente lógica por servicio:
+
+   - **Repo existe localmente** → continuar normalmente con esa ruta.
+   - **Repo no existe localmente pero hay URL en `service-map.yaml`** → el Líder clona el repo a un directorio temporal (`/tmp/<nombre-servicio>-<timestamp>`), la Fase 1.5 lo explora desde ahí, y al terminar la exploración se elimina el clon temporal.
+   - **Repo no existe localmente y no hay URL en `service-map.yaml`** → STOP. El Líder pausa y le pide al usuario: URL del repo o ruta local donde está clonado. La respuesta se persiste en `service-map.local.yaml` bajo el campo `local_path` del servicio correspondiente para que futuros runs no vuelvan a preguntar.
+   - **Repo no es accesible por ninguna vía** → marcar ese servicio como `sin contexto de código` en el ARD. El architect debe documentar explícitamente qué decisiones quedan sin verificar por falta de acceso al código.
 
 3. **Descubrir dependencias transitivas (OBLIGATORIO):**
    Para cada servicio que se está cambiando, verificar service-map.yaml:
@@ -58,6 +63,24 @@ Adicionalmente, el orquestador debe:
    - Debe listar TODOS los servicios en scope bajo Dependencias
    - Debe notar los servicios omitidos como pendientes
    - Debe especificar el tipo de operación
+
+### Fase 1.5 — Exploración de código por repo (N agentes explorer, OBLIGATORIO)
+
+Esta fase es obligatoria y no se puede saltar. Garantiza que el architect reciba contexto técnico real de cada servicio antes de tomar decisiones de diseño.
+
+Por cada repo resuelto en la Fase 1, el orquestador:
+
+1. **Spawnea un agente `explorer`** con el objetivo de leer firmas de función, contratos de API, schemas, estructuras de evento, tipos y cualquier interfaz relevante al scope de la tarea. Cuando hay 2+ repos → en paralelo.
+
+2. **Inputs por explorer:**
+   - La ruta local del repo (`full_path` resuelto en Fase 1, o el clon temporal cuando aplique)
+   - Los paths específicos dentro del repo que la tarea va a tocar (tomados del PRD del PM en Fase 1)
+
+3. **Output por explorer:** un bloque `## Contexto técnico — <nombre-servicio>` con firmas, contratos, schemas y tipos relevantes.
+
+4. **Consolidación:** el orquestador concatena los bloques de cada explorer en un único documento. Este documento consolidado es lo que resuelve el `{context_path}` referenciado en la Fase 2 como input del architect.
+
+**Servicios marcados como `sin contexto de código` en la Fase 1 se omiten en esta fase** — el bloque consolidado debe anotarlos explícitamente como faltantes para que el architect lo refleje en el ARD.
 
 ### Fase 2 — Arquitectura (1 agente architect)
 
@@ -115,6 +138,7 @@ Un agente QA ve el diff combinado de todos los servicios. Foco en:
 | Fase | Agente | Cantidad | ¿En paralelo? |
 |-------|-------|-------|-----------|
 | PM | pm | 1 | — |
+| Exploración por repo | explorer | N | Sí (cuando hay 2+ repos) |
 | Arquitectura | architect | 1 | — |
 | Migración DB | dba | 0-1 | — |
 | Implementación | developer | N | Sí (cuando son independientes) |

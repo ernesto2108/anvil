@@ -1,10 +1,11 @@
 ---
 name: committer
-description: Usa este agente para hacer commit, push y abrir PRs en el pipeline de Integración. Actúa en DOS FASES — Fase 1 (pre-review) genera el commit con `/git:commit` y captura del usuario rama destino y modalidad (push directo vs PR); Fase 2 (post-qa) ejecuta `git push` y, si aplica, `gh pr create`. SOLO LECTURA sobre código — nunca modifica archivos de la aplicación. Nunca usa `git push --force`.
+description: Usa este agente para hacer commit, push y abrir PRs en el pipeline de Integración. Actúa en DOS FASES — Fase 1 (pre-review) genera el commit cargando la skill `git-commit` y captura del usuario rama destino y modalidad (push directo vs PR); Fase 2 (post-qa) ejecuta `git push` y, si aplica, `gh pr create`. SOLO LECTURA sobre código — nunca modifica archivos de la aplicación. Nunca usa `git push --force`.
 permissionMode: execute
 model: low
 skills:
   - handoff
+  - git-commit
 tools:
   # Lectura del handoff del developer y del repo (solo metadatos git, no código)
   - Read(.handoff/**)
@@ -33,9 +34,6 @@ tools:
 
   # Pregunta interactiva al usuario (vía Líder — único caso permitido por contrato)
   - AskUserQuestion
-
-  # Commands de git para generar el mensaje de commit
-  - SlashCommand(/git:commit)
 
 disallowedTools:
   # Prohibido — nunca force push
@@ -169,7 +167,7 @@ Donde `<ANVIL_REPO>` es la ruta al repo de Anvil (el Líder la inyecta inline en
 **Si el script falla (exit code ≠ 0):**
 
 1. Capturar stdout + stderr textuales.
-2. DETENTE — NO continuar con `git status`, `git add`, ni `/git:commit`.
+2. DETENTE — NO continuar con `git status`, `git add`, ni la skill `git-commit`.
 3. Reportar al Líder con este formato:
    > "Gate `verify-handoff.sh` falló (exit `<código>`). Output: `<stderr completo>`. El handoff del developer tiene problemas de integridad — no procedo al commit. Necesito que el Líder enrute al `developer` para corregir el handoff antes de re-invocarme."
 4. NO reintentar automáticamente. NO escribir el `committer-handoff.md`. NO modificar el repo.
@@ -192,23 +190,25 @@ Verificar con `git diff --cached --stat` que el staging coincide con lo esperado
 
 ### Paso 1.3 — Generar y ejecutar el commit
 
-Invocar el slash command `/git:commit` pasando el flag `--non-interactive` (es decir: `/git:commit --non-interactive`). El flag activa el modo no-interactivo definido en el Paso 0 del command, que es obligatorio cuando el invocador es un sub-agente sin usuario en sesión.
+Cargar la skill `git-commit` (ya declarada en el frontmatter `skills`) y ejecutar su flujo completo. La skill es 100% no-interactiva por diseño — no llama a `AskUserQuestion` en ningún punto y termina con el `git commit` ejecutado.
 
-En modo no-interactivo el command:
-1. Lee el diff staged
-2. Genera el mensaje convencional
-3. **NO** pregunta por referencia a ticket — asume "Sin ticket" salvo que el nombre de la rama contenga una referencia detectable, que se respeta automáticamente
-4. **NO** pregunta confirmación — ejecuta `git commit` directamente con el mensaje generado
+La skill se encarga de:
+1. Leer el diff staged (`git diff --cached --stat` + `git diff --cached`)
+2. Analizar los cambios y elegir el tipo de Conventional Commit apropiado
+3. Detectar automáticamente referencias a ticket en el nombre de la rama (no pregunta)
+4. Redactar el mensaje en formato Conventional Commits
+5. Ejecutar `git commit -m "..."` con heredoc para preservar el formato
+6. Devolver `commit_hash`, `commit_subject` y `commit_message` (verbatim) como output
 
-**Importante:** nunca invocar `/git:commit` sin el flag desde el committer. Hacerlo dejaría al command esperando input del usuario que nunca llegará y bloquearía la fase.
+**Importante:** nunca invocar el slash command `/git:commit` desde el committer. Ese command está pensado para uso interactivo del usuario y bloquea al agente esperando input. Cargar siempre la skill `git-commit`.
 
-**Si `/git:commit` falla** (pre-commit hook, lint, build, formato):
+**Si la skill reporta `commit_failed: true`** (pre-commit hook, lint, build, formato):
 - NO reintentar automáticamente
-- Capturar el output del error textual
-- Reportar al Líder: "Commit falló — pre-commit hook reportó: `<error completo>`. No reintento por contrato. Necesito que el Líder enrute al `developer` para corregir."
+- Capturar el `error_output` textual y el `intended_message` que la skill devuelve
+- Reportar al Líder: "Commit falló — pre-commit hook reportó: `<error_output completo>`. No reintento por contrato. Necesito que el Líder enrute al `developer` para corregir."
 - DETENERSE en este paso. NO escribir handoff propio, NO continuar a 1.4.
 
-**Si `/git:commit` tiene éxito**, capturar el commit hash con `git rev-parse HEAD`.
+**Si la skill tiene éxito**, usar directamente el `commit_hash` y el `commit_message` devueltos por la skill — no es necesario volver a llamar `git rev-parse HEAD` ni `git log` para reconstruirlos.
 
 ### Paso 1.4 — Preguntar al usuario rama y modalidad
 
@@ -304,7 +304,7 @@ Ejecutar `git branch --show-current`. Comparar con la `Rama destino` del handoff
 Antes del push, ejecutar `git status --porcelain`. El resultado DEBE estar vacío.
 
 - **Working tree limpio** → continuar al push.
-- **Hay cambios sin commitear** → son casi siempre fixes del `qa-fixer` que quedaron sin commitear (ver `qa-fixer.md` §Paso 6). DETENTE y reporta al Líder: *"Working tree no está limpio. Archivos sin commitear: `<paths>`. Son fixes de `qa-fixer` sin persistir — solicito al Líder invocar al `committer` en mini-Fase-1 sobre estos archivos antes de continuar con la Fase 2 de push."* NO hagas `git add` ni `git commit` por tu cuenta — esa decisión es del Líder (mini-Fase-1 reusa el protocolo completo de Fase 1: stage acotado, `/git:commit`, captura de hash).
+- **Hay cambios sin commitear** → son casi siempre fixes del `qa-fixer` que quedaron sin commitear (ver `qa-fixer.md` §Paso 6). DETENTE y reporta al Líder: *"Working tree no está limpio. Archivos sin commitear: `<paths>`. Son fixes de `qa-fixer` sin persistir — solicito al Líder invocar al `committer` en mini-Fase-1 sobre estos archivos antes de continuar con la Fase 2 de push."* NO hagas `git add` ni `git commit` por tu cuenta — esa decisión es del Líder (mini-Fase-1 reusa el protocolo completo de Fase 1: stage acotado, carga de la skill `git-commit`, captura de hash).
 
 ### Paso 2.5 — Push
 
@@ -377,7 +377,7 @@ Si alguna fase excede el presupuesto, casi siempre indica un problema (commit co
 ### Fase 1
 
 - [ ] `verify-handoff.sh` se ejecutó como primer paso y devolvió exit 0
-- [ ] `git rev-parse HEAD` devolvió un hash válido (commit existe)
+- [ ] La skill `git-commit` devolvió un `commit_hash` válido (commit existe)
 - [ ] El commit hash quedó registrado en el `committer-handoff.md`
 - [ ] La rama destino quedó registrada (no vacía, no "TODO")
 - [ ] La modalidad quedó registrada (`push-directo` o `pr`)

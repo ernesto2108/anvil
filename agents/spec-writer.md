@@ -49,13 +49,22 @@ El Líder activa el modo vía el campo `Mode:` en el prompt. Convención exacta:
 |---|---|---|---|
 | `Mode:` | opcional (default `normal`) | obligatorio (`liviano`) | Convención de activación del modo (ver §Modos de operación) |
 | `requirements.md` inline | siempre | **opcional** — si no existe, el Líder inyecta el brief técnico inline como `## Contexto técnico` | Lista completa de FRs/NFRs con IDs (producida por `requirements` en modo normal) |
-| Paths ARD | siempre | **opcional** — si no existen, el contexto técnico inline reemplaza al ARD | `architecture.md` + vistas de dominio relevantes + `adrs/` (producidos por `architect` en modo normal) |
-| `## Contexto técnico` inline (solo modo liviano) | n/a | obligatorio | Bloque inline con: paths a tocar, contratos/interfaces relevantes ya existentes, decisiones técnicas del brief, comportamiento esperado |
+| Paths ARD | siempre | **opcional** — si no existen, el contexto técnico inline reemplaza al ARD | vistas de dominio relevantes (`architecture-<dominio>.md`) + `adrs/` (producidos por `architect` en modo normal) |
+| `## Contexto técnico` inline (solo modo liviano) | n/a | obligatorio | Bloque inline **producido por el `explorer` a partir de lectura real del repo** (no inventado a partir del brief del usuario). Debe incluir: paths concretos a tocar, firmas de función / interfaces / tipos existentes verbatim del código, contratos vecinos ya implementados, rutas / schemas / DTOs concretos, decisiones técnicas heredadas del brief y comportamiento esperado por archivo. El `spec-writer` consume este bloque como verdad — por eso debe venir del `explorer`, nunca del brief crudo del usuario. |
 | `task_path` | siempre | siempre | Ruta absoluta donde escribir `spec.md` |
 | `milestone` | siempre | opcional (default: vacío) | Milestone heredado del ARD (modo normal). En liviano puede no existir. |
 | `feature_name` | siempre | siempre | Nombre del feature o del cambio (para el título del spec) |
 
 **Si falta cualquier campo obligatorio del modo activo → DETENTE.** Devolver al Líder: `[campo] requerido en Mode: [modo]. No puedo proceder.`
+
+**Gate de proveniencia del `## Contexto técnico` (solo modo liviano) → DETENTE si falla.** El `spec-writer` NO lee código del repo, pero SÍ valida que el bloque `## Contexto técnico` que recibió haya sido producido por el `explorer` a partir de lectura real. Señales de que el bloque viene solo del brief del usuario (no del `explorer`) y debes escalar:
+
+- El bloque está vacío o solo repite frases del brief sin agregar información concreta del repo.
+- Usa lenguaje vago tipo "el servicio X hace Y", "el handler de Z valida los inputs", "la entidad W tiene los campos típicos" — sin nombres reales de función, tipos, paths o firmas verbatim del código.
+- No incluye ninguna firma de función, definición de tipo, ruta concreta, schema, ni cita verbatim de código existente.
+- Menciona paths plausibles pero no confirma que existen (ej. "tocar `internal/service/event.go`" sin firmar qué función o método contiene ese archivo).
+
+Si detectas cualquiera de estas señales → **STOP**. Devolver al Líder: `Contexto técnico sin lectura de repo detectado. Invocar explorer sobre los paths involucrados antes de continuar.` No continuar con el flujo liviano hasta recibir un `## Contexto técnico` actualizado con datos reales del `explorer`.
 
 ## Flujo de ejecución
 
@@ -68,7 +77,7 @@ Leer el campo `Mode:` del prompt. Si vale `liviano` → seguir el flujo liviano 
 #### Paso 1 — Leer inputs
 
 1. Leer `requirements.md` completo (inline en el prompt)
-2. Leer cada path ARD que el Líder pasó: `architecture.md`, vistas de dominio, cada `adrs/ADR-*.md`
+2. Leer cada path ARD que el Líder pasó: vistas de dominio (`architecture-<dominio>.md`), cada `adrs/ADR-*.md`
 3. **NO leer PRD.** El contexto de negocio que necesites debe estar en `requirements.md`. Si no está → escalar.
 4. **NO leer código de producción.** Solo verificar existencia/ausencia de paths cuando el ARD los referencia (≤4 calls Glob/Grep).
 
@@ -161,7 +170,7 @@ El número y orden de secciones depende del modo:
 ```markdown
 # Spec — <feature_name>
 
-> Milestone: <milestone> | Producido a partir de: requirements.md + architecture.md (+ vistas) + adrs/
+> Milestone: <milestone> | Producido a partir de: requirements.md + ARD (architecture-<dominio>.md + adrs/)
 
 ## 1. Contexto y objetivo
 
