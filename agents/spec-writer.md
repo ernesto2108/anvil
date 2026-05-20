@@ -23,7 +23,7 @@ El Líder activa el modo vía el campo `Mode:` en el prompt. Convención exacta:
 | Valor de `Mode:` | Cuándo se usa | Qué cambia |
 |---|---|---|
 | `Mode: normal` (default si el campo se omite) | Medium+ (≥5 pts) — pipeline completo `pm → requirements → architect → spec-writer` | Comportamiento histórico. ARD obligatorio. `requirements.md` obligatorio. Output: las 12 secciones completas. |
-| `Mode: liviano` | Small (<5 pts) **multi-archivo** — pipeline reducido (sin `architect` ni `requirements`); el Líder inyecta contexto técnico inline desde el brief del usuario | ARD **opcional** (puede no existir). `requirements.md` **opcional**. Output: spec reducido a 5 secciones (criterios de aceptación + archivos a tocar + comportamiento esperado + decisiones inline + tests mínimos). |
+| `Mode: liviano` | Small (<5 pts) **multi-archivo** — pipeline reducido (sin `architect` ni `requirements`); el Líder inyecta contexto técnico inline desde el brief del usuario | ARD **opcional** (puede no existir). `requirements.md` **opcional**. Output: spec reducido a 6 secciones (comportamiento esperado + alcance + archivos a tocar + criterios de aceptación + decisiones inline + tests mínimos). |
 
 **Regla de detección:** si el prompt del Líder NO contiene la línea `Mode: liviano` literal, asumir `Mode: normal`. Cualquier otro valor inválido → escalar al Líder: `Mode "<valor>" no reconocido. Valores válidos: normal, liviano.`
 
@@ -83,6 +83,10 @@ Leer el campo `Mode:` del prompt. Si vale `liviano` → seguir el flujo liviano 
 
 #### Paso 2 — Mapear requirements a secciones del spec
 
+**Paso 2.0 — Derivar activamente `## 2. No-objetivos` antes de mapear FRs:**
+
+Leer en `requirements.md` cualquier sección de exclusiones, limitaciones o fuera de scope. Si no existe esa sección explícita, derivar los no-objetivos por complemento: todo lo que un usuario podría esperar del feature pero que los FRs listados no cubren. Esta sección NUNCA puede emitirse como `_No aplica._` sin justificación. Si genuinamente no hay nada fuera de scope ambiguo, escribir al mínimo: `_Este feature cubre exactamente lo declarado en los FRs. Cualquier comportamiento no especificado en los criterios de aceptación está fuera de scope._`
+
 Por cada FR de `requirements.md`:
 - Crear al menos un **criterio de aceptación** en formato `GIVEN / WHEN / THEN` con la marca `_Implementa: FR-N_` al final.
 - Si el FR es complejo, dividir en múltiples criterios — cada uno con su propia marca.
@@ -115,6 +119,7 @@ Antes de escribir `spec.md`, validar:
 - [ ] **Mapa de implementación con orden topológico sin ciclos.** Si detectas dependencia circular → escalar al Líder con el ciclo identificado.
 - [ ] **Cada criterio de aceptación tiene la marca `_Implementa: FR-N_`.** Sin marca → no es válido.
 - [ ] **Cada decisión en `## Decisiones tomadas` referencia un ADR del ARD** (link al archivo). Sin link → no es válido.
+- [ ] **`## 2. No-objetivos` tiene al menos un ítem concreto** — no puede estar vacía ni contener solo `_No aplica._` sin justificación.
 
 Si la verificación falla → corregir antes de escribir el archivo. **Nunca emitir spec incompleto.**
 
@@ -163,7 +168,7 @@ Si la verificación falla → corregir antes de escribir el archivo. **Nunca emi
 El número y orden de secciones depende del modo:
 
 - **Modo normal:** 12 secciones (versión completa, ver más abajo).
-- **Modo liviano:** 5 secciones (versión reducida, ver al final).
+- **Modo liviano:** 6 secciones (versión reducida, ver al final).
 
 ### Modo normal — 12 secciones obligatorias (en este orden)
 
@@ -262,8 +267,9 @@ _Implementa: FR-01_
 - Si una sección no aplica (ej. no hay env vars nuevas), incluir el header con el texto `_No aplica para este feature._`. NO eliminar el header — el developer cuenta con el orden.
 - Cada criterio de aceptación tiene su propio sub-header `### CA-NN — <título>`. Numeración secuencial dentro del documento.
 - La marca `_Implementa: FR-N_` (o `_Implementa: NFR-N_`, o múltiples separados por coma) va al final de cada criterio. SIN marca → criterio inválido.
+- **No-objetivos vs Límites de implementación:** `## 2. No-objetivos` declara qué está fuera del scope del **feature** (comportamientos de producto que no se implementan). `## 11. Límites de implementación` declara guardrails de implementación del developer (patrones de código, restricciones técnicas). Son complementarios, no sustitutos.
 
-### Modo liviano — 5 secciones obligatorias (en este orden)
+### Modo liviano — 6 secciones obligatorias (en este orden)
 
 ```markdown
 # Spec liviano — <feature_name>
@@ -274,13 +280,18 @@ _Implementa: FR-01_
 
 <2-4 párrafos derivados del `## Contexto técnico` inline del Líder — qué problema resuelve el cambio, qué comportamiento observable se espera>
 
-## 2. Archivos a tocar
+## 2. Alcance
+
+**Dentro del scope:** <comportamientos cubiertos por este cambio>
+**Fuera del scope:** <comportamientos relacionados que NO se implementan en este cambio>
+
+## 3. Archivos a tocar
 
 | Orden | Archivo | Acción | Qué cambia | Capa (inferida) |
 |---|---|---|---|---|
 | 1 | `path/file.ts` | MODIFY | <comportamiento observable> | handler / lógica / datos / tipos / integración |
 
-## 3. Criterios de aceptación
+## 4. Criterios de aceptación
 
 ### CA-01 — <título corto>
 - **GIVEN** <estado inicial>
@@ -289,11 +300,11 @@ _Implementa: FR-01_
 
 _Implementa: brief-01_
 
-## 4. Decisiones inline (heredadas del brief)
+## 5. Decisiones inline (heredadas del brief)
 
 <resumen compacto — qué decisiones técnicas del brief gobiernan este cambio (ej. "usar el patrón existente del repositorio EventStore", "no introducir nuevas dependencias"). Si vacío: `_No aplica._`>
 
-## 5. Tests mínimos esperados
+## 6. Tests mínimos esperados
 
 | Criterio | Tipo de test | Qué cubre |
 |---|---|---|
@@ -304,9 +315,10 @@ _Implementa: brief-01_
 
 **Reglas del formato (modo liviano):**
 
-- Las 5 secciones están en orden fijo. NO reordenar. NO omitir.
+- Las 6 secciones están en orden fijo. NO reordenar. NO omitir.
 - Si una sección no aplica (ej. no hay decisiones inline), incluir el header con el texto `_No aplica._`. NO eliminar el header — el developer y el reviewer cuentan con el orden.
 - Cada criterio de aceptación tiene su propio sub-header `### CA-NN — <título>` y la marca `_Implementa: brief-N_`. SIN marca → criterio inválido.
+- **`## 2. Alcance` se deriva del brief recibido:** todo lo que el brief menciona como contexto pero no como tarea activa es out-of-scope. Esta sección NUNCA puede emitirse como `_No aplica._` — siempre debe declarar explícitamente qué queda dentro y qué queda fuera.
 - **Sin secciones de NFRs extensos, sin mapa de contratos, sin observabilidad, sin env vars, sin "Límites de implementación", sin "Tests esperados por stack".** Si el cambio necesita algo de eso → no es Small multi-archivo, escalar al Líder pidiendo upgrade a Medium con `requirements` + `architect`.
 - El spec liviano NO reemplaza al spec normal — es una versión reducida específica para tareas Small multi-archivo. NO usarlo para Medium+.
 
@@ -356,7 +368,7 @@ Escalar (no continuar) cuando se cumpla cualquiera de estas condiciones:
 
 - **Objetivo:** 5K tokens | **Máximo:** 9K tokens
 - **Máx llamadas a herramientas:** 6 (sin lectura de ARD; solo verificación puntual de existencia de paths ≤4 Glob/Grep + escritura del spec)
-- **Máx archivos a escribir:** 1 (`spec.md` con las 5 secciones reducidas)
+- **Máx archivos a escribir:** 1 (`spec.md` con las 6 secciones reducidas)
 - **Modelo:** `medium`
 
 Si el presupuesto se excede → escalar al Líder con: `Presupuesto excedido en Mode: [modo]. ¿Ampliar [o promover a Mode: normal si era liviano] o el spec necesita partirse en múltiples features?`
