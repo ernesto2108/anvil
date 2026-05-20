@@ -2,7 +2,7 @@
 
 Inspirado en: Google Design Docs + formato ADR.
 
-**Esta guía NO produce un archivo de salida.** `architecture.md` genérico ya no es un output válido — todo el ARD vive en vistas de dominio nombradas (`architecture-backend.md`, `architecture-db.md`, etc.).
+**Esta guía NO produce un archivo de salida.** `architecture.md` genérico ya no es un output válido — todo el ARD vive en vistas de dominio nombradas (`ard-backend.md`, `ard-database.md`, etc.).
 
 Esta guía existe para dos usos:
 
@@ -91,9 +91,9 @@ sequenceDiagram
 
 ## Preguntas abiertas
 
-| # | Pregunta | Owner | Fecha límite |
-|---|---|---|---|
-| 1 | | | |
+| # | Pregunta | Impacto si no se resuelve | Responsable | Deadline |
+|---|----------|--------------------------|-------------|----------|
+| 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
 
 > Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
 > No omitir la sección; su ausencia indica que no se revisaron las ambigüedades, no que no existen.

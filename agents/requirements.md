@@ -63,7 +63,7 @@ Por cada ítem de las 4 fuentes:
 1. **Asigna el patrón EARS correcto** (tabla abajo)
 2. **Escribe el requirement** con la plantilla exacta del patrón
 3. **Asigna ID**: `FR-<N>` para funcionales, `NFR-<N>` para no funcionales (N empieza en 01, numeración secuencial)
-4. **Preserva referencia a la sección de origen** en la columna `Source` (ej. `PRD §Criterios de aceptación`, `PRD §Journeys`)
+4. **Preserva referencia a la sección de origen** en la columna `Fuente` (ej. `PRD > Criterios de aceptación`, `PRD > Journeys`)
 
 **Patrones EARS disponibles:**
 
@@ -93,7 +93,7 @@ Lee los Journeys del PRD buscando comportamientos descritos narrativamente que N
 
 Por cada uno encontrado:
 1. Crear FR con ID nuevo
-2. Marcar `Source: PRD §Journeys (inferido)`
+2. Marcar `Fuente: PRD > Journeys (inferido)`
 3. Incluir en `## Notas de transformación` con la cita exacta del journey
 
 **Límite duro:** si al terminar este paso hay más de **20 FRs** para una sola feature → señal de que el PRD mezcla múltiples features. DETENERSE, registrar como decisión abierta ("FRs >20 — posible mezcla de features; ¿partir en múltiples PRDs?") y escalar al Líder antes de continuar.
@@ -111,17 +111,17 @@ Por cada uno encontrado:
 ```markdown
 # Requirements — <feature_name>
 
-## Functional Requirements
+## Requerimientos Funcionales
 
-| ID    | Requirement                                                              | Prioridad | Source                         |
-|-------|--------------------------------------------------------------------------|-----------|--------------------------------|
-| FR-01 | WHEN <trigger>, the system shall <response>                              | P0        | PRD §Criterios de aceptación   |
-| FR-02 | The system shall <action>                                                | P1        | PRD §Requerimientos funcionales |
-| FR-03 | IF <condition>, THEN the system shall <response>                         | P0        | PRD §Journeys (inferido)       |
+| ID    | Requerimiento                                                            | Prioridad | Fuente                              |
+|-------|--------------------------------------------------------------------------|-----------|-------------------------------------|
+| FR-01 | WHEN <trigger>, the system shall <response>                              | P0        | PRD > Criterios de aceptación       |
+| FR-02 | The system shall <action>                                                | P1        | PRD > Requerimientos funcionales    |
+| FR-03 | IF <condition>, THEN the system shall <response>                         | P0        | PRD > Journeys (inferido)           |
 
-## Non-Functional Requirements
+## Requerimientos No Funcionales
 
-| ID     | Requirement                                                             | Categoría     |
+| ID     | Requerimiento                                                           | Categoría     |
 |--------|-------------------------------------------------------------------------|---------------|
 | NFR-01 | The system shall <action> within <metric>                               | Performance   |
 | NFR-02 | WHEN <trigger>, the system shall <response>                             | Security      |
@@ -139,7 +139,7 @@ Por cada uno encontrado:
 ## Notas de transformación
 <!-- Requirements inferidos de journeys, expansiones de ambigüedades, contexto adicional para el architect -->
 
-- **FR-XX** (inferido de PRD §Journeys): "[cita exacta del journey]"
+- **FR-XX** (inferido de PRD > Journeys): "[cita exacta del journey]"
 - **NFR-XX**: el PRD decía "rápido" — interpretado como "<200ms p95". Confirmar con PM.
 ```
 

@@ -49,7 +49,7 @@ El Líder activa el modo vía el campo `Mode:` en el prompt. Convención exacta:
 |---|---|---|---|
 | `Mode:` | opcional (default `normal`) | obligatorio (`liviano`) | Convención de activación del modo (ver §Modos de operación) |
 | `requirements.md` inline | siempre | **opcional** — si no existe, el Líder inyecta el brief técnico inline como `## Contexto técnico` | Lista completa de FRs/NFRs con IDs (producida por `requirements` en modo normal) |
-| Paths ARD | siempre | **opcional** — si no existen, el contexto técnico inline reemplaza al ARD | vistas de dominio relevantes (`architecture-<dominio>.md`) + `adrs/` (producidos por `architect` en modo normal) |
+| Paths ARD | siempre | **opcional** — si no existen, el contexto técnico inline reemplaza al ARD | vistas de dominio relevantes (`ard-<dominio>.md`) + `adrs/` (producidos por `architect` en modo normal) |
 | `## Contexto técnico` inline (solo modo liviano) | n/a | obligatorio | Bloque inline **producido por el `explorer` a partir de lectura real del repo** (no inventado a partir del brief del usuario). Debe incluir: paths concretos a tocar, firmas de función / interfaces / tipos existentes verbatim del código, contratos vecinos ya implementados, rutas / schemas / DTOs concretos, decisiones técnicas heredadas del brief y comportamiento esperado por archivo. El `spec-writer` consume este bloque como verdad — por eso debe venir del `explorer`, nunca del brief crudo del usuario. |
 | `task_path` | siempre | siempre | Ruta absoluta donde escribir `spec.md` |
 | `milestone` | siempre | opcional (default: vacío) | Milestone heredado del ARD (modo normal). En liviano puede no existir. |
@@ -77,7 +77,7 @@ Leer el campo `Mode:` del prompt. Si vale `liviano` → seguir el flujo liviano 
 #### Paso 1 — Leer inputs
 
 1. Leer `requirements.md` completo (inline en el prompt)
-2. Leer cada path ARD que el Líder pasó: vistas de dominio (`architecture-<dominio>.md`), cada `adrs/ADR-*.md`
+2. Leer cada path ARD que el Líder pasó: vistas de dominio (`ard-<dominio>.md`), cada `adrs/ADR-*.md`
 3. **NO leer PRD.** El contexto de negocio que necesites debe estar en `requirements.md`. Si no está → escalar.
 4. **NO leer código de producción.** Solo verificar existencia/ausencia de paths cuando el ARD los referencia (≤4 calls Glob/Grep).
 
@@ -176,7 +176,7 @@ El número y orden de secciones depende del modo:
 ```markdown
 # Spec — <feature_name>
 
-> Milestone: <milestone> | Producido a partir de: requirements.md + ARD (architecture-<dominio>.md + adrs/)
+> Milestone: <milestone> | Producido a partir de: requirements.md + ARD (ard-<dominio>.md + adrs/)
 
 ## 1. Contexto y objetivo
 

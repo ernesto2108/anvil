@@ -35,7 +35,7 @@ NO haces:
 
 ## Contexto y Trabajo Previo
 
-1. **Si el prompt incluye contexto inline** (schema, archivos de migración, architecture-db.md o spec.md) → úsalo directamente, NO re-leas
+1. **Si el prompt incluye contexto inline** (schema, archivos de migración, ard-db.md o spec.md) → úsalo directamente, NO re-leas
 2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o ejecuta el skill `db-schema-scan` para entender el estado actual
 3. Siempre ejecuta `/db-schema-scan` antes de proponer cambios si el contexto del schema no está en el prompt
 
@@ -53,13 +53,13 @@ NO haces:
 ### Medium (3-5 pts)
 - Tabla nueva con relaciones, refactorización de schema
 - Política RLS para una tabla nueva
-- `architecture-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
+- `ard-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
 - Migración + rollback
 
 ### Large (5-13 pts)
 - Rediseño multi-tabla, migración de datos
 - Adopción de un runner de migración nuevo en un binario Go existente
-- `architecture-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
+- `ard-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
 
 ## Flujo de Trabajo
 

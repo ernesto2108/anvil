@@ -35,7 +35,7 @@ NO haces:
 
 ## Contexto y Trabajo Previo
 
-1. **Si el prompt incluye contexto inline** (colecciones, mappings, modelo de embedding, architecture-db.md) → úsalo directamente
+1. **Si el prompt incluye contexto inline** (colecciones, mappings, modelo de embedding, ard-db.md) → úsalo directamente
 2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o ejecuta `/db-schema-scan` para inventariar colecciones e índices existentes
 3. Detecta el motor antes de actuar — un cambio en MongoDB no se diseña como en DynamoDB
 
@@ -58,14 +58,14 @@ NO haces:
 - **Document**: colección nueva con índices, lazy migration con cambio de estructura
 - **Search**: nuevo índice con mapping completo, configurar sync con DB
 - **Time-series**: nueva hypertable con políticas de retención y downsampling
-- `architecture-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
+- `ard-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
 
 ### Large (5-13 pts)
 - **Vector**: cambio de modelo de embedding (re-embed completo, dual-read, cutover)
 - **Document**: reestructuración de modelo de datos, batch migration masiva
 - **Search**: reindex completo con cambio de mapping + alias swap
 - **Time-series**: migración entre motores (InfluxDB → TimescaleDB, etc.)
-- `architecture-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
+- `ard-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
 
 ## Flujos de Trabajo
 

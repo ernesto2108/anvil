@@ -22,9 +22,9 @@ El criterio primario es **cuántos dominios toca la tarea**, no los puntos de hi
 
 | Alcance de la tarea | Output |
 |---|---|
-| Single-dominio Small (1-5 pts) | Una sola vista de dominio: `architecture-<dominio>.md` — narrativa pura, sin specs ejecutables ni diagramas extensos |
-| Single-dominio Medium (5-8 pts) | Una sola vista de dominio: `architecture-<dominio>.md` con specs ejecutables del dominio (OpenAPI, DBML, etc.) |
-| Multi-dominio (2+ dominios, cualquier tamaño) | Una vista por dominio: `architecture-backend.md` + `architecture-db.md` + … — cada archivo cubre solo su dominio, sin consolidación |
+| Single-dominio Small (1-5 pts) | Una sola vista de dominio: `ard-<dominio>.md` — narrativa pura, sin specs ejecutables ni diagramas extensos |
+| Single-dominio Medium (5-8 pts) | Una sola vista de dominio: `ard-<dominio>.md` con specs ejecutables del dominio (OpenAPI, DBML, etc.) |
+| Multi-dominio (2+ dominios, cualquier tamaño) | Una vista por dominio: `ard-backend.md` + `ard-database.md` + … — cada archivo cubre solo su dominio, sin consolidación |
 | Large (8+ pts), multi-servicio | Todas las vistas aplicables, specs SDD completos, bridge de contratos entre vistas |
 
 **Regla dura:** `architecture.md` genérico **NO es un output válido en ningún caso**. La narrativa de contexto, objetivos, no-objetivos y concerns transversales vive **dentro** de la vista de dominio correspondiente (sección `## Contexto y alcance` y siguientes). Para multi-dominio, las preocupaciones transversales se documentan en la vista del dominio que las origina, con referencia cruzada desde las demás vistas.
@@ -35,13 +35,13 @@ Cada dominio tiene su propio archivo. Usar exactamente estos nombres.
 
 | Archivo | Cuándo crearlo |
 |---|---|
-| `architecture-backend.md` | Servicios backend, APIs internas, lógica de dominio server-side (Go, Rust, Python, etc.) |
-| `architecture-db.md` | Schema, migraciones, índices, patrones de acceso a datos |
-| `architecture-frontend.md` | UI web, jerarquía de componentes (React, Astro, etc.), rutas, estado cliente |
-| `architecture-mobile.md` | iOS/Android/Flutter — navegación, offline/sync, push, platform channels |
-| `architecture-infra.md` | Topología de despliegue, IaC, brokers/colas, observabilidad, CI/CD |
-| `architecture-api.md` | Contrato de API cross-stack cuando la API es el dominio central (SDK público, OpenAPI compartido) |
-| `architecture-auth.md` | Cuando auth (identidad, autorización, tokens, sesiones) es el dominio central |
+| `ard-backend.md` | Servicios backend, APIs internas, lógica de dominio server-side (Go, Rust, Python, etc.) |
+| `ard-database.md` | Schema, migraciones, índices, patrones de acceso a datos |
+| `ard-frontend.md` | UI web, jerarquía de componentes (React, Astro, etc.), rutas, estado cliente |
+| `ard-mobile.md` | iOS/Android/Flutter — navegación, offline/sync, push, platform channels |
+| `ard-infrastructure.md` | Topología de despliegue, IaC, brokers/colas, observabilidad, CI/CD |
+| `ard-api.md` | Contrato de API cross-stack cuando la API es el dominio central (SDK público, OpenAPI compartido) |
+| `ard-auth.md` | Cuando auth (identidad, autorización, tokens, sesiones) es el dominio central |
 
 ❌ `architecture.md` genérico no es un output válido — usar siempre vistas de dominio nombradas.
 
@@ -53,13 +53,13 @@ Cada guía contiene el template + reglas de formato para una vista. Cargar SOLO 
 
 | Vista | Guía | Cuándo cargar |
 |---|---|---|
-| Backend (`architecture-backend.md`) | `guides/backend.md` | Trabajo de backend |
-| Frontend web (`architecture-frontend.md`) | `guides/frontend.md` | Trabajo de frontend web |
-| Mobile (`architecture-mobile.md`) | `guides/mobile.md` | Trabajo de mobile (Flutter, RN, nativo) |
-| Base de datos (`architecture-db.md`) | `guides/database.md` | Cambios de DB |
-| Infraestructura (`architecture-infra.md`) | `guides/infrastructure.md` | Cambios de infra |
-| API cross-stack (`architecture-api.md`) | `guides/backend.md` (sección de contratos) | Contrato de API es el dominio central |
-| Auth (`architecture-auth.md`) | `guides/backend.md` (sección de seguridad/identidad) | Auth es el dominio central |
+| Backend (`ard-backend.md`) | `guides/backend.md` | Trabajo de backend |
+| Frontend web (`ard-frontend.md`) | `guides/frontend.md` | Trabajo de frontend web |
+| Mobile (`ard-mobile.md`) | `guides/mobile.md` | Trabajo de mobile (Flutter, RN, nativo) |
+| Base de datos (`ard-database.md`) | `guides/database.md` | Cambios de DB |
+| Infraestructura (`ard-infrastructure.md`) | `guides/infrastructure.md` | Cambios de infra |
+| API cross-stack (`ard-api.md`) | `guides/api.md` | Contrato de API es el dominio central |
+| Auth (`ard-auth.md`) | `guides/auth.md` | Auth es el dominio central |
 | Convenciones transversales (MADR, etc.) | `guides/overview.md` | Solo para consultar formato MADR de ADRs y convenciones — **no produce archivo overview** |
 
 **Orden de generación (obligatorio):** vistas de dominio (en el orden en que el dominio aparece en la cadena de impacto: datos → backend → contratos → consumidores) → `adrs/`. No existe paso de "overview" separado — cada vista de dominio se autocontiene. El `spec.md` lo produce el `spec-writer` en una invocación separada después del cierre del architect — NO cargar `guides/spec.md` desde el architect.

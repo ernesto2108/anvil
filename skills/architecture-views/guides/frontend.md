@@ -1,4 +1,4 @@
-# Template: architecture-frontend.md
+# Template: ard-frontend.md
 
 Inspirado en: rcherny Front-End Architecture Checklist + diseño component-driven.
 
@@ -28,6 +28,22 @@ Instrucción para el architect: poblar esta tabla con TODOS los archivos que toc
 Los archivos NEW (acción CREATE) deben tener justificación de ubicación explícita.
 Esta tabla es el contrato de handoff hacia el `spec-writer`.
 -->
+
+---
+
+## Restricciones no-funcionales
+
+| Atributo | Requerimiento | Fuente |
+|----------|---------------|--------|
+| Latencia p99 | [valor concreto, ej. < 200ms] | requirements.md §NFR |
+| Throughput | [valor concreto, ej. 500 RPS sostenidos] | requirements.md §NFR |
+| Disponibilidad | [valor concreto, ej. 99.9% mensual] | requirements.md §NFR |
+| Error budget | [valor concreto, ej. 43.8 min/mes] | derivado de disponibilidad |
+| RTO | [valor concreto, ej. < 15 min] | requirements.md §NFR |
+| Constraints de seguridad | [ej. TLS 1.2+, datos en reposo cifrados] | requirements.md §NFR |
+| Constraints de compliance | [ej. GDPR, SOC2] o N/A | requirements.md §NFR |
+
+> Propagar los valores exactos de `requirements.md`. Si un atributo no aplica a este dominio, escribir `N/A` con una justificación de una línea.
 
 ---
 
@@ -157,6 +173,14 @@ stateDiagram-v2
 sequenceDiagram
   ...
 ```
+
+## Preguntas abiertas
+
+| # | Pregunta | Impacto si no se resuelve | Responsable | Deadline |
+|---|----------|--------------------------|-------------|----------|
+| 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
+
+> Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
 ```
 
 ## Reglas

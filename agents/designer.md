@@ -292,7 +292,7 @@ Micro-interacciones, estados de carga, UX de manejo de errores, estados vacíos,
 
 ## Producción
 
-**El DTD es un artefacto bloqueante para el arquitecto.** Cuando la tarea involucra UI (pantallas nuevas, flujos de navegación, jerarquía de componentes), el arquitecto NO puede producir `architecture-frontend.md` ni `architecture-mobile.md` sin un DTD completo. Un DTD incompleto o ausente detiene el pipeline — trátalo con la misma urgencia que el PRD tiene para este agente.
+**El DTD es un artefacto bloqueante para el arquitecto.** Cuando la tarea involucra UI (pantallas nuevas, flujos de navegación, jerarquía de componentes), el arquitecto NO puede producir `ard-frontend.md` ni `ard-mobile.md` sin un DTD completo. Un DTD incompleto o ausente detiene el pipeline — trátalo con la misma urgencia que el PRD tiene para este agente.
 
 Crea: `{task_path}/dtd.md`
 
