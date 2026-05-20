@@ -339,6 +339,7 @@ El criterio primario es **cuántos dominios toca la tarea**, no los puntos de hi
 - Single-dominio Small (1-5 pts): la vista de dominio puede ser narrativa pura (sin specs ejecutables ni diagramas extensos), pero sigue siendo `architecture-<dominio>.md`, no `architecture.md`.
 - Multi-dominio: nunca consolidar dos dominios en un solo archivo. Cada dominio en su propio archivo, incluso si la tarea es chica. Las preocupaciones transversales (consistencia de contratos, ordering de deploys) se documentan en la vista del dominio que las **origina**, con referencia cruzada desde las demás vistas — no en un archivo genérico.
 - ADRs son independientes del tamaño — ver "ADRs — Registros de Decisiones de Arquitectura" arriba.
+- **`architecture-infra.md` es OBLIGATORIO** para toda tarea **Medium+ (6+ pts)** que introduzca o modifique **cualquier componente desplegable** — servicio, API, worker, cron job, función serverless, broker/cola, schedule. Si la tarea es Medium+ y existe al menos un componente desplegable → generar `architecture-infra.md` aunque la tarea sea "principalmente backend"; documenta topología de despliegue, env vars, observabilidad mínima (logs/métricas), SLOs y plan de rollback. Excepción única: tareas Medium+ que NO tocan ningún componente desplegable (ej. refactor puro de tipos, cambios de docs, migración interna de paquetes sin deploy) — en ese caso, registrar explícitamente en el resumen de decisiones del Paso 2: `architecture-infra.md: N/A — la tarea no introduce ni modifica componentes desplegables`.
 
 ### Dominios reconocidos
 
@@ -460,6 +461,9 @@ Antes de cerrar el ARD y reportar al Líder, verificar:
 - [ ] Los no-objetivos del feature están documentados en `### Out of scope`
 - [ ] El milestone está en el encabezado de cada vista
 - [ ] Los no-objetivos del PRD/requirements.md fueron propagados al ARD
+- [ ] NFRs de requirements.md propagados al ARD con al menos latencia p99 y SLO de disponibilidad cuantificados (número concreto, o `N/A` con justificación)
+- [ ] Sección "Preguntas abiertas" presente en al menos una vista de dominio (con contenido o con "Ninguna — todas las ambigüedades fueron resueltas")
+- [ ] Si la tarea es Medium+ con cualquier componente desplegable → `architecture-infra.md` generado; si no aplica, registrado como `N/A` con justificación en el resumen del Paso 2
 
 Si algún ítem falta → completarlo antes de entregar al Líder.
 

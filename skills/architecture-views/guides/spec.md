@@ -1,8 +1,7 @@
 # Template: spec.md
 
-**Generado por:** agente architect, después de producir todas las vistas de arquitectura.
-**Aprobado por:** usuario (gate de aprobación del SPEC — obligatorio antes de que el developer empiece).
-**Consumido por:** developer (input principal), tester (sección de AC), QA (AC + límites).
+**Generado por:** agente `spec-writer`, después de recibir el ARD del `architect`.
+**Consumido por:** `developer`, `tester`, `QA`, `task-decomposer`.
 
 ## Qué ES y qué NO ES el spec.md
 
