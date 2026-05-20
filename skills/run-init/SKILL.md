@@ -37,7 +37,23 @@ Complementar con `mcp__anvil__get_recent_changes(days=1)` para incluir contexto 
 
 **Flujo:**
 
-1. Spawnear `explorer` con prompt: "Lee `.context/NAVIGATOR.md`, `.context/project.md`, `.context/patterns.md` y los dominios relevantes a [objetivo del run]. Devuelve el contenido condensado más el valor de `last_updated`.
+1. Spawnear `explorer` con prompt:
+
+   ```
+   ## Objetivo
+   Lee `.context/NAVIGATOR.md`, `.context/project.md`, `.context/patterns.md` y los dominios relevantes a [objetivo del run]. Devuelve el contenido condensado más el valor de `last_updated`.
+
+   ## Fuentes a consultar
+   - `.context/` del proyecto (NAVIGATOR + project + patterns + dominios relevantes)
+   - Memoria — `mcp__anvil__search_memories` con el objetivo del run
+   - GitHub: rama de referencia `develop` (usar `skip_github: true` para omitir si no aplica)
+
+   ## Restricciones
+   Solo lectura — no modificar ningún archivo. No hacer checkout ni reset.
+
+   ## Done-when
+   Navigator cargado, memoria consultada y estado de GitHub disponibles.
+   ```
 
    **Contrato estricto de respuesta (sin excepciones):** DEBES devolver exactamente el token `CONTEXT_MISSING` y nada más (sin explicaciones, sin disculpas, sin texto adicional, sin markdown, sin envoltorios) si se cumple cualquiera de estas condiciones:
    - `.context/NAVIGATOR.md` no existe o no se puede abrir (archivo no encontrado, permisos, path inválido).
@@ -46,7 +62,7 @@ Complementar con `mcp__anvil__get_recent_changes(days=1)` para incluir contexto 
    - El contenido se devolvió truncado, corrupto, o no se pudo parsear de manera confiable.
    - Tuviste un error de tool, timeout, o cualquier otra falla que te impida garantizar que el contexto cargado es válido y completo.
 
-   En cualquiera de esos casos: una sola línea, sin formato, sin más texto → `CONTEXT_MISSING`. Si dudas entre devolver contenido parcial o `CONTEXT_MISSING`, devuelve `CONTEXT_MISSING`."
+   En cualquiera de esos casos: una sola línea, sin formato, sin más texto → `CONTEXT_MISSING`. Si dudas entre devolver contenido parcial o `CONTEXT_MISSING`, devuelve `CONTEXT_MISSING`.
 2. Recibir el output del `explorer`:
    - **Devolvió contenido válido + `last_updated`:** calcular días desde esa fecha.
      - `>3 días` → etiquetar "⚠️ puede estar stale" pero continuar.

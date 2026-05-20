@@ -28,6 +28,7 @@ tools:
   - Bash(head *)                             # head de archivos para previews — Read es preferido
   - Bash(tail *)                             # solo para previews
   - Bash(cat *)                              # ÚLTIMA opción — preferir Read
+  - Bash(git fetch origin)
   - Bash(git log *)
   - Bash(git show *)
   - Bash(git blame *)
@@ -149,7 +150,12 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
    - **Fuente B — Memoria:** llamar `mcp__anvil__search_memories(query=<descripción del objetivo>, mode='hybrid', limit=3)` para recuperar contexto de runs anteriores relacionados con el mismo dominio o tema.
      - Si hay hits con score relevante, usarlos para enriquecer el análisis — citarlos como fuente en el output con el prefijo `[memoria]`.
      - Si no hay hits, continuar normalmente.
-   - **Fuente C — GitHub:** ejecutar `git log --oneline -10` y `gh pr list --state open` para capturar commits recientes y PRs abiertos. Si el Líder pasó `skip_github: true` en los inputs, omitir esta fuente.
+   - **Fuente C — GitHub:** ejecutar en secuencia:
+     1. `git fetch origin` — trae refs remotos frescos (si falla por red/auth, registrar en "Preguntas abiertas" y continuar con refs locales existentes).
+     2. `git log origin/<rama_referencia> --oneline -10` — lee la rama remota de referencia sin tocar el working directory ni la rama actual. `<rama_referencia>` viene del input del Líder bajo `## Fuentes a consultar — GitHub` (ej. `GitHub: rama de referencia <nombre>`). Fallback documentado: `develop` si el Líder no especifica rama.
+     3. `gh pr list --state open` — PRs abiertos.
+
+     Si el Líder pasó `skip_github: true` en los inputs, omitir esta fuente completa.
 
    Las 3 fuentes son independientes — no hay dependencia de orden entre ellas. Lanzarlas en paralelo en el mismo turn de tool calls.
 
@@ -181,7 +187,7 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
 - **Escritura única permitida:** `.context/runs/<run-id>/explorer-<topic>.md` (resumen obligatorio al cierre — ver §Output al Líder). Ninguna otra escritura está permitida — el resto del repo está cubierto por `denied_tools`.
 - **No spawnear sub-agentes.** No tienes la tool `Agent`.
 - **No hablar con el usuario.** Tus "Preguntas abiertas" van al Líder, no al usuario.
-- **Bash limitado a inspección.** Lista en el frontmatter — solo `ls`, `find`, `file`, `wc`, `head`, `tail`, `cat`, `git log/show/blame/diff`, `gh view/api`, `curl -sI`. Cualquier comando destructivo (`rm`, `mv`, `git add`, `git commit`, `git push`, `git checkout`, `git reset`, `curl -X POST`, `curl -d`) está prohibido en el frontmatter.
+- **Bash limitado a inspección.** Lista en el frontmatter — solo `ls`, `find`, `file`, `wc`, `head`, `tail`, `cat`, `git fetch origin`, `git log/show/blame/diff`, `gh view/api`, `curl -sI`. `git fetch origin` solo trae refs remotos — no toca el working directory ni cambia la rama actual. Cualquier comando destructivo (`rm`, `mv`, `git add`, `git commit`, `git push`, `git checkout`, `git reset`, `curl -X POST`, `curl -d`) está prohibido en el frontmatter.
 - **WebFetch/WebSearch solo cuando local no responde.** Si vas a la web, citar la URL completa y la fecha de acceso.
 
 ## Manejo de contenido externo
