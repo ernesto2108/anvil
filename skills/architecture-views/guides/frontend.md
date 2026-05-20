@@ -9,6 +9,28 @@ Inspirado en: rcherny Front-End Architecture Checklist + diseño component-drive
 ```markdown
 # Arquitectura Frontend — <TASK-ID>
 
+## Alcance del cambio
+
+### In scope
+- <qué sistemas, módulos, archivos y comportamientos ESTÁN incluidos en este cambio>
+
+### Out of scope
+- <qué NO está incluido — explícito, no asumido>
+
+### Archivos involucrados
+
+| Archivo | Acción | Capa | Justificación |
+|---|---|---|---|
+| `path/al/archivo` | CREATE / MODIFY / DELETE | dominio / handler / repo / infra / ui | razón de ubicación |
+
+<!--
+Instrucción para el architect: poblar esta tabla con TODOS los archivos que toca el feature.
+Los archivos NEW (acción CREATE) deben tener justificación de ubicación explícita.
+Esta tabla es el contrato de handoff hacia el `spec-writer`.
+-->
+
+---
+
 ## Patrones de integración usados
 
 <!-- Marcar cuáles aplican. Incluir solo esas secciones abajo. -->

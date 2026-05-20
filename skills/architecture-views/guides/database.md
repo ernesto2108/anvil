@@ -9,6 +9,29 @@ Inspirado en: sección "Data Storage" de Google + formato de spec DBML.
 ```markdown
 # Arquitectura de Base de Datos — <TASK-ID>
 
+## Alcance del cambio
+
+### In scope
+- <qué sistemas, módulos, archivos y comportamientos ESTÁN incluidos en este cambio>
+
+### Out of scope
+- <qué NO está incluido — explícito, no asumido>
+
+### Archivos involucrados
+
+| Archivo | Acción | Capa | Justificación |
+|---|---|---|---|
+| `path/al/archivo` | CREATE / MODIFY / DELETE | dominio / handler / repo / infra / ui | razón de ubicación |
+
+<!--
+Instrucción para el architect: poblar esta tabla con TODOS los archivos que toca el feature
+(migraciones, schemas DBML, scripts SQL, modelos de persistencia, etc.).
+Los archivos NEW (acción CREATE) deben tener justificación de ubicación explícita.
+Esta tabla es el contrato de handoff hacia el `spec-writer`.
+-->
+
+---
+
 ## Schema intent
 
 <!-- Formato DBML — spec ejecutable. El agente DBA genera migraciones de esto. -->

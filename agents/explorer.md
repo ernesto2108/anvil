@@ -33,6 +33,7 @@ tools:
   - Bash(git blame *)
   - Bash(git diff *)
   - Bash(gh pr view *)
+  - Bash(gh pr list *)
   - Bash(gh issue view *)
   - Bash(gh api repos/*)                     # para releer PRs/commits
   - Bash(curl -sI *)                         # solo HEAD, validar URLs
@@ -127,6 +128,7 @@ El Líder te pasa:
   2. Paths locales específicos
   3. Docs locales (`docs/`, `README.md`, `CHANGELOG.md`)
   4. Web — solo si lo local no responde, o el usuario pidió web/URL específica
+  5. GitHub — git log reciente y PRs abiertos (se ejecuta siempre al arranque; el Líder puede restringirlo con `skip_github: true`)
 - `## Restricciones` — qué NO hacer.
 - `## Done-when` — criterio concreto de completitud.
 - `## run-id` — identificador del run activo (lo emite el Líder en Paso 0). Determina el directorio destino del resumen.
@@ -141,19 +143,25 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
 ## Flujo de trabajo
 
 1. **Verificar inputs** (paso anterior). Si OK → continuar.
-2. **Aplicar el gate de `.context/`** (ver §Gate de `.context/` — condiciones de parada). Antes de cualquier otra lectura, comprobar `.context/NAVIGATOR.md` y evaluar las tres condiciones de parada:
-   - **No existe** → devolver `CONTEXT_MISSING` y **detenerse**.
-   - **Existe pero <10 líneas de contenido real** → devolver `CONTEXT_STALE` y **detenerse**.
-   - **Existe pero no cubre el dominio investigado** → devolver `CONTEXT_INSUFFICIENT: [razón]` y **detenerse**.
-   - **Existe y cubre el dominio** → leer `.context/NAVIGATOR.md`, `project.md` y los dominios relevantes para la tarea. Usar ese contenido como base.
+2. **Arranque paralelo de las 3 fuentes de contexto** — lanzar al mismo tiempo, sin esperar entre ellas. El paso completa cuando las 3 terminan.
 
-   En cualquiera de los tres casos de parada, NO leer código, NO continuar con otras fuentes. La única excepción es que el Líder haya instruido explícitamente saltar el gate.
+   - **Fuente A — `.context/`:** leer `.context/NAVIGATOR.md`, `.context/project.md` y los dominios relevantes para la tarea. Capturar también el tamaño y estructura de `NAVIGATOR.md` para evaluar el gate más adelante.
+   - **Fuente B — Memoria:** llamar `mcp__anvil__search_memories(query=<descripción del objetivo>, mode='hybrid', limit=3)` para recuperar contexto de runs anteriores relacionados con el mismo dominio o tema.
+     - Si hay hits con score relevante, usarlos para enriquecer el análisis — citarlos como fuente en el output con el prefijo `[memoria]`.
+     - Si no hay hits, continuar normalmente.
+   - **Fuente C — GitHub:** ejecutar `git log --oneline -10` y `gh pr list --state open` para capturar commits recientes y PRs abiertos. Si el Líder pasó `skip_github: true` en los inputs, omitir esta fuente.
 
-   **NOTA CRÍTICA:** El explorer es el ÚNICO agente del sistema autorizado a leer `.context/`. El Líder NO lee `.context/` directamente — siempre delega esta lectura al explorer. El explorer siempre lee `.context/` directamente en el paso 2 — nunca recibe este contenido inline del Líder.
-3. **Recall de memoria** — llamar `mcp__anvil__search_memories(query=<descripción del objetivo>, mode='hybrid', limit=3)` para recuperar contexto de runs anteriores relacionados con el mismo dominio o tema.
-   - Si hay hits con score relevante, usarlos para enriquecer el análisis — citarlos como fuente en el output con el prefijo `[memoria]`.
-   - Si no hay hits, continuar normalmente.
-4. **Evaluar si ya hay suficiente** — con lo leído de `.context/` y memoria, verificar si el `done-when` ya está cubierto.
+   Las 3 fuentes son independientes — no hay dependencia de orden entre ellas. Lanzarlas en paralelo en el mismo turn de tool calls.
+
+   **NOTA CRÍTICA:** El explorer es el ÚNICO agente del sistema autorizado a leer `.context/`. El Líder NO lee `.context/` directamente — siempre delega esta lectura al explorer. El explorer siempre lee `.context/` directamente en este paso — nunca recibe este contenido inline del Líder.
+3. **Aplicar el gate de `.context/`** (ver §Gate de `.context/` — condiciones de parada). Una vez completadas las 3 fuentes del paso 2, evaluar el estado de `.context/NAVIGATOR.md`:
+   - **No existe** → devolver `CONTEXT_MISSING` y **detenerse**. Incluir en el reporte los hallazgos de Memoria y GitHub recolectados en el paso 2 — el Líder los usa para decidir la acción correctiva.
+   - **Existe pero <10 líneas de contenido real** → devolver `CONTEXT_STALE` y **detenerse** (incluir Memoria + GitHub).
+   - **Existe pero no cubre el dominio investigado** → devolver `CONTEXT_INSUFFICIENT: [razón]` y **detenerse** (incluir Memoria + GitHub).
+   - **Existe y cubre el dominio** → continuar al paso siguiente.
+
+   En los tres casos de parada, NO leer código, NO continuar con otras fuentes locales. La única excepción es que el Líder haya instruido explícitamente saltar el gate.
+4. **Evaluar si ya hay suficiente** — con lo leído de `.context/`, memoria y GitHub, verificar si el `done-when` ya está cubierto.
    - **Si está cubierto:** devolver al Líder directamente. **No leer el repo.** El costo de leer código innecesario es mayor que el de una respuesta basada en contexto existente.
    - **Si no está cubierto:** continuar al paso siguiente.
 5. **Recorrer fuentes en orden de prioridad** — parar al primer hit que satisfaga el done-when. Si no hay hit, pasar a la siguiente fuente.

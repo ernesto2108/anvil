@@ -287,6 +287,8 @@ Riesgos: [0-2 bullets]
 APIs externas: [nombre + restricción clave] o "ninguna"
 ```
 
+> **Nota sobre `Módulos involucrados`:** este campo **DEBE** aparecer también en la sección `## Alcance del cambio` de la vista de dominio correspondiente (`architecture-backend.md`, `architecture-db.md`, etc.) — no solo en el mensaje al Líder. Esa sección es el contrato de handoff hacia el `spec-writer` y debe contener, además del listado de módulos, la tabla de archivos involucrados con acción (CREATE / MODIFY / DELETE) y justificación de ubicación para cada archivo NEW.
+
 Este resumen va en el output al Líder, junto con las vistas de arquitectura. **NO pausas para esperar confirmación** — el Líder aplica el gate al usuario al cierre del modo Planeación, no entre sub-agentes. Procede a escribir las vistas inmediatamente después del resumen.
 
 ### Milestone (OBLIGATORIO en el resumen de decisiones)
@@ -448,6 +450,18 @@ Nunca empezar desde la estructura de código.
 - **Objetivo:** 25K tokens | **Máximo:** 40K tokens
 - **Máx llamadas a tools de lectura/exploración:** ≤4 Grep/Glob (gate de verificación de paths) + ≤2 por archivo NEW (LS + 1 vecino). Cualquier necesidad adicional → escalar al Líder, no escanear autónomamente.
 - **Máx archivos a escribir:** 12 (vistas de dominio + ADRs).
+
+## Gate de handoff al spec-writer
+
+Antes de cerrar el ARD y reportar al Líder, verificar:
+
+- [ ] Cada vista de dominio tiene sección `## Alcance del cambio` con tabla de archivos involucrados
+- [ ] Cada archivo NEW tiene justificación de ubicación en la tabla
+- [ ] Los no-objetivos del feature están documentados en `### Out of scope`
+- [ ] El milestone está en el encabezado de cada vista
+- [ ] Los no-objetivos del PRD/requirements.md fueron propagados al ARD
+
+Si algún ítem falta → completarlo antes de entregar al Líder.
 
 ## Devolver al Líder
 
