@@ -55,21 +55,28 @@ Complementar con `mcp__anvil__get_recent_changes(days=1)` para incluir contexto 
    Navigator cargado, memoria consultada y estado de GitHub disponibles.
    ```
 
-   **Contrato estricto de respuesta (sin excepciones):** DEBES devolver exactamente el token `CONTEXT_MISSING` y nada más (sin explicaciones, sin disculpas, sin texto adicional, sin markdown, sin envoltorios) si se cumple cualquiera de estas condiciones:
-   - `.context/NAVIGATOR.md` no existe o no se puede abrir (archivo no encontrado, permisos, path inválido).
-   - `.context/NAVIGATOR.md` existe pero está vacío o solo contiene whitespace.
-   - El contenido no es un NAVIGATOR válido: faltan los campos obligatorios (`last_updated`, índice de dominios, referencias a `project.md`/`patterns.md`), o el header no identifica al archivo como Context Navigator.
-   - El contenido se devolvió truncado, corrupto, o no se pudo parsear de manera confiable.
-   - Tuviste un error de tool, timeout, o cualquier otra falla que te impida garantizar que el contexto cargado es válido y completo.
+   **Contrato estricto de respuesta (sin excepciones):** DEBES devolver exactamente uno de estos tres tokens — sin texto adicional, sin disculpas, sin markdown, sin envoltorios — cuando aplique la condición correspondiente:
 
-   En cualquiera de esos casos: una sola línea, sin formato, sin más texto → `CONTEXT_MISSING`. Si dudas entre devolver contenido parcial o `CONTEXT_MISSING`, devuelve `CONTEXT_MISSING`.
+   - `CONTEXT_MISSING` si:
+     - `.context/NAVIGATOR.md` no existe o no se puede abrir (archivo no encontrado, permisos, path inválido).
+     - Tuviste un error de tool, timeout, o cualquier otra falla que te impida garantizar que el contexto cargado es válido y completo.
+   - `CONTEXT_STALE` si:
+     - `.context/NAVIGATOR.md` existe pero está vacío, solo contiene whitespace, o tiene menos de 10 líneas de contenido real.
+     - El contenido se devolvió truncado, corrupto, o no se pudo parsear de manera confiable.
+     - El contenido no es un NAVIGATOR válido: faltan los campos obligatorios (`last_updated`, índice de dominios, referencias a `project.md`/`patterns.md`), o el header no identifica al archivo como Context Navigator.
+   - `CONTEXT_INSUFFICIENT: <razón concreta>` si:
+     - `.context/NAVIGATOR.md` existe y es válido pero no cubre el dominio/área investigado en este run. Incluir una razón concreta tras el token (ej: `CONTEXT_INSUFFICIENT: no hay info sobre orkestapay`).
+
+   En cualquiera de esos casos: una sola línea, sin formato, sin más texto que el token (más la razón cuando aplique). Si dudas entre devolver contenido parcial o un token de parada, devuelve el token.
 2. Recibir el output del `explorer`:
    - **Devolvió contenido válido + `last_updated`:** calcular días desde esa fecha.
      - `>3 días` → etiquetar "⚠️ puede estar stale" pero continuar.
      - `>7 días` → recomendar correr `scanner` antes (no auto-spawnear; gate al usuario).
      - Inyectar el contenido devuelto inline en el primer agente productivo bajo `## Contexto del sistema`. NO releer los archivos — el contenido ya está inline.
    - **Devolvió `CONTEXT_MISSING` (token exacto, único contenido material):** agregar `context-bootstrap` + `scanner` (modo deep) al inicio del pipeline (ver §Manejo de `CONTEXT_MISSING` en `leader.md`). Excepción solo si el usuario dijo "sin bootstrap".
-   - **Devolvió cualquier otra cosa (texto ambiguo, error, mensaje "archivo no encontrado", output parcial, formato inesperado):** tratarlo como `CONTEXT_MISSING` y seguir la rama anterior. El Líder NO intenta interpretar outputs no conformes — un output que no es contenido válido de NAVIGATOR es, por definición, contexto faltante.
+   - **Devolvió `CONTEXT_STALE` (token exacto):** el `.context/` existe pero está desactualizado — agregar solo `scanner` (modo deep) al inicio del pipeline, sin `context-bootstrap`. Excepción solo si el usuario dijo "sin scanner".
+   - **Devolvió `CONTEXT_INSUFFICIENT: <razón>`:** el `.context/` existe pero no cubre el dominio/área señalado — agregar `scanner` al inicio del pipeline con scope acotado al dominio o área que el explorer marcó como insuficiente (parsear la razón devuelta tras el token). Excepción solo si el usuario dijo "sin scanner".
+   - **Devolvió cualquier otra cosa (texto ambiguo, error, output parcial, formato inesperado, token desconocido):** tratarlo como `CONTEXT_MISSING` (fallback seguro) y seguir la rama correspondiente. El Líder NO intenta interpretar outputs no conformes — un output que no es uno de los tres tokens válidos se trata como contexto faltante.
 
 **Sin excepción de complejidad:** una tarea Small sin `.context/` igual arranca con `context-bootstrap` + `scanner`. El Líder nunca abre `.context/` por su cuenta para "ahorrar un spawn" — la regla #9 no admite atajos.
 

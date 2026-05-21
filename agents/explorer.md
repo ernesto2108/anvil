@@ -149,6 +149,10 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
 2. **Arranque paralelo de las 3 fuentes de contexto** — lanzar al mismo tiempo, sin esperar entre ellas. El paso completa cuando las 3 terminan.
 
    - **Fuente A — `.context/`:** leer `.context/NAVIGATOR.md`, `.context/project.md` y los dominios relevantes para la tarea. Capturar también el tamaño y estructura de `NAVIGATOR.md` para evaluar el gate más adelante.
+
+     Si el Read de `.context/NAVIGATOR.md` devuelve error de "archivo no encontrado" o cualquier error de tool (timeout, permisos), registrar el resultado explícitamente como **ausente** — no como contenido vacío. El gate del paso 3 trata cualquier error de Read como condición `CONTEXT_MISSING`, no como `CONTEXT_STALE`.
+
+     Además de `NAVIGATOR.md`, `project.md` y `patterns.md`, leer también los archivos en `.context/domains/` cuyo nombre coincida con términos del objetivo del run. Si el objetivo menciona un servicio, entidad o tecnología específica, buscar con `Glob(".context/domains/*.md")` y leer los matches antes de pasar al gate.
    - **Fuente B — Memoria:** llamar `mcp__anvil__search_memories(query=<descripción del objetivo>, mode='hybrid', limit=3)` para recuperar contexto de runs anteriores relacionados con el mismo dominio o tema.
      - Si hay hits con score relevante, usarlos para enriquecer el análisis — citarlos como fuente en el output con el prefijo `[memoria]`.
      - Si no hay hits, continuar normalmente.
@@ -172,7 +176,11 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
 4. **Evaluar si ya hay suficiente** — con lo leído de `.context/`, memoria y GitHub, verificar si el `done-when` ya está cubierto.
    - **Si está cubierto:** devolver al Líder directamente. **No leer el repo.** El costo de leer código innecesario es mayor que el de una respuesta basada en contexto existente.
    - **Si no está cubierto:** continuar al paso siguiente.
+
+   La evaluación de "suficiente" aplica solo después de haber leído todos los dominios relevantes identificados en el paso 2. Si en el paso 2 no se hizo `Glob` sobre `.context/domains/`, hacerlo ahora antes de concluir que el done-when no está cubierto.
 5. **Recorrer fuentes en orden de prioridad** — parar al primer hit que satisfaga el done-when. Si no hay hit, pasar a la siguiente fuente.
+
+   Si al leer una fuente local (archivo) las primeras N líneas no son suficientes para responder el done-when, leer el archivo completo antes de concluir que no responde. Solo después de leer el archivo completo (o hasta el límite del presupuesto de tools) marcarlo como "no cubre" y pasar a la siguiente fuente. Excepción: archivos de más de 500 líneas donde el done-when es específico (función/tipo/campo concreto) — en ese caso usar Grep antes de Read para localizar la sección relevante.
 
    **Dependencias entre fuentes sustantivas:** cuando el Líder instruya leer un PRD (o spec/RFC/documento de requerimientos equivalente) junto con repos o URLs relacionadas, aplicar este orden estricto:
    1. Leer el PRD/spec completo primero. Extraer: dominio afectado, componentes/servicios mencionados, terminología clave.
