@@ -130,6 +130,8 @@ El Líder te pasa:
   3. Docs locales (`docs/`, `README.md`, `CHANGELOG.md`)
   4. Web — solo si lo local no responde, o el usuario pidió web/URL específica
   5. GitHub — git log reciente y PRs abiertos (se ejecuta siempre al arranque; el Líder puede restringirlo con `skip_github: true`)
+
+  El orden de las fuentes (prioridad 1=highest) puede indicar dependencia secuencial además de relevancia. Cuando una fuente de menor prioridad depende conceptualmente de una de mayor prioridad (ej. los repos afectados se derivan del PRD), el explorer debe procesarlas en orden estricto, no en paralelo. El Líder puede comunicar esto explícitamente con la notación: `## Fuentes a consultar — secuencial` (procesar en orden) vs `## Fuentes a consultar — paralelo` (independientes entre sí).
 - `## Restricciones` — qué NO hacer.
 - `## Done-when` — criterio concreto de completitud.
 - `## run-id` — identificador del run activo (lo emite el Líder en Paso 0). Determina el directorio destino del resumen.
@@ -157,7 +159,7 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
 
      Si el Líder pasó `skip_github: true` en los inputs, omitir esta fuente completa.
 
-   Las 3 fuentes son independientes — no hay dependencia de orden entre ellas. Lanzarlas en paralelo en el mismo turn de tool calls.
+   Las 3 fuentes del arranque (`.context/`, Memoria, GitHub/git log) son independientes entre sí — lanzarlas en paralelo en el mismo turn de tool calls. **Esta regla de paralelismo aplica solo a estas 3 fuentes de arranque. Las fuentes de investigación sustantiva que el Líder pase en `## Fuentes a consultar` pueden tener dependencias entre sí — ver el paso de recorrido de fuentes (paso 5) para el manejo correcto del orden.**
 
    **NOTA CRÍTICA:** El explorer es el ÚNICO agente del sistema autorizado a leer `.context/`. El Líder NO lee `.context/` directamente — siempre delega esta lectura al explorer. El explorer siempre lee `.context/` directamente en este paso — nunca recibe este contenido inline del Líder.
 3. **Aplicar el gate de `.context/`** (ver §Gate de `.context/` — condiciones de parada). Una vez completadas las 3 fuentes del paso 2, evaluar el estado de `.context/NAVIGATOR.md`:
@@ -171,6 +173,12 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
    - **Si está cubierto:** devolver al Líder directamente. **No leer el repo.** El costo de leer código innecesario es mayor que el de una respuesta basada en contexto existente.
    - **Si no está cubierto:** continuar al paso siguiente.
 5. **Recorrer fuentes en orden de prioridad** — parar al primer hit que satisfaga el done-when. Si no hay hit, pasar a la siguiente fuente.
+
+   **Dependencias entre fuentes sustantivas:** cuando el Líder instruya leer un PRD (o spec/RFC/documento de requerimientos equivalente) junto con repos o URLs relacionadas, aplicar este orden estricto:
+   1. Leer el PRD/spec completo primero. Extraer: dominio afectado, componentes/servicios mencionados, terminología clave.
+   2. Solo después de completar el paso 1, lanzar en paralelo: (a) investigación web/docs relacionadas, (b) exploración de repos/paths afectados — ya que los repos a consultar se derivan del dominio extraído en el paso 1.
+
+   Sin el PRD leído, no es posible saber qué repos son relevantes. No hay excepción a este orden.
 6. **No ir a la web si lo local responde.** La web es la última opción.
 7. **Para cada hallazgo, citar la fuente exacta** — `path:línea` para código, URL completa para web (con fecha de acceso).
 8. **Sintetizar** — agrupar hallazgos relacionados, no listar todo lo que leíste.

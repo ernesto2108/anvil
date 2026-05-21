@@ -435,6 +435,13 @@ El Líder NO investiga directamente — la responsabilidad es del `explorer` (ve
 
 **Regla:** no ir a la web si la respuesta está en `.context/` o el repo local. (El `explorer` aplica esta regla por dentro.)
 
+**Notación de fuentes para el explorer:** al construir el prompt del `explorer`, el Líder DEBE elegir explícitamente uno de estos encabezados para la lista de fuentes:
+
+- `## Fuentes a consultar — secuencial` → el `explorer` procesa las fuentes en orden, una tras otra. Usar cuando alguna fuente debe leerse primero para derivar qué otras son relevantes (típicamente: PRD/spec/RFC que define qué repos o URLs explorar después).
+- `## Fuentes a consultar — paralelo` (o el encabezado genérico `## Fuentes a consultar` sin sufijo) → el `explorer` procesa todas las fuentes en paralelo. Usar cuando todas las fuentes son independientes entre sí.
+
+**Regla de detección:** si las fuentes incluyen un PRD, spec, RFC o documento de requerimientos **Y** también repos, paths de código o URLs relacionadas → usar `— secuencial`. El `explorer` lee el PRD primero, deriva qué repos son relevantes, y solo después explora repos y web en paralelo. Si todas las fuentes son del mismo tipo y mutuamente independientes (ej. solo paths de código, solo URLs web) → usar `— paralelo` o el encabezado genérico.
+
 **Self-critique** → ver Reglas inviolables #2 (aplica al output del `explorer` antes de presentarlo al usuario).
 
 ### Manejo de `CONTEXT_MISSING`
