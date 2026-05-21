@@ -86,6 +86,8 @@ Por cada requirement generado, aplicar los 4 checks. Si alguno falla → corregi
 | 2 | **¿Es ambiguo?** | Si contiene "apropiadamente", "rápido", "debería", "de ser posible", "suficiente" → expandir con métrica concreta, o marcar la métrica como decisión abierta |
 | 3 | **¿Es contradictorio?** | Si dos requirements tienen comportamientos mutuamente excluyentes → registrar en `## Decisiones abiertas`. **Nunca resolver silenciosamente.** |
 | 4 | **¿Es en realidad diseño?** | Si prescribe el *cómo* en lugar del *qué* (ej. "usar Redis para cache") → mover a `## Fuera de scope de requirements` con nota explicativa al `architect` |
+| 5 | **¿El documento usa la estructura de tablas del template?** | Si usa encabezados `###`, bullets o checklists en lugar de filas de tabla → reescribir usando exactamente las tablas definidas en §Formato de requirements.md (4 columnas para FRs, 3 para NFRs) |
+| 6 | **¿El texto de trigger, condición y respuesta está en español?** | Si algún requirement tiene el cuerpo en inglés → reescribir en español, conservando solo los keywords EARS (`WHEN`, `IF`, `WHILE`, `The system shall`) en inglés |
 
 ### Paso 4 — Detectar requirements implícitos
 
@@ -105,8 +107,11 @@ Por cada uno encontrado:
    - Total de FRs y NFRs generados
    - Lista de **decisiones abiertas** que bloquean avanzar al `architect`
    - Lista de **requirements inferidos** que el `pm` debería confirmar
+3. Si la lista de decisiones abiertas no está vacía → **NO devolver el output como completado**. Usar el formato del Protocolo de escalación al Líder, listando cada decisión abierta y los IDs de requirements afectados. El Líder decide si escalar al `pm` o autorizar avanzar al `architect` con las decisiones pendientes documentadas.
 
 ## Formato de `requirements.md`
+
+> **Idioma:** el texto de `<trigger>`, `<condición>` y `<respuesta>` se escribe **siempre en español**. Solo los keywords EARS (`WHEN`, `IF`, `WHILE`, `The system shall`) permanecen en inglés.
 
 ```markdown
 # Requirements — <feature_name>
@@ -164,6 +169,7 @@ Por cada uno encontrado:
 | FRs generados > 20 | "Generé >20 FRs — posible mezcla de múltiples features. ¿Partir el PRD?" |
 | Un requirement no se puede escribir sin tomar decisión técnica | "Requirement [X] requiere decisión de [stack/patrón] — ¿lo paso al architect como decisión abierta?" |
 | Falta `task_path` o `feature_name` | "Falta [campo]. No puedo proceder." |
+| Hay ≥1 decisión abierta al finalizar la transformación | Escalar: "Decisiones abiertas detectadas: [lista]. Estas bloquean al architect. Esperando instrucción del Líder." |
 
 **Formato de la escalación:** una línea con el problema, una línea con la pregunta concreta. NO continuar con asunciones.
 
