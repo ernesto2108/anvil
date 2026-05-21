@@ -372,6 +372,23 @@ Usar exactamente estos nombres en los archivos de salida. No inventar dominios f
 - **`ard-api.md`** — Contrato de API cross-stack: versionado, deprecación, schema canónico (OpenAPI/AsyncAPI/proto), backwards compatibility, contract testing
 - **`ard-auth.md`** — Modelo de identidad, flujos de auth (OAuth/OIDC/JWT/sesiones), políticas de autorización (RBAC/ABAC), gestión de tokens, integraciones con IdP
 
+### Diagramas embebidos en vistas de dominio (OBLIGATORIO)
+
+Al producir una vista de dominio (`ard-<dominio>.md`) o cualquier documento de arquitectura que se beneficie de una visualización, cargar la skill `generate-diagram` para incluir **al menos un diagrama Mermaid embebido** que ilustre, según el dominio:
+
+- **Flujo de datos principal** — `flowchart LR` mostrando el recorrido de una request o evento desde origen hasta sink
+- **Límites de dominio** — `flowchart` con `subgraph` por bounded context, mostrando qué componentes viven en cada límite y cómo cruzan información
+- **Secuencia de interacción** — `sequenceDiagram` para llamadas async/sync entre componentes cuando el orden de mensajes importa
+- **Schema de datos** — `erDiagram` para `ard-database.md` (obligatorio en esta vista)
+- **Máquina de estados** — `stateDiagram-v2` cuando hay un ciclo de vida no trivial (orden, tarea, sesión)
+
+Reglas duras:
+
+1. Toda vista de dominio que describe flujo o comunicación entre componentes incluye **al menos un diagrama** — no entregar `ard-backend.md`, `ard-frontend.md`, `ard-mobile.md`, `ard-infrastructure.md` o `ard-api.md` solo con prosa.
+2. `ard-database.md` **DEBE** incluir un `erDiagram` con las entidades del cambio.
+3. Cada diagrama debe pasar el checklist de validación de la skill `generate-diagram` antes de cerrar el archivo. No entregar Mermaid sin verificar sintaxis (keyword correcto, labels sin caracteres especiales sin comillas, subgraphs con ID válido, cierre con `end`).
+4. Si el diagrama necesario excede el alcance de Mermaid (shapes ricos, mensajes específicos de brokers, gateways con anotaciones complejas) → escalar al Líder con `Pregunta abierta: el diagrama de [X] requiere drawio standalone — ¿quieres que lo produzca el agente diagrammer?`. No forzar Mermaid en casos que claramente piden drawio.
+
 ### Consistencia de contratos cross-vista
 
 Cuando se generan múltiples vistas, los contratos DEBEN ser consistentes:
