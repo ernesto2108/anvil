@@ -328,6 +328,10 @@ Ruta de output: `{task_path}/`
 
 El architect produce **únicamente** vistas de arquitectura por dominio + ADRs. Nunca `spec.md`. Nunca `architecture.md` genérico. Generar SOLO las vistas relevantes a los dominios que toca la tarea. Cargar la skill `architecture-views` para templates y reglas de formato. Las guías de esa skill son la **fuente de verdad única** para la estructura de documentos — no inventar secciones ni formatos.
 
+### Idioma del ARD (REGLA DURA)
+
+Todo el ARD se escribe en español: secciones, labels de tabla, campos del bloque MADR (Estado, Contexto, Opciones consideradas, Decisión, Consecuencias positivas, Consecuencias negativas), nombres de archivos ADR en kebab-case español. Solo quedan en inglés: identificadores de operación en tablas de archivos (`CREATE`, `MODIFY`, `DELETE`) y paths de archivo.
+
 ### Reglas de selección de vistas
 
 El criterio primario es **cuántos dominios toca la tarea**, no los puntos de historia. El tamaño influye en la profundidad de cada vista (cuánto detalle, cuántos diagramas, cuántos specs ejecutables), pero no en si el archivo es por dominio o genérico — siempre es por dominio.
@@ -459,12 +463,14 @@ Nunca empezar desde la estructura de código.
 
 Antes de cerrar el ARD y reportar al Líder, verificar:
 
+- [ ] Cada vista de dominio tiene sección `## Contexto y alcance` con descripción del sistema actual y propuesto
+- [ ] Cada vista de dominio tiene sección `## Objetivos` con los objetivos del feature
 - [ ] Cada vista de dominio tiene sección `## Alcance del cambio` con tabla de archivos involucrados
 - [ ] Cada archivo NEW tiene justificación de ubicación en la tabla
 - [ ] Los no-objetivos del feature están documentados en `### Out of scope`
 - [ ] El milestone está en el encabezado de cada vista
 - [ ] Los no-objetivos del PRD/requirements.md fueron propagados al ARD
-- [ ] NFRs de requirements.md propagados al ARD con al menos latencia p99 y SLO de disponibilidad cuantificados (número concreto, o `N/A` con justificación)
+- [ ] NFRs de requirements.md propagados al ARD con al menos latencia p99 y SLO de disponibilidad cuantificados (número concreto, o `N/A` con justificación). Para tareas Small sin `requirements.md`, la sección `## Restricciones no-funcionales` puede tener todos los campos como `N/A — tarea Small sin NFRs formales`. No bloquear el handoff por NFRs vacíos en este caso.
 - [ ] Sección "Preguntas abiertas" presente en al menos una vista de dominio (con contenido o con "Ninguna — todas las ambigüedades fueron resueltas")
 - [ ] Si la tarea es Medium+ con cualquier componente desplegable → `ard-infrastructure.md` generado; si no aplica, registrado como `N/A` con justificación en el resumen del Paso 2
 

@@ -6,7 +6,7 @@ Inspirado en: Google Design Docs + formato ADR.
 
 Esta guía existe para dos usos:
 
-1. **Plantilla de secciones comunes** que cada vista de dominio incorpora al inicio del archivo (Contexto y alcance, Objetivos, No-objetivos, Convenciones aplicadas, Decisiones de diseño, Concerns transversales, Diagramas). Cuando la tarea es multi-dominio, estas secciones viven en la vista del dominio que las origina, con referencias cruzadas desde las demás.
+1. **Plantilla de secciones comunes** que cada vista de dominio incorpora al inicio del archivo (Contexto y alcance, Objetivos, Alcance del cambio con `### Out of scope`, Convenciones aplicadas, Decisiones de diseño, Concerns transversales, Diagramas). Cuando la tarea es multi-dominio, estas secciones viven en la vista del dominio que las origina, con referencias cruzadas desde las demás.
 2. **Formato canónico MADR de ADRs** — el bloque `### ADR-NN` de abajo es el formato que el architect usa tanto en archivos ADR standalone (`adrs/ADR-NNN-<slug>.md`) como en decisiones inline dentro de una vista de dominio.
 
 ## Template — secciones a embeber en cada vista de dominio
@@ -39,9 +39,13 @@ Para tareas Small, mínimo latencia p99 y disponibilidad.
 
 - ...
 
-## No-objetivos
+## Alcance del cambio
 
-- ...
+### In scope
+- <qué sistemas, módulos, archivos y comportamientos ESTÁN incluidos en este cambio>
+
+### Out of scope
+- <qué NO está incluido — explícito, no asumido>
 
 ## Convenciones aplicadas
 
@@ -52,17 +56,17 @@ Para tareas Small, mínimo latencia p99 y disponibilidad.
 
 <!-- Formato MADR por decisión. Un bloque por cada elección no obvia. -->
 
-### ADR-01: <Título de la decisión>
+### ADR-001 — <título en español>
 
-- **Estado:** accepted | superseded-by ADR-XX | deprecated
+- **Estado:** Propuesto | Aceptado | Obsoleto | Reemplazado por ADR-NNN
 - **Contexto:** ¿Qué problema o restricción motivó esta decisión?
 - **Opciones consideradas:**
-  - Opción A — [pro / con]
-  - Opción B — [pro / con]
-  - Opción C — [pro / con]
-- **Decisión:** Elegimos [opción] porque [fuerza principal que pesó].
+  - **[Opción A]** — ventaja. Contra: desventaja.
+  - **[Opción B]** — ventaja. Contra: desventaja.
+  - **[Opción C]** — ventaja. Contra: desventaja.
+- **Decisión:** [opción elegida] — [fuerza principal]
 - **Consecuencias positivas:** ...
-- **Consecuencias negativas / tradeoffs aceptados:** ...
+- **Consecuencias negativas:** ...
 
 <!-- Repetir bloque por cada decisión no obvia -->
 
