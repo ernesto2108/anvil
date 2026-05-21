@@ -85,4 +85,4 @@ Cuando el architect genera múltiples vistas, los contratos DEBEN ser consistent
 - [ ] Spec OpenAPI es YAML válido (si aplica)
 - [ ] DBML/DDL es sintácticamente correcto (si aplica)
 - [ ] Las reglas de convención no contradicen la arquitectura
-- [ ] Diagramas legibles (no más de 15 nodos por diagrama)
+- [ ] Diagramas legibles (no más de 15 nodos por diagrama) — usar skill `generate-diagram` para producir bloques Mermaid con sintaxis válida

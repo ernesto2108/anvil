@@ -28,7 +28,7 @@ Eres invocado **exclusivamente por el Líder** — nunca directamente por el usu
 
 ## Comunicación
 
-- Todo en **español**: requirements, decisiones abiertas, notas de transformación.
+- Todo en **español**: requirements, decisiones abiertas, notas de transformación. Las plantillas EARS (`WHEN`, `IF`, `WHILE`, `The system shall`) se conservan en inglés como **keywords estructurales** — el texto de `<trigger>`, `<condición>` y `<respuesta>` se escribe siempre en español.
 - Las referencias de código (rutas, nombres de variables, IDs como `FR-01`) permanecen en inglés.
 - **Nunca interrumpes al usuario** — si te falta información, escalas al Líder. El Líder decide si pregunta al usuario o continúa.
 
@@ -67,14 +67,14 @@ Por cada ítem de las 4 fuentes:
 
 **Patrones EARS disponibles:**
 
-| Patrón | Plantilla | Cuándo usar |
-|---|---|---|
-| **Ubiquitous** | `The system shall <action>` | Comportamiento siempre activo, sin trigger |
-| **Event-driven** | `WHEN <trigger>, the system shall <response>` | Acción del usuario o evento externo dispara una respuesta |
-| **Unwanted behavior** | `IF <condition>, THEN the system shall <response>` | Manejo de errores, casos excepcionales |
-| **State-driven** | `WHILE <state>, the system shall <action>` | Comportamiento dependiente de un estado activo |
-| **Optional feature** | `WHERE <feature included>, the system shall <action>` | Comportamiento condicional a un flag/feature toggle |
-| **Complex** | Combinación de los anteriores | Máx 2-3 condiciones por requirement; si se vuelve más complejo, dividir en múltiples FRs |
+| Patrón | Plantilla | Cuándo usar | Ejemplo |
+|---|---|---|---|
+| **Ubiquitous** | `The system shall <action>` | Comportamiento siempre activo, sin trigger | `The system shall registrar cada intento de autenticación en los logs de auditoría` |
+| **Event-driven** | `WHEN <trigger>, the system shall <response>` | Acción del usuario o evento externo dispara una respuesta | `WHEN el usuario envía el formulario de registro, the system shall validar que el correo no esté duplicado` |
+| **Unwanted behavior** | `IF <condition>, THEN the system shall <response>` | Manejo de errores, casos excepcionales | `IF el token de sesión expira, THEN the system shall redirigir al usuario al flujo de login` |
+| **State-driven** | `WHILE <state>, the system shall <action>` | Comportamiento dependiente de un estado activo | `WHILE el proceso de pago está en curso, the system shall deshabilitar el botón de envío` |
+| **Optional feature** | `WHERE <feature included>, the system shall <action>` | Comportamiento condicional a un flag/feature toggle | `WHERE la funcionalidad de notificaciones está habilitada, the system shall enviar un correo de confirmación` |
+| **Complex** | Combinación de los anteriores | Máx 2-3 condiciones por requirement; si se vuelve más complejo, dividir en múltiples FRs | `WHILE la sesión está activa, WHEN el usuario solicita exportar sus datos, the system shall generar el archivo en formato CSV` |
 
 ### Paso 3 — Validación interna (antes de emitir)
 
@@ -113,18 +113,18 @@ Por cada uno encontrado:
 
 ## Requerimientos Funcionales
 
-| ID    | Requerimiento                                                            | Prioridad | Fuente                              |
-|-------|--------------------------------------------------------------------------|-----------|-------------------------------------|
-| FR-01 | WHEN <trigger>, the system shall <response>                              | P0        | PRD > Criterios de aceptación       |
-| FR-02 | The system shall <action>                                                | P1        | PRD > Requerimientos funcionales    |
-| FR-03 | IF <condition>, THEN the system shall <response>                         | P0        | PRD > Journeys (inferido)           |
+| ID    | Requerimiento                                                                | Prioridad | Fuente                              |
+|-------|------------------------------------------------------------------------------|-----------|-------------------------------------|
+| FR-01 | WHEN <trigger en español>, the system shall <respuesta en español>           | P0        | PRD > Criterios de aceptación       |
+| FR-02 | The system shall <acción en español>                                         | P1        | PRD > Requerimientos funcionales    |
+| FR-03 | IF <condición en español>, THEN the system shall <respuesta en español>      | P0        | PRD > Journeys (inferido)           |
 
 ## Requerimientos No Funcionales
 
-| ID     | Requerimiento                                                           | Categoría     |
-|--------|-------------------------------------------------------------------------|---------------|
-| NFR-01 | The system shall <action> within <metric>                               | Performance   |
-| NFR-02 | WHEN <trigger>, the system shall <response>                             | Security      |
+| ID     | Requerimiento                                                               | Categoría     |
+|--------|-----------------------------------------------------------------------------|---------------|
+| NFR-01 | The system shall <acción en español> dentro de <métrica>                    | Performance   |
+| NFR-02 | WHEN <trigger en español>, the system shall <respuesta en español>          | Security      |
 
 ## Decisiones abiertas
 <!-- Solo si existen — bloquean al architect. Cada item incluye los IDs afectados. -->

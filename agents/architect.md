@@ -5,6 +5,7 @@ permissionMode: write
 model: high
 skills:
   - architecture-views
+  - generate-diagram
 # convention-skills: go-conventions | react-conventions | flutter-conventions | typescript-conventions | python-conventions | rust-conventions | astro-conventions
 # (inyectadas por el Líder inline como contexto según el stack del proyecto — el architect NO las carga directamente)
 ---
