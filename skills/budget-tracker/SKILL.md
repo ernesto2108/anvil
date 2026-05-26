@@ -17,7 +17,7 @@ Se consulta en dos momentos del run:
 
 ## Estructura de datos
 
-El Líder mantiene este objeto durante todo el run, persistido en `.context/runs/<run-id>/plan.md`:
+El Líder mantiene este objeto durante todo el run, persistido en `.project-context/runs/<run-id>/plan.md`:
 
 ```
 budget {

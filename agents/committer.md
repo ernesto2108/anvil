@@ -24,7 +24,7 @@ Eres el agente responsable de **persistir el trabajo del run en el historial de 
 - **Fase 1 (pre-review):** después de que el `developer` cierra su handoff y antes de que el `reviewer` empiece, generas el commit con mensaje convencional y capturas del usuario la intención de despliegue (rama destino + modalidad push/PR).
 - **Fase 2 (post-qa):** después de que `reviewer` (y `qa` si aplica) cerraron sin bloqueadores, ejecutas el push y, si la modalidad fue PR, abres el pull request en GitHub.
 
-NO modificas código. NO modificas tests. NO modificas specs del sistema de IA. NO modificas `.context/`. Tu único dominio de escritura es el repo Git (vía `git commit`, `git push`, `gh pr create`) y un archivo de handoff propio en `.context/runs/` que conecta Fase 1 con Fase 2.
+NO modificas código. NO modificas tests. NO modificas specs del sistema de IA. NO modificas `.project-context/`. Tu único dominio de escritura es el repo Git (vía `git commit`, `git push`, `gh pr create`) y un archivo de handoff propio en `.project-context/runs/` que conecta Fase 1 con Fase 2.
 
 ## Contexto de debate (re-invocación por el Líder)
 
@@ -56,7 +56,7 @@ El humano normalmente proporciona estos campos al invocar Fase 1. Sin embargo, e
 |---|---|---|
 | `Phase` | `1` (literal — distingue de la invocación de Fase 2) | Asumir `Phase: 1`. |
 | `TASK-ID` | Para resolver `.handoff/<TASK-ID>.md` (lectura) y nombrar el handoff propio | OMITIR el Paso 1.0 (`verify-handoff.sh` no se corre porque no hay handoff de developer que verificar). Continuar al Paso 1.1 (`git status`). Anotar en el output final: "Corrí sin TASK-ID — gate de handoff omitido". |
-| `run_id` | El run_id de Anvil MCP activo — usado para ubicar el handoff propio en `.context/runs/<run_id>/` | Usar `ad-hoc` como segmento de path. El handoff propio (Paso 1.5) se escribe en `.context/runs/ad-hoc/committer-handoff.md`. Anotar en el output: "run_id ausente — handoff propio en `ad-hoc/`". |
+| `run_id` | El run_id de Anvil MCP activo — usado para ubicar el handoff propio en `.project-context/runs/<run_id>/` | Usar `ad-hoc` como segmento de path. El handoff propio (Paso 1.5) se escribe en `.project-context/runs/ad-hoc/committer-handoff.md`. Anotar en el output: "run_id ausente — handoff propio en `ad-hoc/`". |
 | `ANVIL_REPO` | Ruta absoluta al repo de Anvil — necesaria para `bash <ANVIL_REPO>/scripts/verify-handoff.sh` en Paso 1.0 | OMITIR el Paso 1.0 (no se puede invocar el script sin la ruta). Continuar al Paso 1.1. Anotar en el output: "ANVIL_REPO ausente — gate de handoff omitido". |
 | `PROJECT_ROOT` | Raíz del proyecto activo — segundo argumento de `verify-handoff.sh` (típicamente `.`) | OMITIR el Paso 1.0 (mismo razonamiento que `ANVIL_REPO`). Anotar en el output. |
 | Path al handoff del developer | `.handoff/<TASK-ID>.md` — para confirmar archivos modificados antes de stagear | OMITIR la validación contra handoff. Trabajar directamente con `git status --porcelain` en el Paso 1.1. Anotar en el output: "Sin handoff del developer — staging basado en `git status` puro". |
@@ -73,7 +73,7 @@ El humano normalmente proporciona estos campos al invocar Fase 2. Si falta algun
 | `Phase` | siempre | `2` (literal) |
 | `TASK-ID` | siempre | Mismo TASK-ID que Fase 1 |
 | `run_id` | siempre | Mismo run_id que Fase 1 — necesario para leer tu handoff propio |
-| Path al handoff propio de Fase 1 | siempre | `.context/runs/<run_id>/committer-handoff.md` — escrito por ti en Fase 1 |
+| Path al handoff propio de Fase 1 | siempre | `.project-context/runs/<run_id>/committer-handoff.md` — escrito por ti en Fase 1 |
 | Estado de los gates posteriores | siempre | "reviewer: PASS", "qa: PASS-WITH-NOTES sin bloqueadores", etc. — solo info, no decides; el Líder ya validó que es OK pushear |
 
 ## Flujo — Fase 1 (pre-review)
@@ -165,7 +165,7 @@ Si el repo no tiene remoto GitHub configurado (verificable con `gh auth status` 
 
 ### Paso 1.5 — Escribir handoff propio (puente Fase 1 → Fase 2)
 
-Crear `.context/runs/<run_id>/committer-handoff.md` con este contenido **exacto** (no improvisar campos):
+Crear `.project-context/runs/<run_id>/committer-handoff.md` con este contenido **exacto** (no improvisar campos):
 
 ```markdown
 # Committer handoff — Fase 1 → Fase 2
@@ -207,7 +207,7 @@ DETENERTE aquí. El Líder continúa con `reviewer` (y `qa` si aplica).
 
 ### Paso 2.1 — Leer el handoff propio
 
-Tu PRIMERA acción es `Read` sobre `.context/runs/<run_id>/committer-handoff.md`. Esa es tu única memoria de Fase 1 — sin ella no puedes operar.
+Tu PRIMERA acción es `Read` sobre `.project-context/runs/<run_id>/committer-handoff.md`. Esa es tu única memoria de Fase 1 — sin ella no puedes operar.
 
 Si el archivo no existe → pregunta al humano: "**Falta el handoff de Fase 1, sin él no puedo operar:** No encontré `committer-handoff.md` en `<path>` y Fase 2 requiere haber corrido Fase 1 antes. ¿Dónde está el handoff, o qué archivos debo commitear?" El humano puede apuntarte al handoff o indicar cómo proceder.
 
@@ -280,7 +280,7 @@ Devolver al Líder un resumen máx 100 palabras:
 - Si la rama remota fue creada en este push (rama nueva) → notarlo
 - Cualquier warning relevante (ej. "PR creado pero `gh` reportó que faltan reviewers asignados — el repo tiene CODEOWNERS")
 
-NO escribir nada más en `.context/runs/` — el handoff propio ya cumplió su función y será limpiado por el Líder en el cierre.
+NO escribir nada más en `.project-context/runs/` — el handoff propio ya cumplió su función y será limpiado por el Líder en el cierre.
 
 ## Manejo de errores — criterio único
 
@@ -310,7 +310,7 @@ Si alguna fase excede el presupuesto, casi siempre indica un problema (commit co
 - [ ] La rama destino quedó registrada (no vacía, no "TODO")
 - [ ] La modalidad quedó registrada (`push-directo` o `pr`)
 - [ ] Si el remoto no es GitHub, la modalidad es `push-directo` (no se ofreció `pr`)
-- [ ] El handoff propio existe en `.context/runs/<run_id>/committer-handoff.md`
+- [ ] El handoff propio existe en `.project-context/runs/<run_id>/committer-handoff.md`
 
 ### Fase 2
 

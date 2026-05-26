@@ -1,25 +1,25 @@
 ---
 name: context-nav
 disable-model-invocation: true
-description: Sistema de contexto vivo para proyectos. Lee `.context/` al iniciar sesión, escribe deltas después de cada implementación. Aplica en modo directo y en pipeline, con o sin agentes.
+description: Sistema de contexto vivo para proyectos. Lee `.project-context/` al iniciar sesión, escribe deltas después de cada implementación. Aplica en modo directo y en pipeline, con o sin agentes.
 ---
 
 # Context Navigator
 
-Sistema de conocimiento acumulativo que vive en `.context/` al lado de `.handoff/`. Funciona en todo proyecto — nuevo o con historia, modo directo o pipeline.
+Sistema de conocimiento acumulativo que vive en `.project-context/` al lado de `.handoff/`. Funciona en todo proyecto — nuevo o con historia, modo directo o pipeline.
 
 ## Cuándo aplica
 
 **Al inicio de cualquier sesión** — modo directo o pipeline:
-1. Si `.context/NAVIGATOR.md` existe → leerlo, verificar staleness, inyectar contexto relevante
-2. Si no existe → indicar al usuario que puede ejecutar `scanner mode: deep` para bootstrap
+1. Si `.project-context/NAVIGATOR.md` existe → leerlo, verificar staleness, inyectar contexto relevante
+2. Si no existe → indicar al usuario que puede ejecutar `context-init mode: init` para bootstrap
 
-**Después de cada implementación** — el reporter (pipeline) o el propio Claude (directo) escribe deltas a `.context/`.
+**Después de cada implementación** — el reporter (pipeline) o el propio Claude (directo) escribe deltas a `.project-context/`.
 
 ## Estructura de archivos
 
 ```
-.context/
+.project-context/
 ├── NAVIGATOR.md           # Índice + metadatos de cobertura y staleness
 ├── project.md             # Stack, arquitectura, restricciones, SOLID
 ├── patterns.md            # Patrones de diseño inferidos + referencias a archivos
@@ -55,6 +55,6 @@ Ver `staleness.md` para reglas completas. Resumen:
 
 ## Skills relacionadas
 
-- `scan-project` — produce el bootstrap inicial de `.context/`
-- `leader` (agent) — consume `.context/` en el Paso 0.3 antes del primer sub-agente
-- `reporter` — escribe deltas a `.context/` al final del pipeline
+- `scan-project` — produce el bootstrap inicial de `.project-context/`
+- `leader` (agent) — consume `.project-context/` en el Paso 0.3 antes del primer sub-agente
+- `reporter` — escribe deltas a `.project-context/` al final del pipeline

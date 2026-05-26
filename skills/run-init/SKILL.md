@@ -31,9 +31,9 @@ Complementar con `mcp__anvil__get_recent_changes(days=1)` para incluir contexto 
 
 ### 0.3 — Cargar Context Navigator (vía `explorer`)
 
-**Este chequeo es el primer paso operativo del run** — se ejecuta ANTES de spawnear cualquier sub-agente productivo. **El Líder NO lee `.context/` directamente** (ver Reglas inviolables #9 del `leader.md`): la carga del Context Navigator se delega SIEMPRE al `explorer`.
+**Este chequeo es el primer paso operativo del run** — se ejecuta ANTES de spawnear cualquier sub-agente productivo. **El Líder NO lee `.project-context/` directamente** (ver Reglas inviolables #9 del `leader.md`): la carga del Context Navigator se delega SIEMPRE al `explorer`.
 
-**Existencia de `.context/NAVIGATOR.md`** — el Líder no puede verificarla con `Read` (`.context/` está fuera de su whitelist). Para detectarla usa `Bash[ls .context/NAVIGATOR.md]` (cubierto por `Bash[ls *]`) o delega la verificación al `explorer` en el mismo spawn.
+**Existencia de `.project-context/NAVIGATOR.md`** — el Líder no puede verificarla con `Read` (`.project-context/` está fuera de su whitelist). Para detectarla usa `Bash[ls .project-context/NAVIGATOR.md]` (cubierto por `Bash[ls *]`) o delega la verificación al `explorer` en el mismo spawn.
 
 **Flujo:**
 
@@ -41,10 +41,10 @@ Complementar con `mcp__anvil__get_recent_changes(days=1)` para incluir contexto 
 
    ```
    ## Objetivo
-   Lee `.context/NAVIGATOR.md`, `.context/project.md`, `.context/patterns.md` y los dominios relevantes a [objetivo del run]. Devuelve el contenido condensado más el valor de `last_updated`.
+   Lee `.project-context/NAVIGATOR.md`, `.project-context/project.md`, `.project-context/patterns.md` y los dominios relevantes a [objetivo del run]. Devuelve el contenido condensado más el valor de `last_updated`.
 
    ## Fuentes a consultar
-   - `.context/` del proyecto (NAVIGATOR + project + patterns + dominios relevantes)
+   - `.project-context/` del proyecto (NAVIGATOR + project + patterns + dominios relevantes)
    - Memoria — `mcp__anvil__search_memories` con el objetivo del run
    - GitHub: rama de referencia `develop` (usar `skip_github: true` para omitir si no aplica)
 
@@ -58,27 +58,27 @@ Complementar con `mcp__anvil__get_recent_changes(days=1)` para incluir contexto 
    **Contrato estricto de respuesta (sin excepciones):** DEBES devolver exactamente uno de estos tres tokens — sin texto adicional, sin disculpas, sin markdown, sin envoltorios — cuando aplique la condición correspondiente:
 
    - `CONTEXT_MISSING` si:
-     - `.context/NAVIGATOR.md` no existe o no se puede abrir (archivo no encontrado, permisos, path inválido).
+     - `.project-context/NAVIGATOR.md` no existe o no se puede abrir (archivo no encontrado, permisos, path inválido).
      - Tuviste un error de tool, timeout, o cualquier otra falla que te impida garantizar que el contexto cargado es válido y completo.
    - `CONTEXT_STALE` si:
-     - `.context/NAVIGATOR.md` existe pero está vacío, solo contiene whitespace, o tiene menos de 10 líneas de contenido real.
+     - `.project-context/NAVIGATOR.md` existe pero está vacío, solo contiene whitespace, o tiene menos de 10 líneas de contenido real.
      - El contenido se devolvió truncado, corrupto, o no se pudo parsear de manera confiable.
      - El contenido no es un NAVIGATOR válido: faltan los campos obligatorios (`last_updated`, índice de dominios, referencias a `project.md`/`patterns.md`), o el header no identifica al archivo como Context Navigator.
    - `CONTEXT_INSUFFICIENT: <razón concreta>` si:
-     - `.context/NAVIGATOR.md` existe y es válido pero no cubre el dominio/área investigado en este run. Incluir una razón concreta tras el token (ej: `CONTEXT_INSUFFICIENT: no hay info sobre orkestapay`).
+     - `.project-context/NAVIGATOR.md` existe y es válido pero no cubre el dominio/área investigado en este run. Incluir una razón concreta tras el token (ej: `CONTEXT_INSUFFICIENT: no hay info sobre orkestapay`).
 
    En cualquiera de esos casos: una sola línea, sin formato, sin más texto que el token (más la razón cuando aplique). Si dudas entre devolver contenido parcial o un token de parada, devuelve el token.
 2. Recibir el output del `explorer`:
    - **Devolvió contenido válido + `last_updated`:** calcular días desde esa fecha.
      - `>3 días` → etiquetar "⚠️ puede estar stale" pero continuar.
-     - `>7 días` → recomendar correr `scanner` antes (no auto-spawnear; gate al usuario).
+     - `>7 días` → recomendar correr `context-init` (modo deep) antes (no auto-spawnear; gate al usuario).
      - Inyectar el contenido devuelto inline en el primer agente productivo bajo `## Contexto del sistema`. NO releer los archivos — el contenido ya está inline.
-   - **Devolvió `CONTEXT_MISSING` (token exacto, único contenido material):** agregar `context-bootstrap` + `scanner` (modo deep) al inicio del pipeline (ver §Manejo de `CONTEXT_MISSING` en `leader.md`). Excepción solo si el usuario dijo "sin bootstrap".
-   - **Devolvió `CONTEXT_STALE` (token exacto):** el `.context/` existe pero está desactualizado — agregar solo `scanner` (modo deep) al inicio del pipeline, sin `context-bootstrap`. Excepción solo si el usuario dijo "sin scanner".
-   - **Devolvió `CONTEXT_INSUFFICIENT: <razón>`:** el `.context/` existe pero no cubre el dominio/área señalado — agregar `scanner` al inicio del pipeline con scope acotado al dominio o área que el explorer marcó como insuficiente (parsear la razón devuelta tras el token). Excepción solo si el usuario dijo "sin scanner".
+   - **Devolvió `CONTEXT_MISSING` (token exacto, único contenido material):** agregar `context-init` (modo init) al inicio del pipeline (ver §Manejo de `CONTEXT_MISSING` en `leader.md`). Excepción solo si el usuario dijo "sin bootstrap".
+   - **Devolvió `CONTEXT_STALE` (token exacto):** el `.project-context/` existe pero está desactualizado — agregar `context-init` (modo deep) al inicio del pipeline. Excepción solo si el usuario dijo "sin rescan".
+   - **Devolvió `CONTEXT_INSUFFICIENT: <razón>`:** el `.project-context/` existe pero no cubre el dominio/área señalado — agregar `context-init` (modo deep) al inicio del pipeline con scope acotado al dominio o área que el explorer marcó como insuficiente (parsear la razón devuelta tras el token). Excepción solo si el usuario dijo "sin rescan".
    - **Devolvió cualquier otra cosa (texto ambiguo, error, output parcial, formato inesperado, token desconocido):** tratarlo como `CONTEXT_MISSING` (fallback seguro) y seguir la rama correspondiente. El Líder NO intenta interpretar outputs no conformes — un output que no es uno de los tres tokens válidos se trata como contexto faltante.
 
-**Sin excepción de complejidad:** una tarea Small sin `.context/` igual arranca con `context-bootstrap` + `scanner`. El Líder nunca abre `.context/` por su cuenta para "ahorrar un spawn" — la regla #9 no admite atajos.
+**Sin excepción de complejidad:** una tarea Small sin `.project-context/` igual arranca con `context-init` (modo init). El Líder nunca abre `.project-context/` por su cuenta para "ahorrar un spawn" — la regla #9 no admite atajos.
 
 **Por qué este paso pasa por el `explorer` y no es opcional:** el chequeo sigue siendo el primer paso del run, pero ahora se ejecuta vía spawn (no vía `Read` directo). El `explorer` carga el contexto, el Líder lo recibe y lo inyecta hacia los siguientes sub-agentes. Sin este paso, los agentes posteriores pueden reportar `CONTEXT_MISSING` mid-run y forzar reintentos costosos.
 
@@ -91,8 +91,8 @@ Hits con `score >= 0.5` → inyectar inline en primer agente bajo `## Memorias r
 ### 0.5 — Iniciar persistencia
 
 1. `mcp__anvil__start_orchestration(objetivo, pipeline)` → obtener `run-id`
-2. Escribir `.context/runs/<run-id>/plan.md` (formato en la skill `leader/output-formats`, sección `## plan.md del run`)
-3. Escribir `.context/runs/<run-id>/log.md` con encabezado mínimo `# Log del run <run-id>` (archivo donde el Líder irá apendando entradas del run en orden cronológico)
+2. Escribir `.project-context/runs/<run-id>/plan.md` (formato en la skill `leader/output-formats`, sección `## plan.md del run`)
+3. Escribir `.project-context/runs/<run-id>/log.md` con encabezado mínimo `# Log del run <run-id>` (archivo donde el Líder irá apendando entradas del run en orden cronológico)
 4. `mcp__anvil__save_leader_log(run_id, content)` con plan inicial completo
 
 ## Output disponible para el Líder al terminar
@@ -100,7 +100,7 @@ Hits con `score >= 0.5` → inyectar inline en primer agente bajo `## Memorias r
 Al completar los 5 sub-pasos, el Líder tiene listo:
 
 - **`run_id` activo** — identificador devuelto por `start_orchestration`, requerido por todas las llamadas MCP posteriores (`save_step`, `save_leader_log`, `complete_orchestration`)
-- **Contenido del Context Navigator** — texto condensado de `.context/NAVIGATOR.md`, `project.md`, `patterns.md` y dominios relevantes (vía `explorer`), o flag `CONTEXT_MISSING` que dispara `context-bootstrap` + `scanner`
+- **Contenido del Context Navigator** — texto condensado de `.project-context/NAVIGATOR.md`, `project.md`, `patterns.md` y dominios relevantes (vía `explorer`), o flag `CONTEXT_MISSING` que dispara `context-init` (modo init)
 - **Archivos ya modificados en la sesión** — output de `git status --short` capturado en 0.2, listo para inyectar al `developer` bajo `## Archivos ya modificados`
 - **Memorias relevantes** — hits con `score >= 0.5` del recall de 0.4, listos para inyectar al primer sub-agente bajo `## Memorias relevantes` (vacío si no hubo hits)
 
@@ -109,7 +109,7 @@ Estos cuatro artefactos son los inputs base de cualquier sub-agente productivo q
 ## Reglas
 
 - Sin excepciones de complejidad — corre completo aun para tareas Small.
-- El Líder NO lee `.context/` directamente en ningún sub-paso — la lectura siempre pasa por `explorer` (Regla inviolable #9 del `leader.md`).
-- Si el `explorer` devuelve `CONTEXT_MISSING`, la secuencia obligatoria es `context-bootstrap` + `scanner` (deep) ANTES de re-invocar al `explorer` con los mismos inputs y continuar el pipeline original.
+- El Líder NO lee `.project-context/` directamente en ningún sub-paso — la lectura siempre pasa por `explorer` (Regla inviolable #9 del `leader.md`).
+- Si el `explorer` devuelve `CONTEXT_MISSING`, la secuencia obligatoria es `context-init` (modo init) ANTES de re-invocar al `explorer` con los mismos inputs y continuar el pipeline original.
 - El orden de los 5 sub-pasos NO se altera — 0.1 → 0.2 → 0.3 → 0.4 → 0.5.
 - Sin este paso ejecutado completo, el gate de visibilidad del Líder (definido en `~/.claude/CLAUDE.md`) no puede iniciarse — no mostrar árbol de agentes ni spawnear nada hasta que `run-init` termine.

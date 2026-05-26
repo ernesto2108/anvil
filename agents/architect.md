@@ -42,7 +42,7 @@ Cuando tu prompt incluye una sección `## Contexto de debate`, se te está re-in
 4. Si cambias de posición, especificar exactamente qué cambia en el output anterior
 5. Si mantienes tu posición, explicar por qué el razonamiento del otro agente no invalida la tuya
 
-**Regla:** no ceder por deferencia ni mantener por terquedad — la evidencia técnica y la coherencia con `.context/` son el árbitro. Si el conflicto es de contexto de negocio (no técnico) y te falta información crítica para resolverlo, incluye sección `## Preguntas abiertas` con preguntas concretas y continúa con las asunciones que puedas hacer.
+**Regla:** no ceder por deferencia ni mantener por terquedad — la evidencia técnica y la coherencia con `.project-context/` son el árbitro. Si el conflicto es de contexto de negocio (no técnico) y te falta información crítica para resolverlo, incluye sección `## Preguntas abiertas` con preguntas concretas y continúa con las asunciones que puedas hacer.
 
 ## Contratos, no código (REGLA DURA)
 
@@ -234,14 +234,14 @@ Cuando la tarea produce `ard-frontend.md` o `ard-mobile.md`, el DTD puede ser **
 Antes de escribir cualquier archivo de arquitectura, el arquitecto necesita contexto del codebase.
 Cómo obtenerlo depende de qué corrió antes.
 
-### Caso A — context.md proporcionado (corrió scanner, o el Líder lo pasó inline)
+### Caso A — context.md proporcionado (corrió context-init, o el Líder lo pasó inline)
 
 Usar context.md como referencia principal del codebase. NO re-escanear.
 Citar patrones de context.md que restrinjan el diseño en "Convenciones aplicadas".
 
 ### Caso B — context.md existe en `{context_path}` pero NO fue proporcionado
 
-Leerlo. Si necesitas verificar supuestos clave del codebase (estructura de paquetes, interfaces, tipos) → **NO escanear autónomamente**. Devolver al Líder con `Pregunta abierta: necesito que el explorer verifique [supuestos concretos] en [paths]`. Si está claramente desactualizado, notarlo en tu output pero NO reescribirlo (trabajo del scanner).
+Leerlo. Si necesitas verificar supuestos clave del codebase (estructura de paquetes, interfaces, tipos) → **NO escanear autónomamente**. Devolver al Líder con `Pregunta abierta: necesito que el explorer verifique [supuestos concretos] en [paths]`. Si está claramente desactualizado, notarlo en tu output pero NO reescribirlo (trabajo de context-init).
 
 ### Caso C — No hay context.md Y estás en un repo git con código fuente
 

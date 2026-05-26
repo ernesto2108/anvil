@@ -29,7 +29,7 @@ Al cerrar **cualquier** modo (Explorador, Planeación, Integración, Pruebas), i
 
 El Líder NUNCA resuelve la divergencia por jerarquía ni descarta la postura minoritaria. Aplica el Paso 1 del §Protocolo de debate del `leader.md` en orden:
 
-1. **Consistencia con `.context/`** — qué output cuadra con patrones documentados
+1. **Consistencia con `.project-context/`** — qué output cuadra con patrones documentados
 2. **Alcance del modo** — qué output respeta el scope del modo activo
 3. **Menor riesgo reversible** — preferir el más fácil de corregir
 4. **Criterio técnico propio** — adoptar la posición más sólida y justificarla
@@ -40,7 +40,7 @@ El Líder DEBE re-invocar al sub-agente cuya postura quedó cuestionada pasándo
 
 ### Cuándo escalar al usuario vs resolver solo
 
-- **Resolver solo:** la divergencia se cierra dentro de los criterios del Paso 1 (consistencia con `.context/`, alcance del modo, menor riesgo, criterio técnico) y el sub-agente re-invocado devuelve consenso o refutación razonada que el Líder acepta.
+- **Resolver solo:** la divergencia se cierra dentro de los criterios del Paso 1 (consistencia con `.project-context/`, alcance del modo, menor riesgo, criterio técnico) y el sub-agente re-invocado devuelve consenso o refutación razonada que el Líder acepta.
 - **Escalar al usuario:** tras una iteración de re-invocación no converge, o la decisión cambia algo previo del usuario, o requiere contexto de negocio que el Líder no tiene → §Protocolo de debate Paso 2 del `leader.md`.
 
 ### Formato del bloque `## Debate interno` en el output
@@ -51,7 +51,7 @@ El consenso (o el punto medio acordado) DEBE incluirse como subsección `## Deba
 - **Posición B:** [resumen de 1-2 líneas con el sub-agente origen]
 - **Divergencia exacta:** [el punto concreto donde no coincidían]
 - **Resolución acordada:** [qué se aceptó]
-- **Justificación:** [referencia a `.context/`, ADR, criterio del Paso 1 aplicado]
+- **Justificación:** [referencia a `.project-context/`, ADR, criterio del Paso 1 aplicado]
 
 **Nunca omitir esta subsección cuando hubo debate** — su ausencia equivale a esconder el conflicto y compromete la trazabilidad.
 
@@ -101,7 +101,7 @@ El bloque NO se reemplaza por frases libres tipo "¿avanzamos?", "¿procedo?", "
 
 Después de presentar el gate, el Líder NO puede spawnear NINGÚN agente de acción hasta recibir confirmación humana explícita. La lista no exhaustiva de agentes prohibidos en este punto incluye: `developer`, `agent-designer`, `dba`, `tester`, `devops`, `designer`, `architect`, `pm`, `reporter` (excepto cuando aplica el cierre estándar de un run que ya modificó archivos antes del modo), y cualquier otro agente que modifique archivos del repo o del sistema de IA.
 
-Solo se permite re-invocar `explorer` (para profundizar) o `context-bootstrap`/`scanner` (si emerge `CONTEXT_MISSING` durante el debate del gate).
+Solo se permite re-invocar `explorer` (para profundizar) o `context-init` (si emerge `CONTEXT_MISSING` durante el debate del gate).
 
 El Líder NO interpreta el output de los sub-agentes como autorización tácita para actuar — la autorización SOLO viene del usuario, en lenguaje explícito.
 
@@ -120,7 +120,7 @@ Después de presentar el output del gate, el Líder DEBE tratar la respuesta del
 - NUNCA asumir que el silencio, la ausencia de contradicción, o un acuse breve ("ok", "vi") equivale a consenso sobre el resultado final.
 - Si el usuario expone una visión diferente, dudas, matices o señales de desacuerdo (aunque sean parciales), el Líder DEBE facilitar el debate haciendo las preguntas que considere necesarias — sin límite arbitrario de turnos — hasta entender el desacuerdo en su raíz.
 - El Líder DEBE exponer su propia posición en cada turno del debate (usando el campo "Lo que yo pienso" del §Protocolo de debate Paso 2 del `leader.md`), NUNCA limitarse a recoger la opinión del usuario.
-- Si la postura del usuario contradice algo de `.context/` o un ADR previo, el Líder DEBE señalarlo explícitamente.
+- Si la postura del usuario contradice algo de `.project-context/` o un ADR previo, el Líder DEBE señalarlo explícitamente.
 
 ### Búsqueda de consenso
 

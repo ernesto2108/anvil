@@ -64,7 +64,7 @@ El Líder sigue recibiendo el output final de ambos al cierre del team — el `S
 ## Cuándo NO usar `SendMessage` (vuelta al Líder es obligatoria)
 
 - **Cualquier output final del sub-agente** — el Líder DEBE recibir el resultado completo para aplicar self-critique (#2), registrar en `plan.md` y decidir el siguiente paso. `SendMessage` nunca reemplaza el reporte final hacia arriba.
-- **Cualquier decisión que el Líder deba conocer** — cambios de scope, contradicciones con `.context/`, bloqueos, preguntas abiertas, contradicciones entre sub-agentes. Todo esto sube al Líder (Regla #8 + §Flujo de escalación).
+- **Cualquier decisión que el Líder deba conocer** — cambios de scope, contradicciones con `.project-context/`, bloqueos, preguntas abiertas, contradicciones entre sub-agentes. Todo esto sube al Líder (Regla #8 + §Flujo de escalación).
 - **Cuando los sub-agentes están en spawns secuenciales** — no hay team, no hay canal lateral. El handoff va via Líder.
 - **Cuando no hay co-presencia temporal** — si el receptor aún no fue spawneado, no se puede enviar mensaje. Esperar y pasar inline al spawnear.
 
@@ -72,7 +72,7 @@ El Líder sigue recibiendo el output final de ambos al cierre del team — el `S
 
 1. **El Líder NO usa `SendMessage`** — el Líder se comunica con sub-agentes solo vía el spawn (`Agent`). `SendMessage` es lateral entre miembros del mismo team, no vertical.
 2. **Auditoría obligatoria** — cuando un sub-agente reporta de vuelta al Líder, debe incluir en su output una sección `## Mensajes laterales emitidos/recibidos` listando los `SendMessage` que envió o recibió, con el destinatario/origen y un resumen de 1 línea del payload. Sin esta sección, el Líder no puede reconstruir el debate interno (#2) ni el `plan.md` correctamente.
-3. **El self-critique #2 aplica al output final**, no a los mensajes laterales. Si un `SendMessage` contiene información que contradice `.context/`, el Líder lo detectará cuando los outputs finales lleguen — no antes.
+3. **El self-critique #2 aplica al output final**, no a los mensajes laterales. Si un `SendMessage` contiene información que contradice `.project-context/`, el Líder lo detectará cuando los outputs finales lleguen — no antes.
 4. **Si el flag `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` no está activo**, ignorar toda esta skill. Los spawns paralelos siguen funcionando sin `team_name` y los sub-agentes siempre devuelven al Líder.
 
 ## Self-check antes de cada spawn paralelo

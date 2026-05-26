@@ -69,7 +69,7 @@ No hay dos bloques separados — el LLM debe escribir el output completo del mod
 - [hallazgo 2]
 
 ## Fuentes consultadas
-- .context/domains/X.md (local)
+- .project-context/domains/X.md (local)
 - internal/foo/bar.go:123-150 (local)
 - https://... (web) — accedido <fecha>
 
@@ -174,7 +174,7 @@ No hay dos bloques separados — el LLM debe escribir el output completo del mod
 ┌─ líder
 ├─── developer         → <qué produjo>
 ├─── tester            → <qué produjo>
-└─── reporter          → delta aplicado a .context/
+└─── reporter          → delta aplicado a .project-context/
 
 **Resumen ejecutivo:**
 - [bullet 1 — qué cambió en términos del comportamiento del sistema, no del código]
@@ -310,7 +310,7 @@ Formato no negociable de la nota que el Líder escribe al vault al cerrar Modo I
 
 ## `plan.md` del run
 
-Scratchpad operativo del Líder durante el run. Vive en `.context/runs/<run-id>/plan.md`. Se inicializa en Paso 0.5 y se actualiza con `mcp__anvil__save_leader_log` después de cada sub-agente.
+Scratchpad operativo del Líder durante el run. Vive en `.project-context/runs/<run-id>/plan.md`. Se inicializa en Paso 0.5 y se actualiza con `mcp__anvil__save_leader_log` después de cada sub-agente.
 
 ```markdown
 # Plan — <run-id>
@@ -340,4 +340,4 @@ budget: { max_retries: N, max_cost: $X }
 - `last_updated` en ISO-8601 (`2026-05-10T14:32:00Z`).
 - Cada paso del pipeline se marca `[x]` cuando completa.
 - "Errores acumulados" guarda firmas de error (categoría + substring) para detectar bucles de retry.
-- Al cerrar el run en `success` → el directorio `.context/runs/<run-id>/` se limpia.
+- Al cerrar el run en `success` → el directorio `.project-context/runs/<run-id>/` se limpia.

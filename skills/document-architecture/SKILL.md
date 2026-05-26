@@ -41,9 +41,9 @@ Pregúntate a ti mismo (NO al usuario): ¿este proyecto maneja auth, pagos, PII 
 - **Sí** → incluir seguridad en el pipeline
 - **No** → omitir seguridad
 
-## Paso 3 — Scanner (profundo, con conciencia de skeleton)
+## Paso 3 — Context Init (escaneo profundo, con conciencia de skeleton)
 
-Lee el archivo skeleton especificado en la guía. Inyéctalo INLINE en el prompt del scanner. Lanza el agente `scanner` con `mode: deep` siguiendo las instrucciones del scanner de la guía.
+Lee el archivo skeleton especificado en la guía. Inyéctalo INLINE en el prompt de `context-init`. Lanza el agente `context-init` con `mode: deep` siguiendo las instrucciones de escaneo de la guía.
 
 - Modelo: **sonnet**
 - **Objetivo: <25 tool calls**

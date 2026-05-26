@@ -1,6 +1,6 @@
-# Bootstrap — Generar `.context/` desde cero
+# Bootstrap — Generar `.project-context/` desde cero
 
-Usado por el scanner en `mode: deep` cuando `.context/` no existe o tiene `coverage: none`.
+Usado por `context-init` en `mode: init` o `mode: deep` cuando `.project-context/` no existe o tiene `coverage: none`.
 
 ## Paso 1 — Leer estructura base
 
@@ -253,7 +253,7 @@ ls src/         # React — carpetas de features
 ls lib/         # Flutter
 ```
 
-Un dominio es relevante para `.context/domains/` si tiene > 3 archivos significativos y lógica de negocio propia (no es util, config, o types puros).
+Un dominio es relevante para `.project-context/domains/` si tiene > 3 archivos significativos y lógica de negocio propia (no es util, config, o types puros).
 
 ## Paso 5 — Detectar SOLID
 
@@ -314,4 +314,4 @@ Marcar `coverage: bootstrap` en NAVIGATOR.md.
 - No inferir patrones de nombres de archivos solos — leer al menos la firma de las funciones clave
 - No crear un `domains/<name>.md` para paquetes de < 3 archivos
 - No inventar decisiones — solo las que tienen evidencia en código o en MCP memory
-- No sobreescribir si `.context/` ya existe con `coverage: full` — en ese caso solo actualizar secciones stale
+- No sobreescribir si `.project-context/` ya existe con `coverage: full` — en ese caso solo actualizar secciones stale

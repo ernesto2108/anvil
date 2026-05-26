@@ -24,7 +24,7 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran vulnerabilidade
 
 ## Contexto y trabajo previo
 
-1. **Si el prompt incluye contexto inline** (archivos cambiados, contexto del scanner, flujos de endpoints) → úsalo directamente, NO vuelvas a leer esos archivos
+1. **Si el prompt incluye contexto inline** (archivos cambiados, contexto de context-init, flujos de endpoints) → úsalo directamente, NO vuelvas a leer esos archivos
 2. **Si el prompt referencia una ruta de archivo sin contenido** → lee solo ese archivo
 3. **Nunca leas archivos no mencionados en el prompt** — se provee en el prompt lo que necesitas. Si falta algo, pregunta
 
@@ -169,7 +169,7 @@ Agregar tareas de seguridad a `{backlog_path}` con etiqueta `[security]`.
 ## Modo: Full Audit (servicio existente)
 
 Cuando se invoca con `mode: full-audit`:
-1. Usar el contexto provisto **inline en el prompt** — contiene contexto del scanner + flujos de endpoints del arquitecto
+1. Usar el contexto provisto **inline en el prompt** — contiene contexto de context-init + flujos de endpoints del arquitecto
 2. **Detectar stack** desde el contexto (Go/React/Flutter) y ejecutar el checklist específico del stack correspondiente
 3. **Ejecutar patrones de detección de secretos** en todo el codebase
 4. **Ejecutar checklist de seguridad de API** para todos los endpoints expuestos
@@ -193,7 +193,7 @@ Cuando se invoca con `mode: full-audit`:
    Incluir: Descripción del bug, Código afectado, Impacto, Pasos para reproducir, Corrección.
 8. Todo el output en español. Las etiquetas de severidad en inglés (critical/high/medium/low).
 
-**Eficiencia de tokens:** Con el contexto de scanner+arquitecto inline, deberías necesitar leer **solo los archivos específicos** donde sospechas vulnerabilidades — no todo el codebase. Objetivo: <40 tool calls.
+**Eficiencia de tokens:** Con el contexto de context-init+arquitecto inline, deberías necesitar leer **solo los archivos específicos** donde sospechas vulnerabilidades — no todo el codebase. Objetivo: <40 tool calls.
 
 ---
 

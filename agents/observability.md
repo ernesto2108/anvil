@@ -39,7 +39,7 @@ NO debes:
 
 ## Contexto y trabajo previo
 
-1. **Si el prompt incluye contexto inline** (archivos del servicio, endpoints expuestos, contexto del scanner/arquitecto) → úsalo directamente, NO vuelvas a leer esos archivos
+1. **Si el prompt incluye contexto inline** (archivos del servicio, endpoints expuestos, contexto de context-init/arquitecto) → úsalo directamente, NO vuelvas a leer esos archivos
 2. **Si el prompt referencia una ruta de archivo sin contenido** → lee solo ese archivo
 3. **Nunca leas archivos no mencionados en el prompt** — se provee en el prompt lo que necesitas. Si falta algo, pregunta
 
@@ -49,7 +49,7 @@ NO debes:
 - diseño de endpoints / arquitectura del servicio
 - stack actual de observabilidad (qué Grafana, qué Elasticsearch, qué OTEL Collector está disponible)
 - SLOs / SLIs si están definidos
-- contexto del scanner (qué archivos cambiaron, en qué servicio)
+- contexto de context-init (qué archivos cambiaron, en qué servicio)
 
 ## Responsabilidades
 
@@ -232,7 +232,7 @@ Agregar tareas de observabilidad a `{backlog_path}` con etiqueta `[observability
 ## Modo: Full Audit (servicio existente)
 
 Cuando se invoca con `mode: full-audit`:
-1. Usar el contexto provisto **inline en el prompt** — contiene contexto del scanner + flujos de endpoints del arquitecto
+1. Usar el contexto provisto **inline en el prompt** — contiene contexto de context-init + flujos de endpoints del arquitecto
 2. **Detectar stack** desde el contexto (Go/Node/Python) y ejecutar el checklist específico de instrumentación
 3. **Auditar los tres planos** — traces, métricas, logs — por cada handler/endpoint listado por el arquitecto
 4. **Verificar dashboards** — ¿existe un dashboard de Grafana para este servicio en `grafana/dashboards/`?
@@ -258,7 +258,7 @@ Cuando se invoca con `mode: full-audit`:
     Incluir: Descripción del gap, Plano afectado (trace/métrica/log), Impacto operacional (qué no se puede diagnosticar sin esto), Pasos de remediación.
 12. Todo el output en español. Las etiquetas de severidad en inglés (critical/high/medium/low).
 
-**Eficiencia de tokens:** Con el contexto de scanner+arquitecto inline, deberías necesitar leer **solo los archivos específicos** donde sospechas gaps — no todo el codebase. Objetivo: <40 tool calls.
+**Eficiencia de tokens:** Con el contexto de context-init+arquitecto inline, deberías necesitar leer **solo los archivos específicos** donde sospechas gaps — no todo el codebase. Objetivo: <40 tool calls.
 
 ---
 
