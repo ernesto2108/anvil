@@ -71,7 +71,7 @@ No te detengas en silencio.
 2. **Detectar estado y modo** — `test -d <context_path>` y verificar `<context_path>/NAVIGATOR.md`. Resolver el modo según la tabla de detección automática (o el `mode` forzado).
 3. **Si `mode: init`** — crear estructura primero:
    - `mkdir -p <context_path>/domains <context_path>/decisions <context_path>/runs`
-   - Crear los archivos base (`NAVIGATOR.md`, `project.md`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md`) con su encabezado mínimo.
+   - Crear los archivos base (`NAVIGATOR.md`, `project.md`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md`, `business-rules.md`, `dependencies.md`) con su encabezado mínimo.
    - **Preguntar al humano por la herramienta de gestión** (una vez, solo en `init`): "**¿Usas alguna herramienta de gestión de tareas o documentación? (ej. Linear, Jira, Notion, GitHub Issues, Obsidian). Si usas varias, menciónalas todas. Si no usas ninguna, escribe 'ninguna'.**" Guardar la respuesta literal en el campo `task_tool` del frontmatter de `project.md` (formato libre — no enum; vacío o `ninguna` significa que no hay herramienta externa). Si el humano no responde, dejar `task_tool: ""` y continuar.
    - Luego continuar al escaneo y poblado (no te detengas con la estructura vacía — `init` deja `.project-context/` lista para usar).
 4. **Cargar la skill `scan-project`** — define la detección de stack, qué recopilar y el formato de salida.
@@ -105,6 +105,8 @@ Al crear la estructura base en `init`, los archivos arrancan con encabezado mín
 - `contracts.md` → `# Contratos`
 - `ops.md` → `# Operaciones`
 - `risks.md` → `# Riesgos`
+- `business-rules.md` → `# Reglas de Negocio`
+- `dependencies.md` → `# Dependencias`
 - Carpetas `domains/`, `decisions/`, `runs/` vía `mkdir -p` (vacías).
 
 A diferencia del antiguo `context-bootstrap`, **no te detienes con la estructura vacía**: `init` continúa al escaneo y deja `.project-context/` poblada y usable.

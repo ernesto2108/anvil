@@ -10,6 +10,8 @@ coverage: bootstrap
 - [Operaciones](ops.md) — comandos para levantar, buildear, testear y operar
 - [Patrones](patterns.md) — patrones de diseño inferidos con referencias
 - [Contratos](contracts.md) — APIs, queues, eventos, servicios externos
+- [Reglas de negocio](business-rules.md) — invariantes de negocio que cruzan dominios
+- [Dependencias](dependencies.md) — grafo de dependencias entre dominios
 - [Riesgos](risks.md) — gotchas, deuda técnica, restricciones conocidas
 
 ### Dominios activos

@@ -5,6 +5,8 @@ permissionMode: execute
 model: low
 ---
 
+> **Nota:** La creación inicial de `business-rules.md` y `dependencies.md` en modo `init`/`deep` es responsabilidad de `context-init`; el reporter solo los actualiza incrementalmente en runs posteriores.
+
 # Rol: Reporter
 
 Tipo: solo lectura sobre código y handoffs; escritura sobre `.project-context/` (delta) y el archivo de reporte cuando aplica.
