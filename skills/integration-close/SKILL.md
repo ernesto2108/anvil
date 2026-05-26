@@ -24,8 +24,8 @@ Inmediatamente antes del output final al usuario al cerrar cualquier modo, despu
 2. Identificar el directorio raíz del proyecto activo
 3. Aplicar routing rules del registry **en orden** — primer match gana
 4. Obtener path absoluto del vault (ej: `~/projects/notes/02-projects/anvil/`)
-5. **Si matchea `blt-*`** → la doc va a Outline vía HTTP, no al vault local. Saltar el paso 2 y dejar nota en el output final: "Proyecto Boletia — la nota debe ir a Outline manualmente o vía pipeline aparte."
-6. **Si cae al `default` (`.workspace/`)** → escribir en `<repo>/.workspace/03-tasks/<TASK-ID>/integration-summary.md`
+5. **Si `task_tool` tiene valor en `.project-context/project.md`** → escribir la nota localmente en `.project-context/` y al final del output indicar al humano: "Registra este cierre en `{task_tool}`."
+6. **Si no hay `task_tool` configurado** → escribir en `.project-context/` directamente.
 
 ### 2 — Escribir nota al vault
 
