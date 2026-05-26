@@ -113,3 +113,12 @@ Estos cuatro artefactos son los inputs base de cualquier sub-agente productivo q
 - Si el `explorer` devuelve `CONTEXT_MISSING`, la secuencia obligatoria es `context-init` (modo init) ANTES de re-invocar al `explorer` con los mismos inputs y continuar el pipeline original.
 - El orden de los 5 sub-pasos NO se altera — 0.1 → 0.2 → 0.3 → 0.4 → 0.5.
 - Sin este paso ejecutado completo, el gate de visibilidad del Líder (definido en `~/.claude/CLAUDE.md`) no puede iniciarse — no mostrar árbol de agentes ni spawnear nada hasta que `run-init` termine.
+
+## Definition of done del run (referencia)
+
+`run-init` arranca el run; el cierre lo ejecuta `integration-close`. Para que un run que modificó archivos se considere cerrado ("done"), el cierre DEBE incluir, al mismo nivel:
+
+- [ ] Tests pasan (cuando aplique)
+- [ ] Documentación de `.project-context/` actualizada por el `reporter` (delta + `last_updated` en NAVIGATOR)
+
+Actualizar `.project-context/` no es opcional — tiene el mismo estatus que los tests en la definición de "done". Ver `skills/integration-close/SKILL.md` paso 3.

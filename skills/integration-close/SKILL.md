@@ -46,15 +46,15 @@ Decidir el destino dentro del vault según el tipo de cambio:
 - Permiso denegado → escalar con formato de §Protocolo de debate del `leader.md`
 - `project-registry.md` no existe → escalar: "No encontré `~/.claude/project-registry.md`. ¿Dónde escribo el resumen?"
 
-### 3 — Spawnear `reporter` con archivos modificados
+### 3 — Spawnear `reporter` con archivos modificados (paso obligatorio de cierre)
 
-Después de escribir al vault y antes del output final, spawnear `reporter` con la lista de archivos modificados durante el run. El `reporter` aplica el delta a `.project-context/domains/`, `.project-context/patterns.md`, `.project-context/contracts.md`, `.project-context/ops.md`, `.project-context/risks.md` según corresponda.
+**Después de que los tests pasen** y de escribir al vault, spawnear `reporter` con la lista de archivos modificados durante el run. Documentar el delta en `.project-context/` (business-rules, dependencies, domains, patterns según lo que cambió) es un **paso obligatorio de cierre, al mismo nivel que los tests** — no una opción. Una tarea o bug fix no está "done" hasta que el reporter haya actualizado `.project-context/`. El `reporter` aplica el delta a `.project-context/domains/`, `.project-context/patterns.md`, `.project-context/contracts.md`, `.project-context/ops.md`, `.project-context/risks.md` según corresponda.
 
 **El Líder NO escribe en esos paths** — están en `denied_tools` del frontmatter del `leader.md`. El mapeo de archivos tocados → secciones de `.project-context/` vive en `skills/context-nav/update.md` — el `reporter` lo carga al ejecutar el delta. El Líder no necesita conocer este mapeo.
 
 **Saltar `reporter` solo si el run NO modificó archivos del proyecto** (caso atípico en Integración, pero posible si todo el cambio fue revertido). Si hubo cualquier modificación → invocar siempre.
 
-**Instrucción adicional al `reporter`:** incluir explícitamente en el prompt "Actualiza también `last_updated` en `.project-context/NAVIGATOR.md` a la fecha de hoy" — esto delega el paso 6 al `reporter` y evita que el Líder lo haga después por separado.
+**`last_updated` en NAVIGATOR:** el `reporter` actualiza `last_updated` en `.project-context/NAVIGATOR.md` **siempre** que escriba o edite cualquier archivo de `.project-context/` — es su comportamiento por defecto, no requiere instrucción explícita en el prompt. El paso 6 solo aplica como fallback cuando el `reporter` NO fue invocado.
 
 **Inyección obligatoria del path del handoff:** si el run produjo un `.handoff/<TASK-ID>.md`, el Líder DEBE incluir en el prompt al `reporter` la línea `handoff_path: .project-context/runs/<run-id>/committer-handoff.md` (ajustando el path al archivo de handoff real del run). Sin este path, el `reporter` no puede llamar `mcp__anvil__digest_from_handoff` al final de su flujo y el ciclo queda sin cerrar (forzando que el Líder lo haga en el paso 7).
 
@@ -76,7 +76,7 @@ Este paso es **responsabilidad exclusiva del Líder** — el `developer` solo re
 
 Criterio binario:
 
-- **Si el `reporter` fue spawneado en el paso 3** → ya se delegó como instrucción explícita en su prompt. Omitir aquí.
+- **Si el `reporter` fue spawneado en el paso 3** → ya actualizó `last_updated` por defecto (siempre lo hace al tocar `.project-context/`). Omitir aquí.
 - **Si el `reporter` NO fue spawneado** (caso atípico en Integración) → el Líder lo hace directamente con `Edit` sobre `.project-context/NAVIGATOR.md`. Esta es la única escritura del Líder en `.project-context/` fuera de `runs/`.
 
 ### 7 — Cerrar ciclo con `digest_from_handoff` (cuando no corrió reporter)

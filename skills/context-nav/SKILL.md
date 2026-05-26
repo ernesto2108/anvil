@@ -24,6 +24,8 @@ Sistema de conocimiento acumulativo que vive en `.project-context/` al lado de `
 ├── project.md             # Stack, arquitectura, restricciones, SOLID
 ├── patterns.md            # Patrones de diseño inferidos + referencias a archivos
 ├── contracts.md           # APIs REST, queues, eventos, webhooks, servicios externos
+├── business-rules.md      # Invariantes de negocio que cruzan dominios
+├── dependencies.md        # Grafo de dependencias entre dominios
 ├── domains/               # Un .md por bounded context significativo
 │   └── <domain>.md
 ├── decisions/             # ADRs-lite: decisiones con contexto y alternativas

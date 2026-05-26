@@ -302,10 +302,20 @@ Usar los templates en `templates/`. Escribir en este orden:
 2. `ops.md` — comandos operativos reales extraídos en el Paso 3.5
 3. `patterns.md`
 4. `contracts.md`
-5. `domains/<name>.md` — solo dominios con > 3 archivos significativos
-6. `decisions/NNN-slug.md` — solo los que tienen evidencia del Paso 6
-7. `risks.md` — incluir top-5 archivos > 300 líneas como deuda potencial
-8. `NAVIGATOR.md` — al final, con el índice de lo que se generó
+5. `business-rules.md` — usar el template `templates/business-rules.tmpl.md`. Si no se detectan invariantes de negocio en bootstrap, crearlo con el encabezado mínimo:
+   ```
+   # Business Rules
+   <!-- Invariantes de negocio que cruzan dominios. -->
+   ```
+6. `dependencies.md` — usar el template `templates/dependencies.tmpl.md`. Si no se detectan dependencias entre dominios en bootstrap, crearlo con el encabezado mínimo:
+   ```
+   # Dependencies
+   <!-- Grafo de dependencias entre dominios. -->
+   ```
+7. `domains/<name>.md` — solo dominios con > 3 archivos significativos
+8. `decisions/NNN-slug.md` — solo los que tienen evidencia del Paso 6
+9. `risks.md` — incluir top-5 archivos > 300 líneas como deuda potencial
+10. `NAVIGATOR.md` — al final, con el índice de lo que se generó
 
 Marcar `coverage: bootstrap` en NAVIGATOR.md.
 

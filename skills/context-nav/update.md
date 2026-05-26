@@ -19,6 +19,8 @@ A partir del diff de la implementación, mapear archivos cambiados a secciones d
 | Nuevas interfaces o estructuras con patron claro | `patterns.md` — agregar o actualizar entrada |
 | Decisión arquitectónica documentada en SPEC | `decisions/NNN-slug.md` — crear si no existe |
 | Archivos > 300 líneas introducidos | `risks.md` — agregar nota de deuda potencial |
+| Cambio que introduce, modifica o elimina una regla de negocio observable (validaciones de dominio, restricciones cross-entidad, reglas que aplican a múltiples dominios) | `business-rules.md` — sección de invariante afectada |
+| Nuevo dominio, o cambio en relaciones entre dominios (nuevo import cross-dominio, nueva dependencia de servicio, nueva FK entre bounded contexts) | `dependencies.md` — actualizar el grafo |
 | `Makefile`, `docker-compose.*`, `package.json` scripts, `scripts/` | `ops.md` — actualizar el target o comando que cambió |
 | `agents/*.md` | `domains/ai-system.md` — sección Agentes |
 | `skills/*/SKILL.md` | `domains/ai-system.md` — sección Skills |
