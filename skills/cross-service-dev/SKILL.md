@@ -17,7 +17,7 @@ cross-service-dev    = orchestrate × N repos (coordinado)
 
 ## Prerequisitos
 
-- `service-map.yaml` existe en `{service_map_path}` (resuelto por el orquestador según vault-setup path table)
+- `service-map.yaml` existe en `{service_map_path}` (archivo local en `.project-context/service-map.yaml` o el repo)
 - Los repos de servicios afectados están en disco (local_path debe resolver)
 - Si existe `service-map.local.yaml`, usarlo para overrides de rutas locales
 
@@ -57,12 +57,11 @@ Adicionalmente, el orquestador debe:
    - DELETE/DEPRECATE → la verificación transitiva es CRÍTICA
    - UPDATE con cambios de contrato → todos los consumidores están afectados
 
-4. El PM escribe **un** PRD:
-   - Obsidian/`.workspace/`: `{task_path}/prd.md`
-   - Linear+Outline: documento en Outline vinculado al issue de Linear
+4. El PM escribe **un** PRD local en `{task_path}/prd.md` (en `.project-context/` o el repo):
    - Debe listar TODOS los servicios en scope bajo Dependencias
    - Debe notar los servicios omitidos como pendientes
    - Debe especificar el tipo de operación
+   - Si el proyecto tiene `task_tool` configurado (campo de `.project-context/project.md`), al finalizar **indicar al humano** que vincule el PRD en esa herramienta — nunca ejecutar acciones en ella
 
 ### Fase 1.5 — Exploración de código por repo (N agentes explorer, OBLIGATORIO)
 
@@ -154,4 +153,4 @@ Un agente QA ve el diff combinado de todos los servicios. Foco en:
 3. Developer y Tester son por servicio — guiados por design.md consolidado
 4. NUNCA omitir silenciosamente servicios afectados
 5. El orden de eliminación es inverso al de creación — consumidores primero, productor último
-6. Todos los docs centralizados en `<docs>` — sin duplicación entre repos
+6. Todos los docs centralizados en `.project-context/` o el repo — sin duplicación entre repos

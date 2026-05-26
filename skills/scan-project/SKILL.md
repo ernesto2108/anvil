@@ -10,7 +10,7 @@ Descubrir la estructura REAL del repositorio y las herramientas utilizadas. NO a
 
 ## Paso 1: Objetivo del Producto
 
-Si el contexto del objetivo del producto está ausente o desactualizado en `{context_path}` (resolver desde `~/.claude/project-registry.md` — ver vault-setup path table), hacer estas preguntas primero:
+Si el contexto del objetivo del producto está ausente o desactualizado en `{context_path}` (siempre dentro de `.project-context/`), hacer estas preguntas primero:
 1. "What is the project objective in 3-6 lines?"
 2. "What non-negotiable rules must I always respect?"
 
@@ -59,9 +59,7 @@ Para TODOS los stacks:
 
 ## Paso 4: Escribir Salida
 
-Escribir ÚNICAMENTE en `{context_path}` (sobreescribir si existe). Resolver la ruta desde vault-setup path table:
-- Obsidian vault: `<docs>/01-project/context.md`
-- Linear+Outline o `.workspace/`: `.workspace/context.md`
+Escribir ÚNICAMENTE en `{context_path}` (sobreescribir si existe). La fuente de verdad es siempre `.project-context/` — no hay rutas alternativas según sistema de docs.
 Nunca eliminar secciones técnicas al agregar contexto del objetivo del producto; conservar ambas.
 
 Usar el template de `output-template.md` — incluir solo las secciones para los stacks detectados.

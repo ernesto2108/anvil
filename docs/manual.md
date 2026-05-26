@@ -85,7 +85,7 @@ Ask your AI: **"what skills do I have available?"** — the system lists them au
 
 Agents are specialized roles the AI can assume. They are invoked in two ways:
 
-### Method 1: Automatic (via orchestration)
+### Method 1: Guided (via `/orchestrate`)
 
 Tell your AI what you want to do and use `/orchestrate`:
 
@@ -94,7 +94,7 @@ I want to add a notifications endpoint to the backend.
 /orchestrate
 ```
 
-The orchestrator classifies task complexity and launches agents in order:
+The `/orchestrate` skill classifies task complexity and proposes agents in order. You confirm before anything runs:
 
 | Complexity | What happens |
 |------------|-------------|
@@ -104,10 +104,10 @@ The orchestrator classifies task complexity and launches agents in order:
 
 ### Method 2: Manual (invoke a specific agent)
 
-If you know exactly which agent you need, ask the AI to use it:
+You are the orchestrator — there is no automatic leader agent. Pick the agent that matches your task and invoke it directly:
 
 ```
-"Use the developer agent to implement the login"
+"Use the developer-backend agent to implement the login"
 "I need the dba agent to create the migration"
 "Launch the security agent to audit the code"
 ```
@@ -119,15 +119,17 @@ If you know exactly which agent you need, ask the AI to use it:
 | Write requirements | **pm** | "Write the PRD for the invitations feature" |
 | Design architecture | **architect** | "Design the notifications bounded context" |
 | Design UI/UX | **designer** | "Design the settings screen in Pencil" |
-| Write code | **developer** | "Implement the GET /users/:id endpoint" |
+| Write Go/backend code | **developer-backend** | "Implement the GET /users/:id endpoint" |
+| Write React/Astro/TS code | **developer-frontend** | "Implement the Workflows screen" |
+| Write Flutter/Dart code | **developer-mobile** | "Implement the notifications screen" |
 | Write tests | **tester** | "Write tests for the auth service" |
 | Create migrations | **dba** | "Create the migration to add the invitations table" |
 | CI/CD and infra | **devops** | "Create the Dockerfile and CI workflow" |
 | Review quality | **qa** | "Review the code from the last PR" |
 | Audit security | **security** | "Audit the JWT token handling" |
-| Scan project | **scanner** | "Scan the repo and generate context" |
+| Initialize or refresh project context | **context-init** | "Initialize the project context" |
 | Write docs | **tech-writer** | "Update the README with the new endpoints" |
-| Generate report | **reporter** | "Generate the session report" |
+| Generate report + update context | **reporter** | "Generate the session report" |
 
 ---
 
@@ -162,15 +164,15 @@ The AI:
 > /orchestrate
 ```
 
-The AI:
-1. Classifies as large (~13 pts)
-2. Launches **pm** → generates PRD
-3. Launches **architect** → designs contracts and bounded context
-4. Launches **designer** → designs screens
-5. Launches **developer** → implements backend and frontend
-6. Launches **tester** → writes tests
-7. Launches **qa** → reviews quality (blocks if score < 7)
-8. Launches **reporter** → generates session report
+You (as orchestrator):
+1. Classify as large (~13 pts)
+2. Invoke **pm** → generates PRD
+3. Invoke **architect** → designs contracts and bounded context
+4. Invoke **designer** → designs screens
+5. Invoke **developer-backend** and/or **developer-frontend** / **developer-mobile** → implements the relevant stacks
+6. Invoke **tester** → writes tests
+7. Invoke **qa** → reviews quality (blocks if score < 7)
+8. Invoke **reporter** → generates session report and updates `.project-context/`
 
 ### Infrastructure task
 
@@ -388,5 +390,6 @@ Anvil removes what it deployed and **restores original files** from the snapshot
 - **Use `/orchestrate` when you don't know where to start** — the system classifies and picks agents for you.
 - **Conventions stack** — if you load `/go-conventions` and then `/devops-conventions`, both apply.
 - **Agents have strict boundaries** — developer doesn't touch tests, tester doesn't touch production, dba doesn't touch business logic. This is by design.
-- **Scanner saves tokens** — run `scanner` at the start of a long session so other agents have context without reading every file.
+- **context-init saves tokens** — run `context-init` (mode: `init` or `regular`) at the start of a session so other agents have context without reading every file.
+- **Documenting is part of done** — after tests pass, invoke `reporter` to update `.project-context/`. This is as mandatory as the tests themselves.
 - **AGENTS.md is auto-generated** — don't edit it manually, it gets overwritten on every anvil deploy.

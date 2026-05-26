@@ -72,6 +72,7 @@ No te detengas en silencio.
 3. **Si `mode: init`** — crear estructura primero:
    - `mkdir -p <context_path>/domains <context_path>/decisions <context_path>/runs`
    - Crear los archivos base (`NAVIGATOR.md`, `project.md`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md`) con su encabezado mínimo.
+   - **Preguntar al humano por la herramienta de gestión** (una vez, solo en `init`): "**¿Usas alguna herramienta de gestión de tareas o documentación? (ej. Linear, Jira, Notion, GitHub Issues, Obsidian). Si usas varias, menciónalas todas. Si no usas ninguna, escribe 'ninguna'.**" Guardar la respuesta literal en el campo `task_tool` del frontmatter de `project.md` (formato libre — no enum; vacío o `ninguna` significa que no hay herramienta externa). Si el humano no responde, dejar `task_tool: ""` y continuar.
    - Luego continuar al escaneo y poblado (no te detengas con la estructura vacía — `init` deja `.project-context/` lista para usar).
 4. **Cargar la skill `scan-project`** — define la detección de stack, qué recopilar y el formato de salida.
 5. **Escanear el codebase** siguiendo la skill. En `init`/`deep`: escaneo completo + bootstrap de Context Navigator (cargar `skills/context-nav/bootstrap.md`, ejecutar inferencia de patrones, contratos, bounded contexts y SOLID). En `regular`: solo actualizar lo que cambió desde el último run (escaneo incremental liviano).

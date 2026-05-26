@@ -12,12 +12,12 @@ Prevenir cambios que rompan la compatibilidad entre microservicios verificando l
 ## Ubicación del Service Map
 
 ```
-{service_map_path}
+.project-context/service-map.yaml
 ```
 
-Resolver desde vault-setup path table. Obsidian: `<docs>/04-architecture/service-map.yaml`. `.workspace/` o Linear+Outline: `.workspace/service-map.yaml`.
+El service map vive siempre como archivo local en `.project-context/service-map.yaml` (o donde el repo lo tenga). Si no existe un service map, solicitar al usuario que cree uno usando la plantilla en `service-map-template.yaml`.
 
-Si no existe un service map, solicitar al usuario que cree uno usando la plantilla en `service-map-template.yaml`.
+Si el proyecto tiene `task_tool` configurado (campo de `.project-context/project.md`) y hay que registrar el análisis de impacto fuera del repo, **describir al humano** qué crear en su herramienta — nunca ejecutar acciones en ella.
 
 ## Flujo Pre-Cambio
 

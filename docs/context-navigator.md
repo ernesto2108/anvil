@@ -10,7 +10,7 @@ El resultado: el arquitecto redescubre lo que ya sabe, el developer re-infiere p
 
 ## Qué es el Context Navigator
 
-Un sistema de contexto **vivo, granular y acumulativo** que vive en `.context/` al lado de `.handoff/`. No reemplaza `context.md` del scanner — lo extiende. Mientras el scanner produce el snapshot técnico del repositorio, el Context Navigator captura el **conocimiento operativo** del sistema: qué patrones se usan y dónde, qué contratos existen, qué decisiones se tomaron y por qué.
+Un sistema de contexto **vivo, granular y acumulativo** que vive en `.project-context/` al lado de `.handoff/`. No reemplaza `context.md` del scanner — lo extiende. Mientras el scanner produce el snapshot técnico del repositorio, el Context Navigator captura el **conocimiento operativo** del sistema: qué patrones se usan y dónde, qué contratos existen, qué decisiones se tomaron y por qué.
 
 **Analogía:** el scanner es el mapa del territorio. El navigator es el cuaderno de bitácora del capitán — lo que aprendió navegando ese territorio.
 
@@ -19,11 +19,13 @@ Un sistema de contexto **vivo, granular y acumulativo** que vive en `.context/` 
 ## Estructura de archivos
 
 ```
-.context/
+.project-context/
 ├── NAVIGATOR.md           # Índice + cómo leer este sistema
 ├── project.md             # Visión, restricciones, stack, arquitectura general
 ├── patterns.md            # Patrones de diseño en uso con referencias a archivos
 ├── contracts.md           # APIs, queues, eventos, webhooks, servicios externos
+├── business-rules.md      # Invariantes de negocio que cruzan dominios
+├── dependencies.md        # Grafo de dependencias entre dominios con tabla de impacto
 ├── domains/               # Un archivo por bounded context / paquete clave
 │   └── <domain>.md
 ├── decisions/             # ADRs-lite: decisiones arquitectónicas con contexto
@@ -156,11 +158,11 @@ Usar claude CLI cuando está disponible; fallback a API key si no.
 
 ## Cómo se genera y actualiza
 
-### Modo Bootstrap — proyecto nuevo o sin `.context/`
+### Modo Bootstrap — proyecto nuevo o sin `.project-context/`
 
-Trigger: scanner no encuentra `.context/NAVIGATOR.md` o el usuario pide explícitamente.
+Trigger: scanner no encuentra `.project-context/NAVIGATOR.md` o el usuario pide explícitamente.
 
-**Agente responsable:** `scanner` en `mode: deep`
+**Agente responsable:** `context-init` en `mode: deep`
 
 Pasos:
 1. Detectar stack y árbol (ya lo hace)
@@ -169,7 +171,7 @@ Pasos:
 4. Grep por interfaces (Go) o abstract classes — inferir ISP/DIP
 5. Leer `go.mod` / `package.json` / etc. para dependencias externas
 6. Identificar bounded contexts por estructura de directorios (`internal/<domain>/`)
-7. Escribir todos los archivos de `.context/` desde templates
+7. Escribir todos los archivos de `.project-context/` desde templates
 8. Marcar `coverage: bootstrap` y `last_full_scan`
 
 Bootstrap produce contexto de calidad media-alta automáticamente. El arquitecto lo refina en el siguiente paso del pipeline.
@@ -178,7 +180,7 @@ Bootstrap produce contexto de calidad media-alta automáticamente. El arquitecto
 
 Trigger: al final de cada pipeline run, como último paso del reporter.
 
-**Agente responsable:** `reporter` con instrucción explícita de actualizar `.context/`
+**Agente responsable:** `reporter` con instrucción explícita de actualizar `.project-context/`
 
 El reporter recibe el diff de la implementación y actualiza **solo las secciones afectadas**:
 
@@ -211,10 +213,10 @@ Si diff > 7 días → sugerir al usuario correr scanner en mode: deep
 
 ### Paso 0.5 — Context load (nuevo)
 
-Antes del architect, el orquestador carga `.context/`:
+Antes del architect, el orquestador carga `.project-context/`:
 
 ```
-Contexto disponible en .context/:
+Contexto disponible en .project-context/:
 - project.md → inyectar completo (< 200 líneas)
 - patterns.md → inyectar completo
 - contracts.md → inyectar completo
@@ -228,7 +230,7 @@ El orquestador decide qué domains inyectar basándose en los archivos que la ta
 Antes del Context Navigator, el architect tenía que explorar el repo para entender el contexto. Ahora recibe inline:
 
 ```
-## Contexto del sistema (pre-cargado desde .context/)
+## Contexto del sistema (pre-cargado desde .project-context/)
 
 ### Patrones en uso
 [contenido de patterns.md]
@@ -246,13 +248,13 @@ Esto elimina el ciclo de exploración del architect y mejora la calidad de sus d
 
 Al final del pipeline, el reporter tiene dos responsabilidades:
 1. Su tarea actual: resumen de ejecución
-2. Nueva: delta a `.context/` basado en el diff de la implementación
+2. Nueva: delta a `.project-context/` basado en el diff de la implementación
 
 ---
 
 ## Integración con el modo directo (sin agentes)
 
-En modo directo (el usuario no pide pipeline), el orquestador lee `.context/` al inicio y lo inyecta en la conversación principal:
+En modo directo (el usuario no pide pipeline), el orquestador lee `.project-context/` al inicio y lo inyecta en la conversación principal:
 
 > "Contexto del sistema cargado: patrones en uso (Factory, Repository, Strategy), 3 endpoints REST, dominio memory activo. Puedes preguntar sobre cualquier sección."
 
@@ -289,12 +291,12 @@ Los templates tienen secciones marcadas con `<!-- TODO: detectar -->` que el sca
 ### Modificados
 | Archivo | Cambio |
 |---------|--------|
-| `skills/scan-project/SKILL.md` | Agregar Paso 5: generar `.context/` en modo deep |
+| `skills/scan-project/SKILL.md` | Agregar Paso 5: generar `.project-context/` en modo deep |
 | `skills/scan-project/guides/deep-scan.md` | Agregar sección de detección de patrones y contratos |
-| `agents/scanner.md` | Mencionar responsabilidad de bootstrap de `.context/` |
+| `agents/scanner.md` | Mencionar responsabilidad de bootstrap de `.project-context/` |
 | `skills/orchestrate/SKILL.md` | Agregar Paso 0.5 de context load antes del architect |
-| `agents/reporter.md` | Agregar responsabilidad de delta a `.context/` |
-| `docs/token-optimization.md` | Agregar regla: inyectar `.context/` vs explorar repo |
+| `agents/reporter.md` | Agregar responsabilidad de delta a `.project-context/` |
+| `docs/token-optimization.md` | Agregar regla: inyectar `.project-context/` vs explorar repo |
 
 ---
 
@@ -317,10 +319,10 @@ Ahorro estimado: **15-24K tokens por sesión** en proyectos con > 3 meses de his
 ### Fase 1 — Estructura base y bootstrap (Small, 3 pts)
 - Skill `context-nav/SKILL.md` con spec completa
 - Templates para todos los tipos de archivo
-- Actualizar `scan-project` para generar `.context/` en modo deep
+- Actualizar `scan-project` para generar `.project-context/` en modo deep
 
 ### Fase 2 — Integración con orquestador (Small, 2 pts)
-- Agregar Paso 0.5 en orchestrate: cargar y filtrar `.context/`
+- Agregar Paso 0.5 en orchestrate: cargar y filtrar `.project-context/`
 - Regla de staleness detection
 
 ### Fase 3 — Actualización incremental por reporter (Small, 2 pts)
@@ -328,16 +330,16 @@ Ahorro estimado: **15-24K tokens por sesión** en proyectos con > 3 meses de his
 - Guía `update.md` con reglas de qué sección actualizar según diff
 
 ### Fase 4 — Integración modo directo (Trivial, 1 pt)
-- Regla en CLAUDE.md: al inicio de sesión, si `.context/NAVIGATOR.md` existe → leerlo y mencionar cobertura
+- Regla en CLAUDE.md: al inicio de sesión, si `.project-context/NAVIGATOR.md` existe → leerlo y mencionar cobertura
 
 ---
 
 ## Preguntas abiertas antes de implementar
 
-1. **¿Dónde vive `.context/` en proyectos con vault de Obsidian?** — ¿Al lado del código o dentro del vault? Propuesta: siempre al lado del código (`.context/` en el repo), no en el vault — es contexto técnico, no documentación.
+1. **¿Dónde vive `.project-context/` en proyectos con vault de Obsidian?** — ¿Al lado del código o dentro del vault? Propuesta: siempre al lado del código (`.project-context/` en el repo), no en el vault — es contexto técnico, no documentación.
 
-2. **¿Se commitea `.context/` al repo?** — Propuesta: sí, en `.gitignore` no. Es conocimiento del equipo. El git history de `.context/` es trazabilidad de evolución del sistema.
+2. **¿Se commitea `.project-context/` al repo?** — Propuesta: sí, en `.gitignore` no. Es conocimiento del equipo. El git history de `.project-context/` es trazabilidad de evolución del sistema.
 
 3. **¿Qué pasa si el reporter falla o se salta?** — El sistema debe ser resiliente a updates perdidos. La staleness detection cubre esto — si el código cambió pero el context no, se marca STALE.
 
-4. **¿Context Navigator para anvil-dashboard también?** — Propuesta: sí, mismo sistema, `.context/` en cada repo. El cross-service skill ya sabe de múltiples repos.
+4. **¿Context Navigator para anvil-dashboard también?** — Propuesta: sí, mismo sistema, `.project-context/` en cada repo. El cross-service skill ya sabe de múltiples repos.

@@ -116,23 +116,27 @@ Each agent is a markdown file with YAML frontmatter defining its role, permissio
 | **pm** | Requirements, PRDs, backlog, sprint planning | write | high |
 | **architect** | System design, API contracts, ADRs | write | high |
 | **designer** | UX/UI design, design system, user flows | write | high |
-| **developer** | Production code (Go, React, Flutter, Astro, Python, TypeScript, Rust) | execute | medium |
+| **developer-backend** | Production code — Go (APIs, services, workers) | execute | medium |
+| **developer-frontend** | Production code — React/TypeScript/Astro | execute | medium |
+| **developer-mobile** | Production code — Flutter/Dart | execute | medium |
 | **tester** | Test files across all stacks | execute | medium |
 | **dba** | Migrations, schema design, query optimization | execute | medium |
 | **devops** | CI/CD, Docker, Terraform, K8s, cloud infra | execute | medium |
 | **qa** | Code review, quality gate (blocks if score < 7) | execute | medium |
 | **security** | SAST, SCA, secrets audit, auth review | execute | medium |
-| **scanner** | Repository scanning, project context generation | execute | medium |
+| **context-init** | Project context initialization and refresh (3 modes: init, deep, regular) | execute | medium |
 | **tech-writer** | Documentation, README, API docs, changelogs | write | medium |
-| **reporter** | Session execution reports | execute | low |
+| **reporter** | Session execution reports + `.project-context/` delta updates | execute | low |
 | **mkt-content** | Content marketing, copywriting, visual assets | execute | high |
 
 ### How agents work
 
-- The orchestrator (you or `/orchestrate`) triages task complexity
-- **Trivial** tasks: execute directly, no agents
-- **Medium+**: agents run in sequence with gates between phases
-- Each agent has strict boundaries — developer can't touch tests, tester can't touch production code
+- **You are the orchestrator.** There is no automatic leader agent — you decide which agent to invoke based on the task.
+- **Trivial** tasks: execute directly, no agents needed
+- **Medium+**: invoke agents in sequence, respecting gates between phases
+- Each agent has strict boundaries — developer-backend can't touch tests, tester can't touch production code
+- Choose the right developer agent for the stack: `developer-backend` for Go, `developer-frontend` for React/TypeScript/Astro, `developer-mobile` for Flutter/Dart
+- **Documenting is part of done**: after tests pass on any task or bug fix, invoke `reporter` to update `.project-context/`
 
 ### Permissions
 

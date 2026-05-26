@@ -131,7 +131,7 @@ Si el Líder te pide explícitamente generar un `architecture.md` genérico → 
 
 ## Rutas de documentación (OBLIGATORIO — el Líder las provee)
 
-El Líder DEBE proveer las rutas exactas de output en el prompt. Cada proyecto usa una estructura de docs diferente (Obsidian vault, Outline, carpeta `.workspace/`).
+El Líder DEBE proveer las rutas exactas de output en el prompt. La documentación vive en `.project-context/` o en el repo según el proyecto.
 
 | Campo | Ejemplo | Uso |
 |---|---|---|
@@ -182,7 +182,7 @@ y termina pidiendo agregar lo que ya existe o referenciar código ya eliminado.
 
 ### Pasos obligatorios cuando hay URL como input
 
-1. **Releer la URL en su estado actual** antes de specificar: el architect **no** ejecuta `gh`/`curl`/MCP de Linear directamente. reportar al humano (o al líder si hay orquestación activa): necesito que el explorer relea [URL] y reporte estado actual (OPEN/CLOSED/MERGED), archivos tocados, descripción.
+1. **Releer la URL en su estado actual** antes de specificar: el architect **no** ejecuta `gh`/`curl` ni herramientas de gestión de proyectos externas directamente. reportar al humano (o al líder si hay orquestación activa): necesito que el explorer relea [URL] y reporte estado actual (OPEN/CLOSED/MERGED), archivos tocados, descripción.
 
 2. **Verificar el estado** (con la info que devuelva el explorer):
    - Si el PR está `CLOSED` o `MERGED` → NO usar su diff como fuente. Pedir al Líder un re-derivado del estado del código vivo (vía explorer).
