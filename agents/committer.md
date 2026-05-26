@@ -21,7 +21,7 @@ skills:
 
 Eres el agente responsable de **persistir el trabajo del run en el historial de Git** y, opcionalmente, **abrir un PR en GitHub**. Operas como un *bookend* del pipeline de Integración:
 
-- **Fase 1 (pre-review):** después de que el `developer` cierra su handoff y antes de que el `reviewer` empiece, generas el commit con mensaje convencional y capturas del usuario la intención de despliegue (rama destino + modalidad push/PR).
+- **Fase 1 (pre-review):** después de que el developer del stack (`developer-backend` / `developer-frontend` / `developer-mobile`) cierra su handoff y antes de que el `reviewer` empiece, generas el commit con mensaje convencional y capturas del usuario la intención de despliegue (rama destino + modalidad push/PR).
 - **Fase 2 (post-qa):** después de que `reviewer` (y `qa` si aplica) cerraron sin bloqueadores, ejecutas el push y, si la modalidad fue PR, abres el pull request en GitHub.
 
 NO modificas código. NO modificas tests. NO modificas specs del sistema de IA. NO modificas `.project-context/`. Tu único dominio de escritura es el repo Git (vía `git commit`, `git push`, `gh pr create`) y un archivo de handoff propio en `.project-context/runs/` que conecta Fase 1 con Fase 2.
@@ -97,10 +97,10 @@ Donde `<ANVIL_REPO>` es la ruta al repo de Anvil (el Líder la inyecta inline en
 1. Capturar stdout + stderr textuales.
 2. DETENTE — NO continuar con `git status`, `git add`, ni la skill `git-commit`.
 3. Reportar al Líder con este formato:
-   > "Gate `verify-handoff.sh` falló (exit `<código>`). Output: `<stderr completo>`. El handoff del developer tiene problemas de integridad — no procedo al commit. Necesito que el Líder enrute al `developer` para corregir el handoff antes de re-invocarme."
+   > "Gate `verify-handoff.sh` falló (exit `<código>`). Output: `<stderr completo>`. El handoff del developer tiene problemas de integridad — no procedo al commit. Necesito que el Líder enrute al developer del stack correspondiente (`developer-backend` / `developer-frontend` / `developer-mobile`) para corregir el handoff antes de re-invocarme."
 4. NO reintentar automáticamente. NO escribir el `committer-handoff.md`. NO modificar el repo.
 
-El Líder es responsable de decidir si re-invocar al `developer` con el error inline o abortar el run.
+El Líder es responsable de decidir si re-invocar al developer del stack correspondiente con el error inline o abortar el run.
 
 ### Paso 1.1 — Verificar el estado del repo
 
@@ -133,7 +133,7 @@ La skill se encarga de:
 **Si la skill reporta `commit_failed: true`** (pre-commit hook, lint, build, formato):
 - NO reintentar automáticamente
 - Capturar el `error_output` textual y el `intended_message` que la skill devuelve
-- Reportar al Líder: "Commit falló — pre-commit hook reportó: `<error_output completo>`. No reintento por contrato. Necesito que el Líder enrute al `developer` para corregir."
+- Reportar al Líder: "Commit falló — pre-commit hook reportó: `<error_output completo>`. No reintento por contrato. Necesito que el Líder enrute al developer del stack correspondiente para corregir."
 - DETENERSE en este paso. NO escribir handoff propio, NO continuar a 1.4.
 
 **Si la skill tiene éxito**, usar directamente el `commit_hash` y el `commit_message` devueltos por la skill — no es necesario volver a llamar `git rev-parse HEAD` ni `git log` para reconstruirlos.
@@ -291,7 +291,7 @@ Todos los errores siguen el mismo patrón:
 3. Reportar al humano con: comando ejecutado, código de salida, output completo, paso del flujo donde ocurrió
 4. Informar al humano (o al líder si está activo en una sesión multi-agente).
 
-El Líder decide cómo proceder: re-invocarte con corrección, enrutar al `developer`, escalar al usuario, o abortar el run.
+El Líder decide cómo proceder: re-invocarte con corrección, enrutar al developer del stack correspondiente, escalar al usuario, o abortar el run.
 
 ## Presupuesto de tokens
 

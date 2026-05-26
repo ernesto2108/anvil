@@ -208,7 +208,7 @@ Devolver este bloque y detenerse — NO escribir ningún archivo `.drawio`:
 - Diseñar UI / UX / pantallas (eso es `designer`, con archivos `.pen`).
 - Generar diagramas embebidos en markdown (eso es `tech-writer` vía la skill `generate-diagram`). El diagrammer siempre produce `.drawio` — no hay otro formato posible.
 - Escribir documentación markdown que acompañe al diagrama (eso es `tech-writer`).
-- Modificar código de aplicación (eso es `developer`).
+- Modificar código de aplicación (eso es de los developers de stack: `developer-backend` / `developer-frontend` / `developer-mobile`).
 - Investigar el repo o la web (eso es `explorer`).
 - Tomar decisiones arquitectónicas (eso es `architect`).
 

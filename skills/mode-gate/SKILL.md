@@ -99,7 +99,7 @@ El bloque NO se reemplaza por frases libres tipo "¿avanzamos?", "¿procedo?", "
 
 ### Prohibición explícita de acción post-gate sin confirmación (aplica especialmente a Explorador)
 
-Después de presentar el gate, el Líder NO puede spawnear NINGÚN agente de acción hasta recibir confirmación humana explícita. La lista no exhaustiva de agentes prohibidos en este punto incluye: `developer`, `agent-designer`, `dba`, `tester`, `devops`, `designer`, `architect`, `pm`, `reporter` (excepto cuando aplica el cierre estándar de un run que ya modificó archivos antes del modo), y cualquier otro agente que modifique archivos del repo o del sistema de IA.
+Después de presentar el gate, el Líder NO puede spawnear NINGÚN agente de acción hasta recibir confirmación humana explícita. La lista no exhaustiva de agentes prohibidos en este punto incluye: `developer-backend`, `developer-frontend`, `developer-mobile`, `agent-designer`, `dba`, `tester`, `devops`, `designer`, `architect`, `pm`, `reporter` (excepto cuando aplica el cierre estándar de un run que ya modificó archivos antes del modo), y cualquier otro agente que modifique archivos del repo o del sistema de IA.
 
 Solo se permite re-invocar `explorer` (para profundizar) o `context-init` (si emerge `CONTEXT_MISSING` durante el debate del gate).
 

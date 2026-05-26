@@ -94,9 +94,9 @@ Lee las propiedades del componente, variantes y configuraciones de auto-layout
 | Space between | `justify-content: space-between` |
 | Alineación centrada | `align-items: center` |
 
-## Paso 4: Delegar al agente developer
+## Paso 4: Delegar al developer del stack
 
-El agente `developer` es el ÚNICO agente autorizado a escribir código de producción. Después de los pasos 1-3, lanza el agente developer con:
+Los developers de stack (`developer-frontend` para web React/TypeScript/Astro, `developer-mobile` para Flutter/Dart) son los ÚNICOS autorizados a escribir código de producción. Después de los pasos 1-3, lanza el developer del stack objetivo con:
 
 1. **Token diff** — variables CSS nuevas/modificadas para agregar
 2. **Component map** — qué componentes crear/actualizar, mapeados desde las secciones del diseño
@@ -105,7 +105,7 @@ El agente `developer` es el ÚNICO agente autorizado a escribir código de produ
 
 Incluye este contexto INLINE en el prompt del agente (nunca le digas al agente "lee el archivo X").
 
-Reglas para el developer:
+Reglas para el developer del stack:
 - **Usa CSS custom properties**, nunca valores codificados
 - **Usa los mismos nombres semánticos** que los tokens de diseño
 - **Si un token de diseño no tiene equivalente CSS**, agrégalo primero al archivo CSS

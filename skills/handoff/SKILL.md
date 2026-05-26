@@ -42,7 +42,7 @@ Actualizar incrementalmente — no reescribir todo el archivo, agregar o actuali
 - Registrar decisiones en "Decisiones tomadas" en el momento que las tomas (no al final)
 - Actualizar "Siguiente paso" para reflejar dónde retomar si la sesión se corta
 
-**Anti-patrón:** dejar el handoff vacío hasta el cierre y volcar todo en los últimos minutos. Ver `agents/developer.md` § Checkpoint protocol para los tres momentos exactos donde se actualiza.
+**Anti-patrón:** dejar el handoff vacío hasta el cierre y volcar todo en los últimos minutos. Ver el agente del stack correspondiente (`agents/developer-backend.md`, `agents/developer-frontend.md` o `agents/developer-mobile.md`) § "Output de cierre" para los momentos en que se actualiza el handoff.
 
 El gate `scripts/verify-handoff.sh` (invocado por el orquestador después del developer) detecta handoffs incompletos y rebota la tarea — actualizar al final ya no es viable.
 

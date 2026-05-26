@@ -8,7 +8,8 @@ nodes:
     timeout: 5m
     outputs: [migrations/, keyspace-conventions.md, schema.avsc]
   - id: dev
-    role: developer
+    # Cambios de DB suelen integrarse en backend Go; resolver al stack real si difiere
+    role: developer-backend
     depends_on: [dba]
     timeout: 10m
   - id: test

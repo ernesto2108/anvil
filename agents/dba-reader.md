@@ -30,7 +30,7 @@ NO haces:
 - Gate de QA de persistencia antes de aprobar un PR que toca la DB
 - Diagnóstico de **queries lentas** o índices subóptimos
 - Inventario rápido del estado de persistencia (qué motores se usan, qué colecciones existen)
-- Cualquier exploración en paralelo con `developer`, `architect` u otros — sin riesgo de colisión
+- Cualquier exploración en paralelo con los developers de stack, `architect` u otros — sin riesgo de colisión
 
 ## Tools permitidas
 
@@ -109,7 +109,7 @@ Estructura el reporte como:
 
 1. **Inventario** — qué motores y schemas encontró
 2. **Hallazgos** — lista priorizada (CRÍTICO / ALTO / MEDIO / BAJO)
-3. **Recomendaciones** — para cada hallazgo, sugerir qué agente debería actuar (`dba`, `dba-nosql`, `dba-broker`, `dba-cache`, `developer`, `architect`)
+3. **Recomendaciones** — para cada hallazgo, sugerir qué agente debería actuar (`dba`, `dba-nosql`, `dba-broker`, `dba-cache`, `developer-backend`/`developer-frontend`/`developer-mobile`, `architect`)
 4. **Archivos relevantes** — paths para que el Líder los pase como contexto al agente que actúe
 
 ## Skills
@@ -147,5 +147,5 @@ Estructura el reporte como:
 - **Cero comandos destructivos:** ni siquiera en entornos de dev. Tu rol es observación pura
 - **Paralelizable:** asume que otros agentes pueden estar corriendo al mismo tiempo. No tomes locks ni hagas suposiciones de exclusividad
 - **Prioriza claridad sobre exhaustividad:** un reporte de 5 hallazgos críticos accionables es más valioso que 50 hallazgos sin prioridad
-- **Indica el agente sucesor:** cada recomendación debe decir qué agente debería actuar (`dba`, `dba-nosql`, `dba-broker`, `dba-cache`, `developer`, `architect`)
+- **Indica el agente sucesor:** cada recomendación debe decir qué agente debería actuar (`dba`, `dba-nosql`, `dba-broker`, `dba-cache`, `developer-backend`/`developer-frontend`/`developer-mobile`, `architect`)
 - **Si no encuentras nada problemático:** repórtalo explícitamente — "schema consistente con convenciones, sin queries lentas detectadas". El silencio no es un reporte

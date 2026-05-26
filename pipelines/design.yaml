@@ -12,7 +12,8 @@ nodes:
     timeout: 5m
     outputs: [architecture.md, spec.md]
   - id: dev
-    role: developer
+    # Pipeline UI/UX → developer-frontend por defecto; usar developer-mobile si el target es Flutter
+    role: developer-frontend
     depends_on: [arch]
     timeout: 10m
   - id: test

@@ -1,7 +1,8 @@
 # Bug fix — dev + tester + qa review
 nodes:
   - id: dev
-    role: developer
+    # Resolver al developer del stack de la tarea: developer-backend | developer-frontend | developer-mobile
+    role: developer-backend
     timeout: 10m
   - id: test
     role: tester

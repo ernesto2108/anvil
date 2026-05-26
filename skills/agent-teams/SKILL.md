@@ -44,7 +44,9 @@ El mecanismo por defecto sigue siendo: sub-agente termina → output al Líder �
 2. El emisor produce un artefacto **que el receptor necesita para arrancar su propio trabajo en paralelo**, no al final del pipeline.
 3. Esperar al Líder introduce latencia evitable sin ganancia (el Líder no necesita ver el artefacto intermedio para decidir nada).
 
-### Caso canónico — `explorer` → `developer` en paralelo
+### Caso canónico — `explorer` → developer del stack en paralelo
+
+(En este ejemplo, `developer` denota el developer del stack relevante: `developer-backend`, `developer-frontend` o `developer-mobile`.)
 
 Escenario: Modo Integración para un bug fix donde la causa raíz no está clara. El Líder spawnea `explorer` y `developer` **en el mismo team** (`team_name = "fix-<slug>"`). El `developer` arranca con el SPEC base pero queda esperando los hallazgos del `explorer` para tocar el archivo correcto.
 
