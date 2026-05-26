@@ -2,13 +2,15 @@
 
 ## Como funciona
 
-El sistema actua como orquestador. Cuando recibe una tarea:
+**El humano es el orquestador.** No existe un agente lider automatico que invoque a los demas. Eres tu quien decide que agente usar segun la tarea, propone el pipeline, y confirma cada paso.
 
-1. **Triagea** la complejidad (Trivial/Small/Medium/Complex)
-2. **Propone** que agentes correr
-3. **Confirma** con el usuario (si es Complex+)
-4. **Ejecuta** el pipeline en orden
-5. **Respeta gates** — si uno falla, para
+Como orquestador, tu flujo es:
+
+1. **Triagear** la complejidad de la tarea (Trivial/Small/Medium/Complex)
+2. **Proponer** que agentes correr y en que orden
+3. **Confirmar** el plan (si la tarea es Complex+)
+4. **Invocar** cada agente en secuencia
+5. **Respetar gates** — si uno falla, parar
 
 ## Step 0 — Triage (SIEMPRE PRIMERO)
 
@@ -67,7 +69,7 @@ El orquestador se hace estas preguntas internamente (no al usuario):
 | Toca schema de DB? | Agregar dba |
 | Toca infra/CI? | Agregar devops |
 | Toca auth o datos sensibles? | Agregar security |
-| Falta context.md o esta viejo? | Agregar scanner |
+| Falta context.md o esta viejo? | Invocar context-init |
 | El alcance no esta claro? | Empezar con pm |
 
 ## Reglas de skip
@@ -76,7 +78,7 @@ No todos los agentes corren siempre:
 
 | Agente | Saltar cuando |
 |--------|--------------|
-| scanner | context.md existe y se actualizo en esta sesion |
+| context-init | .project-context/ existe y se actualizo en esta sesion |
 | pm | requirements ya son claros y especificos |
 | designer | no hay cambios de UI |
 | architect | no hay decisiones de diseno (patron ya existe) |
@@ -146,7 +148,7 @@ Cada agente recibe SOLO lo que necesita:
 | Agente | Recibe | NO recibe |
 |--------|--------|-----------|
 | pm | vault path, request del usuario | codigo, diffs |
-| scanner | root del proyecto | tareas |
+| context-init | root del proyecto | tareas |
 | designer | prd.md, context.md | codigo, reportes |
 | architect | prd.md, ui-spec.md, context.md | codigo, reportes |
 | developer | prd.md, design.md, ui-spec.md, skill | reportes QA/security |

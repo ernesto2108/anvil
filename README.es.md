@@ -116,23 +116,27 @@ Cada agente es un archivo markdown con frontmatter YAML que define su rol, permi
 | **pm** | Requisitos, PRDs, backlog, planificacion de sprints | write | high |
 | **architect** | Diseno de sistema, contratos API, ADRs | write | high |
 | **designer** | Diseno UX/UI, design system, flujos de usuario | write | high |
-| **developer** | Codigo de produccion (Go, React, Flutter, Astro, Python, TypeScript, Rust) | execute | medium |
+| **developer-backend** | Codigo de produccion — Go (APIs, servicios, workers) | execute | medium |
+| **developer-frontend** | Codigo de produccion — React/TypeScript/Astro | execute | medium |
+| **developer-mobile** | Codigo de produccion — Flutter/Dart | execute | medium |
 | **tester** | Archivos de test en todos los stacks | execute | medium |
 | **dba** | Migraciones, diseno de schema, optimizacion de queries | execute | medium |
 | **devops** | CI/CD, Docker, Terraform, K8s, infra cloud | execute | medium |
 | **qa** | Code review, quality gate (bloquea si score < 7) | execute | medium |
 | **security** | SAST, SCA, auditoria de secretos, revision de auth | execute | medium |
-| **scanner** | Escaneo de repositorio, generacion de contexto | execute | medium |
+| **context-init** | Inicializacion y refresco del contexto del proyecto (3 modos: init, deep, regular) | execute | medium |
 | **tech-writer** | Documentacion, README, API docs, changelogs | write | medium |
-| **reporter** | Reportes de ejecucion de sesion | execute | low |
+| **reporter** | Reportes de ejecucion de sesion + actualizaciones delta de `.project-context/` | execute | low |
 | **mkt-content** | Marketing de contenido, copywriting, assets visuales | execute | high |
 
 ### Como funcionan los agentes
 
-- El orquestador (tu o `/orchestrate`) clasifica la complejidad de la tarea
+- **Tu eres el orquestador.** No existe un agente lider automatico — tu decides que agente invocar segun la tarea.
 - **Trivial**: se ejecuta directo, sin agentes
 - **Medium+**: los agentes corren en secuencia con gates entre fases
-- Cada agente tiene limites estrictos — developer no toca tests, tester no toca codigo de produccion
+- Cada agente tiene limites estrictos — developer-backend no toca tests, tester no toca codigo de produccion
+- Elige el agente developer correcto segun el stack: `developer-backend` para Go, `developer-frontend` para React/TypeScript/Astro, `developer-mobile` para Flutter/Dart
+- **Documentar es parte del done**: despues de que los tests pasen en cualquier tarea o bug fix, invoca `reporter` para actualizar `.project-context/`
 
 ### Permisos
 

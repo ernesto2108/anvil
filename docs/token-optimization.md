@@ -51,22 +51,22 @@ Las convention skills son grandes (go-conventions = 5,900 lineas). Los agentes N
 
 Ver `docs/convention-routing.md` para la guia completa con ejemplos de prompts.
 
-### 5. Skip scanner si context.md es reciente
+### 5. Skip context-init si .project-context/ es reciente
 
-Si `context.md` se actualizo en la misma sesion, no correr scanner de nuevo. Ahorra ~5000 tokens.
+Si `.project-context/NAVIGATOR.md` se actualizo en la misma sesion, no correr `context-init` de nuevo. Ahorra ~5000 tokens.
 
-### 13. Inyectar `.context/` en vez de explorar el repo
+### 13. Inyectar `.project-context/` en vez de explorar el repo
 
-Si `.context/NAVIGATOR.md` existe y tiene menos de 3 dias, inyectar los archivos relevantes inline en vez de dejar que el agente explore el repo:
+Si `.project-context/NAVIGATOR.md` existe y tiene menos de 3 dias, inyectar los archivos relevantes inline en vez de dejar que el agente explore el repo:
 
 | Escenario | Sin Context Navigator | Con Context Navigator |
 |---|---|---|
 | Architect explorando un dominio | ~8K tokens en reads | ~2K inyectado inline |
 | Developer infiriendo patrones existentes | ~5K en greps | 0 — patrones en `patterns.md` |
 | Orquestador eligiendo convention files | ~3K buscando | 0 — stack en `project.md` |
-| Scanner re-descubriendo contratos | ~10K cada sesion | 0 si < 3 dias |
+| context-init re-descubriendo contratos | ~10K cada sesion | 0 si < 3 dias |
 
-Regla: antes de decirle a un agente "lee `internal/X/`", verificar si ese dominio existe en `.context/domains/X.md`. Si existe y esta fresco, inyectar ese archivo en lugar del codigo fuente.
+Regla: antes de decirle a un agente "lee `internal/X/`", verificar si ese dominio existe en `.project-context/domains/X.md`. Si existe y esta fresco, inyectar ese archivo en lugar del codigo fuente.
 
 ### 6. Reporter solo en Maximum
 

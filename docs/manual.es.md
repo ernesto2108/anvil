@@ -85,7 +85,7 @@ Preguntale a tu IA: **"que skills tengo disponibles?"** — el sistema las lista
 
 Los agentes son roles especializados que la IA puede asumir. Se invocan de dos formas:
 
-### Forma 1: Automatica (via orquestacion)
+### Forma 1: Guiada (via `/orchestrate`)
 
 Dile a tu IA que quieres hacer y usa `/orchestrate`:
 
@@ -94,7 +94,7 @@ Quiero agregar un endpoint de notificaciones al backend.
 /orchestrate
 ```
 
-El orquestador clasifica la tarea por complejidad y lanza los agentes necesarios en orden:
+La skill `/orchestrate` clasifica la tarea por complejidad y propone los agentes en orden. Tu confirmas antes de que se ejecute algo:
 
 | Complejidad | Que pasa |
 |-------------|----------|
@@ -104,10 +104,10 @@ El orquestador clasifica la tarea por complejidad y lanza los agentes necesarios
 
 ### Forma 2: Manual (invocas un agente especifico)
 
-Si sabes exactamente que agente necesitas, pidele a la IA que lo use:
+Tu eres el orquestador — no existe un agente lider automatico. Elige el agente que corresponde a tu tarea e invocalo directamente:
 
 ```
-"Usa el agente developer para implementar el login"
+"Usa el agente developer-backend para implementar el login"
 "Necesito al agente dba para crear la migracion"
 "Lanza el agente security para auditar el codigo"
 ```
@@ -119,15 +119,17 @@ Si sabes exactamente que agente necesitas, pidele a la IA que lo use:
 | Escribir requisitos | **pm** | "Escribe el PRD para la feature de invitaciones" |
 | Disenar arquitectura | **architect** | "Disena el bounded context de notificaciones" |
 | Disenar UI/UX | **designer** | "Disena la pantalla de configuracion en Pencil" |
-| Escribir codigo | **developer** | "Implementa el endpoint GET /users/:id" |
+| Escribir codigo Go/backend | **developer-backend** | "Implementa el endpoint GET /users/:id" |
+| Escribir codigo React/Astro/TS | **developer-frontend** | "Implementa la pantalla de Workflows" |
+| Escribir codigo Flutter/Dart | **developer-mobile** | "Implementa la pantalla de notificaciones" |
 | Escribir tests | **tester** | "Escribe tests para el servicio de autenticacion" |
 | Crear migraciones | **dba** | "Crea la migracion para agregar la tabla invitations" |
 | CI/CD e infra | **devops** | "Crea el Dockerfile y el workflow de CI" |
 | Revisar calidad | **qa** | "Revisa el codigo del ultimo PR" |
 | Auditar seguridad | **security** | "Audita el manejo de tokens JWT" |
-| Escanear proyecto | **scanner** | "Escanea el repo y genera contexto" |
+| Inicializar o refrescar contexto del proyecto | **context-init** | "Inicializa el contexto del proyecto" |
 | Escribir docs | **tech-writer** | "Actualiza el README con los nuevos endpoints" |
-| Generar reporte | **reporter** | "Genera el reporte de esta sesion" |
+| Generar reporte + actualizar contexto | **reporter** | "Genera el reporte de esta sesion" |
 
 ---
 
@@ -162,15 +164,15 @@ La IA:
 > /orchestrate
 ```
 
-La IA:
-1. Clasifica como alta (~13 pts)
-2. Lanza **pm** → genera PRD
-3. Lanza **architect** → disena contratos y bounded context
-4. Lanza **designer** → disena pantallas
-5. Lanza **developer** → implementa backend y frontend
-6. Lanza **tester** → escribe tests
-7. Lanza **qa** → revisa calidad (bloquea si score < 7)
-8. Lanza **reporter** → genera reporte de sesion
+Tu (como orquestador):
+1. Clasificas como alta (~13 pts)
+2. Invocas **pm** → genera PRD
+3. Invocas **architect** → disena contratos y bounded context
+4. Invocas **designer** → disena pantallas
+5. Invocas **developer-backend** y/o **developer-frontend** / **developer-mobile** → implementa los stacks necesarios
+6. Invocas **tester** → escribe tests
+7. Invocas **qa** → revisa calidad (bloquea si score < 7)
+8. Invocas **reporter** → genera reporte de sesion y actualiza `.project-context/`
 
 ### Tarea de infraestructura
 
@@ -403,5 +405,6 @@ Si no habia snapshot (instalacion limpia), simplemente borra los archivos de Anv
 - **Usa `/orchestrate` cuando no sepas por donde empezar** — el sistema clasifica y elige los agentes por ti.
 - **Las convenciones se acumulan** — si cargas `/go-conventions` y despues `/devops-conventions`, ambas aplican.
 - **Los agentes tienen limites estrictos** — developer no toca tests, tester no toca produccion, dba no toca logica de negocio. Esto es por diseno.
-- **El scanner ahorra tokens** — ejecuta `scanner` al inicio de una sesion larga para que los demas agentes tengan contexto sin leer cada archivo.
+- **context-init ahorra tokens** — ejecuta `context-init` (modo: `init` o `regular`) al inicio de una sesion para que los demas agentes tengan contexto sin leer cada archivo.
+- **Documentar es parte del done** — despues de que los tests pasen, invoca `reporter` para actualizar `.project-context/`. Es tan obligatorio como los tests.
 - **AGENTS.md se genera automaticamente** — no lo edites a mano, se sobreescribe en cada deploy.
