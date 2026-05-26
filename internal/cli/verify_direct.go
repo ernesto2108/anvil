@@ -39,7 +39,7 @@ var verifyStackByExt = map[string]string{
 // exit_code 0, count as a successful lint run for that stack.
 var verifyLintPatterns = map[string][]string{
 	"go":   {"golangci-lint run", "go vet"},
-	"ts":   {"eslint", "tsc --noEmit", "biome lint", "biome check"},
+	"ts":   {"eslint", "tsc --noEmit", "biome lint", "biome check", "pnpm lint", "npm run lint", "yarn lint", "bun lint"},
 	"dart": {"dart analyze", "flutter analyze"},
 	"rs":   {"cargo clippy", "cargo check"},
 	"py":   {"ruff check", "mypy", "pylint", "flake8"},

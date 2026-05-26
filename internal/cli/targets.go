@@ -32,7 +32,7 @@ func cmdTargets(cfg *config.App, args []string) {
 		return
 	}
 
-	mode := "set"
+	var mode string
 	var tools []string
 
 	switch args[0] {
@@ -77,15 +77,21 @@ func cmdTargets(cfg *config.App, args []string) {
 	switch mode {
 	case "add":
 		for _, t := range tools {
-			cfg.SetTargetEnabled(t, true)
+			if err := cfg.SetTargetEnabled(t, true); err != nil {
+				output.Warn("set target %s: %s", t, err)
+			}
 		}
 	case "rm":
 		for _, t := range tools {
-			cfg.SetTargetEnabled(t, false)
+			if err := cfg.SetTargetEnabled(t, false); err != nil {
+				output.Warn("set target %s: %s", t, err)
+			}
 		}
 	case "set":
 		for _, t := range allTargets {
-			cfg.SetTargetEnabled(t, requested[t])
+			if err := cfg.SetTargetEnabled(t, requested[t]); err != nil {
+				output.Warn("set target %s: %s", t, err)
+			}
 		}
 	}
 

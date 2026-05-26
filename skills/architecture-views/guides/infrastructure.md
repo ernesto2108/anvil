@@ -1,4 +1,4 @@
-# Template: architecture-infra.md
+# Template: ard-infrastructure.md
 
 Inspirado en: AWS Well-Architected + bflorat Infrastructure View.
 
@@ -44,7 +44,7 @@ graph LR
 
 ## Variables de entorno y secretos
 
-<!-- Usar los nombres estándar definidos en architecture-backend.md §Variables de entorno. -->
+<!-- Usar los nombres estándar definidos en ard-backend.md §Variables de entorno. -->
 <!-- Esta tabla es el contrato de deploy — lo que ops necesita configurar por entorno. -->
 
 | Variable | Tipo | Descripción | Requerida | Secreto |
@@ -52,7 +52,7 @@ graph LR
 
 ### Reglas de env vars en infra
 
-- Los nombres DEBEN coincidir con los definidos en `architecture-backend.md` y `architecture-frontend.md` — si backend define `KAFKA_BROKERS`, infra configura `KAFKA_BROKERS`, no `KAFKA_BOOTSTRAP_SERVERS`
+- Los nombres DEBEN coincidir con los definidos en `ard-backend.md` y `ard-frontend.md` — si backend define `KAFKA_BROKERS`, infra configura `KAFKA_BROKERS`, no `KAFKA_BOOTSTRAP_SERVERS`
 - Separar ConfigMap (no-sensibles) de Secrets (sensibles) — la columna "Secreto" determina cuál
 - Documentar valores por entorno cuando difieren (dev: `localhost`, staging: `broker.staging`, prod: `broker.prod`)
 - Variables de frontend público (`VITE_*`, `NEXT_PUBLIC_*`) van en el build, no en runtime — documentar en qué paso del CI se inyectan
@@ -63,11 +63,19 @@ graph LR
 - **Límites de recursos (CPU/mem):** ...
 - **Bottlenecks conocidos:** ...
 
-## SLOs y supuestos de capacidad
+## Restricciones no-funcionales
 
-- **Latencia objetivo (p95):** ...
-- **Throughput esperado:** ...
-- **Presupuesto de fallos:** % de errores aceptable antes de alerta
+| Atributo | Requerimiento | Fuente |
+|----------|---------------|--------|
+| Latencia p99 | [valor concreto, ej. < 200ms] | requirements.md §NFR |
+| Throughput | [valor concreto, ej. 500 RPS sostenidos] | requirements.md §NFR |
+| Disponibilidad | [valor concreto, ej. 99.9% mensual] | requirements.md §NFR |
+| Error budget | [valor concreto, ej. 43.8 min/mes] | derivado de disponibilidad |
+| RTO | [valor concreto, ej. < 15 min] | requirements.md §NFR |
+| Constraints de seguridad | [ej. TLS 1.2+, datos en reposo cifrados] | requirements.md §NFR |
+| Constraints de compliance | [ej. GDPR, SOC2] o N/A | requirements.md §NFR |
+
+> Propagar los valores exactos de `requirements.md`. Si un atributo no aplica a este dominio, escribir `N/A` con una justificación de una línea.
 
 ## Observabilidad
 
@@ -85,13 +93,21 @@ graph LR
 - **Red:** segmentación, puertos expuestos
 - **Secretos:** dónde se almacenan, cómo se inyectan
 - **Acceso:** IAM roles, service accounts, mínimo privilegio
+
+## Preguntas abiertas
+
+| # | Pregunta | Impacto si no se resuelve | Responsable | Deadline |
+|---|----------|--------------------------|-------------|----------|
+| 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
+
+> Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
 ```
 
 ## Reglas
 
 - Incluir SOLO secciones que apliquen — omitir secciones vacías completamente
 - La sección de brokers/colas es obligatoria si se usa cualquier patrón async — documentar DLQ siempre
-- La sección de SLOs es requerida para tareas Medium+ — "N/A" solo si explícitamente es un job background sin impacto al usuario
+- La tabla "Restricciones no-funcionales" es requerida para tareas Medium+ — usar `N/A` con justificación solo si explícitamente es un job background sin impacto al usuario
 - La sección de observabilidad debe nombrar métricas específicas — "agregar logging" no es suficiente
 - El diagrama de despliegue muestra servicios y conexiones — no código interno
 - Cada env var debe especificar tipo (string, int, bool, secret), si es requerida, y si es secreto

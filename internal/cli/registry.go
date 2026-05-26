@@ -430,7 +430,7 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 		}
 		// Remove any existing symlink to avoid writing through it to the source
 		if deploy.IsAnvilSymlink(destFile) {
-			os.Remove(destFile)
+			_ = os.Remove(destFile)
 		}
 		if err := os.WriteFile(destFile, []byte(content), 0o644); err != nil {
 			output.Error("  write agent: %s", err)
@@ -517,7 +517,7 @@ func installSkill(cfg *config.App, it tui.Item, targetPath string, mode tui.Depl
 			return
 		}
 	} else {
-		fileutil.CleanPath(dst)
+		_ = fileutil.CleanPath(dst)
 		if err := fileutil.CopyDir(srcDir, dst); err != nil {
 			output.Error("  copy failed: %s", err)
 			return
@@ -663,7 +663,7 @@ func reconcileAgents(cfg *config.App, targetPaths map[string]string) {
 			}
 
 			// Remove symlink, write resolved copy
-			os.Remove(path)
+			_ = os.Remove(path)
 			if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 				output.Error("  reconcile %s: %s", e.Name(), err)
 				continue
@@ -685,8 +685,11 @@ func syncMetadataFiles(cfg *config.App, targetPaths map[string]string) {
 		if fileutil.Exists(src) {
 			dst := filepath.Join(claudePath, config.FileClaudeMD)
 			if !fileutil.Exists(dst) && !fileutil.IsSymlink(dst) {
-				fileutil.ForceSymlink(src, dst)
-				output.Info("  %s %s -> %s", output.Green("✓"), config.FileClaudeMD, dst)
+				if err := fileutil.ForceSymlink(src, dst); err != nil {
+					output.Warn("symlink %s: %s", config.FileClaudeMD, err)
+				} else {
+					output.Info("  %s %s -> %s", output.Green("✓"), config.FileClaudeMD, dst)
+				}
 			}
 		}
 	}
@@ -696,8 +699,11 @@ func syncMetadataFiles(cfg *config.App, targetPaths map[string]string) {
 		src := filepath.Join(cfg.RepoDir, config.FileClaudeMD)
 		if fileutil.Exists(src) {
 			dst := filepath.Join(geminiPath, config.FileGeminiMD)
-			fileutil.CopyFile(src, dst)
-			output.Info("  %s %s -> %s", output.Green("✓"), config.FileGeminiMD, dst)
+			if err := fileutil.CopyFile(src, dst); err != nil {
+				output.Warn("copy %s: %s", config.FileGeminiMD, err)
+			} else {
+				output.Info("  %s %s -> %s", output.Green("✓"), config.FileGeminiMD, dst)
+			}
 		}
 	}
 
@@ -733,14 +739,6 @@ func registryHelp() {
         url: https://example.com/registry.json  # remote`)
 }
 
-func contains(list []string, item string) bool {
-	for _, v := range list {
-		if v == item {
-			return true
-		}
-	}
-	return false
-}
 
 // fetchRegistry resolves a registry config to an Index.
 // If path is set, reads from local disk. Otherwise fetches from URL.

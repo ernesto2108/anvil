@@ -10,17 +10,6 @@ import (
 	"github.com/ernesto2108/anvil/pkg/output"
 )
 
-// builtinPresets lists the command names that map to pipelines/<name>.yaml.
-var builtinPresets = map[string]bool{
-	"quick":  true,
-	"bug":    true,
-	"feat":   true,
-	"design": true,
-	"epic":   true,
-	"db":     true,
-	"infra":  true,
-}
-
 // resolvePipeline searches for <name>.yaml in ./pipelines/ and then <repoDir>/pipelines/.
 func resolvePipeline(cfg *config.App, name string) ([]orchestrator.Node, error) {
 	candidates := []string{

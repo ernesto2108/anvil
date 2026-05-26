@@ -25,7 +25,8 @@ nodes:
     depends_on: [arch]
     timeout: 5m
   - id: dev
-    role: developer
+    # Resolver al developer del stack de la tarea: developer-backend | developer-frontend | developer-mobile
+    role: developer-backend
     depends_on: [spec-approval, dba]
     timeout: 10m
     inputs: [spec.md]

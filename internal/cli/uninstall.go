@@ -44,11 +44,14 @@ func cmdUninstall(cfg *config.App) {
 	}
 	claudeMD := filepath.Join(paths.Claude, config.FileClaudeMD)
 	if fileutil.IsSymlink(claudeMD) {
-		os.Remove(claudeMD)
+		_ = os.Remove(claudeMD)
 		snapMD := filepath.Join(snap, config.TargetClaude, config.FileClaudeMD)
 		if fileutil.Exists(snapMD) {
-			fileutil.CopyFile(snapMD, claudeMD)
-			output.Info("  %s %s", output.Green("restored"), config.FileClaudeMD)
+			if err := fileutil.CopyFile(snapMD, claudeMD); err != nil {
+				output.Warn("restore %s: %s", config.FileClaudeMD, err)
+			} else {
+				output.Info("  %s %s", output.Green("restored"), config.FileClaudeMD)
+			}
 		}
 	}
 
@@ -65,10 +68,12 @@ func cmdUninstall(cfg *config.App) {
 	}
 	geminiMD := filepath.Join(paths.Gemini, config.FileGeminiMD)
 	if fileutil.Exists(geminiMD) {
-		os.Remove(geminiMD)
+		_ = os.Remove(geminiMD)
 		snapGMD := filepath.Join(snap, config.TargetGemini, config.FileGeminiMD)
 		if fileutil.Exists(snapGMD) {
-			fileutil.CopyFile(snapGMD, geminiMD)
+			if err := fileutil.CopyFile(snapGMD, geminiMD); err != nil {
+				output.Warn("restore %s: %s", config.FileGeminiMD, err)
+			}
 		}
 	}
 
@@ -77,10 +82,12 @@ func cmdUninstall(cfg *config.App) {
 	deploy.RestoreItem(filepath.Join(paths.Codex, config.CompSkills), filepath.Join(snap, config.TargetCodex, config.CompSkills))
 	agentsMD := filepath.Join(paths.Codex, config.FileAgentsMD)
 	if fileutil.Exists(agentsMD) {
-		os.Remove(agentsMD)
+		_ = os.Remove(agentsMD)
 		snapAMD := filepath.Join(snap, config.TargetCodex, config.FileAgentsMD)
 		if fileutil.Exists(snapAMD) {
-			fileutil.CopyFile(snapAMD, agentsMD)
+			if err := fileutil.CopyFile(snapAMD, agentsMD); err != nil {
+				output.Warn("restore %s: %s", config.FileAgentsMD, err)
+			}
 		}
 	}
 	output.Info("  removed %s", config.FileAgentsMD)
@@ -88,10 +95,12 @@ func cmdUninstall(cfg *config.App) {
 	// Clean repo AGENTS.md
 	repoAgentsMD := filepath.Join(cfg.RepoDir, config.FileAgentsMD)
 	if fileutil.Exists(repoAgentsMD) {
-		os.Remove(repoAgentsMD)
+		_ = os.Remove(repoAgentsMD)
 	}
 
-	st.Remove()
+	if err := st.Remove(); err != nil {
+		output.Warn("remove state: %s", err)
+	}
 	fmt.Println()
 	output.Info("%s uninstalled. Pre-existing files restored where snapshots existed.", title(cfg.Name))
 	output.Info("Run %s to reinstall.", output.Yellow(cfg.Name+" deploy"))

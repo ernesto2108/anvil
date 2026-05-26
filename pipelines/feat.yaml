@@ -9,7 +9,8 @@ nodes:
     depends_on: [arch]
     description: User approves SPEC before developer starts
   - id: dev
-    role: developer
+    # Resolver al developer del stack de la tarea: developer-backend | developer-frontend | developer-mobile
+    role: developer-backend
     depends_on: [spec-approval]
     timeout: 10m
     inputs: [spec.md]

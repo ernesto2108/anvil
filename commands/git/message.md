@@ -1,4 +1,5 @@
 ---
+name: git:message
 description: Generar un mensaje de commit convencional a partir de una descripción en lenguaje natural
 ---
 

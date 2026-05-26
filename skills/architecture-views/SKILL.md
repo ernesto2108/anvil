@@ -18,27 +18,34 @@ Cada vista balancea ambas. Las secciones narrativas explican "por qué"; las sec
 
 ## Cuándo usar cada formato
 
-| Complejidad | Output |
+El criterio primario es **cuántos dominios toca la tarea**, no los puntos de historia. El tamaño influye en la profundidad de cada vista (cuánto detalle, cuántos diagramas, cuántos specs ejecutables), pero no en si el archivo es por dominio o genérico — siempre es por dominio.
+
+| Alcance de la tarea | Output |
 |---|---|
-| Small (2 pts), single-stack, sin contratos | Solo `architecture.md` — narrativa con diagramas |
-| Medium (5 pts), single-stack con DB o API | `architecture.md` + vista de dominio relevante |
-| Medium+ con contratos cross-stack | **Archivos separados por concern** (ver Nombrado abajo) + specs ejecutables |
-| Large (8+ pts), multi-servicio | Todas las vistas aplicables, specs SDD completos, bridge de contratos |
+| Single-dominio Small (1-5 pts) | Una sola vista de dominio: `ard-<dominio>.md` — narrativa pura, sin specs ejecutables ni diagramas extensos |
+| Single-dominio Medium (5-8 pts) | Una sola vista de dominio: `ard-<dominio>.md` con specs ejecutables del dominio (OpenAPI, DBML, etc.) |
+| Multi-dominio (2+ dominios, cualquier tamaño) | Una vista por dominio: `ard-backend.md` + `ard-database.md` + … — cada archivo cubre solo su dominio, sin consolidación |
+| Large (8+ pts), multi-servicio | Todas las vistas aplicables, specs SDD completos, bridge de contratos entre vistas |
 
-## Nombrado de archivos — tareas Medium+ (OBLIGATORIO)
+**Regla dura:** `architecture.md` genérico **NO es un output válido en ningún caso**. La narrativa de contexto, objetivos, no-objetivos y concerns transversales vive **dentro** de la vista de dominio correspondiente (sección `## Contexto y alcance` y siguientes). Para multi-dominio, las preocupaciones transversales se documentan en la vista del dominio que las origina, con referencia cruzada desde las demás vistas.
 
-Cada concern tiene su propio archivo.
+## Nombrado de archivos (OBLIGATORIO)
+
+Cada dominio tiene su propio archivo. Usar exactamente estos nombres.
 
 | Archivo | Cuándo crearlo |
 |---|---|
-| `architecture-backend.md` | Cualquier cambio de backend (Go, Rust, Python, etc.) |
-| `architecture-db.md` | Cualquier cambio de DB/schema |
-| `architecture-frontend.md` | Cualquier cambio de frontend web (React, Astro, etc.) |
-| `architecture-mobile.md` | Cualquier cambio de mobile (Flutter, React Native, Swift, Kotlin) |
-| `architecture-infra.md` | Cualquier cambio de infra/CI |
-| `architecture.md` | **Small:** único output. **Medium+:** suplemento overview (contexto, decisiones, concerns transversales) junto a las vistas de dominio |
+| `ard-backend.md` | Servicios backend, APIs internas, lógica de dominio server-side (Go, Rust, Python, etc.) |
+| `ard-database.md` | Schema, migraciones, índices, patrones de acceso a datos |
+| `ard-frontend.md` | UI web, jerarquía de componentes (React, Astro, etc.), rutas, estado cliente |
+| `ard-mobile.md` | iOS/Android/Flutter — navegación, offline/sync, push, platform channels |
+| `ard-infrastructure.md` | Topología de despliegue, IaC, brokers/colas, observabilidad, CI/CD |
+| `ard-api.md` | Contrato de API cross-stack cuando la API es el dominio central (SDK público, OpenAPI compartido) |
+| `ard-auth.md` | Cuando auth (identidad, autorización, tokens, sesiones) es el dominio central |
 
-El orquestador verifica que estos archivos existan antes de invocar al Developer. Archivos faltantes → se re-invoca al architect.
+❌ `architecture.md` genérico no es un output válido — usar siempre vistas de dominio nombradas.
+
+El orquestador verifica que las vistas de dominio relevantes existan antes de invocar al `spec-writer`. Archivos faltantes → se re-invoca al architect.
 
 ## Guías — cargar por vista
 
@@ -46,15 +53,16 @@ Cada guía contiene el template + reglas de formato para una vista. Cargar SOLO 
 
 | Vista | Guía | Cuándo cargar |
 |---|---|---|
-| Overview | `guides/overview.md` | Siempre |
-| Backend | `guides/backend.md` | Trabajo de backend |
-| Frontend web | `guides/frontend.md` | Trabajo de frontend web |
-| Mobile | `guides/mobile.md` | Trabajo de mobile (Flutter, RN, nativo) |
-| Base de datos | `guides/database.md` | Cambios de DB |
-| Infraestructura | `guides/infrastructure.md` | Cambios de infra |
-| **SPEC** | `guides/spec.md` | **Siempre — se genera ÚLTIMO, después de todas las vistas** |
+| Backend (`ard-backend.md`) | `guides/backend.md` | Trabajo de backend |
+| Frontend web (`ard-frontend.md`) | `guides/frontend.md` | Trabajo de frontend web |
+| Mobile (`ard-mobile.md`) | `guides/mobile.md` | Trabajo de mobile (Flutter, RN, nativo) |
+| Base de datos (`ard-database.md`) | `guides/database.md` | Cambios de DB |
+| Infraestructura (`ard-infrastructure.md`) | `guides/infrastructure.md` | Cambios de infra |
+| API cross-stack (`ard-api.md`) | `guides/api.md` | Contrato de API es el dominio central |
+| Auth (`ard-auth.md`) | `guides/auth.md` | Auth es el dominio central |
+| Convenciones transversales (MADR, etc.) | `guides/overview.md` | Solo para consultar formato MADR de ADRs y convenciones — **no produce archivo overview** |
 
-**Orden de generación (obligatorio):** overview → vistas de dominio (backend/db/frontend/mobile/infra) → spec.md. El spec referencia archivos de arquitectura — no puede escribirse antes.
+**Orden de generación (obligatorio):** vistas de dominio (en el orden en que el dominio aparece en la cadena de impacto: datos → backend → contratos → consumidores) → `adrs/`. No existe paso de "overview" separado — cada vista de dominio se autocontiene. El `spec.md` lo produce el `spec-writer` en una invocación separada después del cierre del architect — NO cargar `guides/spec.md` desde el architect.
 
 ## Consistencia de contratos cross-vista
 
@@ -70,11 +78,11 @@ Cuando el architect genera múltiples vistas, los contratos DEBEN ser consistent
 
 ## Checklist de validación (auto-check del architect antes de cerrar)
 
-- [ ] Cada decisión en `architecture.md` tiene una razón ("por qué")
+- [ ] Cada decisión en las vistas de dominio (o en su ADR correspondiente) tiene una razón ("por qué")
 - [ ] Contratos cross-vista son consistentes (mismas formas)
 - [ ] Todos los paths referenciados verificados con Glob/Grep
 - [ ] Archivos/paths nuevos marcados como `NEW`
 - [ ] Spec OpenAPI es YAML válido (si aplica)
 - [ ] DBML/DDL es sintácticamente correcto (si aplica)
 - [ ] Las reglas de convención no contradicen la arquitectura
-- [ ] Diagramas legibles (no más de 15 nodos por diagrama)
+- [ ] Diagramas legibles (no más de 15 nodos por diagrama) — usar skill `generate-diagram` para producir bloques Mermaid con sintaxis válida

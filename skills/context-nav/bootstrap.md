@@ -1,6 +1,6 @@
-# Bootstrap — Generar `.context/` desde cero
+# Bootstrap — Generar `.project-context/` desde cero
 
-Usado por el scanner en `mode: deep` cuando `.context/` no existe o tiene `coverage: none`.
+Usado por `context-init` en `mode: init` o `mode: deep` cuando `.project-context/` no existe o tiene `coverage: none`.
 
 ## Paso 1 — Leer estructura base
 
@@ -253,7 +253,7 @@ ls src/         # React — carpetas de features
 ls lib/         # Flutter
 ```
 
-Un dominio es relevante para `.context/domains/` si tiene > 3 archivos significativos y lógica de negocio propia (no es util, config, o types puros).
+Un dominio es relevante para `.project-context/domains/` si tiene > 3 archivos significativos y lógica de negocio propia (no es util, config, o types puros).
 
 ## Paso 5 — Detectar SOLID
 
@@ -295,15 +295,27 @@ Si no hay hits o MCP no está disponible → dejar `decisions/` vacío (se llena
 
 ## Paso 7 — Escribir archivos
 
+**Idioma obligatorio:** todo el contenido generado debe estar en español. Esto incluye encabezados, descripciones, notas, comentarios, listas, evidencias y cualquier texto narrativo. Los identificadores técnicos (nombres de archivos, funciones, paquetes, comandos, paths, snippets de código) se preservan tal como aparecen en el repo. Si un template trae encabezados en inglés, traducirlos antes de escribir.
+
 Usar los templates en `templates/`. Escribir en este orden:
 1. `project.md`
 2. `ops.md` — comandos operativos reales extraídos en el Paso 3.5
 3. `patterns.md`
 4. `contracts.md`
-5. `domains/<name>.md` — solo dominios con > 3 archivos significativos
-6. `decisions/NNN-slug.md` — solo los que tienen evidencia del Paso 6
-7. `risks.md` — incluir top-5 archivos > 300 líneas como deuda potencial
-8. `NAVIGATOR.md` — al final, con el índice de lo que se generó
+5. `business-rules.md` — usar el template `templates/business-rules.tmpl.md`. Si no se detectan invariantes de negocio en bootstrap, crearlo con el encabezado mínimo:
+   ```
+   # Business Rules
+   <!-- Invariantes de negocio que cruzan dominios. -->
+   ```
+6. `dependencies.md` — usar el template `templates/dependencies.tmpl.md`. Si no se detectan dependencias entre dominios en bootstrap, crearlo con el encabezado mínimo:
+   ```
+   # Dependencies
+   <!-- Grafo de dependencias entre dominios. -->
+   ```
+7. `domains/<name>.md` — solo dominios con > 3 archivos significativos
+8. `decisions/NNN-slug.md` — solo los que tienen evidencia del Paso 6
+9. `risks.md` — incluir top-5 archivos > 300 líneas como deuda potencial
+10. `NAVIGATOR.md` — al final, con el índice de lo que se generó
 
 Marcar `coverage: bootstrap` en NAVIGATOR.md.
 
@@ -312,4 +324,4 @@ Marcar `coverage: bootstrap` en NAVIGATOR.md.
 - No inferir patrones de nombres de archivos solos — leer al menos la firma de las funciones clave
 - No crear un `domains/<name>.md` para paquetes de < 3 archivos
 - No inventar decisiones — solo las que tienen evidencia en código o en MCP memory
-- No sobreescribir si `.context/` ya existe con `coverage: full` — en ese caso solo actualizar secciones stale
+- No sobreescribir si `.project-context/` ya existe con `coverage: full` — en ese caso solo actualizar secciones stale

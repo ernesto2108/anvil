@@ -318,7 +318,7 @@ func (s *Server) getConventions(_ context.Context, args map[string]any) (string,
 			continue
 		}
 		rel, _ := filepath.Rel(skillDir, f)
-		sb.WriteString(fmt.Sprintf("### %s\n\n", rel))
+		fmt.Fprintf(&sb, "### %s\n\n", rel)
 		chunk := string(data)
 		if total+len(chunk) > maxTotal {
 			chunk = chunk[:maxTotal-total]
@@ -505,7 +505,7 @@ func (s *Server) getTask(_ context.Context, args map[string]any) (string, error)
 		if err != nil {
 			continue // file doesn't exist
 		}
-		sb.WriteString(fmt.Sprintf("## %s\n\n", fname))
+		fmt.Fprintf(&sb, "## %s\n\n", fname)
 		content := string(data)
 		if len(content) > maxPerFile {
 			content = content[:maxPerFile] + "\n\n[truncated]"
@@ -579,7 +579,7 @@ func (s *Server) getRecentChanges(_ context.Context, args map[string]any) (strin
 			 FROM runs WHERE project = ? AND started_at >= ?
 			 ORDER BY started_at DESC LIMIT 20`, project, cutoff)
 		if err == nil {
-			defer rows.Close()
+			defer func() { _ = rows.Close() }()
 			for rows.Next() {
 				var r runInfo
 				var task sql.NullString

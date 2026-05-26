@@ -158,6 +158,18 @@ func (s *Server) startOrchestration(_ context.Context, args map[string]any) (str
 		return "", fmt.Errorf("insert run: %w", err)
 	}
 
+	planContent := fmt.Sprintf("# Plan — %s\n\nlast_updated: %s\nstack: %s\ncomplexity: %s\n\n## Objetivo\n%s\n\n## Pasos\n\n## Asunciones\n\n## Memoria consultada\n\n## Errores acumulados\n",
+		runID, createdAt, stack, complexity, objective)
+	_, err = s.db.ExecContext(context.Background(),
+		`INSERT OR IGNORE INTO run_plans (id, run_id, project, max_retries, max_cost_usd, content, created_at)
+		 VALUES (?, ?, ?, 0, 0, ?, ?)`,
+		"rp_"+runID, runID, project, planContent, createdAt,
+	)
+	if err != nil {
+		// best-effort: log but don't fail the orchestration
+		fmt.Fprintf(os.Stderr, "[mcp] persist run_plan: %s\n", err)
+	}
+
 	result := map[string]any{
 		"run_id":     runID,
 		"created_at": createdAt,
@@ -336,7 +348,7 @@ func (s *Server) loadOrchestration(_ context.Context, args map[string]any) (stri
 	if err != nil {
 		return "", fmt.Errorf("query agents: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	type stepResult struct {
 		StepID       string   `json:"step_id"`
@@ -420,6 +432,67 @@ func (s *Server) loadOrchestration(_ context.Context, args map[string]any) (stri
 		"ended_at":      endedAt.String,
 		"steps":         steps,
 		"pending_roles": pendingRoles,
+	}
+	out, _ := json.MarshalIndent(result, "", "  ")
+	return string(out), nil
+}
+
+// saveLeaderLog upserts the leader's plan content into run_plans.content
+// for the given run. Used by the Leader agent to publish its progress log
+// in real time so the dashboard can display it.
+//
+// The Leader is expected to call this at the start of a run (with the
+// initial plan) and again whenever the plan is updated (after each
+// sub-agent step, gate decision, or self-critique). The call is
+// idempotent — the latest content always replaces the previous value.
+func (s *Server) saveLeaderLog(_ context.Context, args map[string]any) (string, error) {
+	if s.db == nil {
+		return "", fmt.Errorf("database not available")
+	}
+
+	runID := strArg(args, "run_id", "")
+	if runID == "" {
+		return "", fmt.Errorf("run_id is required")
+	}
+	content := strArg(args, "content", "")
+	if content == "" {
+		return "", fmt.Errorf("content is required")
+	}
+
+	// Verify run exists and is not terminal. Allow running and paused.
+	var runStatus, project string
+	err := s.db.QueryRowContext(context.Background(),
+		`SELECT status, project FROM runs WHERE id = ?`, runID).Scan(&runStatus, &project)
+	if err == sql.ErrNoRows {
+		return fmt.Sprintf(`{"error": "run %s not found"}`, runID), nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("query run: %w", err)
+	}
+	if runStatus == "success" || runStatus == "failed" || runStatus == "done" {
+		return fmt.Sprintf(`{"error": "run %s is already completed (status: %s)"}`, runID, runStatus), nil
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	planID := "rp_" + runID
+
+	// Upsert: if the row exists (created by start_orchestration or the CLI
+	// runner), update its content. If it does not exist (e.g. a run created
+	// outside the standard paths), insert a fresh row.
+	_, err = s.db.ExecContext(context.Background(),
+		`INSERT INTO run_plans (id, run_id, project, max_retries, max_cost_usd, content, created_at)
+		 VALUES (?, ?, ?, 0, 0, ?, ?)
+		 ON CONFLICT(run_id) DO UPDATE SET content = excluded.content`,
+		planID, runID, project, content, now,
+	)
+	if err != nil {
+		return "", fmt.Errorf("upsert run_plan: %w", err)
+	}
+
+	result := map[string]any{
+		"run_id":     runID,
+		"bytes":      len(content),
+		"updated_at": now,
 	}
 	out, _ := json.MarshalIndent(result, "", "  ")
 	return string(out), nil

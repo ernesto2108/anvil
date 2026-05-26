@@ -68,17 +68,17 @@ Usar el template de `output-template.md` — incluir solo las secciones para los
 
 ## Paso 5: Bootstrap de Context Navigator (modo deep o primer scan)
 
-Si se ejecuta en `mode: deep` O si `.context/NAVIGATOR.md` no existe en el proyecto:
+Si se ejecuta en `mode: deep` O si `.project-context/NAVIGATOR.md` no existe en el proyecto:
 
 1. Cargar `skills/context-nav/bootstrap.md` — define las firmas de código a buscar por stack
 2. Ejecutar los greps de inferencia de patrones del bootstrap (Paso 2 del bootstrap)
 3. Ejecutar los greps de contratos del bootstrap (Paso 3 del bootstrap)
 4. Detectar bounded contexts desde estructura de directorios (Paso 4 del bootstrap)
 5. Ejecutar detección SOLID (Paso 5 del bootstrap)
-6. Escribir todos los archivos en `.context/` usando los templates de `skills/context-nav/templates/`
-7. Marcar `coverage: bootstrap` en `.context/NAVIGATOR.md`
+6. Escribir todos los archivos en `.project-context/` usando los templates de `skills/context-nav/templates/`
+7. Marcar `coverage: bootstrap` en `.project-context/NAVIGATOR.md`
 
-**Si `.context/NAVIGATOR.md` ya existe con `coverage: bootstrap` o superior** y el diff con el último commit es < 3 días: saltar el Paso 5 — el contexto está fresco.
+**Si `.project-context/NAVIGATOR.md` ya existe con `coverage: bootstrap` o superior** y el diff con el último commit es < 3 días: saltar el Paso 5 — el contexto está fresco.
 
 ## Checklist de Acciones
 
@@ -89,4 +89,4 @@ Si se ejecuta en `mode: deep` O si `.context/NAVIGATOR.md` no existe en el proye
 - [ ] Buscar herramientas de build (`Makefile`, `taskfile.*`)
 - [ ] Preguntar sobre el objetivo del producto si está ausente
 - [ ] Escribir `{context_path}`
-- [ ] Si mode: deep o sin `.context/`: bootstrap de `.context/` según Paso 5
+- [ ] Si mode: deep o sin `.project-context/`: bootstrap de `.project-context/` según Paso 5

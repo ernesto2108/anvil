@@ -67,7 +67,9 @@ func cmdProvider(cfg *config.App, args []string) {
 
 	st := loadState(cfg)
 	st.Provider = newProvider
-	st.Save()
+	if err := st.Save(); err != nil {
+		output.Warn("save state: %s", err)
+	}
 
 	fmt.Println()
 	output.Info("Done. All agents now use %s models.", output.Green(newProvider))

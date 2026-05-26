@@ -90,6 +90,10 @@ func Run(args []string) {
 		cmdSelfUpdate(cfg, git, cmdArgs)
 	case "doctor":
 		cmdDoctor(cfg, git)
+	case "stats":
+		cmdStats(cfg)
+	case "dream":
+		cmdDream(cfg, cmdArgs)
 	case "export":
 		cmdExport(cfg, cmdArgs)
 	case "digests":

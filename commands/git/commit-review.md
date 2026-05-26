@@ -1,4 +1,5 @@
 ---
+name: git:commit-review
 description: Revisar commits recientes y puntuarlos contra la spec de conventional commits
 ---
 

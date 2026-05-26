@@ -1,7 +1,7 @@
 ---
 name: handoff
 disable-model-invocation: true
-description: Continuidad de sesión para tareas Medium+. Crea, actualiza, lee y archiva notas de handoff para que los desarrolladores puedan retomar el trabajo entre sesiones sin tener que releer todo. Invocado por el desarrollador y el orquestador — no directamente por el usuario.
+description: Continuidad de sesión para tareas Medium+. Crea, actualiza, lee y archiva notas de handoff para que los desarrolladores puedan retomar el trabajo entre sesiones sin tener que releer todo. Invocado por el desarrollador y el Líder — no directamente por el usuario. El gate de calidad es verify-handoff.sh (invocado por el Líder), no aprobación manual del usuario.
 ---
 
 # Notas de Handoff
@@ -30,54 +30,7 @@ Aplica tanto si la tarea viene del backlog (con TASK-ID) como si se invoca direc
 1. Crear el directorio `.handoff/` si no existe
 2. Leer `template.md` de este skill y usarlo para escribir el archivo de handoff
 3. Completar el plan de ejecución y la tabla de uso de tokens vacía
-4. **Devolver el control al orquestador con el plan** — NO presentar el plan directamente al usuario ni continuar automáticamente. El orquestador es responsable del gate de aprobación del usuario (ver Approval Gate abajo).
-
-### Approval Gate (OBLIGATORIO — el usuario debe aprobar manualmente)
-
-El plan presentado en el handoff DEBE ser aprobado por el **usuario**, no por el orquestador. El orquestador es un relay, no una autoridad en aprobaciones.
-
-**Flujo:**
-1. El desarrollador termina de crear el handoff con el plan de ejecución y devuelve el control al orquestador con un resumen del plan
-2. **El orquestador presenta el plan al usuario en español** y espera una respuesta explícita. El orquestador usa `AskUserQuestion` o un prompt de texto directo — nunca asume aprobación por el silencio
-3. El desarrollador NO continúa codificando hasta que el orquestador lo reanude con aprobación explícita del usuario (flag `plan_preapproved=true` o "plan approved — proceed")
-
-**Formato de presentación del orquestador (español):**
-
-```
-## Plan de ejecución — <TASK-ID or slug>
-
-**Pasos:**
-1. <descripción del paso>
-2. <descripción del paso>
-3. <descripción del paso>
-
-**Archivos que voy a tocar:**
-- `path/to/file` — qué cambio y por qué
-- `path/to/file` — qué cambio y por qué
-
-**Enfoque técnico:**
-<breve explicación del enfoque>
-
-¿Apruebas este plan, quieres ajustar algo, o prefieres otra cosa?
-```
-
-**Reglas:**
-- El orquestador NO DEBE auto-aprobar. Frases como "el plan coincide con las specs, apruebo y continúo" están prohibidas — el usuario decide
-- El orquestador espera una respuesta explícita del usuario antes de reanudar al desarrollador
-- El usuario puede decir: "dale", "ok", "aprobado", "sí" → el orquestador reanuda al desarrollador con `plan_preapproved=true`
-- El usuario puede decir: "cambia X", "no me gusta Y", "mejor usa Z" → el orquestador envía el feedback al desarrollador, el desarrollador actualiza el plan en el handoff, bucle
-- El usuario puede decir: "no, mejor hacemos otra cosa" → el orquestador descarta el plan, reiniciar con nuevo alcance
-- En **continuaciones** (handoff ya existe con plan aprobado) → omitir el gate, reanudar desde "Siguiente paso"
-
-### Planes pre-aprobados (atajo del orquestador)
-
-Cuando el orquestador ya diseñó el plan en detalle en la conversación principal Y el usuario ya lo aprobó en la conversación principal (antes de invocar cualquier agente), el orquestador puede pasar `plan_preapproved=true` directamente en la primera invocación del desarrollador. En este caso:
-
-1. El desarrollador crea el archivo de handoff como artefacto de progreso (NO como gate bloqueante)
-2. El desarrollador procede a la implementación inmediatamente — sin segunda invocación, sin paso de aprobación separado
-3. Esto evita el overhead de dos invocaciones del desarrollador (plan + impl) cuando el orquestador ya hizo el trabajo de planificación
-
-**Responsabilidad del orquestador:** ser honesto sobre la pre-aprobación. Si hay CUALQUIER duda de que el usuario aprobó explícitamente el plan (no solo dijo "continúa" o "sigue" sin ver los detalles), usar el flujo normal, no el atajo. En caso de duda, preguntar.
+4. **Devolver el control al Líder con el plan** — NO presentar el plan directamente al usuario ni continuar automáticamente. El Líder lo incluirá en el output del modo Integración al final.
 
 ### Actualizar (continuo, no batch al final)
 
@@ -89,7 +42,7 @@ Actualizar incrementalmente — no reescribir todo el archivo, agregar o actuali
 - Registrar decisiones en "Decisiones tomadas" en el momento que las tomas (no al final)
 - Actualizar "Siguiente paso" para reflejar dónde retomar si la sesión se corta
 
-**Anti-patrón:** dejar el handoff vacío hasta el cierre y volcar todo en los últimos minutos. Ver `agents/developer.md` § Checkpoint protocol para los tres momentos exactos donde se actualiza.
+**Anti-patrón:** dejar el handoff vacío hasta el cierre y volcar todo en los últimos minutos. Ver el agente del stack correspondiente (`agents/developer-backend.md`, `agents/developer-frontend.md` o `agents/developer-mobile.md`) § "Output de cierre" para los momentos en que se actualiza el handoff.
 
 El gate `scripts/verify-handoff.sh` (invocado por el orquestador después del developer) detecta handoffs incompletos y rebota la tarea — actualizar al final ya no es viable.
 

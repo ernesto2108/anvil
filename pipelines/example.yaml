@@ -8,7 +8,8 @@ nodes:
     gate: true
     timeout: 5m
   - id: dev
-    role: developer
+    # Resolver al developer del stack de la tarea: developer-backend | developer-frontend | developer-mobile
+    role: developer-backend
     depends_on: [arch]
     on_fail: retry
     timeout: 10m

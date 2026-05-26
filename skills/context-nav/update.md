@@ -1,4 +1,4 @@
-# Update — Actualización incremental de `.context/`
+# Update — Actualización incremental de `.project-context/`
 
 Usado por el reporter (pipeline) y directamente por Claude (modo directo) después de cada implementación.
 
@@ -8,7 +8,7 @@ Usado por el reporter (pipeline) y directamente por Claude (modo directo) despu�
 
 ## Detectar qué actualizar
 
-A partir del diff de la implementación, mapear archivos cambiados a secciones de `.context/`:
+A partir del diff de la implementación, mapear archivos cambiados a secciones de `.project-context/`:
 
 | Si se tocaron archivos en... | Actualizar... |
 |---|---|
@@ -19,7 +19,13 @@ A partir del diff de la implementación, mapear archivos cambiados a secciones d
 | Nuevas interfaces o estructuras con patron claro | `patterns.md` — agregar o actualizar entrada |
 | Decisión arquitectónica documentada en SPEC | `decisions/NNN-slug.md` — crear si no existe |
 | Archivos > 300 líneas introducidos | `risks.md` — agregar nota de deuda potencial |
+| Cambio que introduce, modifica o elimina una regla de negocio observable (validaciones de dominio, restricciones cross-entidad, reglas que aplican a múltiples dominios) | `business-rules.md` — sección de invariante afectada |
+| Nuevo dominio, o cambio en relaciones entre dominios (nuevo import cross-dominio, nueva dependencia de servicio, nueva FK entre bounded contexts) | `dependencies.md` — actualizar el grafo |
 | `Makefile`, `docker-compose.*`, `package.json` scripts, `scripts/` | `ops.md` — actualizar el target o comando que cambió |
+| `agents/*.md` | `domains/ai-system.md` — sección Agentes |
+| `skills/*/SKILL.md` | `domains/ai-system.md` — sección Skills |
+| `pipelines/*.yaml` | `domains/ai-system.md` — sección Pipelines |
+| `commands/*.md` | `domains/ai-system.md` — sección Commands |
 | Cualquier cambio | `NAVIGATOR.md` — actualizar `last_updated` |
 
 ## Formato de actualización
@@ -74,7 +80,7 @@ Cuando Claude implementa directamente (sin agentes), al finalizar la implementac
 
 1. Revisar qué archivos se modificaron en la sesión
 2. Aplicar la tabla de mapeo de arriba
-3. Escribir deltas — máximo 3-5 ediciones a `.context/`
+3. Escribir deltas — máximo 3-5 ediciones a `.project-context/`
 4. Actualizar `last_updated` en NAVIGATOR.md
 
 No pedir confirmación al usuario para los deltas — es una operación de mantenimiento transparente.
@@ -83,7 +89,7 @@ No pedir confirmación al usuario para los deltas — es una operación de mante
 
 El reporter recibe el diff inline del orquestador y aplica los mismos pasos. El orquestador debe incluir en el brief del reporter:
 ```
-## Delta para .context/
+## Delta para .project-context/
 Archivos cambiados: [lista]
 Nuevos patrones detectados: [si aplica]
 Nuevos contratos: [si aplica]

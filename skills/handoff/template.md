@@ -217,6 +217,11 @@ Firmas exactas de lo que se agregó o modificó. Copiar-pegar del código.
 | Puente de contratos verificado | SÍ / N/A |
 | Impacto cross-service | NINGUNO / <lista de servicios afectados> |
 
+## Documentación
+<!-- Parte del "done" de la tarea, al mismo nivel que los tests. El reporter lo invoca el humano al cierre. -->
+
+- [ ] `.project-context/` actualizado por el reporter (delta a business-rules / dependencies / domains / patterns según lo que cambió, y `last_updated` en NAVIGATOR)
+
 ## Retro
 <!-- Llenar DESPUÉS de completar la tarea (antes de archivar). Evaluación honesta — alimenta mejoras futuras. -->
 

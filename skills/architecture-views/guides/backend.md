@@ -1,4 +1,4 @@
-# Template: architecture-backend.md
+# Template: ard-backend.md
 
 Inspirado en: diseño spec-driven de Stripe + bflorat Application View.
 
@@ -8,6 +8,44 @@ Inspirado en: diseño spec-driven de Stripe + bflorat Application View.
 
 ```markdown
 # Arquitectura Backend — <TASK-ID>
+
+## Alcance del cambio
+
+### In scope
+- <qué sistemas, módulos, archivos y comportamientos ESTÁN incluidos en este cambio>
+
+### Out of scope
+- <qué NO está incluido — explícito, no asumido>
+
+### Archivos involucrados
+
+| Archivo | Acción | Capa | Justificación |
+|---|---|---|---|
+| `path/al/archivo` | CREATE / MODIFY / DELETE | dominio / handler / repo / infra / ui | razón de ubicación |
+
+<!--
+Instrucción para el architect: poblar esta tabla con TODOS los archivos que toca el feature.
+Los archivos NEW (acción CREATE) deben tener justificación de ubicación explícita.
+Esta tabla es el contrato de handoff hacia el `spec-writer`.
+-->
+
+---
+
+## Restricciones no-funcionales
+
+| Atributo | Requerimiento | Fuente |
+|----------|---------------|--------|
+| Latencia p99 | [valor concreto, ej. < 200ms] | requirements.md §NFR |
+| Throughput | [valor concreto, ej. 500 RPS sostenidos] | requirements.md §NFR |
+| Disponibilidad | [valor concreto, ej. 99.9% mensual] | requirements.md §NFR |
+| Error budget | [valor concreto, ej. 43.8 min/mes] | derivado de disponibilidad |
+| RTO | [valor concreto, ej. < 15 min] | requirements.md §NFR |
+| Constraints de seguridad | [ej. TLS 1.2+, datos en reposo cifrados] | requirements.md §NFR |
+| Constraints de compliance | [ej. GDPR, SOC2] o N/A | requirements.md §NFR |
+
+> Propagar los valores exactos de `requirements.md`. Si un atributo no aplica a este dominio, escribir `N/A` con una justificación de una línea.
+
+---
 
 ## Patrones de comunicación usados
 
@@ -236,6 +274,14 @@ ConfigMap/Secret names en `kebab-case` (ej. `app-config`). Keys internas en `SCR
 - **Idempotencia:** clave de idempotencia, ventana de deduplicación
 - **Reintentos / backoff:** política, límite de intentos
 - **Manejo de fallos:** qué pasa si el downstream no responde
+
+## Preguntas abiertas
+
+| # | Pregunta | Impacto si no se resuelve | Responsable | Deadline |
+|---|----------|--------------------------|-------------|----------|
+| 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
+
+> Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
 ```
 
 ## Archivos de spec ejecutables (OBLIGATORIO para tareas Medium+)
@@ -254,7 +300,7 @@ Los fragmentos OpenAPI/AsyncAPI/proto en este documento son **borradores**. El a
 
 ### Reglas de archivos spec
 
-- **El archivo spec es la fuente de verdad** — el fragmento en `architecture-backend.md` es documentación de diseño, el archivo en `api/` o `proto/` es el contrato ejecutable
+- **El archivo spec es la fuente de verdad** — el fragmento en `ard-backend.md` es documentación de diseño, el archivo en `api/` o `proto/` es el contrato ejecutable
 - Si el archivo ya existe → **extenderlo** con los nuevos endpoints/eventos/RPCs. No sobrescribirlo
 - Si el archivo no existe → **crearlo** con la estructura mínima (info, servers, los contratos de esta tarea)
 - El developer implementa contra el archivo spec, no contra el fragmento del markdown
@@ -277,7 +323,7 @@ buf lint proto/
 ### Cuándo NO generar archivos spec
 
 - **Tareas Small** que no tocan endpoints, eventos ni RPCs → no aplica
-- **Tauri commands / IPC** → no hay estándar de spec ejecutable; documentar solo en `architecture-backend.md`
+- **Tauri commands / IPC** → no hay estándar de spec ejecutable; documentar solo en `ard-backend.md`
 - **Endpoints internos sin consumidores externos** → evaluar; si solo lo consume el frontend del mismo repo, el spec es recomendado pero no obligatorio
 
 ## Reglas

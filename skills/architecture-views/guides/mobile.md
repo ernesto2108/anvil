@@ -1,4 +1,4 @@
-# Template: architecture-mobile.md
+# Template: ard-mobile.md
 
 Inspirado en: Flutter architecture guide + Android App Architecture + iOS Human Interface Guidelines.
 
@@ -14,6 +14,20 @@ Inspirado en: Flutter architecture guide + Android App Architecture + iOS Human 
 - [ ] iOS
 - [ ] Android
 - [ ] Ambas (Flutter / React Native)
+
+## Restricciones no-funcionales
+
+| Atributo | Requerimiento | Fuente |
+|----------|---------------|--------|
+| Latencia p99 | [valor concreto, ej. < 200ms] | requirements.md §NFR |
+| Throughput | [valor concreto, ej. 500 RPS sostenidos] | requirements.md §NFR |
+| Disponibilidad | [valor concreto, ej. 99.9% mensual] | requirements.md §NFR |
+| Error budget | [valor concreto, ej. 43.8 min/mes] | derivado de disponibilidad |
+| RTO | [valor concreto, ej. < 15 min] | requirements.md §NFR |
+| Constraints de seguridad | [ej. TLS 1.2+, datos en reposo cifrados] | requirements.md §NFR |
+| Constraints de compliance | [ej. GDPR, SOC2] o N/A | requirements.md §NFR |
+
+> Propagar los valores exactos de `requirements.md`. Si un atributo no aplica a este dominio, escribir `N/A` con una justificación de una línea.
 
 ## Patrones de comunicación con backend
 
@@ -190,6 +204,14 @@ stateDiagram-v2
 ### Platform channels / FFI — incluir si aplica
 - **Canal:** qué operación nativa se expone
 - **Serialización:** formato de datos entre Dart/JS y native
+
+## Preguntas abiertas
+
+| # | Pregunta | Impacto si no se resuelve | Responsable | Deadline |
+|---|----------|--------------------------|-------------|----------|
+| 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
+
+> Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
 ```
 
 ## Reglas
