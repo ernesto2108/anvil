@@ -82,7 +82,7 @@ low / medium / high — basado en el radio de explosión de los problemas encont
 
 ## Formato de Tarea para el Backlog
 
-Cuando se encuentran problemas, agregar al backlog (`{backlog_path}` — resuelto por el orquestador según el sistema de docs; en Linear+Outline crear issues en Linear)
+Cuando se encuentran problemas, agregar al backlog local (`{backlog_path}` — archivo en `.project-context/` o el repo). Si el proyecto tiene `task_tool` configurado (campo de `.project-context/project.md`), **describir al humano** qué issues crear en esa herramienta — nunca ejecutar acciones en ella.
 
 Cada tarea debe incluir:
 - Título (imperativo: "Fix nil check in user service")

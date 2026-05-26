@@ -48,7 +48,7 @@ Los milestones se definen en la sección `## Scope` del PRD (campo `Milestone`) 
 
 Áreas: FEAT, SEC, BUG, TECH, INFRA, DOC, TEST
 
-Verificar los IDs existentes en `{backlog_path}` (o en Linear si el proyecto usa Linear+Outline) antes de asignar nuevos.
+Verificar los IDs existentes en `{backlog_path}` (archivo local en `.project-context/` o el repo) antes de asignar nuevos.
 
 ## Descomponer un PRD en tareas
 
@@ -109,60 +109,54 @@ El formato estándar usa **tablas**, no encabezados markdown:
 | TASK-ID | Task | Type | Date | Notes |
 ```
 
-## Integración con sistema de docs (OBLIGATORIO — detectar antes de actuar)
+## Dónde vive el backlog (patrón universal)
 
-El backlog puede vivir en diferentes sistemas según el proyecto. **Antes de crear archivos o tareas, detecta cuál usa el proyecto actual:**
+El backlog vive **siempre como archivos locales** en `.project-context/` o en el repo. El humano es el orquestador: si usa una herramienta de gestión externa, la skill **describe qué crear/mover en ella** — nunca ejecuta acciones en herramientas externas.
 
-1. Lee `~/.claude/project-registry.md` → busca el proyecto actual
-2. Si no hay registry → **pregunta al usuario**: "¿Dónde vive tu backlog? (Obsidian vault / Linear + Outline / carpeta .workspace/)"
+**Antes de crear archivos o tareas:**
 
-### Obsidian vault
+1. Leer el campo `task_tool` de `.project-context/project.md`.
+2. **Crear/actualizar el backlog local** (`sprint-current.md`, `board.md`, `dashboard.md` y los `task.md` por tarea) en `.project-context/` o el repo según corresponda.
+3. **Si `task_tool` tiene valor** (ej. Linear, Jira, Notion, GitHub Issues) → al finalizar, **indicar al humano** qué tareas debe crear/mover en esa herramienta, en texto libre. No llamar MCP ni APIs externas.
+4. **Si `task_tool` está vacío, es `ninguna`, o el campo no existe** → preguntar al humano en texto libre ("¿Usas alguna herramienta de gestión de tareas para registrar este backlog, o lo mantengo solo en archivos locales?") y persistir la respuesta en `task_tool` si la da. No ofrecer un enum cerrado de opciones.
 
-Cada tarea y archivo de sprint debe ser compatible con los plugins de Obsidian: **Dataview** (queries) y **Kanban** (tablero visual).
+### Frontmatter y archivos del backlog local
 
-**Todos los templates viven en `vault-template/` en la raíz del repo Anvil.** Leerlos directamente — nunca hardcodear templates inline en skills o agentes.
+Cada `task.md` usa frontmatter YAML simple. Los archivos del sprint viven juntos en `.project-context/` o el repo:
 
-#### Frontmatter de archivo de tarea (OBLIGATORIO para cada task.md)
-
-Cada `<docs>/03-tasks/<TASK-ID>/task.md` DEBE incluir frontmatter para Dataview. Leer `vault-template/03-tasks/task-template.md` para el formato y campos exactos.
-
-**Sin este frontmatter, las queries de Dataview y el tablero Kanban no funcionarán.** Esto no es opcional.
-
-#### Archivos companion del sprint (crear junto con sprint-current.md)
-
-Al crear un nuevo sprint, el PM DEBE crear 3 archivos basados en los templates en `vault-template/02-backlog/`:
-
-| Archivo | Fuente del template | Propósito |
-|---|---|---|
-| `<docs>/02-backlog/sprint-current.md` | `vault-template/02-backlog/sprint-current.md` | Tabla del sprint con secciones |
-| `<docs>/02-backlog/board.md` | `vault-template/02-backlog/board.md` | Tablero Kanban (plugin Obsidian) |
-| `<docs>/02-backlog/dashboard.md` | `vault-template/02-backlog/dashboard.md` | Queries del dashboard Dataview |
-
-**Los tres archivos deben existir juntos.** Nunca crear uno sin los otros.
+| Archivo | Propósito |
+|---|---|
+| `sprint-current.md` | Tabla del sprint con secciones (formato abajo) |
+| `board.md` | Tablero Kanban — ítems de checkbox con wiki-link y etiquetas |
+| `dashboard.md` | Queries del dashboard (opcional; útil si el proyecto usa un visor tipo Dataview) |
 
 Cada tarea en board.md es un ítem de checkbox con un wiki-link y etiquetas relevantes:
 ```
 - [ ] [[TASK-ID/task]] Titulo de la tarea #proyecto #tag
 ```
 
+`board.md` y `dashboard.md` son opcionales para proyectos ligeros — `sprint-current.md` y los `task.md` son el mínimo. Si el proyecto usa un visor tipo Dataview/Kanban, leer las plantillas de referencia que el proyecto tenga y mantener su frontmatter.
+
 #### Actualizar archivos companion
 
 - Cuando las tareas cambian de estado → actualizar tanto `sprint-current.md` COMO `board.md` (mover el checkbox a la columna correcta)
 - Cuando se agregan tareas → agregar a la tabla de `sprint-current.md` Y a la columna Backlog de `board.md`
 - Actualizar el campo `status` del frontmatter de la tarea para que coincida
-- El `dashboard.md` se actualiza solo via queries Dataview — no se necesitan actualizaciones manuales
+- El `dashboard.md` se actualiza solo via queries — no se necesitan actualizaciones manuales
 
 #### Transiciones de estado — la regla de los 3 lugares (CRÍTICO)
 
-Cada vez que una tarea cambia de estado, se DEBEN actualizar **exactamente 3 archivos**. Olvidar cualquiera de ellos causa deriva.
+Cada vez que una tarea cambia de estado, se DEBEN actualizar **exactamente 3 archivos** locales. Olvidar cualquiera de ellos causa deriva.
 
 **Lista de verificación para CADA transición de estado:**
 
-1. **`<docs>/02-backlog/sprint-current.md`** — mover la fila a la sección correcta (Backlog / TODO / In Progress / Blocked / In Review / Done). Las filas Done incluyen: `| ID | Title | Type | YYYY-MM-DD | Notes |`.
+1. **`sprint-current.md`** — mover la fila a la sección correcta (Backlog / TODO / In Progress / Blocked / In Review / Done). Las filas Done incluyen: `| ID | Title | Type | YYYY-MM-DD | Notes |`.
 
-2. **`<docs>/02-backlog/board.md`** — mover la línea de checkbox `- [ ]` / `- [x]` a la columna Kanban correcta. Al mover a Done, cambiar `- [ ]` a `- [x]`.
+2. **`board.md`** — mover la línea de checkbox `- [ ]` / `- [x]` a la columna Kanban correcta. Al mover a Done, cambiar `- [ ]` a `- [x]`.
 
-3. **Frontmatter de `<docs>/03-tasks/<TASK-ID>/task.md`** — actualizar el campo `status`. Si se mueve a Done, TAMBIÉN agregar el campo `completed: YYYY-MM-DD`. **Este es el que se olvida.**
+3. **Frontmatter del `task.md`** — actualizar el campo `status`. Si se mueve a Done, TAMBIÉN agregar el campo `completed: YYYY-MM-DD`. **Este es el que se olvida.**
+
+Si `task_tool` tiene valor, además **describir al humano** la transición equivalente a aplicar en su herramienta — sin ejecutarla.
 
 #### Mapeo de estado → valor en frontmatter
 
@@ -179,37 +173,18 @@ Cada vez que una tarea cambia de estado, se DEBEN actualizar **exactamente 3 arc
 
 **Síntoma:** el usuario dice "veo la tarea X todavía en el backlog" aunque `sprint-current.md` y `board.md` la muestren en Done.
 
-**Causa:** `03-tasks/<ID>/task.md` todavía tiene `status: backlog`. La query Dataview en `dashboard.md` lee los frontmatters, no las columnas Kanban.
+**Causa:** el `task.md` todavía tiene `status: backlog`. La query del `dashboard.md` lee los frontmatters, no las columnas Kanban.
 
 **Corrección:** buscar statuses desactualizados antes de cerrar un sprint:
 ```bash
-grep -r "status: backlog" <docs>/03-tasks/ | grep -v "$(awk '/## Backlog/,/## TODO/' <docs>/02-backlog/sprint-current.md)"
+grep -rl "status: backlog" <ruta-de-tasks>/
 ```
 
 **Prevención:** al mover a Done, hacer las 3 ediciones de archivo en el mismo lote de llamadas a herramientas.
 
-### Outline + Linear
-
-Las tareas y el backlog viven en Linear. Los PRDs viven en Outline.
-
-- **NO crear archivos locales** (ni task.md, ni sprint-current.md, ni board.md)
-- Las tareas se crean como issues en Linear con los campos: título, descripción, prioridad, puntos, asignado
-- Las transiciones de estado se hacen moviendo issues entre columnas en Linear
-- El PRD se vincula como documento de Outline en la descripción del issue de Linear
-- Si el proyecto tiene MCP servers de Linear/Outline configurados, usar esas herramientas
-
-### Carpeta `.workspace/`
-
-Formato ligero sin plugins de Obsidian.
-
-- Crear `sprint-current.md` con el formato de tabla estándar (ver sección "Formato del tablero de sprint")
-- `board.md` y `dashboard.md` son opcionales
-- Los task.md usan frontmatter YAML simple (sin Dataview)
-- Las transiciones de estado solo requieren actualizar `sprint-current.md`
-
 ## Formato del tablero de sprint
 
-`{backlog_path}` (Obsidian: `<docs>/02-backlog/sprint-current.md` | `.workspace/`: `.workspace/sprint-current.md` | Linear: N/A):
+`{backlog_path}` (archivo local `sprint-current.md` en `.project-context/` o el repo):
 
 ```markdown
 # Sprint Backlog

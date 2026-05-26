@@ -263,7 +263,7 @@ El descubrimiento determina la audiencia. Adapta tu enfoque:
 - Muestra código, comandos CLI, snippets de arquitectura
 - Reconoce trade-offs — la honestidad construye confianza
 - Sin buzzwords: "revolutionary", "game-changing", "leverage" = pérdida instantánea
-- La prueba: "¿Lo compartirían en el Slack de su equipo?"
+- La prueba: "¿Lo compartirían en el canal de comunicación de su equipo?"
 
 ### Audiencia de negocios (founders, ejecutivos, managers)
 - Resultados > features. ROI, tiempo ahorrado, impacto en ingresos

@@ -62,8 +62,8 @@ El `spec-writer` puede correr en dos modos (ver `agents/spec-writer.md`, §Modos
 | `requirements.md` path | siempre | **opcional** — si no existe, los IDs de cobertura por task vienen del spec liviano (`brief-N`) | Para extraer IDs FR-N/NFR-N por task (trazabilidad) en modo normal |
 | ARD paths | siempre | **opcionales** — si no existen, las capas se infieren del path de cada archivo | `architecture.md` + vistas relevantes — para entender capas y dependencias |
 | `task_path` | siempre | siempre | Ruta absoluta donde escribir `tasks.md` y subdirectorios `<TASK-ID>/spec.md` cuando aplique |
-| `backlog_path` | siempre | siempre | Path al `sprint-current.md` (o equivalente del sistema de docs) |
-| Sistema de gestión | siempre | siempre | `obsidian` / `linear` / `workspace` — controla el formato de salida |
+| `backlog_path` | siempre | siempre | Path al `sprint-current.md` local (en `.project-context/` o el repo) |
+| `task_tool` | siempre | siempre | Leído de `.project-context/project.md`. Valor libre (ej. `Linear`, `Jira`, `Notion`) o vacío/`ninguna`. Si tiene valor, el agente **describe** al humano qué crear en esa herramienta; nunca la ejecuta |
 | `feature_id` | siempre | siempre | ID parent (`PROJ-FEAT-NNN`) — los `TASK-ID` derivan de este |
 | `milestone` | siempre | opcional (default: vacío) | Heredado del ARD — propagado a cada task |
 
@@ -79,7 +79,7 @@ El `spec-writer` puede correr en dos modos (ver `agents/spec-writer.md`, §Modos
    - **Spec liviano:** `## 2. Archivos a tocar`, `## 3. Criterios de aceptación` y `## 4. Decisiones inline`.
 3. Si hay path a `requirements.md` (spec normal o caso atípico liviano), leerlo para tener IDs `FR-N`/`NFR-N` disponibles para trazabilidad. Con spec liviano sin `requirements.md` → usar los IDs `brief-N` del spec.
 4. Si hay paths ARD (spec normal o caso atípico liviano), leer `architecture.md` y vistas para entender capas y dependencias entre componentes. Con spec liviano sin ARD → inferir capas desde el path de cada archivo (`internal/handler/` → handler; `internal/service/` → lógica; `internal/repo/` → datos; `types/` → tipos; etc.).
-5. Leer el `backlog_path` actual para respetar el formato y las convenciones existentes (no imponer formato nuevo). Si el sistema es `linear`, no se lee archivo local — se delega la lectura a la skill `backlog-management`.
+5. Leer el `backlog_path` actual (archivo local) para respetar el formato y las convenciones existentes (no imponer formato nuevo). Leer `task_tool` de `.project-context/project.md` para saber si, al cerrar, debes describir al humano qué crear en su herramienta externa.
 6. **NO leer código de producción.** Verificación puntual de existencia de paths con `LS`, sí; lecturas amplias, no.
 
 ### Paso 2 — Descomponer en tasks atómicas
@@ -118,7 +118,7 @@ Cada task debe contener TODO lo que el developer necesita para ejecutarla sin re
 
 1. **Escribir `{task_path}/tasks.md`** con todas las tasks en el formato definido abajo.
 2. **Para tasks ≥ 5 pts (solo con spec normal):** escribir además `{task_path}/<TASK-ID>/spec.md` self-contained — extracto del spec global con SOLO las secciones relevantes a esa task (criterios que cubre, contratos que toca, ubicación). Esto evita que el developer cargue el spec global completo para una task pequeña. **Con spec liviano este sub-paso no aplica** — ninguna task individual debería llegar a 5 pts dentro de un feature Small; si lo hace, escalar al humano (o al líder si hay orquestación activa) en lugar de escribir el extracto.
-3. **Actualizar el backlog vía skill `/backlog-management`** — respetar el sistema (`obsidian` / `linear` / `workspace`) y el formato existente del `backlog_path`.
+3. **Actualizar el backlog local vía skill `/backlog-management`** — respetar el formato existente del `backlog_path`. Si `task_tool` tiene valor, **describir al humano** qué tareas crear en esa herramienta — nunca ejecutarla.
 4. **Devolver al humano (o al líder si hay orquestación activa)** la tabla resumida de tasks con ID, tipo, puntos, dependencias y orden de ejecución.
 
 ## Formato de cada task en `tasks.md`
@@ -176,7 +176,6 @@ Escalar (no continuar) cuando se cumpla cualquiera de estas condiciones:
 |---|---|
 | Tasks superan 15 | `Generé >15 tasks — entregué las 15 primeras por prioridad. Decisión abierta: ¿partir el feature en sub-features o ampliar el límite?` |
 | Dependencia circular detectada | `Ciclo detectado: [A → B → C → A]. Re-invocar [architect/spec-writer en modo normal / spec-writer en modo liviano] para resolver el orden.` |
-| Sistema de gestión `linear` pero falta MCP de Linear | `Sistema linear declarado pero MCP no configurado. ¿Continuo en formato local o se configura primero?` |
 | Falta cualquier campo de entrada obligatorio del modo correspondiente | `Falta [campo] para spec [normal/liviano]. No puedo proceder.` |
 | Una task requiere decisión técnica no presente en las fuentes disponibles | `Task [X] requiere decisión [Y] no resuelta en [spec/ARD si normal, spec liviano si liviano]. Re-invocar spec-writer [o architect si normal y es decisión arquitectónica / o ampliar el brief si liviano].` |
 
@@ -229,9 +228,10 @@ Si el presupuesto se excede → escalar al humano (o al líder si hay orquestaci
 **Orden de ejecución sugerido:** <feature_id>-01 → <feature_id>-02 → ...
 **Tasks críticas (bloqueadoras):** [lista — tasks de las que dependen ≥3 otras]
 **Decisiones abiertas:** [lista corta — si vacía, "ninguna"]
-**Backlog actualizado:** sí / no (sistema: <obsidian|linear|workspace>)
+**Backlog actualizado:** sí / no (local en `.project-context/` o repo)
+**Acción para el humano:** <si task_tool tiene valor: "crear N tasks en {task_tool}"; si no: "ninguna">
 ```
 
 ## Skills
 
-- `/backlog-management` — reglas de descomposición, formato de filas en sprint-current.md, formato de tasks por sistema de docs (Obsidian / Linear / .workspace), regla de los 3 lugares para Obsidian. Cargar **antes** del Paso 4 para escribir el backlog en el formato correcto del proyecto.
+- `/backlog-management` — reglas de descomposición, formato de filas en sprint-current.md, formato de tasks locales, regla de los 3 lugares, y patrón universal de `task_tool` (describir al humano qué crear en su herramienta externa sin ejecutarla). Cargar **antes** del Paso 4 para escribir el backlog en el formato correcto del proyecto.

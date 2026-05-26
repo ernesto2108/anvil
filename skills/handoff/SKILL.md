@@ -55,14 +55,10 @@ El orquestador lee el handoff y lo pasa inline al desarrollador. El desarrollado
 Llamado por `/task-complete` o manualmente por el orquestador:
 
 1. Leer el contenido del handoff
-2. **Agregar `## Resumen de completacion` al archivo de la tarea** — el destino depende del sistema de docs:
-   - **Obsidian vault:** `{task_path}/task.md`. Seguir el formato de tareas completadas existentes.
-   - **Linear+Outline:** agregar el resumen como comentario en el issue de Linear.
-   - **`.workspace/`:** `{task_path}/task.md` con YAML simple.
+2. **Agregar `## Resumen de completacion` al archivo de la tarea local** (`{task_path}/task.md` en `.project-context/` o el repo). Seguir el formato de tareas completadas existentes.
 3. Mover el archivo de handoff a `.handoff/archive/<TASK-ID>.md`
-4. **Obsidian vault:** actualizar board (`{board_path}`) — mover la tarea a Done. Actualizar frontmatter: `status: done`, `completed: <fecha>`.
-   **Linear+Outline:** mover issue a Done en Linear.
-   **`.workspace/`:** actualizar `{backlog_path}` solamente.
+4. Actualizar el tablero/backlog local si existe — mover la tarea a Done, actualizar frontmatter: `status: done`, `completed: <fecha>`.
+5. **Si el proyecto tiene `task_tool` configurado** en `.project-context/project.md` (ej. Linear, Jira, Notion): **describir al humano** qué registrar en esa herramienta (ej. "Agrega el resumen de completación como comentario y mueve <TASK-ID> a Done en {task_tool}"). **Nunca ejecutar la acción en la herramienta externa** — solo describirla. Si `task_tool` está vacío o es `ninguna`, omitir este paso.
 
 ## Template
 

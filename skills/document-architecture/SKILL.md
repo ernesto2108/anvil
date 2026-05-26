@@ -14,8 +14,7 @@ Si se invoca sin argumentos, pregunta al usuario (en español):
 1. **¿Que proyecto?** — nombre del repo
 2. **¿Que tarea del backlog?** — ID. Si no hay, preguntar si crear una.
 
-Resuelve `<docs>` desde `~/.claude/project-registry.md`.
-Resuelve `<repo>` desde `~/projects/<project-name>`.
+La documentación de arquitectura vive en `.project-context/` o el repo. Resuelve `<repo>` desde `~/projects/<project-name>`. Lee `task_tool` de `.project-context/project.md` para saber si, al cerrar la tarea, debes describir al humano qué actualizar en su herramienta externa.
 
 ### Auto-detección
 
@@ -33,7 +32,7 @@ Ejecuta `ls <repo>/` y determina:
 
 ## Paso 1 — Verificar patrón de output
 
-Verifica `{architecture_path}` para la estructura de archivos esperada. El orquestador resuelve esta ruta según vault-setup path table. La guía especifica qué archivos generar.
+Verifica `{architecture_path}` para la estructura de archivos esperada (en `.project-context/` o el repo). La guía especifica qué archivos generar.
 
 ## Paso 2 — Decidir seguridad
 
@@ -71,10 +70,11 @@ Omitir si el Paso 2 dijo que no. Lee `known-systemic-issues.md`, inyéctalo INLI
 
 ## Paso 6 — Cerrar tarea
 
-1. Actualiza el estado de la tarea a `done`
-2. Si el sistema es Obsidian: actualiza board.md + frontmatter. Si es Linear: mueve issue a Done. Si es `.workspace/`: actualiza sprint-current.md.
+1. Actualiza el estado de la tarea a `done` en el `task.md` local
+2. Actualiza el tablero/backlog local si existe (board.md + frontmatter, sprint-current.md)
 3. Elimina duplicado del backlog si existe
-4. Actualiza métricas del sprint (si aplica al sistema de docs)
+4. Actualiza métricas del sprint local (si existen)
+5. Si `task_tool` tiene valor → **describe al humano** qué mover a Done en su herramienta. Nunca la ejecutes. Si está vacío o es `ninguna`, omite.
 
 ## Reglas
 

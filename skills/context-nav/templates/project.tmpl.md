@@ -1,6 +1,7 @@
 # Proyecto — <ProjectName>
 
 last_updated: <YYYY-MM-DD>
+task_tool: ""  # Herramienta de gestión de tareas del proyecto (valor libre, ej: Linear, Jira, Notion, ninguna)
 
 ## Objetivo
 

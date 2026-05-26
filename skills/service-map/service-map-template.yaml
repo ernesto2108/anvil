@@ -1,12 +1,12 @@
 # Service Map Template
-# Copy this file to: .workspace/context/service-map.yaml
+# Copy this file to: .project-context/service-map.yaml
 # Fill in your actual services, endpoints, and dependencies.
 #
 # This file is SHARED (committed to git). It documents the architecture
 # and dependencies that the whole team needs to know.
 #
 # Local paths (where repos live on YOUR machine) go in:
-#   .workspace/context/service-map.local.yaml  ← git-ignored, per-developer
+#   .project-context/service-map.local.yaml  ← git-ignored, per-developer
 #
 # Rules:
 # - Each endpoint/table/event must have exactly ONE owner

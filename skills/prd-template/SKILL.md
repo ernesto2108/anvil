@@ -57,7 +57,7 @@ Después de recopilar suficientes respuestas: confirmar con un breve resumen en 
 
 ## Template de PRD
 
-Crear en: `{task_path}/prd.md` (el orquestador provee `task_path` resuelto). En Linear+Outline, el PRD se crea como documento en Outline y se vincula al issue de Linear.
+Crear en: `{task_path}/prd.md` dentro de `.project-context/` o del repo (el orquestador provee `task_path` resuelto). El PRD es siempre un archivo local. Si el proyecto tiene `task_tool` configurado (campo de `.project-context/project.md`), al finalizar **indicar al humano**: "Vincula este PRD en {task_tool}". Nunca ejecutar acciones en la herramienta externa.
 
 ```markdown
 # <TASK-ID>: <Titulo>
@@ -169,13 +169,9 @@ Usar formato Dado/Cuando/Entonces. Un comportamiento por escenario.
 
 ## Formato de salida para descomposición de tareas
 
-Cuando el PM descompone un PRD en tareas (vía `/backlog-management`), el formato depende del sistema de docs del proyecto:
+Cuando el PM descompone un PRD en tareas (vía `/backlog-management`), las tareas se escriben siempre como archivos locales en `.project-context/` o en el repo, con frontmatter YAML simple. Ver la skill `/backlog-management` para el formato exacto.
 
-- **Obsidian vault:** cada task.md DEBE incluir frontmatter de Dataview. Leer `vault-template/03-tasks/task-template.md` para el formato exacto.
-- **Linear+Outline:** las tareas se crean como issues en Linear — no como archivos locales.
-- **`.workspace/`:** task.md con frontmatter YAML simple (sin plugins de Obsidian).
-
-**Si no sabes qué sistema usa el proyecto → consulta `~/.claude/project-registry.md` o pregunta al usuario.**
+Si el proyecto tiene `task_tool` configurado (campo de `.project-context/project.md`), al finalizar **indicar al humano** qué tareas crear en esa herramienta — nunca ejecutar acciones en la herramienta externa.
 
 ## Qué NO va en un PRD
 

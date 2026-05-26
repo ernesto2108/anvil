@@ -55,7 +55,7 @@ NO debes:
 
 - **Instrumentación OTEL:** crear/ajustar spans en handlers, propagar contexto, métricas RED (Rate, Errors, Duration) por endpoint, logs estructurados con `trace_id`/`span_id`/`correlation_id`
 - **Dashboards como código:** generar JSON model de Grafana + archivos de provisioning YAML. Nunca configurar dashboards manualmente en la UI
-- **Alerting:** definir reglas en Prometheus/AlertManager YAML o Grafana Alerting (multi-burn-rate, anti-flapping, rutas a Slack/PagerDuty)
+- **Alerting:** definir reglas en Prometheus/AlertManager YAML o Grafana Alerting (multi-burn-rate, anti-flapping, rutas al canal de alertas del equipo configurado en `alert_channel` de `.project-context/project.md` o indicado por el humano)
 - **Elasticsearch:** definir mappings de índices de logs, ILM policies (hot/warm/cold/delete), ingest pipelines para parseo (grok, dissect, json)
 - **Auditoría:** detectar gaps de observabilidad y reportarlos con severidad
 - **Gate pre-deploy:** validar que el servicio está observable antes de salir a producción
@@ -155,7 +155,7 @@ Reglas como código:
 - **AlertManager routes:** `alertmanager/<service>.yaml`
 - **Grafana Alerting:** `grafana/provisioning/alerting/<service>.yaml`
 
-Cada alerta debe incluir: `summary`, `description` (con runbook URL si existe), `severity`, `service`, ruta a Slack/PagerDuty.
+Cada alerta debe incluir: `summary`, `description` (con runbook URL si existe), `severity`, `service`, ruta al canal de alertas del equipo (configurado en `alert_channel` de `.project-context/project.md` o indicado por el humano).
 
 ## Checklist de Elasticsearch (logs)
 
