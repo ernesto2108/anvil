@@ -65,7 +65,7 @@ No hay solapamiento: el `agent-designer` puede escribir un agente impecable que 
 
 ## Inputs que acepta
 
-El Líder PUEDE proporcionar:
+El prompt PUEDE proporcionar:
 
 | Input | Descripción | Default |
 |---|---|---|
@@ -74,9 +74,9 @@ El Líder PUEDE proporcionar:
 | `task_path` | Donde escribir el reporte | (solo consola) |
 | `changed_files` | Lista de archivos modificados recientemente (modo gate pre-merge) | (nada) |
 
-Si el Líder no pasa nada → modo `full-audit` por defecto.
+Si el prompt no pasa nada → modo `full-audit` por defecto.
 
-Si el sistema no tiene **ningún** archivo en `agents/`, `skills/`, `commands/` ni `pipelines/` → reportar al Líder y salir. No hay nada que auditar.
+Si el sistema no tiene **ningún** archivo en `agents/`, `skills/`, `commands/` ni `pipelines/` → reportar al humano (o al líder si hay orquestación activa) y salir. No hay nada que auditar.
 
 ## Contexto del sistema
 
@@ -240,9 +240,9 @@ Construir el grafo de referencias `agente → skill`, `pipeline → agente`, `le
 
 ### Paso 4 — Producir reporte
 
-Generar el reporte en markdown (estructura abajo). Si `task_path` está provisto → escribir en `{task_path}/system-audit.md`. Siempre imprimir resumen ejecutivo en consola para el Líder.
+Generar el reporte en markdown (estructura abajo). Si `task_path` está provisto → escribir en `{task_path}/system-audit.md`. Siempre imprimir resumen ejecutivo en consola para el humano (o el líder si hay orquestación activa).
 
-### Paso 5 — Escalar al Líder
+### Paso 5 — Escalar el resultado
 
 Si hay hallazgos `CRÍTICO` → recomendar invocar a `agent-designer` para aplicar correcciones. Indicar qué archivos tocar y qué cambios sugeridos hacer.
 
@@ -306,7 +306,7 @@ Si hay hallazgos `CRÍTICO` → recomendar invocar a `agent-designer` para aplic
 
 Si no hay hallazgos: "Se auditaron N agentes, M skills, P commands y Q pipelines contra las 7 categorías. Sistema saludable."
 
-## Mensaje al Líder
+## Output de cierre
 
 **Máx 150 palabras.** El reporte completo vive en `{task_path}/system-audit.md` cuando hay path; si no, todo va inline. Incluir:
 
@@ -333,5 +333,5 @@ Si no hay hallazgos: "Se auditaron N agentes, M skills, P commands y Q pipelines
 - **Complementa a `agent-designer`** — el designer escribe, este auditor verifica que el resultado sea coherente con el resto del sistema. Forman un loop: designer → system-reviewer → designer (si hay hallazgos)
 - **Independiente de `arch-reviewer`** — aquel audita PRs de código de aplicación; este audita el meta-sistema de IA. No solapan
 - **Independiente de `reviewer`** — `reviewer` revisa correctitud de código; este revisa coherencia del sistema de configuración de la IA
-- **Si bloquea con CRÍTICO** → el Líder pasa el reporte al `agent-designer` para aplicar correcciones, y luego re-invoca al `system-reviewer` para verificar
+- **Si bloquea con CRÍTICO** → el humano (o el líder si hay orquestación activa) pasa el reporte al `agent-designer` para aplicar correcciones, y luego re-invoca al `system-reviewer` para verificar
 - **No reemplaza al `agent-designer`** — el designer *crea* artefactos del sistema; el system-reviewer *audita* que el conjunto sea coherente

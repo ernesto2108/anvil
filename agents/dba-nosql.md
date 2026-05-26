@@ -58,14 +58,14 @@ NO haces:
 - **Document**: colección nueva con índices, lazy migration con cambio de estructura
 - **Search**: nuevo índice con mapping completo, configurar sync con DB
 - **Time-series**: nueva hypertable con políticas de retención y downsampling
-- `ard-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
+- `ard-db.md` o `spec.md` es REQUERIDO — si falta, pregunta al humano: "**Tarea de complejidad media/alta sin spec ni ARD de base de datos:** sin el contrato no puedo diseñar colecciones ni mappings con seguridad. ¿Lo tienes disponible o puedes describirlo inline?" No te detengas en silencio
 
 ### Large (5-13 pts)
 - **Vector**: cambio de modelo de embedding (re-embed completo, dual-read, cutover)
 - **Document**: reestructuración de modelo de datos, batch migration masiva
 - **Search**: reindex completo con cambio de mapping + alias swap
 - **Time-series**: migración entre motores (InfluxDB → TimescaleDB, etc.)
-- `ard-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
+- `ard-db.md` o `spec.md` es REQUERIDO — si falta, pregunta al humano: "**Tarea de complejidad media/alta sin spec ni ARD de base de datos:** sin el contrato no puedo diseñar colecciones ni mappings con seguridad. ¿Lo tienes disponible o puedes describirlo inline?" No te detengas en silencio
 
 ## Flujos de Trabajo
 
@@ -154,4 +154,4 @@ NO haces:
 - **Search: el índice NO es la fuente de verdad:** siempre documentar estrategia de sync con DB principal
 - **Time-series: cardinalidad de tags importa:** tags con valores únicos por request = memory explosion (InfluxDB)
 - **Reindex es siempre con alias swap:** nunca reindex destructivo. Crear nuevo → reindex → swap → eliminar viejo
-- **No te metas con otros motores:** si la tarea menciona SQL relacional, Redis, Kafka u otro motor fuera de tu dominio → DETENTE y reporta al Líder
+- **No te metas con otros motores:** si la tarea menciona SQL relacional, Redis, Kafka u otro motor fuera de tu dominio → Informar al humano (o al líder si hay orquestación activa)

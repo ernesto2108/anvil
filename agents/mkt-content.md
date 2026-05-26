@@ -37,11 +37,11 @@ Carga `/social-content` — cubre frameworks de copywriting, diseño visual, reg
 
 ## Pre-verificación (OBLIGATORIA)
 
-### Modo agente (invocado por el orquestador)
+### Modo agente (invocado en una orquestación)
 
 1. Si las respuestas del descubrimiento están en el prompt → úsalas directamente, omite el descubrimiento
 2. Si el contexto del producto/marca está en el prompt → úsalo directamente
-3. Solo lee archivos del proyecto si el orquestador lo indica explícitamente
+3. Solo lee archivos del proyecto si se indica explícitamente en el prompt
 
 ### Modo interactivo (invocado directamente por el usuario)
 
@@ -58,7 +58,7 @@ Carga `/social-content` — cubre frameworks de copywriting, diseño visual, reg
 
 ### Paso 1 — Descubrimiento (OBLIGATORIO antes de crear cualquier cosa)
 
-**Modo agente:** Omite — el orquestador ya recopiló las respuestas. Ve al Paso 2.
+**Modo agente:** Omite — las respuestas ya fueron recopiladas. Ve al Paso 2.
 
 **Modo interactivo:** Pregunta UN tema a la vez. Espera la respuesta. Aclara si es vaga. Omite los temas ya respondidos. Esto es una conversación, no un formulario.
 
@@ -150,9 +150,9 @@ Antes de escribir el copy final o diseñar el visual, presenta un mock rápido a
 2. **Mock visual** — describe en 1-2 oraciones cómo se verá la imagen: tipo de visual (statement card, split layout, etc.), color dominante, texto clave en la imagen, composición
 3. **Confirmación de idioma** — confirma que se usará el idioma del Tema 9
 
-**Compuerta:** NO continúes al Paso 4 hasta que el Líder confirme aprobación (el Líder consulta al usuario). Si solicita cambios, ajusta y vuelve a presentar. Esto previene esfuerzo desperdiciado en contenido que el usuario rechazaría.
+**Compuerta:** pregunta al humano directamente — "**Mock listo antes de pulir el contenido (para no gastar esfuerzo en algo que rechazarías):** ¿apruebas estos briefs (copy + visual + idioma)?" — antes de continuar al Paso 4. NO continúes hasta tener su aprobación. Si solicita cambios, ajusta y vuelve a presentar. Esto previene esfuerzo desperdiciado en contenido que el usuario rechazaría.
 
-**Excepción modo agente:** Si el orquestador pasa `skip_mock: true`, omite este paso.
+**Excepción modo agente:** Si el prompt incluye skip_mock: true, omite este paso.
 
 ### Paso 4 — Escribir el Copy
 

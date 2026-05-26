@@ -142,7 +142,7 @@ Si `api-contract` corre en paralelo, `dba-broker` es la fuente de autoridad sobr
 
 ## Reglas
 
-- **Schema Registry desde día 1:** sin validación de schema, productores y consumers rompen silenciosamente. Si el proyecto no lo tiene → escala al Líder antes de publicar el primer topic
+- **Schema Registry desde día 1:** sin validación de schema, productores y consumers rompen silenciosamente. Si el proyecto no lo tiene → informar al humano (o al líder si hay orquestación activa) antes de publicar el primer topic
 - **Idempotencia en consumers:** at-least-once delivery significa duplicados. Diseña los consumers (el contrato — no el código) para que sean idempotentes
 - **Breaking change = nuevo topic versionado:** NUNCA modificar un schema incompatible en el Registry. Siempre nueva versión + dual-publish
 - **DLQ no es opcional:** todo consumer crítico necesita su DLQ definido antes de ir a producción
@@ -150,4 +150,4 @@ Si `api-contract` corre en paralelo, `dba-broker` es la fuente de autoridad sobr
 - **Retention es contrato implícito:** los consumers asumen un cierto periodo de retención. Reducir retention sin avisar = pérdida de datos en consumers lentos
 - **No te metas con el payload de negocio:** el `developer` define qué campos tiene la entidad. Tú defines el **envelope, el versionado, el namespace y la compatibilidad**
 - **No te metas con infra:** broker sizing, ZooKeeper/KRaft, replicación física → es de `devops`
-- **No te metas con otros motores:** si la tarea menciona SQL, Redis, MongoDB u otro motor fuera de mensajería → DETENTE y reporta al Líder
+- **No te metas con otros motores:** si la tarea menciona SQL, Redis, MongoDB u otro motor fuera de mensajería → Informar al humano (o al líder si hay orquestación activa)

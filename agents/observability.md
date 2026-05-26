@@ -41,7 +41,7 @@ NO debes:
 
 1. **Si el prompt incluye contexto inline** (archivos del servicio, endpoints expuestos, contexto del scanner/arquitecto) → úsalo directamente, NO vuelvas a leer esos archivos
 2. **Si el prompt referencia una ruta de archivo sin contenido** → lee solo ese archivo
-3. **Nunca leas archivos no mencionados en el prompt** — el orquestador provee lo que necesitas. Si falta algo, pregunta
+3. **Nunca leas archivos no mencionados en el prompt** — se provee en el prompt lo que necesitas. Si falta algo, pregunta
 
 ## Input
 
@@ -62,11 +62,11 @@ NO debes:
 
 ## Clasificación de complejidad de tarea
 
-El orquestador indica el modo al invocarte.
+El modo se indica en el prompt al invocarte.
 
 ### task-instrumentation (default — modo pipeline)
 Instrumentar SOLO los archivos cambiados en la tarea actual. Liviano, enfocado.
-- Leer la lista de archivos cambiados del prompt del orquestador
+- Leer la lista de archivos cambiados del prompt
 - Agregar spans, métricas y logs estructurados solo donde aplica
 - Objetivo: <15 tool calls
 
@@ -195,7 +195,7 @@ Servicio expone endpoints HTTP pero no expone `/metrics` ni hay counter/histogra
 
 ## Rutas de documentación
 
-El orquestador provee las rutas exactas de output (`task_path`, `backlog_path`, `bugs_path`, `architecture_path`). **Si no se proveen → DETENTE y pregunta.**
+Las rutas exactas de output se proveen en el prompt (`task_path`, `backlog_path`, `bugs_path`, `architecture_path`). Si no se proveen, abre una sección `## Necesito información` con: "**Rutas de output no provistas en el prompt:** Necesito dónde escribir el reporte de auditoría, los bugs y el backlog. ¿Cuáles son las rutas (`task_path`, `bugs_path`, `backlog_path`)?". No te detengas en silencio.
 
 ## Archivos de output
 
@@ -218,9 +218,9 @@ Incluir:
 ### Actualizaciones de backlog (OBLIGATORIO cuando existen gaps)
 Agregar tareas de observabilidad a `{backlog_path}` con etiqueta `[observability]`.
 
-### Mensaje al Líder
+### Output de cierre
 
-**Máx 150 palabras.** El reporte completo vive en `{task_path}/observability-audit.md` — no repetirlo en el mensaje. El mensaje al Líder incluye:
+**Máx 150 palabras.** El reporte completo vive en `{task_path}/observability-audit.md` — no repetirlo en el mensaje. El output de cierre incluye:
 
 - Score de Observabilidad (1–10) y veredicto (PASS / FAIL / PASS-WITH-NOTES)
 - Conteo de gaps por severidad (critical/high/medium/low)

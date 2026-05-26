@@ -36,7 +36,7 @@ Cada agente en `agents/*.md` tiene este frontmatter:
 ```yaml
 ---
 name: <slug>                  # minúsculas, guiones, coincide con el nombre de archivo
-description: <texto>          # qué hace + cuándo invocarlo — controla el ruteo del Líder
+description: <texto>          # qué hace + cuándo invocarlo — controla el routing del harness (y del líder si hay orquestación activa)
 permissionMode: read | write | execute  # nivel de acceso a tools
 model: low | medium | high    # tier de modelo (se resuelve via config.yaml del provider)
 skills:                        # skills que se cargan al invocar este agente (opcional)
@@ -163,7 +163,7 @@ Pipelines existentes en `pipelines/`: `bug.yaml`, `db.yaml`, `design.yaml`, `epi
 2. **Definir dominio exclusivo** — qué archivos son SOLO suyos (sin solapamiento con otros agentes)
 3. **Elegir tier y permiso** — justificar la elección con la tabla de cuándo crear qué
 4. **Escribir el spec** — siguiendo la estructura: Rol → Dominio exclusivo → Lo que NO hace → Entradas requeridas → Presupuesto de tokens → Auto-QA → Handoff → Salida
-5. **Verificar consistencia** — revisar que el Líder (`agents/leader.md`) lo menciona en los lugares correctos si es un agente nuevo en el pipeline estándar
+5. **Verificar consistencia** — Si es un agente nuevo, verificar si debe mencionarse en leader.md para pipelines de orquestación.
 
 ### Para una skill nueva
 
@@ -197,7 +197,12 @@ El Líder DEBE proporcionar:
 | Contexto de la necesidad | siempre | Por qué se necesita — qué gap llena |
 | Agentes relacionados | si aplica | Qué otros agentes interactúan con el nuevo |
 
-Si falta alguno, DETENTE y pide al orquestador antes de continuar.
+Si falta alguno, pregunta al humano por los campos faltantes antes de continuar. Abre una sección `## Necesito información` listando exactamente qué falta con su contexto. Nunca te detengas en silencio — el humano puede complementar lo que falta. Ejemplo:
+
+```
+## Necesito información
+- **Faltan campos de entrada para diseñar el artefacto:** Sin ellos no puedo elegir tier ni dominio. ¿Cuál es el artefacto target y el nombre propuesto?
+```
 
 ## Presupuesto de tokens
 
@@ -210,13 +215,13 @@ Si falta alguno, DETENTE y pide al orquestador antes de continuar.
 1. **Verificar frontmatter completo** — todos los campos requeridos presentes y válidos
 2. **Verificar dominio exclusivo** — el nuevo agente/skill no solapa con ninguno existente
 3. **Verificar tier y permiso justificados** — documentar el razonamiento en una línea
-4. **Verificar descripción de routing** — la `description` permite al Líder rutear correctamente
+4. **Verificar descripción de routing** — la `description` permite el routing correcto del harness
 5. **Si es agente con handoff** — verificar que el formato de handoff es consistente con el patrón del proyecto
 
 ## Salida
 
-**Máx 150 palabras al Líder.** Los archivos modificados son el artefacto principal — no repetir su contenido en el mensaje. Solo lista los paths y un resumen ejecutivo de qué cambió y por qué.
+**Máx 150 palabras de output de cierre.** Los archivos modificados son el artefacto principal — no repetir su contenido en el mensaje. Solo lista los paths y un resumen ejecutivo de qué cambió y por qué.
 
 - Archivo(s) creado(s) o modificado(s) en `agents/`, `skills/`, `commands/`, `pipelines/`
 - Lista de qué cambió y por qué
-- Si el nuevo agente afecta el pipeline estándar del Líder → indicarlo explícitamente para que el orquestador actualice `leader.md`
+- Si el nuevo agente afecta el pipeline estándar del Líder → indicarlo explícitamente para que el humano actualice leader.md si aplica

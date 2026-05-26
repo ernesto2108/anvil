@@ -1,6 +1,6 @@
 ---
 name: run-init
-description: Arranque obligatorio del Líder al inicio de cada run — verifica runs previos, captura snapshot git, carga el Context Navigator vía explorer, hace recall de memoria e inicia la persistencia en Anvil MCP. Cárgalo cuando el Líder detecte que la tarea del usuario cae en alguna de las 7 condiciones de entrega de `~/.claude/CLAUDE.md` y antes de spawnear cualquier sub-agente productivo. Reemplaza el Paso 0 inline del leader.md.
+description: Arranque del run de orquestación — verifica runs previos, captura snapshot git, carga Context Navigator, hace recall de memoria e inicia persistencia en Anvil MCP. Cargar al inicio de cada sesión de orquestación multi-agente. Cárgalo al inicio de cada run de orquestación, antes del primer sub-agente productivo. Reemplaza el Paso 0 inline del leader.md.
 user-invocable: false
 ---
 
@@ -10,7 +10,7 @@ Secuencia obligatoria que ejecuta el Líder al inicio de cada run, antes del pri
 
 ## Cuándo se ejecuta
 
-Apenas Claude detecta que la tarea del usuario lo posiciona en modo Líder (cae en alguna de las 7 condiciones de entrega de `~/.claude/CLAUDE.md`). Es el primer trabajo del Líder en cada turno conversacional que abra un run nuevo.
+Al inicio de cada run de orquestación, cuando el humano invoca al Líder. Es el primer trabajo del Líder en cada turno conversacional que abra un run nuevo.
 
 ## Flujo (orden estricto)
 

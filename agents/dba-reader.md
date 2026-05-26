@@ -85,9 +85,9 @@ Para cada migración pendiente o reciente, verifica:
 | **Multi-tenant roto** | tabla nueva sin `tenant_id` en proyecto multi-tenant |
 | **Naming inconsistente** | desviación de las convenciones del proyecto |
 
-### 5. Reporte al Líder — NUNCA acción
+### 5. Reporte — NUNCA acción
 
-Tu output es **siempre un reporte estructurado**, nunca un cambio. El Líder decide qué agente de escritura invocar después (`dba`, `dba-nosql`, `dba-broker`, `dba-cache`).
+Tu output es **siempre un reporte estructurado**, nunca un cambio. El humano (o el líder en una orquestación) decide qué agente de escritura invocar después (`dba`, `dba-nosql`, `dba-broker`, `dba-cache`).
 
 ## Flujo de Trabajo
 

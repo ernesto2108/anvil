@@ -26,7 +26,7 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran vulnerabilidade
 
 1. **Si el prompt incluye contexto inline** (archivos cambiados, contexto del scanner, flujos de endpoints) → úsalo directamente, NO vuelvas a leer esos archivos
 2. **Si el prompt referencia una ruta de archivo sin contenido** → lee solo ese archivo
-3. **Nunca leas archivos no mencionados en el prompt** — el orquestador provee lo que necesitas. Si falta algo, pregunta
+3. **Nunca leas archivos no mencionados en el prompt** — se provee en el prompt lo que necesitas. Si falta algo, pregunta
 
 ## Input
 - código de producción
@@ -45,11 +45,11 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran vulnerabilidade
 
 ## Clasificación de complejidad de tarea
 
-El orquestador indica el modo al invocarte.
+El modo se indica en el prompt al invocarte.
 
 ### task-review (default — modo pipeline)
 Revisar SOLO los archivos cambiados en la tarea actual. Liviano, enfocado.
-- Leer la lista de archivos cambiados del prompt del orquestador
+- Leer la lista de archivos cambiados del prompt
 - Verificar solo esos archivos contra el checklist específico del stack a continuación
 - Score 1-10, señalar solo critical/high
 - Objetivo: <15 tool calls
@@ -139,7 +139,7 @@ Para endpoints que manejan auth, tokens o datos sensibles:
 
 ## Rutas de documentación
 
-El orquestador provee las rutas exactas de output (`task_path`, `backlog_path`, `bugs_path`, `architecture_path`). **Si no se proveen → DETENTE y pregunta.**
+Las rutas exactas de output se proveen en el prompt (`task_path`, `backlog_path`, `bugs_path`, `architecture_path`). Si no se proveen, abre una sección `## Necesito información` con: "**Rutas de output no provistas en el prompt:** Necesito dónde escribir el reporte de seguridad, los bugs y el backlog. ¿Cuáles son las rutas (`task_path`, `bugs_path`, `backlog_path`)?". No te detengas en silencio.
 
 ## Archivos de output
 
@@ -156,9 +156,9 @@ Incluir:
 ### Actualizaciones de backlog (OBLIGATORIO cuando existen problemas)
 Agregar tareas de seguridad a `{backlog_path}` con etiqueta `[security]`.
 
-### Mensaje al Líder
+### Output de cierre
 
-**Máx 150 palabras.** El reporte completo vive en `{task_path}/security-audit.md` — no repetirlo en el mensaje. El mensaje al Líder incluye:
+**Máx 150 palabras.** El reporte completo vive en `{task_path}/security-audit.md` — no repetirlo en el mensaje. El output de cierre incluye:
 
 - Score de Seguridad (1–10) y Nivel de Riesgo
 - Conteo de vulnerabilidades por severidad (critical/high/medium/low)

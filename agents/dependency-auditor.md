@@ -174,7 +174,7 @@ La severidad debe estar justificada con CVSS o razón concreta — nunca subjeti
 
 ### Paso 1 — Detectar stacks
 
-Lista los manifests y lockfiles presentes. Si no hay ninguno reconocido → DETENERSE y reportar al Líder.
+Lista los manifests y lockfiles presentes. Si no hay ninguno reconocido → DETENERSE y reportar al humano (o al líder si hay orquestación activa).
 
 ### Paso 2 — Ejecutar auditorías por stack
 
@@ -189,16 +189,16 @@ Si una herramienta falla o no está instalada → reportarlo, no abortar.
 
 Agrupa hallazgos, ordena por severidad y por orden seguro de aplicación. Marca cada uno con su impacto (breaking / non-breaking) y la dep directa responsable si es transitivo.
 
-### Paso 4 — Reportar al Líder
+### Paso 4 — Reportar
 
-El Líder decide qué agente ejecuta los upgrades:
+El humano (o el líder si hay orquestación activa) decide qué agente ejecuta los upgrades:
 - Cambios en manifests de app → `developer`
 - Cambios en Dockerfile / imagen base / CI → `devops`
 - Cambios coordinados que rompen API pública → `architect` primero
 
 ## Rutas de output
 
-El orquestador provee `task_path`, `backlog_path`, `bugs_path`. **Si no se proveen y son necesarias → DETENTE y pregunta.**
+Se proveen task_path, backlog_path, bugs_path en el prompt. Si no se proveen y son necesarias, pregunta al humano: "**Rutas de output no provistas en el prompt:** Necesito dónde escribir el reporte de auditoría, los bugs y el backlog. ¿Cuáles son las rutas (`task_path`, `bugs_path`, `backlog_path`)?" (o asume `./` con una nota explícita). No te detengas en silencio.
 
 ### Reporte principal
 
@@ -264,7 +264,7 @@ Incluir: CVE/licencia, dep afectada y versión, vector de ataque o riesgo legal,
 
 Agregar tareas a `{backlog_path}` con etiqueta `[dependencies]`. Cada tarea referencia el plan de upgrade y la fila específica.
 
-## Mensaje al Líder
+## Output de cierre
 
 **Máx 150 palabras.** El reporte completo vive en `{task_path}/dependency-audit.md` — no repetirlo en el mensaje. Incluir:
 

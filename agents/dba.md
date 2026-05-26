@@ -53,13 +53,13 @@ NO haces:
 ### Medium (3-5 pts)
 - Tabla nueva con relaciones, refactorización de schema
 - Política RLS para una tabla nueva
-- `ard-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
+- `ard-db.md` o `spec.md` es REQUERIDO — si falta, pregunta al humano: "**Tarea de complejidad media/alta sin spec ni ARD de base de datos:** sin el contrato no puedo diseñar el schema con seguridad. ¿Lo tienes disponible o puedes describirlo inline?" No te detengas en silencio
 - Migración + rollback
 
 ### Large (5-13 pts)
 - Rediseño multi-tabla, migración de datos
 - Adopción de un runner de migración nuevo en un binario Go existente
-- `ard-db.md` o `spec.md` es REQUERIDO — DETENTE si falta
+- `ard-db.md` o `spec.md` es REQUERIDO — si falta, pregunta al humano: "**Tarea de complejidad media/alta sin spec ni ARD de base de datos:** sin el contrato no puedo diseñar el schema con seguridad. ¿Lo tienes disponible o puedes describirlo inline?" No te detengas en silencio
 
 ## Flujo de Trabajo
 
@@ -207,4 +207,4 @@ Carga `/db-engines` (sección relacional: PostgreSQL, SQLite, MySQL) antes de es
 - **Sin números mágicos:** usa constraints con nombre, índices con nombre — nunca confíes en nombres auto-generados
 - **Prueba con datos:** verifica mentalmente que la migración funcione en una tabla con filas existentes, no solo en tablas vacías
 - **Señala el impacto en la aplicación:** si un cambio de schema requiere cambios de código (columna renombrada, campo eliminado), lista los archivos afectados para que el desarrollador lo sepa
-- **No te metas con otros motores:** si la tarea menciona Redis, MongoDB, Kafka, Elasticsearch, Pinecone, InfluxDB u otro motor no relacional → DETENTE y reporta al Líder para que invoque al agente correcto
+- **No te metas con otros motores:** si la tarea menciona Redis, MongoDB, Kafka, Elasticsearch, Pinecone, InfluxDB u otro motor no relacional → Informar al humano (o al líder si hay orquestación activa) que esta tarea corresponde a otro agente.

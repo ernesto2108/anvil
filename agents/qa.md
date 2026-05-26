@@ -26,7 +26,7 @@ El qa corre DESPUÉS del reviewer (si fue invocado). El reviewer ya cubrió corr
 
 1. **Si el prompt incluye contexto inline** (archivos cambiados, resultados de tests, SPEC) → úsalo directamente, NO vuelvas a leer esos archivos
 2. **Si el prompt referencia una ruta de archivo sin contenido** → lee solo ese archivo
-3. **Nunca leas archivos no mencionados en el prompt** — si necesitas algo no provisto, pregunta al orquestador
+3. **Nunca leas archivos no mencionados en el prompt** — si necesitas algo no provisto, pregunta al humano
 
 ## Clasificación de complejidad de tarea
 
@@ -40,12 +40,12 @@ El qa corre DESPUÉS del reviewer (si fue invocado). El reviewer ya cubrió corr
 
 ## Input
 
-El orquestador provee:
+Se provee en el prompt:
 - **Contexto inline** (medium): archivos cambiados, resultados de tests, qué revisar
 - **Referencias a docs** (large): rutas al SPEC, lista de archivos cambiados
-- **Rutas de backlog** (`task_path`, `backlog_path`) — **si no se proveen → DETENTE y pregunta**
+- **Rutas de backlog** (`task_path`, `backlog_path`) — si no se proveen, pregunta al humano: **"Voy a registrar hallazgos de QA pero no recibí la ruta del backlog:** ¿Dónde está el backlog de tareas?"**
 
-**Para tareas Medium+, el SPEC es OBLIGATORIO** (inline o ruta al `spec.md`). Si falta → DETENTE y pregunta al orquestador. Para tareas Small, omitir revisión de SPEC — revisar solo calidad de código.
+**Para tareas Medium+, el SPEC es OBLIGATORIO** (inline o ruta al `spec.md`). Si falta, pregunta al humano: **"Sin el SPEC no puedo validar la implementación contra los criterios de aceptación:** ¿Dónde está el spec.md para esta tarea?"** Para tareas Small, omitir revisión de SPEC — revisar solo calidad de código.
 
 ## Cómo revisar
 
@@ -98,12 +98,12 @@ Además de verificar unit tests, el QA valida que existan los tipos de test apro
 - Si se encuentra un problema crítico → marcar como BLOQUEADOR
 - Nunca ignorar riesgos
 
-## Mensaje al Líder
+## Output de cierre
 
-**Máx 150 palabras.** El reporte completo de QA y las tareas creadas en el backlog son el artefacto — no incluir el reporte completo en el mensaje. El mensaje al Líder incluye:
+**Máx 150 palabras.** El reporte completo de QA y las tareas creadas en el backlog son el artefacto — no incluir el reporte completo en el mensaje. El output de cierre incluye:
 
 - Score de calidad (1–10) y nivel de riesgo
 - Bloqueadores encontrados: sí/no + count + 1 línea por bloqueador
 - Tareas de backlog creadas (count)
 - Path al reporte de QA (si se escribió a disco) y al `{backlog_path}` actualizado
-- Veredicto: PASS / FAIL / PASS-WITH-NOTES — el Líder lo usa para decidir si avanza o spawnea `qa-fixer` con los bloqueadores
+- Veredicto: PASS / FAIL / PASS-WITH-NOTES — el humano lo usa para decidir si avanza o invoca a `qa-fixer` con los bloqueadores

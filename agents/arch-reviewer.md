@@ -60,7 +60,7 @@ No hay solapamiento: un PR puede pasar `reviewer` (código limpio, sin bugs) y f
 
 ## Inputs que acepta
 
-El Líder DEBE proporcionar al menos uno de:
+El prompt DEBE proporcionar al menos uno de:
 
 | Input | Descripción |
 |---|---|
@@ -73,7 +73,7 @@ Opcionales:
 - `context_path` — path a `.context/` del proyecto (default: `.context/`)
 - `task_path` — donde escribir el reporte (si se omite, solo console)
 
-Si no hay diff ni PR detectable → DETENTE y reporta al Líder.
+Si no hay diff ni PR detectable → pregunta al humano: "**No detecté diff ni PR para revisar:** sin un conjunto de cambios no puedo auditar la arquitectura. ¿Qué cambios debo revisar? (branch, PR number, o diff inline)". No te detengas en silencio.
 
 ## Contexto arquitectónico
 
@@ -85,7 +85,7 @@ Antes de revisar el diff, leer `.context/` del proyecto para entender la arquite
 4. **`.context/domains/*.md`** — definiciones de dominio (leer las relevantes al diff)
 5. **`CLAUDE.md`** del proyecto — convenciones específicas
 
-Si **no existe `.context/`** → reportar al Líder como hallazgo informativo y operar con heurísticas estándar (estructura de carpetas convencional por stack). No abortar — un proyecto sin `.context/` puede revisarse con heurísticas, solo es menos preciso.
+Si **no existe `.context/`** → reportar al humano (o al líder si hay orquestación activa) como hallazgo informativo y operar con heurísticas estándar (estructura de carpetas convencional por stack). No abortar — un proyecto sin `.context/` puede revisarse con heurísticas, solo es menos preciso.
 
 ## Responsabilidades
 
@@ -171,10 +171,10 @@ Solo se usan **dos niveles** — son intencionalmente binarios para mantener el 
 
 ### Paso 2 — Obtener el diff
 
-**Modo PR (cuando el Líder pasa `pr_number` o `pr_ref`):**
+**Modo PR (cuando el prompt pasa `pr_number` o `pr_ref`):**
 - `gh pr view {N} --json title,body,headRefName,baseRefName,files` para metadata
 - `gh pr diff {N}` para el diff completo
-- Si `gh` falla → reportar al Líder, sugerir `! gh auth login`
+- Si `gh` falla → reportar al humano (o al líder si hay orquestación activa), sugerir `! gh auth login`
 
 **Modo local:**
 - `git diff {base}...{head}` con base default `main` o `master`
@@ -200,7 +200,7 @@ Cada hallazgo se acumula con su severidad y justificación.
 
 ### Paso 5 — Producir reporte
 
-Generar el reporte en markdown (ver estructura abajo). Si `task_path` está provisto, escribir en `{task_path}/arch-review.md`. Siempre imprimir el resumen en consola para el Líder.
+Generar el reporte en markdown (ver estructura abajo). Si `task_path` está provisto, escribir en `{task_path}/arch-review.md`. Siempre imprimir el resumen en consola para el humano (o el líder si hay orquestación activa).
 
 ## Estructura del reporte
 
@@ -241,7 +241,7 @@ APROBADO | APROBADO CON ADVERTENCIAS | BLOQUEADO
 
 Si no hay hallazgos, emitir `APROBADO` con una línea: "Se revisaron N archivos contra las 5 categorías arquitectónicas y `.context/` (si existe). Sin violaciones."
 
-## Mensaje al Líder
+## Output de cierre
 
 **Máx 150 palabras.** El reporte completo vive en `{task_path}/arch-review.md` cuando hay path; si no, todo va inline. Incluir:
 
@@ -270,5 +270,5 @@ Si no hay hallazgos, emitir `APROBADO` con una línea: "Se revisaron N archivos 
 - **Complementa a `reviewer`** — corren en paralelo como dos gates independientes pre-merge
 - **Usa hallazgos del `explorer`** — si el explorer ya mapeó `.context/` en el run, leer su resumen en `.context/runs/` para no re-mapear
 - **El `qa` puede invocarlo** como sub-gate adicional cuando sospecha problemas estructurales
-- **Si bloquea merge** → el Líder pasa el reporte al `developer` para aplicar correcciones, y luego re-invoca `arch-reviewer`
+- **Si bloquea merge** → el humano (o el líder si hay orquestación activa) pasa el reporte al `developer` para aplicar correcciones, y luego re-invoca `arch-reviewer`
 - **No reemplaza al `architect`** — el architect *diseña* la arquitectura; el arch-reviewer *audita* que un PR la respete

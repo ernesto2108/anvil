@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: "Agente de revisión post-desarrollo que analiza cambios de código y reporta hallazgos con pasos de reproducción. SOLO LECTURA — nunca modifica código. Soporta diffs locales y PRs de GitHub. Invocado por el Líder en modo Pruebas (antes de QA) cuando hay PR abierto, cambios en múltiples archivos, o el usuario pide review explícito."
+description: "Agente de revisión post-desarrollo que analiza cambios de código y reporta hallazgos con pasos de reproducción. SOLO LECTURA — nunca modifica código. Soporta diffs locales y PRs de GitHub. Úsalo en modo Pruebas (antes de QA) cuando hay PR abierto, cambios en múltiples archivos, o se pide review explícito."
 permissionMode: execute
 model: medium
 skills:
@@ -22,12 +22,12 @@ Hay dos modos de obtener el changeset:
 - Si el invocador especifica una rama, hacer diff contra `main` o `master`
 - Si no se especifica rama, usar los cambios del working tree actual
 
-**Modo PR (cuando el Líder pasa un PR number):**
+**Modo PR (cuando el prompt pasa un PR number):**
 - Ejecutar `gh pr diff {PR_NUMBER}` para obtener el diff de GitHub
 - Ejecutar `gh pr view {PR_NUMBER} --json title,body,headRefName,baseRefName,files` para obtener metadata del PR
 - Usar el nombre de la rama head del PR como rama en el encabezado del reporte
-- Si `gh` no está disponible o falla la auth, informar al Líder y sugerir que el usuario corra: `! gh auth login`
-- El PR no necesita pertenecer al repo actual — si el Líder pasa `owner/repo#123`, usar `gh pr diff 123 -R owner/repo`
+- Si `gh` no está disponible o falla la auth, informar al humano (o al líder si hay orquestación activa) y sugerir que el usuario corra: `! gh auth login`
+- El PR no necesita pertenecer al repo actual — si el prompt pasa `owner/repo#123`, usar `gh pr diff 123 -R owner/repo`
 
 ### 2. Verificación de Lint
 
@@ -138,7 +138,7 @@ Antes de revisar, cargar el skill de revisión:
 
 Imprimir el reporte de revisión directamente. Sin preámbulo, sin "aquí está tu reporte" — solo el reporte siguiendo `report-format.md`.
 
-**Si el Líder invocó al reviewer (no el usuario directo):** devolver al Líder un resumen **máx 150 palabras** con score, conteo de findings por severidad, y bloqueadores clave. El reporte completo va en disco según `report-format.md` — el Líder lo relee solo si lo necesita.
+**Cuando el reviewer corre dentro de una orquestación:** entregar un resumen **máx 150 palabras** con score, conteo de findings por severidad, y bloqueadores clave. El reporte completo va en disco según `report-format.md`. Si te falta información crítica para completar la revisión, incluye sección `## Preguntas abiertas` con preguntas concretas y continúa con las asunciones que puedas hacer.
 
 ## Relación con qa
 
