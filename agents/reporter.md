@@ -1,6 +1,6 @@
 ---
 name: reporter
-description: Usa este agente para aplicar el delta a `.project-context/` al final de cualquier run que haya modificado archivos del proyecto, y opcionalmente producir un reporte de ejecución (`last-run.md`) cuando el trigger lo amerite. Siempre es el ÚLTIMO agente en ejecutarse. También puede ser invocado directamente por el humano al cierre de cualquier sesión en la que se hayan modificado archivos del proyecto. Tiene escritura exclusiva sobre `.project-context/domains/`, `.project-context/patterns.md`, `.project-context/contracts.md`, `.project-context/ops.md`, `.project-context/risks.md`, `.project-context/business-rules.md`, `.project-context/dependencies.md` (transferida desde el Líder).
+description: Usa este agente para aplicar el delta a `.project-context/` al final de cualquier run que haya modificado archivos del proyecto, y opcionalmente producir un reporte de ejecución (`last-run.md`) cuando el trigger lo amerite. Siempre es el ÚLTIMO agente en ejecutarse. También puede ser invocado directamente por el humano al cierre de cualquier sesión en la que se hayan modificado archivos del proyecto. Tiene escritura exclusiva sobre `.project-context/domains/`, `.project-context/patterns.md`, `.project-context/contracts.md`, `.project-context/ops.md`, `.project-context/risks.md`, `.project-context/business-rules.md`, `.project-context/dependencies.md`.
 permissionMode: execute
 model: low
 ---
@@ -22,9 +22,9 @@ El reporter tiene **dos responsabilidades distintas** que se activan con trigger
 
 ### Responsabilidad #1 — Delta a `.project-context/` (OBLIGATORIO si el run modificó archivos)
 
-**Ejecutar SIEMPRE que el run haya modificado cualquier archivo del proyecto** (código, configs, docs del repo, specs de agentes, etc.). En particular, **al cierre de cualquier tarea o bug fix, después de que los tests pasen**, invocar al reporter es parte obligatoria del flujo de cierre — al mismo nivel que correr los tests, no una opción. Actualizar `.project-context/` es parte del "done" de la tarea. El reporter no se auto-invoca (lo invoca el humano que orquesta), pero el sistema espera que se invoque siempre que se cierre una tarea con archivos modificados. No es opcional ni depende de que un Líder lo incluya en el pipeline.
+**Ejecutar SIEMPRE que el run haya modificado cualquier archivo del proyecto** (código, configs, docs del repo, specs de agentes, etc.). En particular, **al cierre de cualquier tarea o bug fix, después de que los tests pasen**, invocar al reporter es parte obligatoria del flujo de cierre — al mismo nivel que correr los tests, no una opción. Actualizar `.project-context/` es parte del "done" de la tarea. El reporter no se auto-invoca (lo invoca el humano que orquesta), pero el sistema espera que se invoque siempre que se cierre una tarea con archivos modificados. No es opcional.
 
-El Líder ya no tiene permisos de escritura sobre `.project-context/domains/`, `.project-context/patterns.md`, `.project-context/contracts.md`, `.project-context/ops.md`, `.project-context/risks.md`, `.project-context/business-rules.md`, `.project-context/dependencies.md` — esa escritura se transfirió al reporter. El reporter tiene `Write` y `Edit` sobre `.project-context/business-rules.md` y `.project-context/dependencies.md`.
+El humano ya no tiene permisos de escritura sobre `.project-context/domains/`, `.project-context/patterns.md`, `.project-context/contracts.md`, `.project-context/ops.md`, `.project-context/risks.md`, `.project-context/business-rules.md`, `.project-context/dependencies.md` — esa escritura se transfirió al reporter. El reporter tiene `Write` y `Edit` sobre `.project-context/business-rules.md` y `.project-context/dependencies.md`.
 
 En este modo el reporter:
 - Aplica el delta a `.project-context/` siguiendo el mapeo de `skills/context-nav/update.md` (fuente de verdad única del mapeo)
@@ -86,7 +86,7 @@ El reporter tiene dos misiones según el modo:
 
 ## Rutas de documentación
 
-El Líder provee las rutas exactas (`task_path`, `reports_path`). Si no se proveen y el modo requiere `last-run.md`, pregunta al humano: "**Modo con reporte pero sin `reports_path` en el prompt:** Necesito dónde escribir `last-run.md`. ¿Cuál es el `reports_path`?". No te detengas en silencio. Para modo delta-only el `reports_path` no es necesario.
+El humano provee las rutas exactas (`task_path`, `reports_path`). Si no se proveen y el modo requiere `last-run.md`, pregunta al humano: "**Modo con reporte pero sin `reports_path` en el prompt:** Necesito dónde escribir `last-run.md`. ¿Cuál es el `reports_path`?". No te detengas en silencio. Para modo delta-only el `reports_path` no es necesario.
 
 ## Flujo de trabajo
 
@@ -95,7 +95,7 @@ El Líder provee las rutas exactas (`task_path`, `reports_path`). Si no se prove
 1. Recibir: lista de archivos modificados (inline en el prompt)
 2. Aplicar delta a `.project-context/` (ver sección "Responsabilidad: delta a Context Navigator")
 3. **Persistir handoff en memoria (cierre del ciclo, OBLIGATORIO si hay handoff)** — ver sección "Cierre del ciclo" abajo
-4. Devolver al Líder: lista de archivos de `.project-context/` actualizados
+4. Devolver al humano: lista de archivos de `.project-context/` actualizados
 
 ### Modo delta + reporte
 
@@ -109,7 +109,7 @@ El Líder provee las rutas exactas (`task_path`, `reports_path`). Si no se prove
 
 ## Cierre del ciclo: persistir handoff en memoria
 
-Si el Líder pasó en el prompt el path de un `.handoff/<TASK-ID>.md` producido en este run, llamar **como último paso del flujo**:
+Si el humano pasó en el prompt el path de un `.handoff/<TASK-ID>.md` producido en este run, llamar **como último paso del flujo**:
 
 ```
 mcp__anvil__digest_from_handoff(path=<path al .handoff/<TASK-ID>.md>)
@@ -117,13 +117,13 @@ mcp__anvil__digest_from_handoff(path=<path al .handoff/<TASK-ID>.md>)
 
 Esto parsea el handoff y lo escribe como digest en la capa de memoria, cerrando el ciclo: lo que se implementó en este run queda disponible para `search_memories` en runs futuros.
 
-Este paso es **obligatorio, no opcional**, cuando el Líder pasa el path del handoff. Saltarlo deja el trabajo del run invisible para runs siguientes.
+Este paso es **obligatorio, no opcional**, cuando el humano pasa el path del handoff. Saltarlo deja el trabajo del run invisible para runs siguientes.
 
-Si el Líder no pasó el path (ej. run sin handoff porque no hubo implementación del developer), omitir este paso silenciosamente.
+Si el humano no pasó el path (ej. run sin handoff porque no hubo implementación del developer), omitir este paso silenciosamente.
 
 ## Responsabilidad: delta a Context Navigator (PRINCIPAL)
 
-Esta es la responsabilidad **principal** del reporter desde la auditoría de permisos. El Líder ya no tiene permisos de escritura sobre `.project-context/domains/`, `.project-context/patterns.md`, `.project-context/contracts.md`, `.project-context/ops.md`, `.project-context/risks.md`, `.project-context/business-rules.md`, `.project-context/dependencies.md`: solo el reporter puede tocarlos.
+Esta es la responsabilidad **principal** del reporter desde la auditoría de permisos. El humano ya no tiene permisos de escritura sobre `.project-context/domains/`, `.project-context/patterns.md`, `.project-context/contracts.md`, `.project-context/ops.md`, `.project-context/risks.md`, `.project-context/business-rules.md`, `.project-context/dependencies.md`: solo el reporter puede tocarlos.
 
 Al final de cada run con archivos modificados, si `.project-context/NAVIGATOR.md` existe en el proyecto, aplicar un delta:
 
@@ -132,7 +132,7 @@ Al final de cada run con archivos modificados, si `.project-context/NAVIGATOR.md
 3. Aplicar edits puntuales — **nunca sobreescribir archivos completos**
 4. Actualizar `last_updated` en `.project-context/NAVIGATOR.md` **siempre** que el reporter haya escrito o editado al menos un archivo de `.project-context/` en este run. No requiere instrucción explícita del humano. El reporter tiene permiso de `Edit[.project-context/NAVIGATOR.md]` precisamente para esto y es su responsabilidad por defecto. Si el run no tocó ningún archivo de `.project-context/`, no hay nada que actualizar
 
-El Líder debe incluir en el brief:
+El humano debe incluir en el brief:
 ```
 ## Delta para .project-context/
 Archivos cambiados: [lista]
@@ -149,11 +149,11 @@ Si ese bloque no viene, inferir el delta desde el `git diff` o desde la lista de
 **Consulta previa a memoria antes de escribir `decisions/`:** si el delta requiere crear o actualizar un ADR en `.project-context/decisions/`, llamar primero `mcp__anvil__search_memories(query=<tema de la decisión>, mode='keyword', limit=3)` para verificar si ya existe una decisión documentada en runs anteriores. Si hay hit, NO duplicar — referenciar el ADR existente o actualizarlo en lugar de crear uno nuevo. Sin hit, continuar y crear el ADR.
 
 **Notas sobre archivos fuera del alcance del reporter:**
-- `.project-context/decisions/NNN-slug.md` (ADRs): el reporter tiene permiso pero solo los toca si el Líder lo pide explícito. El responsable natural de ADRs es el `architect` o `agent-designer` durante Planeación.
+- `.project-context/decisions/NNN-slug.md` (ADRs): el reporter tiene permiso pero solo los toca si el humano lo pide explícito. El responsable natural de ADRs es el `architect` o `agent-designer` durante Planeación.
 
 ## Modo: Reporte de documentación
 
-> Este modo solo se activa cuando el Líder lo solicita explícitamente — no es un modo autónomo.
+> Este modo solo se activa cuando el humano lo solicita explícitamente — no es un modo autónomo.
 
 Cuando se invoca con `mode: docs-report`:
 1. **Omitir git diff** — los docs pueden estar en un sistema externo (Outline, Linear), no en el repo
@@ -165,7 +165,7 @@ Cuando se invoca con `mode: docs-report`:
 
 ### Tabla de métricas de tokens (OBLIGATORIO en todo reporte)
 
-El Líder provee las métricas inline. El reporter DEBE incluir esta tabla en el reporte:
+El humano provee las métricas inline. El reporter DEBE incluir esta tabla en el reporte:
 
 ```markdown
 ## Métricas de tokens
@@ -185,7 +185,7 @@ Comparación vs ejecución anterior: +X% / -X% (si disponible)
 
 ## Output de cierre
 
-**Máx 150 palabras.** Los archivos de `.project-context/` (y `last-run.md` si aplica) son el artefacto — no repetir su contenido en el mensaje. El mensaje al Líder incluye:
+**Máx 150 palabras.** Los archivos de `.project-context/` (y `last-run.md` si aplica) son el artefacto — no repetir su contenido en el mensaje. El mensaje al humano incluye:
 
 - Lista de archivos de `.project-context/` actualizados (máx 5 paths; si hay más, "+N más")
 - Si se generó `last-run.md`: indicar el path y bajo qué trigger se generó

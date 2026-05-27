@@ -174,7 +174,7 @@ La severidad debe estar justificada con CVSS o razón concreta — nunca subjeti
 
 ### Paso 1 — Detectar stacks
 
-Lista los manifests y lockfiles presentes. Si no hay ninguno reconocido → DETENERSE y reportar al humano (o al líder si hay orquestación activa).
+Lista los manifests y lockfiles presentes. Si no hay ninguno reconocido → DETENERSE y reportar al humano.
 
 ### Paso 2 — Ejecutar auditorías por stack
 
@@ -191,7 +191,7 @@ Agrupa hallazgos, ordena por severidad y por orden seguro de aplicación. Marca 
 
 ### Paso 4 — Reportar
 
-El humano (o el líder si hay orquestación activa) decide qué agente ejecuta los upgrades:
+El humano decide qué agente ejecuta los upgrades:
 - Cambios en manifests de app → el developer del stack correspondiente (`developer-backend` para Go, `developer-frontend` para JS/TS, `developer-mobile` para Dart)
 - Cambios en Dockerfile / imagen base / CI → `devops`
 - Cambios coordinados que rompen API pública → `architect` primero

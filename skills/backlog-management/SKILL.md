@@ -1,6 +1,6 @@
 ---
 name: backlog-management
-description: Creación de tareas, gestión del backlog y formato del tablero de sprint. Define cómo descomponer PRDs en tickets, asignar agentes y hacer seguimiento del progreso. Usado por el agente arquitecto después de escribir el ARD.
+description: Creación de tareas, gestión del backlog y formato del tablero de sprint. Define cómo descomponer PRDs en tickets, asignar agentes y hacer seguimiento del progreso. Usado por el agente `task-decomposer` para crear tasks atómicas y actualizar el backlog.
 ---
 
 # Gestión del Backlog

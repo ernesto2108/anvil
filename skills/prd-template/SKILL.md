@@ -85,6 +85,7 @@ Que problema existe, para quien, y por que ahora. Incluir datos de soporte (tick
 ## Scope
 - **Type:** new | visual-improvement | functional-improvement | both
 - **Platform:** web | mobile | both
+- **Stack:** backend | frontend | fullstack
 - **Milestone:** <nombre del milestone> (ej. MVP, v1.0, v2.0, Sprint Q2)
 - **Existing assets:** [lista de archivos, componentes, pantallas que ya existen]
 - **Design status:** none | exists-no-changes | exists-needs-update | new-needed
@@ -115,6 +116,7 @@ Que problema existe, para quien, y por que ahora. Incluir datos de soporte (tick
 
 ## Requerimientos no funcionales
 - **Performance:** <tiempo de respuesta, throughput esperado>
+- **Tests de carga requeridos:** <sí/no — si sí: rps objetivo, p99 target, herramienta preferida (k6/Vegeta/Locust)>
 - **Seguridad:** <auth, sensibilidad de datos, compliance>
 - **Accesibilidad:** <nivel WCAG si aplica>
 - **Escalabilidad:** <carga esperada, crecimiento>

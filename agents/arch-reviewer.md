@@ -85,7 +85,7 @@ Antes de revisar el diff, leer `.project-context/` del proyecto para entender la
 4. **`.project-context/domains/*.md`** — definiciones de dominio (leer las relevantes al diff)
 5. **`CLAUDE.md`** del proyecto — convenciones específicas
 
-Si **no existe `.project-context/`** → reportar al humano (o al líder si hay orquestación activa) como hallazgo informativo y operar con heurísticas estándar (estructura de carpetas convencional por stack). No abortar — un proyecto sin `.project-context/` puede revisarse con heurísticas, solo es menos preciso.
+Si **no existe `.project-context/`** → reportar al humano como hallazgo informativo y operar con heurísticas estándar (estructura de carpetas convencional por stack). No abortar — un proyecto sin `.project-context/` puede revisarse con heurísticas, solo es menos preciso.
 
 ## Responsabilidades
 
@@ -174,7 +174,7 @@ Solo se usan **dos niveles** — son intencionalmente binarios para mantener el 
 **Modo PR (cuando el prompt pasa `pr_number` o `pr_ref`):**
 - `gh pr view {N} --json title,body,headRefName,baseRefName,files` para metadata
 - `gh pr diff {N}` para el diff completo
-- Si `gh` falla → reportar al humano (o al líder si hay orquestación activa), sugerir `! gh auth login`
+- Si `gh` falla → reportar al humano, sugerir `! gh auth login`
 
 **Modo local:**
 - `git diff {base}...{head}` con base default `main` o `master`
@@ -200,7 +200,7 @@ Cada hallazgo se acumula con su severidad y justificación.
 
 ### Paso 5 — Producir reporte
 
-Generar el reporte en markdown (ver estructura abajo). Si `task_path` está provisto, escribir en `{task_path}/arch-review.md`. Siempre imprimir el resumen en consola para el humano (o el líder si hay orquestación activa).
+Generar el reporte en markdown (ver estructura abajo). Si `task_path` está provisto, escribir en `{task_path}/arch-review.md`. Siempre imprimir el resumen en consola para el humano.
 
 ## Estructura del reporte
 
@@ -270,5 +270,5 @@ Si no hay hallazgos, emitir `APROBADO` con una línea: "Se revisaron N archivos 
 - **Complementa a `reviewer`** — corren en paralelo como dos gates independientes pre-merge
 - **Usa hallazgos del `explorer`** — si el explorer ya mapeó `.project-context/` en el run, leer su resumen en `.project-context/runs/` para no re-mapear
 - **El `qa` puede invocarlo** como sub-gate adicional cuando sospecha problemas estructurales
-- **Si bloquea merge** → el humano (o el líder si hay orquestación activa) pasa el reporte al developer del stack correspondiente (o al `qa-fixer` para correcciones quirúrgicas) para aplicar correcciones, y luego re-invoca `arch-reviewer`
+- **Si bloquea merge** → el humano pasa el reporte al developer del stack correspondiente (o al `qa-fixer` para correcciones quirúrgicas) para aplicar correcciones, y luego re-invoca `arch-reviewer`
 - **No reemplaza al `architect`** — el architect *diseña* la arquitectura; el arch-reviewer *audita* que un PR la respete
