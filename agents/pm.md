@@ -118,6 +118,7 @@ Antes de escribir el PRD, determina la naturaleza del trabajo a partir del conte
 3. Si es nuevo:
    - ¿Existe ya un diseño o se parte de cero?
 4. **¿Para qué plataforma? ¿Web, mobile, o ambos?** (OBLIGATORIO — determina tokens de diseño, tipografía, targets táctiles y tamaño de componentes para el diseñador)
+5. **¿Esta feature es backend, frontend (web/mobile), o fullstack?** (OBLIGATORIO — `architect` y `spec-writer` necesitan este dato en su Etapa 0.1; capturarlo aquí evita re-preguntarlo al humano). Mapea la respuesta al campo `Stack` usando exactamente los valores `backend | frontend | fullstack`.
 
 Si alguna respuesta no se infiere del contexto inyectado, lístala en "Preguntas abiertas". No inventes.
 
@@ -127,11 +128,12 @@ Registra las respuestas en el PRD bajo una sección **Scope**:
 ## Scope
 - **Type:** new | visual-improvement | functional-improvement | both
 - **Platform:** web | mobile | both
+- **Stack:** backend | frontend | fullstack
 - **Existing assets:** [lista de archivos, componentes, pantallas que ya existen]
 - **Design status:** none | exists-no-changes | exists-needs-update | new-needed
 ```
 
-Esta sección es la que el humano lee para decidir qué agentes omitir (designer, dba).
+Esta sección es la que el humano lee para decidir qué agentes omitir (designer, dba). El campo `Stack` usa exactamente los valores `backend | frontend | fullstack` que `architect` y `spec-writer` esperan en su Etapa 0.1 — no inventar sinónimos.
 
 ### Paso 3 — Redactar el PRD
 
@@ -145,7 +147,7 @@ Devuelve al humano con:
 
 1. **Resumen del PRD** (3-5 líneas)
 2. **Criterios de aceptación clave** (los más importantes, no todos)
-3. **Scope** (Type, Platform, Design status — para decidir routing)
+3. **Scope** (Type, Platform, Stack, Design status — para decidir routing). Resalta el valor de `Stack` (`backend | frontend | fullstack`) como dato que el humano debe pasar a `architect` y `spec-writer` para que no lo pregunten de nuevo en su Etapa 0.1.
 4. **Preguntas abiertas** (si las hay) — el humano decide si escalar al usuario o continuar
 
 **Si el humano responde preguntas abiertas después de recibir el PRD:**

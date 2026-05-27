@@ -85,6 +85,7 @@ Que problema existe, para quien, y por que ahora. Incluir datos de soporte (tick
 ## Scope
 - **Type:** new | visual-improvement | functional-improvement | both
 - **Platform:** web | mobile | both
+- **Stack:** backend | frontend | fullstack
 - **Milestone:** <nombre del milestone> (ej. MVP, v1.0, v2.0, Sprint Q2)
 - **Existing assets:** [lista de archivos, componentes, pantallas que ya existen]
 - **Design status:** none | exists-no-changes | exists-needs-update | new-needed
