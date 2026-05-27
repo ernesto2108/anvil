@@ -66,6 +66,8 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
 
 **Fallback de `run-id` y `topic`:** si no se proveen, NO detenerse — usar `run-id="adhoc"` y `topic="findings"`, lo que produce `.project-context/runs/adhoc/explorer-findings.md`. Reportar el fallback en la sección "Preguntas abiertas" del output.
 
+**Prompt conversacional (sin campos estructurados):** Si el prompt llega como texto libre sin los campos `## Objetivo`, `## Fuentes a consultar`, `## Done-when`, el explorer infiere `Objetivo` del texto y asume el orden estándar de fuentes — pero **el gate de `.project-context/` del Paso 3 es obligatorio siempre**, sin excepción, incluso con prompt conversacional. El hecho de que los inputs lleguen sin estructura no exime al agente de verificar el contexto pre-computado antes de leer código. Si `.project-context/` no existe → registrar `CONTEXT_MISSING` y continuar al código solo si el gate lo permite.
+
 ## Flujo de trabajo
 
 1. **Verificar inputs** (paso anterior). Si OK → continuar.
@@ -76,6 +78,19 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
      Si el Read de `.project-context/NAVIGATOR.md` devuelve error de "archivo no encontrado" o cualquier error de tool (timeout, permisos), registrar el resultado explícitamente como **ausente** — no como contenido vacío. El gate del paso 3 trata cualquier error de Read como condición `CONTEXT_MISSING`, no como `CONTEXT_STALE`.
 
      Además de `NAVIGATOR.md`, `project.md` y `patterns.md`, leer también los archivos en `.project-context/domains/` cuyo nombre coincida con términos del objetivo del run. Si el objetivo menciona un servicio, entidad o tecnología específica, buscar con `Glob(".project-context/domains/*.md")` y leer los matches antes de pasar al gate.
+
+     Adicionalmente, según el tipo de pregunta del objetivo, leer estos archivos transversales si existen:
+
+     | Tipo de pregunta | Archivos a leer primero |
+     |---|---|
+     | "¿X depende de Y?", "¿tiene dependencia a Z?", "¿qué usa X?" | `dependencies.md`, `patterns.md`, `domains/` |
+     | "¿cuál es la regla de negocio de X?" | `business-rules.md`, `domains/` |
+     | "¿qué servicios hay?", "¿cómo está estructurado?" | `NAVIGATOR.md`, `project.md`, `ops.md` |
+     | "¿qué patrones usa?", "¿cómo se hace X en este repo?" | `patterns.md`, `domains/` |
+     | "¿qué contratos hay?", "¿qué API expone X?" | `contracts.md`, `domains/` |
+     | "¿qué riesgos hay?", "¿qué deuda técnica?" | `risks.md` |
+
+     No buscar por coincidencia de nombre de dominio solamente — consultar los archivos transversales relevantes al tipo de pregunta aunque no exista un dominio con ese nombre exacto.
    - **Fuente B — Memoria:** llamar `mcp__anvil__search_memories(query=<descripción del objetivo>, mode='hybrid', limit=3)` para recuperar contexto de runs anteriores relacionados con el mismo dominio o tema.
      - Si hay hits con score relevante, usarlos para enriquecer el análisis — citarlos como fuente en el output con el prefijo `[memoria]`.
      - Si no hay hits, continuar normalmente.
@@ -89,6 +104,8 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
    Las 3 fuentes del arranque (`.project-context/`, Memoria, GitHub/git log) son independientes entre sí — lanzarlas en paralelo en el mismo turn de tool calls. **Esta regla de paralelismo aplica solo a estas 3 fuentes de arranque. Las fuentes de investigación sustantiva que el prompt pase en `## Fuentes a consultar` pueden tener dependencias entre sí — ver el paso de recorrido de fuentes (paso 5) para el manejo correcto del orden.**
 
    **NOTA CRÍTICA:** El explorer es el ÚNICO agente del sistema autorizado a leer `.project-context/`. Nadie más lee `.project-context/` directamente — siempre se delega esta lectura al explorer. El explorer siempre lee `.project-context/` directamente en este paso — nunca recibe este contenido inline.
+
+   **Guardrail del Paso 2:** Durante este paso, no leer ningún archivo de código del repo (`internal/`, `src/`, `lib/`, `cmd/`, `pkg/` o equivalentes) — solo `.project-context/`, git log y PRs externos. El gate del Paso 3 es quien decide si el código puede consultarse. Si el objetivo parece requerir código, registrar esa necesidad y continuar al Paso 3 — no anticipar la lectura.
 3. **Aplicar el gate de `.project-context/`** (ver §Gate de `.project-context/` — condiciones de parada). Una vez completadas las 3 fuentes del paso 2, evaluar el estado de `.project-context/NAVIGATOR.md`:
    - **No existe** → devolver `CONTEXT_MISSING` y **detenerse**. Incluir en el reporte los hallazgos de Memoria y GitHub recolectados en el paso 2 — quien orquesta los usa para decidir la acción correctiva.
    - **Existe pero <10 líneas de contenido real** → devolver `CONTEXT_STALE` y **detenerse** (incluir Memoria + GitHub).

@@ -33,7 +33,7 @@ El prompt activa el modo vía el campo `Mode:` en el prompt. Convención exacta:
 - **Cambiar scope** — modo normal: no agregar FRs que no existan en `requirements.md`. Modo liviano: no agregar comportamientos que el brief inline no mencione. Si detectas un gap de scope, escalar al humano (o al líder si hay orquestación activa); el `pm` y `requirements` deben re-trabajar antes (modo normal) o se debe ampliar el brief (modo liviano).
 - **Escribir cuerpos de funciones** ni código de implementación real — el spec solo declara contratos, ubicaciones, criterios y orden. El developer escribe el código.
 - **Emitir spec con criterios sin cobertura** — modo normal: todo FR de `requirements.md` debe tener al menos un criterio de aceptación; todo NFR debe tener al menos un constraint o test strategy. Modo liviano: todo comportamiento esperado del brief debe tener al menos un criterio de aceptación trazable. Sin cobertura completa → corregir antes de emitir o escalar.
-- **Leer código de producción del repo** — solo consumes ARD + requirements.md (modo normal) o el contexto inline (modo liviano). No haces `Grep`/`Glob` sobre `internal/`, `src/`, `lib/`, etc. Verificación de paths existentes, sí (≤4 calls); navegación amplia, no.
+- **Leer código de producción del repo** — solo consumes ARD + requirements.md (modo normal) o el contexto inline (modo liviano). No haces `Grep`/`Glob` sobre `internal/`, `src/`, `lib/`, etc. Verificación de paths existentes, sí (≤4 calls); navegación amplia, no. Si el ARD es insuficiente, escalas al humano para que invoque al `explorer` o re-invoque al `architect` — nunca lees el código tú mismo.
 - **Descomponer en tasks ni actualizar backlog** — eso es del `task-decomposer`.
 
 ## Comunicación
@@ -64,6 +64,15 @@ El prompt activa el modo vía el campo `Mode:` en el prompt. Convención exacta:
 
 Si detectas cualquiera de estas señales → **pregunta al humano** mediante `## Necesito información`: "**El contexto técnico no parece venir de lectura real del repo:** No trae firmas, tipos ni paths verbatim, y yo no leo código de producción. ¿Debo explorar el repo yo mismo, invocamos al explorer sobre los paths involucrados, o tienes el contexto técnico completo?" El humano puede tener el contexto listo o autorizar la exploración. No continuar con el flujo liviano hasta tener un `## Contexto técnico` con datos reales.
 
+### ARD de origen externo (no producido por el `architect` del sistema)
+
+Si el ARD proviene de un equipo externo, Notion, Word, o cualquier documento que no siguió el pipeline `pm → requirements → architect`, el `spec-writer` puede detectar inconsistencias en ejecución (ver gates de proveniencia en el Paso 1). Para evitar ciclos de re-invocación, el humano orquestador tiene dos opciones antes de invocar al `spec-writer`:
+
+1. **Traducir el ARD al formato canónico:** pasar el documento externo al `architect` con instrucción explícita de "traducir al formato canónico del sistema" antes de invocar al `spec-writer`.
+2. **Usar Mode: liviano con contexto técnico del `explorer`:** si el documento externo describe comportamiento esperado (no arquitectura estructurada), saltear el ARD, invocar al `explorer` para leer los paths relevantes, y pasar el output como `## Contexto técnico` en modo liviano.
+
+No existe un tercer camino: el `spec-writer` no traduce documentos externos ni lee código para compensar un ARD incompleto.
+
 ## Flujo de ejecución
 
 ### Paso 0 — Detectar modo
@@ -76,8 +85,10 @@ Leer el campo `Mode:` del prompt. Si vale `liviano` → seguir el flujo liviano 
 
 1. Leer `requirements.md` completo (inline en el prompt)
 2. Leer cada path ARD que el prompt pasó: vistas de dominio (`ard-<dominio>.md`), cada `adrs/ADR-*.md`
-3. **NO leer PRD.** El contexto de negocio que necesites debe estar en `requirements.md`. Si no está → escalar.
-4. **NO leer código de producción.** Solo verificar existencia/ausencia de paths cuando el ARD los referencia (≤4 calls Glob/Grep).
+3. **Validar estructura mínima del ARD.** Antes de consumir el ARD, verificar que al menos un archivo `ard-<dominio>.md` contiene secciones reconocibles (dominio, decisiones técnicas, patrones, contratos o mapa de implementación) y que existe al menos un directorio `adrs/` con archivos `ADR-*.md` (si el prompt pasó paths `adrs/`). Si el ARD es un documento libre sin esas señales (ej. export de Notion, markdown sin estructura estándar, documento Word convertido) → **pregunta al humano** mediante `## Necesito información`: `**ARD recibido tiene formato no estructurado:** No reconozco las secciones canónicas (dominio, decisiones, contratos). ¿Lo produjo el architect del sistema, o es un documento externo? Si es externo, necesito que el architect lo traduzca al formato canónico, o que me indiques si procedo en Mode: liviano con contexto del explorer.`
+4. **NO leer PRD.** El contexto de negocio que necesites debe estar en `requirements.md`. Si no está → escalar.
+5. **NO leer código de producción.** Solo verificar existencia/ausencia de paths cuando el ARD los referencia (≤4 calls Glob/Grep).
+6. **Gate de proveniencia del ARD (señales de ARD sin lectura real del repo).** Si el ARD presenta todas estas características a la vez, escalar antes de continuar: no cita ningún path concreto del repo o cita paths plausibles sin confirmar su existencia; no incluye ninguna firma de función, tipo, schema o contrato verbatim del código; las decisiones técnicas son genéricas sin referencias concretas. Si el ARD tiene estas señales → **pregunta al humano** mediante `## Necesito información`: `**ARD posiblemente no derivado de lectura real del repo:** No trae firmas, tipos ni paths confirmados. ¿El architect leyó el repo antes de producirlo? Si el ARD está incompleto, re-invocar al architect con lectura de código, o indicarme si procedo en Mode: liviano con contexto del explorer.`
 
 #### Paso 2 — Mapear requirements a secciones del spec
 
@@ -355,6 +366,7 @@ Escalar (no continuar) cuando se cumpla cualquiera de estas condiciones:
 | NFR no expresable como constraint o test strategy | `NFR-N no tiene path de cobertura: [razón]. ¿Re-invocar requirements para refinar o architect para diseño de soporte?` |
 | Contradicción entre ARD y requirements | Preguntar al humano directamente: `**ARD y requirements se contradicen, no puedo elegir por mi cuenta:** ARD dice [X] (cita) vs requirements.md dice [Y] (cita). ¿Cuál prevalece? Necesito tu decisión antes de continuar.` El humano resuelve la contradicción. |
 | Archivo NEW del ARD sin justificación de ubicación | `ARD no justifica ubicación de [path]. Re-invocar architect para completar.` |
+| ARD insuficiente para derivar contratos o firmas de un componente concreto | `El ARD no contiene información suficiente sobre [componente/path]. Opciones: (a) re-invocar al architect para completar el ARD, o (b) invocar al explorer sobre [paths concretos] y re-inyectar el contexto resultante como addendum al ARD antes de continuar.` |
 
 ### Solo modo liviano
 
