@@ -182,6 +182,12 @@ Si la respuesta de 0.1 fue backend → saltar 0.2 y 0.3 y continuar con el Pre-c
 
 Si **no hay DTD** → advertir que el ARD será incompleto en criterios visuales y **preguntar si continuar de todas formas** antes de avanzar.
 
+> **Dependencia frontend:** Si el stack es `frontend` o `fullstack` y no se provee un DTD, preguntar al humano: "¿El agente `designer` ya corrió y produjo un DTD? Si no, ¿quieres correrlo antes o proceder sin DTD?"
+> - Si el humano confirma que no hay DTD y quiere proceder: marcar el DTD como `N/A` y continuar — no bloquear.
+> - Si hay DTD: recibirlo inline o como path y continuar normalmente.
+>
+> El criterio de opcionalidad del DTD es explícito: nunca quedarse bloqueado esperando un DTD inexistente. La dependencia implícita `designer → architect` (para tareas frontend) se resuelve aquí, con salida clara en ambos casos.
+
 ### Etapa 0.3 — Validación de consistencia DTD ↔ diseño (solo si el humano confirmó que tiene ambos)
 
 1. Leer el DTD en el path indicado

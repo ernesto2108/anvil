@@ -148,6 +148,7 @@ Devuelve al humano con:
 1. **Resumen del PRD** (3-5 líneas)
 2. **Criterios de aceptación clave** (los más importantes, no todos)
 3. **Scope** (Type, Platform, Stack, Design status — para decidir routing). Resalta el valor de `Stack` (`backend | frontend | fullstack`) como dato que el humano debe pasar a `architect` y `spec-writer` para que no lo pregunten de nuevo en su Etapa 0.1.
+   - **Nota para stack frontend/fullstack:** Cuando `Stack: frontend` o `Stack: fullstack`, agregar al humano: "Si la tarea incluye nuevas pantallas o componentes, se recomienda correr `designer` antes de `architect` para que el DTD esté disponible."
 4. **Preguntas abiertas** (si las hay) — el humano decide si escalar al usuario o continuar
 
 **Si el humano responde preguntas abiertas después de recibir el PRD:**
