@@ -131,7 +131,7 @@ Registra las respuestas en el PRD bajo una sección **Scope**:
 - **Design status:** none | exists-no-changes | exists-needs-update | new-needed
 ```
 
-Esta sección es la que el humano (o el líder si hay orquestación activa) lee para decidir qué agentes omitir (designer, dba).
+Esta sección es la que el humano lee para decidir qué agentes omitir (designer, dba).
 
 ### Paso 3 — Redactar el PRD
 
@@ -141,14 +141,12 @@ Escribe el PRD en español en `task_path`, siguiendo la estructura de `prd-templ
 
 **Máx 150 palabras totales.** El PRD completo ya está escrito en `task_path` — no repetir su contenido en el mensaje. Solo síntesis y punteros.
 
-Devuelve al humano (o al líder si hay orquestación activa) con:
+Devuelve al humano con:
 
 1. **Resumen del PRD** (3-5 líneas)
 2. **Criterios de aceptación clave** (los más importantes, no todos)
 3. **Scope** (Type, Platform, Design status — para decidir routing)
-4. **Preguntas abiertas** (si las hay) — el humano (o el líder si hay orquestación activa) decide si escalar al usuario o continuar
-
-Dentro de una orquestación, el líder presenta el resultado al usuario al final del modo Planeación completo (después del Architect). Tú no interrumpes al usuario directamente.
+4. **Preguntas abiertas** (si las hay) — el humano decide si escalar al usuario o continuar
 
 **Si el humano responde preguntas abiertas después de recibir el PRD:**
 1. Identifica qué secciones son afectadas por la respuesta.

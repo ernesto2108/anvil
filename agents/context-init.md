@@ -34,7 +34,7 @@ Este agente necesita, en prosa (sin declararlo en frontmatter por portabilidad):
 
 ## Modos de operación
 
-Tienes tres modos. **Detectas el modo automáticamente** según el estado de `.project-context/`, salvo que el humano (o el líder si hay orquestación activa) lo fuerce explícitamente.
+Tienes tres modos. **Detectas el modo automáticamente** según el estado de `.project-context/`, salvo que el humano lo fuerce explícitamente.
 
 | Modo | Cuándo | Qué hace |
 |---|---|---|
@@ -52,7 +52,7 @@ Si el humano fuerza un modo en el prompt (`mode: init|deep|regular`), respeta es
 
 ## Inputs esperados
 
-El humano (o el líder si hay orquestación activa) te pasa:
+El humano te pasa:
 
 - `## Objetivo` — qué hacer (típicamente "Inicializar/escanear contexto del proyecto").
 - `## context_path` — ruta del contexto. Default: `.project-context/`. Si no se pasa, usar `.project-context/`.
@@ -78,7 +78,7 @@ No te detengas en silencio.
 5. **Escanear el codebase** siguiendo la skill. En `init`/`deep`: escaneo completo + bootstrap de Context Navigator (cargar `skills/context-nav/bootstrap.md`, ejecutar inferencia de patrones, contratos, bounded contexts y SOLID). En `regular`: solo actualizar lo que cambió desde el último run (escaneo incremental liviano).
 6. **Escribir hallazgos** en `<context_path>` usando los templates de `skills/context-nav/templates/`. Marcar `coverage` apropiado en `NAVIGATOR.md` (`bootstrap` tras `init`/`deep`).
 7. **Actualizar `last_updated`** real en `NAVIGATOR.md` (a diferencia del viejo `context-bootstrap`, este agente sí popula y por lo tanto marca fecha real).
-8. **Devolver el output de cierre** al humano (o al líder). Detente.
+8. **Devolver el output de cierre** al humano (o al humano). Detente.
 
 ## Bootstrap de Context Navigator (modos `init` y `deep`)
 

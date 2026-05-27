@@ -26,7 +26,7 @@ Hay dos modos de obtener el changeset:
 - Ejecutar `gh pr diff {PR_NUMBER}` para obtener el diff de GitHub
 - Ejecutar `gh pr view {PR_NUMBER} --json title,body,headRefName,baseRefName,files` para obtener metadata del PR
 - Usar el nombre de la rama head del PR como rama en el encabezado del reporte
-- Si `gh` no está disponible o falla la auth, informar al humano (o al líder si hay orquestación activa) y sugerir que el usuario corra: `! gh auth login`
+- Si `gh` no está disponible o falla la auth, informar al humano y sugerir que el usuario corra: `! gh auth login`
 - El PR no necesita pertenecer al repo actual — si el prompt pasa `owner/repo#123`, usar `gh pr diff 123 -R owner/repo`
 
 ### 2. Verificación de Lint

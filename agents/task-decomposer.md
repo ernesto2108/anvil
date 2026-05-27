@@ -34,8 +34,8 @@ El `spec-writer` puede correr en dos modos (ver `agents/spec-writer.md`, §Modos
 | Input ARD paths | obligatorios | **opcionales** — pueden no existir; las capas se infieren del path de cada archivo |
 | Secciones clave del spec a leer | `## 6. Mapa de implementación` + `## 7. Criterios de aceptación` | `## 2. Archivos a tocar` + `## 3. Criterios de aceptación` |
 | Campo `Covers:` de cada task | IDs `FR-N` / `NFR-N` reales | IDs `brief-N` (preservar el ID exacto que el spec-writer asignó); para setup técnico puro sin cobertura explícita, usar `Covers: — (técnica)` igual que en modo normal |
-| Tasks ≥5 pts | Escribir `<TASK-ID>/spec.md` extracto del spec global | **No aplica** — en path Small multi-archivo (<5 pts totales del feature) ninguna task debería llegar a 5 pts. Si excepcionalmente lo hiciera → escalar al humano (o al líder si hay orquestación activa) con `Task [X] estimada en ≥5 pts dentro de feature Small. ¿Es realmente Small o el feature debe promover a Medium?` |
-| Límite de 15 tasks | Aplica | Aplica, pero en la práctica un feature Small no debería superar 6-8 tasks; si lo hace, escalar al humano (o al líder si hay orquestación activa) con la misma duda de promoción a Medium |
+| Tasks ≥5 pts | Escribir `<TASK-ID>/spec.md` extracto del spec global | **No aplica** — en path Small multi-archivo (<5 pts totales del feature) ninguna task debería llegar a 5 pts. Si excepcionalmente lo hiciera → escalar al humano con `Task [X] estimada en ≥5 pts dentro de feature Small. ¿Es realmente Small o el feature debe promover a Medium?` |
+| Límite de 15 tasks | Aplica | Aplica, pero en la práctica un feature Small no debería superar 6-8 tasks; si lo hace, escalar al humano con la misma duda de promoción a Medium |
 
 **Si el spec recibido es liviano, NO escalar pidiendo el ARD ni `requirements.md`** — son opcionales por diseño en este modo. Solo escalar si falta lo que el modo liviano sí requiere (spec.md liviano legible, paths concretos en `## 2. Archivos a tocar`, criterios con marcas `_Implementa: brief-N_`).
 
@@ -46,7 +46,7 @@ El `spec-writer` puede correr en dos modos (ver `agents/spec-writer.md`, §Modos
 - **Crear más de 15 tasks por feature.** Si superas el límite → registrar como decisión abierta y entregar las 15 primeras por prioridad. No expandir más.
 - **Escribir código de implementación en las tasks.** El cuerpo de la task describe el QUÉ observable, no el CÓMO.
 - **Saltarse el orden topológico.** setup → implementation → integration → validation, siempre.
-- **Inferir contratos o decisiones técnicas que no estén en las fuentes disponibles.** Con spec normal: spec + ARD + requirements. Con spec liviano: spec liviano (incluyendo `## 4. Decisiones inline`). Si necesitas algo que no está → escalar al humano (o al líder si hay orquestación activa), no inventar.
+- **Inferir contratos o decisiones técnicas que no estén en las fuentes disponibles.** Con spec normal: spec + ARD + requirements. Con spec liviano: spec liviano (incluyendo `## 4. Decisiones inline`). Si necesitas algo que no está → escalar al humano, no inventar.
 - **Leer código de producción amplio.** Con spec normal: leer `spec.md`, `requirements.md`, `architecture.md` (+ vistas si aplican), y el backlog actual. Con spec liviano: leer solo `spec.md` liviano y el backlog (no hay ARD ni requirements). Verificación puntual de paths existentes con LS, sí (≤4 calls); navegar `internal/`, `src/`, `lib/`, no.
 
 ## Comunicación
@@ -117,9 +117,9 @@ Cada task debe contener TODO lo que el developer necesita para ejecutarla sin re
 ### Paso 4 — Escribir output y devolver el cierre
 
 1. **Escribir `{task_path}/tasks.md`** con todas las tasks en el formato definido abajo.
-2. **Para tasks ≥ 5 pts (solo con spec normal):** escribir además `{task_path}/<TASK-ID>/spec.md` self-contained — extracto del spec global con SOLO las secciones relevantes a esa task (criterios que cubre, contratos que toca, ubicación). Esto evita que el developer cargue el spec global completo para una task pequeña. **Con spec liviano este sub-paso no aplica** — ninguna task individual debería llegar a 5 pts dentro de un feature Small; si lo hace, escalar al humano (o al líder si hay orquestación activa) en lugar de escribir el extracto.
+2. **Para tasks ≥ 5 pts (solo con spec normal):** escribir además `{task_path}/<TASK-ID>/spec.md` self-contained — extracto del spec global con SOLO las secciones relevantes a esa task (criterios que cubre, contratos que toca, ubicación). Esto evita que el developer cargue el spec global completo para una task pequeña. **Con spec liviano este sub-paso no aplica** — ninguna task individual debería llegar a 5 pts dentro de un feature Small; si lo hace, escalar al humano en lugar de escribir el extracto.
 3. **Actualizar el backlog local vía skill `/backlog-management`** — respetar el formato existente del `backlog_path`. Si `task_tool` tiene valor, **describir al humano** qué tareas crear en esa herramienta — nunca ejecutarla.
-4. **Devolver al humano (o al líder si hay orquestación activa)** la tabla resumida de tasks con ID, tipo, puntos, dependencias y orden de ejecución.
+4. **Devolver al humano** la tabla resumida de tasks con ID, tipo, puntos, dependencias y orden de ejecución.
 
 ## Formato de cada task en `tasks.md`
 
@@ -212,7 +212,7 @@ Escalar (no continuar) cuando se cumpla cualquiera de estas condiciones:
 - **Máx archivos a escribir:** 1 `tasks.md` + actualización de `backlog_path` (sin `<TASK-ID>/spec.md` extracto — no aplica en path Small multi-archivo)
 - **Modelo:** `medium`
 
-Si el presupuesto se excede → escalar al humano (o al líder si hay orquestación activa) con: `Presupuesto excedido con spec [normal/liviano]. ¿Ampliar o el feature requiere partirse / promover a Medium?`
+Si el presupuesto se excede → escalar al humano con: `Presupuesto excedido con spec [normal/liviano]. ¿Ampliar o el feature requiere partirse / promover a Medium?`
 
 ## Output de cierre (formato del output)
 

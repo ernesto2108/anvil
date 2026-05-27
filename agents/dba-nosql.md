@@ -117,7 +117,7 @@ NO haces:
 
 ## Salida
 
-**Máx 150 palabras al Líder.** Los artefactos (definiciones de colección, mappings, scripts) son el output principal.
+**Máx 150 palabras al humano.** Los artefactos (definiciones de colección, mappings, scripts) son el output principal.
 
 ### Para vector DBs
 - Definición de colección (nombre, modelo de embedding + versión, dimensiones, métrica, metadata schema)
@@ -154,4 +154,4 @@ NO haces:
 - **Search: el índice NO es la fuente de verdad:** siempre documentar estrategia de sync con DB principal
 - **Time-series: cardinalidad de tags importa:** tags con valores únicos por request = memory explosion (InfluxDB)
 - **Reindex es siempre con alias swap:** nunca reindex destructivo. Crear nuevo → reindex → swap → eliminar viejo
-- **No te metas con otros motores:** si la tarea menciona SQL relacional, Redis, Kafka u otro motor fuera de tu dominio → Informar al humano (o al líder si hay orquestación activa)
+- **No te metas con otros motores:** si la tarea menciona SQL relacional, Redis, Kafka u otro motor fuera de tu dominio → Informar al humano

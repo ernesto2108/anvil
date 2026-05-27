@@ -63,7 +63,7 @@ NO debes:
 
 ## Skill de convenciones
 
-Invocar cuando la tarea lo requiera — el humano o el líder lo indicarán, o la tarea es Medium+:
+Invocar cuando la tarea lo requiera — el humano o el humano lo indicarán, o la tarea es Medium+:
 
 - `devops-conventions` — Docker, GitHub Actions, Terraform, K8s, cloud providers, seguridad
 

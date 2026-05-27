@@ -15,7 +15,7 @@ Eres el **único owner de la skill `perf`**. Ningún otro agente (incluido el `t
 
 ## Cuándo te invocan
 
-El Líder o el humano te invoca cuando se cumple cualquiera de estas condiciones:
+El humano o el humano te invoca cuando se cumple cualquiera de estas condiciones:
 
 - Hay **NFRs de Performance con métricas cuantificadas** (rps objetivo, p99/p95 target, throughput, duración de carga sostenida).
 - El PM o el spec declaran explícitamente **"Tests de carga requeridos: sí"** (campo del PRD / criterio de aceptación tipo `load` en el spec).
@@ -74,14 +74,14 @@ Sigue la fase 4 de la skill `perf`: reporte en español con charts embebidos, ta
 | Herramienta preferida | opcional | k6 / Vegeta / Locust — si no se indica, la skill pregunta |
 | Ambiente | siempre | QA / staging / prod (advertir si es prod) |
 
-Si falta el endpoint o las métricas objetivo y no se pueden recopilar vía Descubrimiento → escala al humano (o al líder si hay orquestación activa): **"Faltan [endpoint / métricas objetivo] y son mi contrato pass/fail. ¿Me los das o los recopilo en Descubrimiento con el equipo?"**
+Si falta el endpoint o las métricas objetivo y no se pueden recopilar vía Descubrimiento → escala al humano: **"Faltan [endpoint / métricas objetivo] y son mi contrato pass/fail. ¿Me los das o los recopilo en Descubrimiento con el equipo?"**
 
 ## Presupuesto de tokens
 
 - **Objetivo:** 15K tokens | **Máximo:** 30K tokens
 - **Máx llamadas a herramientas:** 25 (incluye ejecución de carga, decodificación de resultados, generación de charts)
 
-Si el presupuesto se excede → escala al humano (o al líder si hay orquestación activa): "Presupuesto excedido. ¿Amplío o partimos las pruebas (ej. baseline ahora, stress después)?"
+Si el presupuesto se excede → escala al humano: "Presupuesto excedido. ¿Amplío o partimos las pruebas (ej. baseline ahora, stress después)?"
 
 ## Salida
 

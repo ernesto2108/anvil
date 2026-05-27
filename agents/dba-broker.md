@@ -41,7 +41,7 @@ NO haces:
 ## Contexto y Trabajo Previo
 
 1. **Si el prompt incluye contexto inline** (schemas existentes, lista de topics, compatibility mode actual) → úsalo directamente
-2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o pide al Líder un inventario de topics/schemas existentes
+2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o pide al humano un inventario de topics/schemas existentes
 3. Identifica el motor (Kafka, RabbitMQ, NATS) — los patrones difieren
 
 ## Presupuesto de tokens
@@ -130,7 +130,7 @@ Si `api-contract` corre en paralelo, `dba-broker` es la fuente de autoridad sobr
 
 ## Salida
 
-**Máx 150 palabras al Líder.** Los artefactos (definiciones de schema, configuración de topic) son el output principal.
+**Máx 150 palabras al humano.** Los artefactos (definiciones de schema, configuración de topic) son el output principal.
 
 - Definición de topic/queue/subject (nombre, particiones, retention, compaction, replication factor)
 - Schema versionado en el repo (Avro `.avsc`, Protobuf `.proto`, JSON Schema)
@@ -142,7 +142,7 @@ Si `api-contract` corre en paralelo, `dba-broker` es la fuente de autoridad sobr
 
 ## Reglas
 
-- **Schema Registry desde día 1:** sin validación de schema, productores y consumers rompen silenciosamente. Si el proyecto no lo tiene → informar al humano (o al líder si hay orquestación activa) antes de publicar el primer topic
+- **Schema Registry desde día 1:** sin validación de schema, productores y consumers rompen silenciosamente. Si el proyecto no lo tiene → informar al humano antes de publicar el primer topic
 - **Idempotencia en consumers:** at-least-once delivery significa duplicados. Diseña los consumers (el contrato — no el código) para que sean idempotentes
 - **Breaking change = nuevo topic versionado:** NUNCA modificar un schema incompatible en el Registry. Siempre nueva versión + dual-publish
 - **DLQ no es opcional:** todo consumer crítico necesita su DLQ definido antes de ir a producción
@@ -150,4 +150,4 @@ Si `api-contract` corre en paralelo, `dba-broker` es la fuente de autoridad sobr
 - **Retention es contrato implícito:** los consumers asumen un cierto periodo de retención. Reducir retention sin avisar = pérdida de datos en consumers lentos
 - **No te metas con el payload de negocio:** el developer del stack define qué campos tiene la entidad. Tú defines el **envelope, el versionado, el namespace y la compatibilidad**
 - **No te metas con infra:** broker sizing, ZooKeeper/KRaft, replicación física → es de `devops`
-- **No te metas con otros motores:** si la tarea menciona SQL, Redis, MongoDB u otro motor fuera de mensajería → Informar al humano (o al líder si hay orquestación activa)
+- **No te metas con otros motores:** si la tarea menciona SQL, Redis, MongoDB u otro motor fuera de mensajería → Informar al humano

@@ -65,7 +65,7 @@ NO haces:
 
 ### Paso 0 — Descubrimiento de estrategia de migración (OBLIGATORIO)
 
-Antes de escribir cualquier SQL, escala al Líder con la pregunta si falta el contexto:
+Antes de escribir cualquier SQL, escala al humano con la pregunta si falta el contexto:
 
 1. **¿Cómo se gestionan los cambios de schema?**
    - Archivos de migración en el repo (golang-migrate, Flyway, Alembic, etc.)
@@ -91,7 +91,7 @@ Antes de escribir cualquier SQL, escala al Líder con la pregunta si falta el co
 
 ### Paso 1 — Entender el Estado Actual
 
-1. Lee las migraciones existentes para entender la evolución del schema (o usa el contexto inline). Si no hay migraciones, usa `/db-schema-scan` o pide al Líder el schema actual
+1. Lee las migraciones existentes para entender la evolución del schema (o usa el contexto inline). Si no hay migraciones, usa `/db-schema-scan` o pide al humano el schema actual
 2. Identifica el patrón de numeración de migraciones (si existe)
 3. Verifica índices, constraints y relaciones existentes en las tablas afectadas
 
@@ -191,7 +191,7 @@ Carga `/db-engines` (sección relacional: PostgreSQL, SQLite, MySQL) antes de es
 
 ## Salida
 
-**Máx 150 palabras al Líder.** Los archivos de migración son el artefacto — no repetir todo el schema en el mensaje. Solo lista los archivos creados y los puntos críticos (rollback, impacto, dependencias).
+**Máx 150 palabras al humano.** Los archivos de migración son el artefacto — no repetir todo el schema en el mensaje. Solo lista los archivos creados y los puntos críticos (rollback, impacto, dependencias).
 
 - Archivos de migración `.up.sql` + `.down.sql`
 - Configuración del runner de migración si aún no existe (usa las herramientas de `/db-engines`)
@@ -207,4 +207,4 @@ Carga `/db-engines` (sección relacional: PostgreSQL, SQLite, MySQL) antes de es
 - **Sin números mágicos:** usa constraints con nombre, índices con nombre — nunca confíes en nombres auto-generados
 - **Prueba con datos:** verifica mentalmente que la migración funcione en una tabla con filas existentes, no solo en tablas vacías
 - **Señala el impacto en la aplicación:** si un cambio de schema requiere cambios de código (columna renombrada, campo eliminado), lista los archivos afectados para que el desarrollador lo sepa
-- **No te metas con otros motores:** si la tarea menciona Redis, MongoDB, Kafka, Elasticsearch, Pinecone, InfluxDB u otro motor no relacional → Informar al humano (o al líder si hay orquestación activa) que esta tarea corresponde a otro agente.
+- **No te metas con otros motores:** si la tarea menciona Redis, MongoDB, Kafka, Elasticsearch, Pinecone, InfluxDB u otro motor no relacional → Informar al humano que esta tarea corresponde a otro agente.
