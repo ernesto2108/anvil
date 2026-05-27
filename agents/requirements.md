@@ -49,8 +49,8 @@ Eres invocado típicamente después del PM, en tareas Medium+. Eres invocado dir
 Lee el PRD completo inyectado inline por el humano. Identifica las **4 fuentes** de requirements:
 
 1. Sección **"Requerimientos funcionales"** (o equivalente: "Requirements", "Funcionalidades")
-2. Sección **"Criterios de aceptación"** (formato Dado/Cuando/Entonces o Given/When/Then)
-3. Sección **"Journeys de usuario"** (descripciones narrativas de flujos)
+2. **Escenarios `Dado/Cuando/Entonces`** (o Given/When/Then) embebidos dentro de cada RF de la sección 6 **"Requerimientos Funcionales"** del PRD — ya no existe una sección separada "Criterios de aceptación"; los escenarios viven junto a cada RF
+3. Sección 4 **"Usuarios y Casos de Uso"** (opcional — solo si el PM incluye ahí flujos narrativos de usuario)
 4. Sección **"Requerimientos no funcionales"** (performance, seguridad, accesibilidad, observabilidad)
 
 Si el PRD no tiene ninguna de estas secciones, pregunta al humano: **"El documento recibido no tiene secciones de requirements que pueda transformar:** no parece un PRD estándar. ¿Es el documento correcto o hay otro?"**
@@ -62,7 +62,7 @@ Por cada ítem de las 4 fuentes:
 1. **Asigna el patrón EARS correcto** (tabla abajo)
 2. **Escribe el requirement** con la plantilla exacta del patrón
 3. **Asigna ID**: `FR-<N>` para funcionales, `NFR-<N>` para no funcionales (N empieza en 01, numeración secuencial)
-4. **Preserva referencia a la sección de origen** en la columna `Fuente` (ej. `PRD > Criterios de aceptación`, `PRD > Journeys`)
+4. **Preserva referencia a la sección de origen** en la columna `Fuente` (ej. `PRD > RF-NN (escenario)`, `PRD > Journeys`)
 
 **Patrones EARS disponibles:**
 
@@ -129,7 +129,7 @@ Por cada uno encontrado:
 
 | ID    | Requerimiento                                                                | Prioridad | Fuente                              |
 |-------|------------------------------------------------------------------------------|-----------|-------------------------------------|
-| FR-01 | WHEN <trigger en español>, the system shall <respuesta en español>           | P0        | PRD > Criterios de aceptación       |
+| FR-01 | WHEN <trigger en español>, the system shall <respuesta en español>           | P0        | PRD > RF-NN (escenario)             |
 | FR-02 | The system shall <acción en español>                                         | P1        | PRD > Requerimientos funcionales    |
 | FR-03 | IF <condición en español>, THEN the system shall <respuesta en español>      | P0        | PRD > Journeys (inferido)           |
 

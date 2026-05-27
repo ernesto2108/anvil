@@ -273,7 +273,7 @@ Verifica categorías, identifica brechas, propone adiciones (no modifiques sin a
 
 Crea `{design_system_path}`. Ver `reference/output-template.md`.
 
-Adicionalmente, si este paso define o modifica tokens (colores, tipografía, espaciado, componentes), genera o actualiza `DESIGN.md` en la raíz del repo. Ver la sección **DESIGN.md** del agente `designer.md` para el formato completo.
+Adicionalmente, si este paso define o modifica tokens (colores, tipografía, espaciado, componentes), genera o actualiza `DESIGN.md` en la raíz del repo. Ver la sección 'DESIGN.md — artefacto adicional' del agente `designer-spec.md` para el formato completo.
 
 `DESIGN.md` es el contrato portable del design system — permite que cualquier agente AI lea los tokens automáticamente sin onboarding manual. Actualízalo siempre que cambien tokens.
 

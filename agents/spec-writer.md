@@ -104,7 +104,11 @@ Si la respuesta de 0.1 fue backend → saltar 0.2 y 0.3 y continuar con el Paso 
 2. ¿El diseño viene de Pencil MCP (`.pen`), Figma (URL), capturas estáticas, o no hay diseño todavía?
 3. ¿El criterio "done" incluye pruebas visuales (regression), accesibilidad (WCAG), o solo funcionalidad?
 
-Si **no hay DTD** → advertir que el spec será incompleto en criterios visuales y **preguntar si continuar de todas formas** antes de avanzar.
+Si la tarea es **frontend, mobile o fullstack con UI nueva** y **no hay DTD** → **bloquear**. No continuar. Mensaje al humano (vía `## Necesito información`):
+
+> "Esta tarea toca UI. No puedo producir un spec completo sin DTD — invocar `designer-spec` para producir el DTD y volver a invocar al `spec-writer` cuando esté listo."
+
+**Única excepción:** tareas frontend/fullstack **sin UI nueva** (bug fixes de lógica, ajustes de performance sin cambio de pantallas). En ese caso el DTD no aplica → continuar.
 
 #### Etapa 0.3 — Validación de consistencia DTD ↔ diseño (solo si el humano confirmó que tiene ambos)
 
