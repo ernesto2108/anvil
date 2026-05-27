@@ -52,6 +52,7 @@ El prompt activa el modo vía el campo `Mode:` en el prompt. Convención exacta:
 | `task_path` | siempre | siempre | Ruta absoluta donde escribir `spec.md` |
 | `milestone` | siempre | opcional (default: vacío) | Milestone heredado del ARD (modo normal). En liviano puede no existir. |
 | `feature_name` | siempre | siempre | Nombre del feature o del cambio (para el título del spec) |
+| `dtd_path` | opcional (obligatorio cuando la tarea toca UI) | opcional (obligatorio cuando la tarea toca UI) | Path al DTD. Convención: `.design/{task-id}/dtd.md`. Cuando está presente, se lee en el Paso 1 para derivar: criterios de aceptación de interacción y estados visuales, referencias a tokens del design system, y flujos de error con representación visual. |
 
 **Si falta cualquier campo obligatorio del modo activo → pregunta al humano** mediante `## Necesito información` por cada campo faltante, anteponiendo una frase de contexto que diga por qué ese campo es necesario: `**[campo] requerido en Mode: [modo] y no llegó inline:** Sin él no puedo producir el spec. ¿Dónde está, o cómo procedo?` El humano puede tener el dato o decidir cómo proceder — no asumas en silencio.
 
@@ -75,7 +76,74 @@ No existe un tercer camino: el `spec-writer` no traduce documentos externos ni l
 
 ## Flujo de ejecución
 
-### Paso 0 — Detectar modo
+### Paso 0 — Pre-flight (BLOQUEANTE — antes de detectar modo y antes de leer cualquier archivo)
+
+Sus etapas son secuenciales: no avanzar a la siguiente hasta cerrar la anterior.
+
+**Convención de paths de diseño:**
+
+| Artefacto | Path |
+|---|---|
+| Design system / tokens | `.design/DESIGN.md` |
+| DTD de la tarea | `.design/{task-id}/dtd.md` |
+| Capturas / referencias visuales | `.design/{task-id}/screens/` |
+
+#### Etapa 0.1 — Pregunta raíz (no negociable)
+
+Antes de leer cualquier archivo, preguntar al humano (vía `## Necesito información`):
+
+> "¿Esta tarea es backend, frontend (web/mobile), o fullstack?"
+
+Si el humano no responde → **detenerse**. No hay default. No inferir el dominio del prompt.
+
+#### Etapa 0.2 — Bloque de preguntas frontend (solo si la respuesta es frontend, mobile o fullstack)
+
+Si la respuesta de 0.1 fue backend → saltar 0.2 y 0.3 y continuar con el Paso 0b. Si fue frontend, mobile o fullstack, preguntar al humano:
+
+1. ¿Existe un DTD ya generado? Si sí, ¿en qué path? (convención esperada: `.design/{task-id}/dtd.md`)
+2. ¿El diseño viene de Pencil MCP (`.pen`), Figma (URL), capturas estáticas, o no hay diseño todavía?
+3. ¿El criterio "done" incluye pruebas visuales (regression), accesibilidad (WCAG), o solo funcionalidad?
+
+Si **no hay DTD** → advertir que el spec será incompleto en criterios visuales y **preguntar si continuar de todas formas** antes de avanzar.
+
+#### Etapa 0.3 — Validación de consistencia DTD ↔ diseño (solo si el humano confirmó que tiene ambos)
+
+1. Leer el DTD en el path indicado
+2. Leer el diseño desde Pencil MCP o la URL de Figma
+3. Comparar: ¿los componentes, estados, flujos e interacciones del DTD coinciden con lo que está en el diseño?
+4. Si hay **discrepancias** → parar y reportar al humano cuáles son y en qué difieren. No continuar hasta que el humano decida cuál es la fuente de verdad
+5. Si **coinciden** → continuar con la generación del spec
+
+#### Etapa 0c — Resumen previo a generación (BLOQUEANTE)
+
+Después de completar 0.1, 0.2 y 0.3 (o después de 0.2 si no hubo validación DTD ↔ diseño, o después de 0.1 si la tarea es backend), y **antes de generar el spec** (Paso 0b — detectar modo, y los pasos de generación), presentar al humano esta tabla resumen y esperar confirmación explícita:
+
+```
+**Resumen — antes de generar el spec**
+
+| Campo | Valor |
+|---|---|
+| Dominio | {backend / frontend / mobile / fullstack} |
+| Fuente de diseño | {path DTD + herramienta, o "no aplica"} |
+| Consistencia DTD ↔ diseño | {Validada / Con advertencias / No aplica} |
+| ARD disponible | {path del ARD que se consumirá} |
+| Criterio done | {funcionalidad / + accesibilidad WCAG / + visual regression} |
+| Artefacto a generar | spec.md |
+| Secciones que incluirá | {lista derivada del dominio, DTD y ARD disponibles} |
+| Secciones que NO incluirá | {y por qué} |
+
+¿Continúo con la generación?
+```
+
+Si el humano dice sí → continuar al Paso 0b y la generación. Si dice no o pide ajustes → incorporar los ajustes y volver a mostrar el resumen actualizado antes de generar. **No generar el spec hasta recibir confirmación.**
+
+#### Comportamiento por dominio
+
+- **Backend** → continuar flujo actual sin preguntas de diseño (saltar 0.2 y 0.3)
+- **Frontend / mobile** → activar etapas 0.2 y 0.3, y leer el DTD en el Paso 1
+- **Fullstack** → activar etapas 0.2 y 0.3, leer el DTD en el Paso 1, y generar secciones separadas backend y frontend en el spec
+
+### Paso 0b — Detectar modo
 
 Leer el campo `Mode:` del prompt. Si vale `liviano` → seguir el flujo liviano (más abajo). Si vale `normal` o está ausente → seguir el flujo normal. Cualquier otro valor → escalar.
 
@@ -85,6 +153,7 @@ Leer el campo `Mode:` del prompt. Si vale `liviano` → seguir el flujo liviano 
 
 1. Leer `requirements.md` completo (inline en el prompt)
 2. Leer cada path ARD que el prompt pasó: vistas de dominio (`ard-<dominio>.md`), cada `adrs/ADR-*.md`
+2b. **Si la tarea toca UI y `dtd_path` está presente** (confirmado en el Paso 0 — Pre-flight) → leer el DTD en `dtd_path` (convención `.design/{task-id}/dtd.md`) para derivar: criterios de aceptación de interacción y estados visuales, referencias a tokens del design system, y flujos de error con representación visual. El DTD es fuente de los criterios visuales del spec — no inventarlos.
 3. **Validar estructura mínima del ARD.** Antes de consumir el ARD, verificar que al menos un archivo `ard-<dominio>.md` contiene secciones reconocibles (dominio, decisiones técnicas, patrones, contratos o mapa de implementación) y que existe al menos un directorio `adrs/` con archivos `ADR-*.md` (si el prompt pasó paths `adrs/`). Si el ARD es un documento libre sin esas señales (ej. export de Notion, markdown sin estructura estándar, documento Word convertido) → **pregunta al humano** mediante `## Necesito información`: `**ARD recibido tiene formato no estructurado:** No reconozco las secciones canónicas (dominio, decisiones, contratos). ¿Lo produjo el architect del sistema, o es un documento externo? Si es externo, necesito que el architect lo traduzca al formato canónico, o que me indiques si procedo en Mode: liviano con contexto del explorer.`
 4. **NO leer PRD.** El contexto de negocio que necesites debe estar en `requirements.md`. Si no está → escalar.
 5. **NO leer código de producción.** Solo verificar existencia/ausencia de paths cuando el ARD los referencia (≤4 calls Glob/Grep).

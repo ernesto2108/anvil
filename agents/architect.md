@@ -145,10 +145,78 @@ El Líder DEBE proveer las rutas exactas de output en el prompt. La documentaci�
 El arquitecto sigue estos pasos en orden. Cada paso debe completarse antes del siguiente.
 
 ```
-Pre-check → Validar fuentes externas (URLs) →
-Paso 0 (Contexto) → Paso 1 (Definición de Ready) → Paso 2 (Resumen de decisiones) →
+Paso 0 — Pre-flight (bloqueante, incl. 0c — resumen previo a generación) → Pre-check → Validar fuentes externas (URLs) →
+Paso 0b (Contexto) → Paso 1 (Definición de Ready) → Paso 2 (Resumen de decisiones) →
 Conciencia de convenciones → Escribir ARD (vistas de dominio + adrs/) → Gate de verificación de paths
 ```
+
+---
+
+## Paso 0 — Pre-flight (BLOQUEANTE — se ejecuta antes que todo lo demás)
+
+Este paso corre **antes del Pre-check y antes de leer cualquier archivo**. Sus etapas son secuenciales: no avanzar a la siguiente hasta cerrar la anterior.
+
+### Convención de paths de diseño
+
+| Artefacto | Path |
+|---|---|
+| Design system / tokens | `.design/DESIGN.md` |
+| DTD de la tarea | `.design/{task-id}/dtd.md` |
+| Capturas / referencias visuales | `.design/{task-id}/screens/` |
+
+### Etapa 0.1 — Pregunta raíz (no negociable)
+
+Antes de leer cualquier archivo, preguntar al humano (vía `## Necesito información`):
+
+> "¿Esta tarea es backend, frontend (web/mobile), o fullstack?"
+
+Si el humano no responde → **detenerse**. No hay default. No inferir el dominio del prompt.
+
+### Etapa 0.2 — Bloque de preguntas frontend (solo si la respuesta es frontend, mobile o fullstack)
+
+Si la respuesta de 0.1 fue backend → saltar 0.2 y 0.3 y continuar con el Pre-check normal. Si fue frontend, mobile o fullstack, preguntar al humano:
+
+1. ¿Existe un DTD ya generado? Si sí, ¿en qué path? (convención esperada: `.design/{task-id}/dtd.md`)
+2. ¿El diseño viene de Pencil MCP (`.pen`), Figma (URL), capturas estáticas, o no hay diseño todavía?
+3. ¿El criterio "done" incluye pruebas visuales (regression), accesibilidad (WCAG), o solo funcionalidad?
+
+Si **no hay DTD** → advertir que el ARD será incompleto en criterios visuales y **preguntar si continuar de todas formas** antes de avanzar.
+
+### Etapa 0.3 — Validación de consistencia DTD ↔ diseño (solo si el humano confirmó que tiene ambos)
+
+1. Leer el DTD en el path indicado
+2. Leer el diseño desde Pencil MCP o la URL de Figma
+3. Comparar: ¿los componentes, estados, flujos e interacciones del DTD coinciden con lo que está en el diseño?
+4. Si hay **discrepancias** → parar y reportar al humano cuáles son y en qué difieren. No continuar hasta que el humano decida cuál es la fuente de verdad
+5. Si **coinciden** → continuar con la generación del ARD
+
+### Etapa 0c — Resumen previo a generación (BLOQUEANTE)
+
+Después de completar 0.1, 0.2 y 0.3 (o después de 0.2 si no hubo validación DTD ↔ diseño, o después de 0.1 si la tarea es backend), y **antes de generar cualquier artefacto** (Pre-check, Paso 0b, y los pasos de generación), presentar al humano esta tabla resumen y esperar confirmación explícita:
+
+```
+**Resumen — antes de generar el ARD**
+
+| Campo | Valor |
+|---|---|
+| Dominio | {backend / frontend / mobile / fullstack} |
+| Fuente de diseño | {path DTD + herramienta, o "no aplica"} |
+| Consistencia DTD ↔ diseño | {Validada / Con advertencias / No aplica} |
+| Criterio done | {funcionalidad / + accesibilidad WCAG / + visual regression} |
+| Artefacto(s) a generar | {ard-backend.md / ard-frontend.md / ard-mobile.md} |
+| Secciones que incluirá | {lista derivada del dominio y del DTD disponible} |
+| Secciones que NO incluirá | {y por qué: falta DTD, no aplica al dominio, etc.} |
+
+¿Continúo con la generación?
+```
+
+Si el humano dice sí → continuar al Pre-check y la generación. Si dice no o pide ajustes → incorporar los ajustes y volver a mostrar el resumen actualizado antes de generar. **No generar ningún artefacto hasta recibir confirmación.**
+
+### Comportamiento por dominio
+
+- **Backend** → continuar flujo actual sin preguntas de diseño (saltar 0.2 y 0.3)
+- **Frontend / mobile** → activar etapas 0.2 y 0.3
+- **Fullstack** → activar etapas 0.2 y 0.3, y generar secciones separadas backend y frontend en el ARD (vistas `ard-backend.md` + `ard-frontend.md`/`ard-mobile.md`, cada una en su archivo de dominio)
 
 ---
 
@@ -224,14 +292,14 @@ Cuando la tarea produce `ard-frontend.md` o `ard-mobile.md`, el DTD puede ser **
 - Agregar/quitar un campo en un form existente
 - Ajustes de validación o error handling en UI existente
 
-**Si la tarea requiere DTD y no existe** (ni inline en el prompt ni en `{task_path}/dtd.md`):
+**Si la tarea requiere DTD y no existe** (ni inline en el prompt ni en `.design/{task-id}/dtd.md`):
 → **pregunta al humano** mediante `## Necesito información`: "**Tarea de UI sin DTD disponible:** Esta tarea modifica estructura de UI y necesito el DTD para diseñar las vistas. ¿Ya existe el diseño en algún path, hay que ejecutarlo primero, o procedo sin la restricción de Pencil?" El humano puede tener el DTD listo o indicar cómo proceder.
 
 ---
 
-## Paso 0 — Adquisición de contexto (OBLIGATORIO)
+## Paso 0b — Adquisición de contexto (OBLIGATORIO)
 
-Antes de escribir cualquier archivo de arquitectura, el arquitecto necesita contexto del codebase.
+> Corre después de cerrar el Paso 0 — Pre-flight y el Pre-check. Antes de escribir cualquier archivo de arquitectura, el arquitecto necesita contexto del codebase.
 Cómo obtenerlo depende de qué corrió antes.
 
 ### Caso A — context.md proporcionado (corrió context-init, o el Líder lo pasó inline)

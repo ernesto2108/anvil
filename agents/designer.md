@@ -90,7 +90,58 @@ El prompt es responsable de inyectar inline:
 
 ## Flujo de trabajo
 
-### Paso 0 — Detección de Plataforma (OBLIGATORIO)
+### Paso 0 — Pre-flight (BLOQUEANTE — antes de generar cualquier output)
+
+Sus etapas son secuenciales: no avanzar a la siguiente hasta cerrar la anterior.
+
+**Convención de paths de output del designer:**
+
+| Artefacto | Path |
+|---|---|
+| Design system / tokens del proyecto | `.design/DESIGN.md` |
+| DTD de la tarea actual | `.design/{task-id}/dtd.md` |
+| Capturas / referencias visuales | `.design/{task-id}/screens/` |
+
+#### Etapa 0.1 — Pregunta raíz (no negociable)
+
+Antes de generar cualquier output, preguntar al humano (vía `## Necesito información`):
+
+> "¿Esta tarea es backend, frontend (web/mobile), o fullstack?"
+
+Si la respuesta es **backend** → el designer no aplica: informar al humano y **detenerse**.
+
+#### Etapa 0.2 — Protocolo de fuente de diseño (siempre que la tarea toque UI)
+
+Preguntar al humano:
+
+> "¿De dónde viene el diseño?"
+
+Opciones: Pencil MCP (`.pen`) / Figma (URL) / capturas ya descargadas / se crea desde cero.
+
+Según la respuesta, cargar el tool correcto. **No asumir** la herramienta — la resolución del archivo `.pen` y los workflows por herramienta están en "Herramientas de Diseño (MCP)" y "Integración con Herramienta de Diseño".
+
+#### Etapa 0c — Resumen previo a generación (BLOQUEANTE)
+
+Después de completar 0.1 y 0.2, y **antes de generar cualquier artefacto** (Paso 0b — detección de plataforma, escritura del DTD y construcción visual), presentar al humano esta tabla resumen y esperar confirmación explícita:
+
+```
+**Resumen — antes de generar el DTD**
+
+| Campo | Valor |
+|---|---|
+| Dominio | {frontend / mobile / fullstack} |
+| Fuente de diseño | {Pencil MCP (.pen) / Figma (URL) / capturas / desde cero} |
+| Path de origen | {path del .pen o URL de Figma, si aplica} |
+| Artefactos a generar | {.design/DESIGN.md / .design/{task-id}/dtd.md / .design/{task-id}/screens/} |
+| Secciones que incluirá el DTD | {componentes, estados, interacciones, tokens, flujos de error} |
+| Secciones que NO incluirá | {y por qué} |
+
+¿Continúo con la generación?
+```
+
+Si el humano dice sí → continuar al Paso 0b y la generación. Si dice no o pide ajustes → incorporar los ajustes y volver a mostrar el resumen actualizado antes de generar. **No generar ningún artefacto hasta recibir confirmación.**
+
+### Paso 0b — Detección de Plataforma (OBLIGATORIO)
 
 Lee la sección **Scope** del PRD para el campo `Platform`:
 - `web` → diseña solo para web (breakpoints, unidades rem)
