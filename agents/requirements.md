@@ -75,6 +75,16 @@ Por cada ítem de las 4 fuentes:
 | **Optional feature** | `WHERE <feature included>, the system shall <action>` | Comportamiento condicional a un flag/feature toggle | `WHERE la funcionalidad de notificaciones está habilitada, the system shall enviar un correo de confirmación` |
 | **Complex** | Combinación de los anteriores | Máx 2-3 condiciones por requirement; si se vuelve más complejo, dividir en múltiples FRs | `WHILE la sesión está activa, WHEN el usuario solicita exportar sus datos, the system shall generar el archivo en formato CSV` |
 
+**NFR de Performance con tests de carga requeridos:** cuando el PRD declare en sus Requerimientos no funcionales el campo **"Tests de carga requeridos: sí"**, genera un NFR tipo `Performance` con formato EARS que incluya: (1) **métrica cuantificada** (rps, p99/p95, duración de carga sostenida) tomada del campo del PRD, (2) **herramienta de validación** — la skill `perf` (k6/Vegeta/Locust según preferencia del PRD), y (3) **criterio pass/fail ejecutable**. No dejes la métrica como prosa vaga ("debe ser rápido") — el campo del PRD trae los números; si faltan, regístralo como decisión abierta.
+
+Ejemplo:
+
+```
+NFR-XX: The system shall handle <N> rps with p99 < <Xms> under <duración> sustained load. Validated by: skill perf (k6).
+```
+
+Este NFR es la fuente que el `spec-writer` traduce a un criterio de aceptación tipo `load` y que dispara la invocación del agente `load-tester`. Si el campo dice "no" o no aparece → no generes este NFR.
+
 ### Paso 3 — Validación interna (antes de emitir)
 
 Por cada requirement generado, aplicar los 4 checks. Si alguno falla → corregir antes de emitir:

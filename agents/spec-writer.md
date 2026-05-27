@@ -310,7 +310,9 @@ _Implementa: FR-01_
 
 | Criterio de aceptación | Tipo | Tool | Comando/pasos | Resultado esperado |
 |---|---|---|---|---|
-| CA-01 — <descripción corta> | unit \| api \| e2e \| visual \| manual | go test \| hurl \| playwright \| agent-browser \| manual | <comando exacto o pasos numerados> | <qué evidencia confirma el pass> |
+| CA-01 — <descripción corta> | unit \| api \| e2e \| visual \| load \| manual | go test \| hurl \| playwright \| agent-browser \| perf (k6/Vegeta/Locust) \| manual | <comando exacto o pasos numerados> | <qué evidencia confirma el pass> |
+
+> **Tipo `load`:** clasifica el criterio como `load` cuando deriva de un NFR de Performance con métrica cuantificada (rps, p99, throughput) — típicamente originado por el campo "Tests de carga requeridos: sí" del PRD. Convención: `perf skill — herramienta (k6/Vegeta/Locust), umbral cuantificado` (ej. `perf — k6, 500 rps p99<300ms`). Un criterio `load` declarado explícitamente permite que el `task-decomposer` genere una task de carga que ejecutará el agente `load-tester`. NO uses `load` para validación funcional ni para tests `api`/`e2e` normales.
 
 ## 9. Requerimientos de observabilidad
 

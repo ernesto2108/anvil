@@ -115,6 +115,7 @@ Que problema existe, para quien, y por que ahora. Incluir datos de soporte (tick
 
 ## Requerimientos no funcionales
 - **Performance:** <tiempo de respuesta, throughput esperado>
+- **Tests de carga requeridos:** <sí/no — si sí: rps objetivo, p99 target, herramienta preferida (k6/Vegeta/Locust)>
 - **Seguridad:** <auth, sensibilidad de datos, compliance>
 - **Accesibilidad:** <nivel WCAG si aplica>
 - **Escalabilidad:** <carga esperada, crecimiento>
