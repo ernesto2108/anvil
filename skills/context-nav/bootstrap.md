@@ -245,6 +245,22 @@ grep -rn "process\.env\." --include="*.ts" --include="*.js" | grep -v "node_modu
 grep -E "^ENTRYPOINT|^CMD|^EXPOSE|^FROM" Dockerfile 2>/dev/null
 ```
 
+## Paso 3.6 — Extraer proceso de equipo (para Core/workflows.md, secciones Estrategia de ramas, Proceso de PR, Ambientes)
+
+```bash
+# Detectar estrategia de ramas desde CONTRIBUTING.md o README
+grep -i "branch\|rama\|feature/\|fix/" CONTRIBUTING.md README.md 2>/dev/null | head -20
+
+# Detectar PR template
+cat .github/PULL_REQUEST_TEMPLATE.md 2>/dev/null | head -30
+
+# Detectar ambientes y triggers de deploy desde GitHub Actions
+ls .github/workflows/ 2>/dev/null
+grep -E "branches:|on:|push:|pull_request:" .github/workflows/*.yml 2>/dev/null | head -20
+```
+
+Si no se encuentra información suficiente para poblar Estrategia de ramas, Proceso de PR o Ambientes, dejar esas secciones con `<!-- completar con el equipo -->` y mencionarlo en el output de cierre como gap pendiente.
+
 ## Paso 4 — Detectar bounded contexts
 
 ```bash
@@ -299,17 +315,20 @@ Si no hay hits o MCP no está disponible → dejar `decisions/` vacío (se llena
 
 Usar los templates en `templates/`. Escribir en este orden:
 1. `Technical domain/project.md`
-2. `Core/workflows.md` — comandos operativos reales extraídos en el Paso 3.5
-3. `Core/coding-standards.md` — patrones detectados
-4. `Technical domain/contracts.md` — APIs + invariantes de negocio
-5. `Technical domain/dependencies.md`
-6. `Technical domain/domain.md` — dominios con > 3 archivos significativos
-7. `Technical domain/glossary.md` — pre-populado con entidades detectadas, marcadas como `⚠️ pendiente validación`
-8. `Technical domain/risks.md` — incluir top-5 archivos > 300 líneas como deuda potencial
-9. `decisions/NNN-slug.md` — solo los que tienen evidencia del Paso 6
-10. `Core/navigation.md` — índice de Core
-11. `Technical domain/navigation.md` — índice de Technical domain
-12. `NAVIGATOR.md` — al final, con el índice general
+2. `Core/workflows.md` — secciones Grupo A (proceso de equipo, del Paso 3.6) + Grupo B (comandos operativos, del Paso 3.5)
+3. `Core/coding-standards.md`
+4. `Core/patterns.md` — patrones de diseño inferidos en el Paso 2
+5. `Core/task-management.md` — poblar con la herramienta de gestión respondida por el humano + convenciones inferibles del repo; si el humano no respondió, dejar sección herramienta en blanco
+6. `Technical domain/contracts.md`
+7. `Technical domain/business-rules.md` — invariantes de negocio detectadas por grep
+8. `Technical domain/dependencies.md`
+9. `Technical domain/domain.md` — dominios con > 3 archivos significativos
+10. `Technical domain/glossary.md` — pre-populado con entidades detectadas, marcadas como `⚠️ pendiente validación`
+11. `Technical domain/risks.md` — incluir top-5 archivos > 300 líneas como deuda potencial
+12. `decisions/NNN-slug.md` — solo los que tienen evidencia del Paso 6
+13. `Core/navigation.md` — índice de Core
+14. `Technical domain/navigation.md` — índice de Technical domain
+15. `NAVIGATOR.md` — al final, con el índice general
 
 Marcar `coverage: bootstrap` en NAVIGATOR.md.
 

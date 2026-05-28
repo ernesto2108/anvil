@@ -52,7 +52,7 @@ Sistema de conocimiento acumulativo que vive en `.project-context/` al lado de `
 
 ## Reglas de lectura
 
-- El orquestador lee `project.md` + `patterns.md` + `contracts.md` siempre
+- El orquestador lee `Technical domain/project.md` + `Core/patterns.md` + `Technical domain/contracts.md` siempre
 - Lee solo los dominios que la tarea va a tocar (inferir desde archivos afectados)
 - En modo directo, inyectar resumen de NAVIGATOR.md en la primera respuesta de sesión
 
