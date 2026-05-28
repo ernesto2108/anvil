@@ -25,32 +25,44 @@ Un PRD define **qué** construir y **por qué**. Nunca el **cómo** — eso corr
 - Que problema resuelve? Describilo sin mencionar soluciones
 - (seguimiento si es necesario) Como lo resuelven hoy? Que pasa si no lo hacemos?
 
-### Tema 2: Usuario
+### Tema 2: Objetivo
+- Que vas a lograr especificamente? Como lo medirias en una frase?
+- (seguimiento si es necesario) Es distinto del problema: el problema es el dolor, el objetivo es el resultado concreto y medible que persigues.
+
+### Tema 3: Usuario
 - Quien es el usuario principal? En que contexto lo usa?
 - (seguimiento si es necesario) Hay otros usuarios afectados?
 
-### Tema 3: Exito
+### Tema 4: Exito
 - Como sabemos que funciono? Que metrica se mueve?
 - (seguimiento si es necesario) Cual es el baseline? Que NO debe empeorar?
 
-### Tema 4: Alcance
+### Tema 5: Alcance
 - Cual es la version minima que entrega valor? (MVP)
 - (seguimiento si es necesario) Hay deadline? Que NO deberia incluir?
 
-### Tema 5: Plataforma
+### Tema 6: Plataforma
 - Para que plataforma es? Web, mobile, o ambos?
 - (seguimiento si es mobile) iOS, Android, o ambos? Flutter o nativo?
 - (seguimiento si es ambos) Se comparte el design system o son independientes?
 
-### Tema 6: User Journeys
-- Cual es el flujo principal del usuario? (paso a paso)
-- (seguimiento si es necesario) Que pasa si algo sale mal? Hay estados vacios o edge cases?
+### Tema 7: Requerimientos Funcionales
+El objetivo es identificar los Requerimientos Funcionales (RF) como unidades discretas, cada una con sus escenarios Dado/Cuando/Entonces.
+- Cuales son las capacidades concretas que el sistema debe permitir? Nombra cada una como un RF discreto (ej. "RF: crear workflow", "RF: editar perfil").
+- Para cada RF: cual es el camino feliz? (Dado <precondición>, Cuando <acción>, Entonces <resultado>)
+- (seguimiento por cada RF) Que pasa si algo sale mal — un error de validación o del sistema? Hay un caso borde o estado vacío?
 
-### Tema 7: Riesgos
+### Tema 8: Requerimientos No Funcionales
+- Performance: hay un tiempo de respuesta o throughput esperado?
+- Seguridad: hay datos sensibles, requisitos de auth, o compliance?
+- Accesibilidad: aplica algún nivel WCAG?
+- Escalabilidad: cuál es la carga o el volumen esperado?
+
+### Tema 9: Riesgos
 - Que estamos asumiendo que no hemos validado?
 - (seguimiento si es necesario) Que puede salir mal en produccion? Que mitigacion hay?
 
-### Tema 8: Dependencias
+### Tema 10: Dependencias
 - Depende de otro equipo, API externa, o servicio compartido?
 
 Después de recopilar suficientes respuestas: confirmar con un breve resumen en español, obtener aprobación antes de escribir.
@@ -62,109 +74,84 @@ Crear en: `{task_path}/prd.md` dentro de `.project-context/` o del repo (el orqu
 ```markdown
 # <TASK-ID>: <Titulo>
 
-## Problema
-Que problema existe, para quien, y por que ahora. Incluir datos de soporte (tickets, metricas, feedback).
+## 1. Contexto y Problema
+Qué problema existe, para quién, y por qué ahora.
+Incluir datos: usuarios afectados, impacto en negocio, señales observadas.
 
-## Objetivos y metricas de exito
-- **Metrica principal:** <que se mueve> (baseline: X, objetivo: Y)
-- **Como medir:** <herramienta, query, dashboard>
-- **Countermetric:** <que NO debe empeorar>
+## 2. Objetivo
+Una frase clara y medible de qué vas a lograr.
 
-## Journeys de usuario
+## 3. Métricas de Éxito
+- **Primaria:** <métrica> (baseline: X → objetivo: Y)
+- **Secundaria:** <qué vigilar para no romper otras cosas>
+- **Cómo medir:** <herramienta, query, dashboard>
 
-### Camino feliz
-1. Usuario hace X
-2. Sistema responde con Y
-3. Usuario ve Z
+## 4. Usuarios y Casos de Uso
+Quién va a usar esto y en qué escenarios.
+- **Usuario principal:** <descripción + contexto de uso>
+- **Otros afectados:** <si aplica>
+- **Jobs-to-be-done:** <qué tarea real resuelve>
 
-### Camino de error
-1. Usuario hace X con input invalido
-2. Sistema responde con mensaje de error claro
-3. Usuario puede reintentar
-
-## Scope
-- **Type:** new | visual-improvement | functional-improvement | both
-- **Platform:** web | mobile | both
-- **Stack:** backend | frontend | fullstack
-- **Milestone:** <nombre del milestone> (ej. MVP, v1.0, v2.0, Sprint Q2)
-- **Existing assets:** [lista de archivos, componentes, pantallas que ya existen]
-- **Design status:** none | exists-no-changes | exists-needs-update | new-needed
-
-## Alcance
-
-### Plataforma
-- **Platform:** web | mobile | both
-- **Mobile stack:** Flutter | iOS native | Android native | N/A
-- **Shared design system:** yes | no | N/A
-
+## 5. Scope
 ### Incluido
-- <capacidad 1> — P0 (obligatorio para lanzar)
-- <capacidad 2> — P0
-- <capacidad 3> — P1 (importante, pronto despues)
-- <capacidad 4> — P2 (deseable, futuro)
+- <capacidad 1> — P0
+- <capacidad 2> — P1
 
 ### Fuera de alcance
-- <que NO incluye esta tarea y por que>
+- <qué NO incluye esta tarea y por qué>
 
-## Requerimientos funcionales
+## 6. Requerimientos Funcionales
 
-| # | Requerimiento | Prioridad | Notas |
-|---|---|---|---|
-| 1 | <especifico, testeable> | P0 | |
-| 2 | <especifico, testeable> | P0 | |
-| 3 | <especifico, testeable> | P1 | |
-
-## Requerimientos no funcionales
-- **Performance:** <tiempo de respuesta, throughput esperado>
-- **Tests de carga requeridos:** <sí/no — si sí: rps objetivo, p99 target, herramienta preferida (k6/Vegeta/Locust)>
-- **Seguridad:** <auth, sensibilidad de datos, compliance>
-- **Accesibilidad:** <nivel WCAG si aplica>
-- **Escalabilidad:** <carga esperada, crecimiento>
-
-## Criterios de aceptacion
-
-Usar formato Dado/Cuando/Entonces. Un comportamiento por escenario.
-
-### Feature: <nombre>
+### RF-01: <nombre del requerimiento>
+<descripción del comportamiento esperado>
 
 **Escenario: camino feliz**
-- Dado <precondicion>
-- Cuando <accion del usuario>
+- Dado <precondición>
+- Cuando <acción del usuario>
 - Entonces <resultado esperado>
 
-**Escenario: caso de error**
-- Dado <precondicion>
-- Cuando <accion invalida>
+**Escenario: error**
+- Dado <precondición>
+- Cuando <acción inválida>
 - Entonces <comportamiento de error>
 
 **Escenario: caso borde**
-- Dado <precondicion inusual>
-- Cuando <accion>
+- Dado <precondición inusual>
+- Cuando <acción>
 - Entonces <manejo esperado>
 
-## Supuestos y riesgos
+---
 
-| Riesgo | Impacto | Mitigacion |
-|---|---|---|
-| <supuesto no validado> | <que se rompe si es incorrecto> | <como mitigar> |
+### RF-02: <nombre del requerimiento>
+...
 
-## Dependencias
-- <equipos externos, APIs, infra compartida>
+## 7. Requerimientos No Funcionales
+- **Performance:** <tiempo de respuesta, throughput>
+- **Seguridad:** <auth, datos sensibles, compliance>
+- **Accesibilidad:** <nivel WCAG si aplica>
+- **Escalabilidad:** <carga esperada>
 
-## Preguntas abiertas
-- [ ] <decision pendiente> — Responsable: <quien>, Deadline: <cuando>
-- [ ] <otra pregunta abierta>
+## 8. Dependencias y Riesgos
 
-## Rollout
-- <fases, feature flags, necesidades de migracion>
+| Item | Tipo | Impacto | Mitigación |
+|------|------|---------|------------|
+| <equipo / sistema / tercero> | Dependencia | <qué se bloquea> | <acción> |
+| <supuesto no validado> | Riesgo | <qué se rompe> | <acción> |
+
+## 9. Milestones y Timeline
+- **MVP:** <fecha> — <qué incluye>
+- **v1.0:** <fecha> — <qué agrega>
+
+## 10. Preguntas Abiertas
+- [ ] <decisión pendiente> — Responsable: <quien>, Deadline: <cuando>
 ```
 
 ## Reglas
 
-- **Los criterios de aceptación deben usar Dado/Cuando/Entonces** — nada vago como "debería funcionar bien"
-- **Incluir al menos 1 escenario de error y 1 caso borde** por feature
+- **Cada RF lleva sus escenarios Dado/Cuando/Entonces** integrados en la sección 6 — nada vago como "debería funcionar bien"
+- **Incluir al menos 1 escenario de error y 1 caso borde** por requerimiento funcional
 - **Sin detalles de implementación** — sin schemas de DB, sin contratos de API, sin decisiones de arquitectura
-- **Los requerimientos funcionales deben tener prioridad** (P0/P1/P2)
+- **Las capacidades en Scope deben tener prioridad** (P0/P1/P2)
 - **Las métricas de éxito deben tener baseline** — "reducir X de 68% a 50%", no solo "reducir X"
 - **Máximo una página** — si es muy grande, dividir en múltiples tareas
 - **Las preguntas abiertas son obligatorias** — si todo está decidido, escribir "Ninguna"

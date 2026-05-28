@@ -180,13 +180,11 @@ Si la respuesta de 0.1 fue backend → saltar 0.2 y 0.3 y continuar con el Pre-c
 2. ¿El diseño viene de Pencil MCP (`.pen`), Figma (URL), capturas estáticas, o no hay diseño todavía?
 3. ¿El criterio "done" incluye pruebas visuales (regression), accesibilidad (WCAG), o solo funcionalidad?
 
-Si **no hay DTD** → advertir que el ARD será incompleto en criterios visuales y **preguntar si continuar de todas formas** antes de avanzar.
-
-> **Dependencia frontend:** Si el stack es `frontend` o `fullstack` y no se provee un DTD, preguntar al humano: "¿El agente `designer` ya corrió y produjo un DTD? Si no, ¿quieres correrlo antes o proceder sin DTD?"
-> - Si el humano confirma que no hay DTD y quiere proceder: marcar el DTD como `N/A` y continuar — no bloquear.
-> - Si hay DTD: recibirlo inline o como path y continuar normalmente.
+> **Dependencia frontend (DTD bloqueante para UI):** Si el stack es `frontend` o `fullstack` y la tarea involucra UI (pantallas nuevas, jerarquías de componentes, flujos de navegación — ver la lista "DTD OBLIGATORIO" más abajo), el DTD es **obligatorio y bloqueante**. Preguntar al humano: "¿Ya existe el DTD para esta tarea (en `.design/{task-id}/dtd.md` o inline)?"
+> - Si el humano confirma que existe: recibirlo inline o como path y continuar normalmente.
+> - Si el humano dice que NO existe → **bloquearse**. No proceder. Indicar al humano: "Esta tarea requiere un DTD y no existe. Debes correr `designer-spec` primero para producirlo, y volver a invocar al `architect` cuando esté listo." No existe la opción de proceder sin DTD para tareas frontend/fullstack con UI.
 >
-> El criterio de opcionalidad del DTD es explícito: nunca quedarse bloqueado esperando un DTD inexistente. La dependencia implícita `designer → architect` (para tareas frontend) se resuelve aquí, con salida clara en ambos casos.
+> Única excepción: si la tarea frontend/fullstack **no** involucra UI nueva (solo cambios de lógica, fixes de bug sin cambio de pantallas, ajustes de performance — ver la lista "DTD NO necesario" más abajo), el DTD no aplica y se continúa sin él.
 
 ### Etapa 0.3 — Validación de consistencia DTD ↔ diseño (solo si el humano confirmó que tiene ambos)
 
@@ -299,7 +297,7 @@ Cuando la tarea produce `ard-frontend.md` o `ard-mobile.md`, el DTD puede ser **
 - Ajustes de validación o error handling en UI existente
 
 **Si la tarea requiere DTD y no existe** (ni inline en el prompt ni en `.design/{task-id}/dtd.md`):
-→ **pregunta al humano** mediante `## Necesito información`: "**Tarea de UI sin DTD disponible:** Esta tarea modifica estructura de UI y necesito el DTD para diseñar las vistas. ¿Ya existe el diseño en algún path, hay que ejecutarlo primero, o procedo sin la restricción de Pencil?" El humano puede tener el DTD listo o indicar cómo proceder.
+→ **pregunta al humano** mediante `## Necesito información`: "**Tarea de UI sin DTD disponible:** Esta tarea modifica estructura de UI y necesito el DTD para diseñar las vistas. ¿Ya existe el diseño en algún path?" Si el humano confirma que existe → recibirlo y continuar. Si confirma que NO existe → **bloquearse**: no proceder, e indicar al humano que debe correr `designer-spec` primero para producir el DTD y volver a invocar al `architect` cuando esté listo. No existe la opción de proceder sin DTD.
 
 ---
 

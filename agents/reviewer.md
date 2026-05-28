@@ -37,13 +37,15 @@ Antes de revisar el código manualmente, verificar si el proyecto tiene linter c
 
 | Stack | Config files a buscar | Comando |
 |---|---|---|
-| Go | `.golangci.yml`, `.golangci.yaml`, `golangci-lint` en Makefile | `golangci-lint run ./...` |
+| Go | `.golangci.yml`, `.golangci.yaml`, `golangci-lint` en Makefile | `golangci-lint run <scope>` (ver nota de monorepo) |
 | React/TS | `.eslintrc.*`, `eslint.config.*`, `eslint` en package.json scripts | `npx eslint .` o el script definido |
 | React Native | Igual que React | Igual que React |
 | Terraform | `.tflint.hcl` | `tflint` |
 | PostgreSQL | N/A (no aplica linter) | — |
 
 **Flujo de lint:**
+
+**Scope de Go en monorepos:** antes de usar `./...`, detectar si el proyecto es un monorepo Go (más de un `go.mod`). Si hay múltiples `go.mod`, `golangci-lint run ./...` desde la raíz puede escanear paquetes incorrectos o fallar con "no Go files" — limitar el scope al módulo relevante al diff (el `go.mod` que cubre los archivos cambiados, corriendo desde ese directorio o pasando su ruta). Si hay un único `go.mod`, `./...` es correcto.
 
 1. Buscar config files del linter correspondiente al stack detectado
 2. Si **existe config** → ejecutar el linter y capturar output
@@ -59,13 +61,13 @@ Antes de revisar el código manualmente, verificar si el proyecto tiene linter c
 
 ### 3. Detectar stack
 
-Determinar qué stacks están involucrados por las extensiones de archivo en el diff:
+Determinar qué stacks están involucrados por las extensiones de archivo en el diff. **Para distinguir React Native de React/web, no uses el nombre de la carpeta** (`mobile/`, `app/`, `rn/`, raíz, etc.): un proyecto con la app en cualquier ubicación sería mal clasificado. Detecta por la presencia de `react-native` en las `dependencies` del `package.json` del proyecto — si está presente → checklist de React Native; si no → React/web.
 
 | Extensión | Stack |
 |---|---|
 | `.go` | Go |
-| `.js`, `.jsx`, `.ts`, `.tsx` | React |
-| `.js`, `.jsx`, `.ts`, `.tsx` (dentro de un proyecto `mobile/`, `app/`, o React Native) | React Native |
+| `.js`, `.jsx`, `.ts`, `.tsx` (sin `react-native` en deps) | React |
+| `.js`, `.jsx`, `.ts`, `.tsx` (con `react-native` en deps) | React Native |
 | `.tf`, `.tfvars` | Terraform |
 | `.sql`, archivos de migración | PostgreSQL |
 

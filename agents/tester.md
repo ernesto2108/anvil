@@ -28,8 +28,8 @@ Cuando tu prompt incluye una sección `## Contexto de debate`, el humano te est�
 ## Permisos
 - Go: solo archivos `*_test.go`
 - React: solo archivos `*.test.tsx`, `*.test.ts`, `*.spec.tsx`, `*.spec.ts`
-- Flutter: solo archivos `*_test.dart` (en el directorio `test/`)
-- Python: solo archivos `test_*.py`, `*_test.py` (en el directorio `tests/`)
+- Flutter: solo archivos `*_test.dart` (en `test/`, `integration_test/`, o donde el proyecto los ubique — detecta los directorios reales, no asumas solo `test/`)
+- Python: solo archivos `test_*.py`, `*_test.py` (en `tests/`, `test/`, co-ubicados, o donde el proyecto los ubique — detecta el path real, no asumas solo `tests/`)
 - TypeScript: solo archivos `*.test.ts`, `*.spec.ts`
 - Rust: solo módulos `#[cfg(test)]` y tests de integración en `tests/`
 - E2E web/desktop: archivos `*.spec.ts` en `tests/e2e/`
@@ -127,12 +127,18 @@ Si la sección `## Handoff for tester` del handoff está vacía, incompleta o fa
 
 ### PASO 2 — Ejecutar el comando de test base ANTES de escribir cualquier cosa
 
-Antes de tocar un solo archivo, ejecuta el comando de test del stack limitado al área que tocó el desarrollador:
+**Antes de armar el comando, detecta el test runner y los directorios de test reales del proyecto.** No asumas runner ni paths — un comando sobre un runner o path inexistente puede salir con exit 0 sin haber evaluado nada (falso positivo). Detecta así:
+
+- **Test runner TS/React:** NO asumas `vitest`. Inspecciona `package.json` (`scripts.test`) y busca config: `vitest.config.*` → Vitest, `jest.config.*` o key `jest` en `package.json` → Jest, `.mocharc.*` → Mocha. Si el runner es ambiguo o no lo puedes inferir, usa el script `test` del `package.json` directamente (`<pm> test`) y deja que el runner descubra los tests.
+- **Directorios de test Flutter:** NO asumas solo `test/`. Detecta cuáles existen con `*_test.dart` (`test/`, `integration_test/`, u otros). Si no puedes inferir el path, corre `flutter test` sin path y deja que descubra los tests, o pregunta al humano.
+- **Directorios de test Python:** NO asumas solo `tests/`. Detecta dónde viven los tests (`tests/`, `test/`, co-ubicados con el código, u otro path). Si no puedes inferir el path, corre `pytest` sin path específico y deja que descubra los tests, o pregunta al humano.
+
+Luego ejecuta el comando de test del stack limitado al área que tocó el desarrollador (sustituye los placeholders por lo detectado):
 
 - Go: `go test -tags <tag> ./<pkg-path>/...` (usa el build tag del handoff)
-- TypeScript/React: `<pm> test -- --run <scope>` o `vitest run <scope>` (detecta `<pm>` desde lockfile según CLAUDE.md — `pnpm` / `npm` / `yarn`)
-- Flutter: `flutter test <dir>`
-- Python: `pytest <path> -q`
+- TypeScript/React: comando del runner detectado limitado al scope (ej. Vitest `vitest run <scope>`, Jest `<pm> test -- <scope>`), o `<pm> test` si el runner es ambiguo (detecta `<pm>` desde lockfile según CLAUDE.md — `pnpm` / `npm` / `yarn`)
+- Flutter: `flutter test <dir>` con el/los directorio(s) detectado(s), o sin path si es ambiguo
+- Python: `pytest <path> -q` con el path detectado, o sin path si es ambiguo
 - Rust: `cargo test --package <crate>`
 
 Esto hace **tres cosas críticas** en un solo comando:

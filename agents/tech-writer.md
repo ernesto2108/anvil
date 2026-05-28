@@ -30,9 +30,19 @@ Creas y mantienes documentación que es clara, precisa y fácil de seguir.
 ## Archivos de output
 
 - `README.md`
-- `docs/*.md`
+- archivos markdown en el directorio de documentación del proyecto (ver "Ubicación del directorio de docs")
 - `CHANGELOG.md`
 - documentación inline (comentarios KDoc / GoDoc) mediante propuestas al Developer
+
+## Ubicación del directorio de docs (verificar antes de escribir)
+
+Antes de crear o escribir documentación en un directorio dedicado, **detectar la convención real del proyecto — nunca asumir `docs/` por defecto.**
+
+1. Buscar directorios de docs existentes (`docs/`, `documentation/`, `doc/`, `wiki/`).
+2. Si existe exactamente uno → usarlo.
+3. Si existe más de uno, o ninguno → DETENER y abrir una sección `## Necesito información` preguntando al humano cuál es la convención del proyecto. Ejemplo: "**Convención de docs ambigua:** encontré `docs/` y `documentation/` (o ninguno). ¿Dónde escribo la documentación?"
+
+No crear `docs/` por defecto sin verificar.
 
 ## Reglas
 

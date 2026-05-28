@@ -7,7 +7,7 @@ description: Creación de tareas, gestión del backlog y formato del tablero de 
 
 ## Cuándo usar
 
-Después de escribir el ARD, el arquitecto DEBE descomponer en tareas antes de que cualquier agente comience a trabajar. Sin PRD no hay ARD. Sin ARD no hay tareas.
+Después de escribir el ARD, el `task-decomposer` DEBE descomponer en tareas antes de que cualquier agente comience a trabajar. Sin PRD no hay ARD. Sin ARD no hay tareas.
 
 ## Jerarquía de trabajo
 
@@ -20,14 +20,14 @@ PROJECT (el repo/producto — ej. Anvil, Dashboard)
 ```
 
 - **PROJECT** — implícito desde el repo. No se rastrea en el backlog
-- **MILESTONE** — grupos de features relacionadas con un objetivo de entrega compartido. Rastreado como campo en el PRD Scope y en el frontmatter de la tarea
+- **MILESTONE** — grupos de features relacionadas con un objetivo de entrega compartido. Rastreado como campo en la sección `## 9. Milestones y Timeline` del PRD y en el frontmatter de la tarea
 - **US** — cada PRD representa una User Story o Feature. El PRD es la US
 - **TASKS** — la descomposición de una US en ítems de trabajo técnico. Estas son las filas en sprint-current.md
 - **SUB TASKS** — pasos de implementación dentro de una tarea. Rastreados en archivos `.handoff/`, no en el backlog
 
 ### Gestión de milestones
 
-Los milestones se definen en la sección `## Scope` del PRD (campo `Milestone`) y se propagan a cada tarea.
+Los milestones se definen en la sección `## 9. Milestones y Timeline` del PRD y se propagan a cada tarea.
 
 **En sprint-current.md:** agrupar tareas por milestone usando encabezados de sección:
 ```
@@ -52,7 +52,7 @@ Verificar los IDs existentes en `{backlog_path}` (archivo local en `.project-con
 
 ## Descomponer un PRD en tareas
 
-Leer los requisitos funcionales y criterios de aceptación del PRD. Crear una tarea por:
+Leer los requisitos funcionales y los escenarios GCE (Dado/Cuando/Entonces) embebidos en los RFs del `requirements.md`. Crear una tarea por:
 
 1. **Cada requisito P0** → al menos una tarea
 2. **Cada componente que requiere trabajo separado** (backend, frontend, DB, infra)
@@ -224,8 +224,8 @@ grep -rl "status: backlog" <ruta-de-tasks>/
 
 ```
 PM crea PRD
-  → Arquitecto crea ARD + milestone
-  → Arquitecto descompone en tareas (este skill)
+  → Arquitecto crea ARD (propaga milestone del PRD)
+  → task-decomposer descompone en tareas (este skill)
   → Tareas van a la columna Backlog
   → Orquestador toma tarea, asigna a agente
   → Agente comienza → tarea se mueve a In Progress
@@ -238,6 +238,6 @@ PM crea PRD
 - **Sin trabajo sin ticket** — si un agente necesita hacer algo, debe haber una tarea para ello
 - **Sin ticket sin PRD** — cada tarea referencia su PRD padre (excepto bugs con pasos de reproducción)
 - **Las dependencias deben ser explícitas** — si la tarea B necesita que la tarea A esté terminada primero, escribir "Depends on: A"
-- **Los criterios de aceptación vienen del PRD** — los criterios de cada tarea provienen de los escenarios Given/When/Then del PRD
+- **Los criterios de aceptación vienen de los escenarios GCE (Dado/Cuando/Entonces) embebidos en los RFs del `requirements.md`** — los criterios de cada tarea provienen de esos escenarios
 - **Los puntos son fibonacci** — 1, 2, 3, 5, 8, 13. Si > 8, descomponer
 - **Las actualizaciones de estado son obligatorias** — los agentes deben actualizar el estado de la tarea al comenzar y al terminar

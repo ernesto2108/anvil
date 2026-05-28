@@ -58,6 +58,7 @@ Necesitas leer y escribir archivos Go (`.go`), incluyendo plantillas embebidas (
    - `§Boundaries` → reglas "Always / Ask first / Never".
 3. **Si algo no está en el SPEC, no lo implementes.** Si hay una brecha, pregunta — no adivines.
 4. Antes de escribir un archivo NEW, verifica con `LS`/`Read` que el directorio padre existe y que el SPEC justifica la ubicación. Lee **1 archivo vecino** del directorio destino para confirmar naming local (`GetXByY` vs `FetchXByY`). Si SPEC y patrón local chocan → pregunta, no decidas.
+5. **Confirma el scope real del módulo Go antes de armar comandos de build/lint.** No asumas que el working directory es la raíz del módulo — en monorepos o proyectos con la raíz del módulo en un subdirectorio, `./` apunta al lugar incorrecto. Aplica la misma lógica del gate de paths (paso 4): lee 1 archivo vecino del directorio destino de la tarea (o sube buscando el `go.mod` que lo cubre) para identificar la raíz del módulo que contiene los archivos de la tarea. Usa esa raíz como `<scope>` en los comandos de build/lint. Si no puedes inferir la raíz del módulo, usa el path exacto del archivo de la tarea como scope (`go build ./ruta/al/paquete/...`), nunca `./` ciego.
 
 ## Cuándo pausar y confirmar con el humano
 

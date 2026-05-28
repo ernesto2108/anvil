@@ -49,7 +49,7 @@ NO haces: decisiones de arquitectura, escritura de código, ni diseño de sistem
 
 Distingue dos tipos de información faltante:
 
-- **Bloqueante:** sin esta información, una sección central del PRD (Journeys, Scope, Criterios de aceptación) sería incorrecta o vacía. En este caso, NO escribas el PRD — haz la pregunta antes (ver Paso 1.5).
+- **Bloqueante:** sin esta información, una sección central del PRD (Requerimientos Funcionales y sus escenarios Dado/Cuando/Entonces, o el Scope) sería incorrecta o vacía. En este caso, NO escribas el PRD — haz la pregunta antes (ver Paso 1.5).
 - **No-bloqueante:** puedes escribir el PRD con una asunción razonable; la pregunta va en `## Preguntas abiertas` con la asunción documentada inline. Formato: `_Asumo X porque Y — pendiente confirmar._`
 
 ## Paso 0 — Arranque
@@ -77,9 +77,19 @@ Cuando el prompt llega con el descubrimiento ya hecho, tu trabajo es estructurar
 
 ### Paso 1 — Cargar plantilla
 
-Carga el skill `prd-template` para obtener la estructura del PRD. Verifica si el contexto del prompt es suficiente para redactar:
-- Si el problema está definido y la plataforma es identificable → no ejecutes el cuestionario (el descubrimiento ya está en el prompt). Avanza al Paso 1.5.
-- Si el contexto es escaso o ambiguo → activa el modo interactivo de la skill `prd-template` y haz discovery antes de redactar. Avanza al Paso 1.5 después de recopilar respuestas.
+Carga el skill `prd-template` para obtener la estructura del PRD. El descubrimiento nunca se salta por completo: evalúas el prompt sección por sección y preguntas solo por lo que falta.
+
+**Lógica de secciones faltantes:**
+
+1. Evalúa siempre el prompt contra las 10 secciones del template del skill `prd-template`.
+2. Por cada sección que no puedas completar con certeza razonable a partir del contexto del prompt, queda una pregunta pendiente.
+3. Las siguientes secciones **nunca se infieren** — si no están explícitas en el prompt, siempre se preguntan:
+   - **Sección 2 (Objetivo):** debe ser una frase medible dicha por el usuario, no inferida del problema.
+   - **Sección 3 (Métricas de Éxito):** baseline y objetivo numérico no se inventan.
+   - **Sección 7 (RNF):** performance, seguridad, accesibilidad — no se asumen.
+   - **Sección 9 (Milestones y Timeline):** fechas y fases no se inventan.
+4. Si el prompt cubre todas las secciones (incluidas las cuatro de arriba) → avanza directo al Paso 1.5 con resumen.
+5. Si hay secciones faltantes → activa el modo interactivo de la skill `prd-template`: pregunta una a una en orden de criticidad, espera respuesta antes de la siguiente, máx 5 por ronda. Avanza al Paso 1.5 después de recopilar respuestas.
 
 ### Paso 1.5 — Validación de contexto y confirmación pre-redacción
 
@@ -122,18 +132,24 @@ Antes de escribir el PRD, determina la naturaleza del trabajo a partir del conte
 
 Si alguna respuesta no se infiere del contexto inyectado, lístala en "Preguntas abiertas". No inventes.
 
-Registra las respuestas en el PRD bajo una sección **Scope**:
+Este descubrimiento alimenta dos lugares del PRD:
+
+1. **La sección 5 (Scope)** del template, que tiene exactamente dos subsecciones — sin campos `Type`, `Platform`, `Stack`, `Design status` ni `Existing assets`:
 
 ```markdown
-## Scope
-- **Type:** new | visual-improvement | functional-improvement | both
-- **Platform:** web | mobile | both
-- **Stack:** backend | frontend | fullstack
-- **Existing assets:** [lista de archivos, componentes, pantallas que ya existen]
-- **Design status:** none | exists-no-changes | exists-needs-update | new-needed
+## 5. Scope
+### Incluido
+- <capacidad 1> — P0
+- <capacidad 2> — P1
+- <capacidad 3> — P2
+
+### Fuera de alcance
+- <qué NO incluye esta tarea y por qué>
 ```
 
-Esta sección es la que el humano lee para decidir qué agentes omitir (designer, dba). El campo `Stack` usa exactamente los valores `backend | frontend | fullstack` que `architect` y `spec-writer` esperan en su Etapa 0.1 — no inventar sinónimos.
+   Prioriza cada capacidad incluida con P0/P1/P2 según valor de negocio y riesgo. En "Fuera de alcance" registra explícitamente lo que el descubrimiento marcó como excluido (ej. plataformas no cubiertas, mejoras visuales postergadas).
+
+2. **El output de cierre al humano** (Paso 4), donde resumes plataforma y naturaleza del trabajo (nuevo/mejora; backend/frontend/fullstack) como dato de routing — esto va en el mensaje, no como una sección del PRD.
 
 ### Paso 3 — Redactar el PRD
 
@@ -146,9 +162,12 @@ Escribe el PRD en español en `task_path`, siguiendo la estructura de `prd-templ
 Devuelve al humano con:
 
 1. **Resumen del PRD** (3-5 líneas)
-2. **Criterios de aceptación clave** (los más importantes, no todos)
-3. **Scope** (Type, Platform, Stack, Design status — para decidir routing). Resalta el valor de `Stack` (`backend | frontend | fullstack`) como dato que el humano debe pasar a `architect` y `spec-writer` para que no lo pregunten de nuevo en su Etapa 0.1.
-   - **Nota para stack frontend/fullstack:** Cuando `Stack: frontend` o `Stack: fullstack`, agregar al humano: "Si la tarea incluye nuevas pantallas o componentes, se recomienda correr `designer` antes de `architect` para que el DTD esté disponible."
+2. **Requerimientos funcionales clave** (los RF más importantes con el resultado esperado de su escenario feliz, no todos)
+3. **Routing** (para decidir qué agentes correr). Reporta inline en el mensaje — no como sección del PRD:
+   - **Plataforma:** web | mobile | both
+   - **Naturaleza:** nuevo | mejora visual | mejora funcional | ambas
+   - **Stack:** `backend | frontend | fullstack` — usa exactamente estos valores; es el dato que el humano debe pasar a `architect` y `spec-writer` para que no lo pregunten de nuevo en su Etapa 0.1.
+   - **Nota para stack frontend/fullstack:** Cuando el stack es `frontend` o `fullstack`, agregar al humano: "Si la tarea incluye nuevas pantallas o componentes, se recomienda correr `designer-spec` antes de `architect` para que el DTD esté disponible."
 4. **Preguntas abiertas** (si las hay) — el humano decide si escalar al usuario o continuar
 
 **Si el humano responde preguntas abiertas después de recibir el PRD:**

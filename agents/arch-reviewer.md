@@ -104,34 +104,42 @@ Para cada duplicación: dónde está la copia en el diff, dónde vive el origina
 
 ### 2. Detección de capa incorrecta
 
-Para cada archivo añadido en el diff, evaluar si está en la capa correcta según la arquitectura del proyecto:
+**Primero, detectar la estructura de capas REAL del proyecto — nunca asumir nombres canónicos de carpeta.** Diferentes proyectos nombran sus capas distinto (`handlers/` vs `http/` vs `api/`, `domain/` vs `core/` vs `models/`, `infrastructure/` vs `adapters/` vs `infra/`). El detector debe operar sobre la estructura real:
 
-| Anti-patrón | Cómo detectarlo |
+1. Inferir las capas del proyecto desde `.project-context/architecture.md` si existe (mapea carpeta → rol de capa).
+2. Si no existe → hacer un `ls` de primer nivel del módulo/repo y mapear cada carpeta a su rol de capa por el comportamiento del código que contiene (qué importa, qué expone), no por su nombre.
+3. Si la estructura de capas **no se puede inferir** (sin `.project-context/` y sin señales claras en el código) → NO inventar capas ni aplicar nombres canónicos; reportar al humano como hallazgo informativo ("No pude inferir la estructura de capas del proyecto — revisión de capa omitida, ver puntos 1/3/4/5") y omitir esta categoría. Este es el fallback real, no un caso de borde.
+
+Una vez identificadas las capas reales, evaluar cada archivo del diff contra estos anti-patrones — la detección se basa en el **comportamiento del import / tipo de dependencia que cruza**, no en el nombre literal de la carpeta:
+
+| Anti-patrón (descrito por comportamiento) | Cómo detectarlo |
 |---|---|
-| Modelo dentro de `handlers/` o `controllers/` | Archivo con `struct`/`class` de entidad de dominio dentro de carpeta de capa de presentación |
-| Lógica de negocio en `infrastructure/` o `adapters/` | Archivo con reglas de negocio (validaciones, cálculos de dominio) en capa de infraestructura |
-| Acceso a DB desde `handlers/` | Imports de `sql`, `gorm`, `pg`, `mongo` directamente en capa de presentación |
-| Llamadas HTTP desde `domain/` o `entities/` | Imports de cliente HTTP en capa de dominio puro |
-| Constantes de UI en `domain/` | Strings de UI, traducciones, colores en capa de dominio |
-| Tests de integración en carpeta de unit tests | Archivos que tocan red/DB en `*_test.go` que debería ser puro |
+| Entidad de dominio dentro de la capa de presentación | Archivo con `struct`/`class` de entidad de dominio en una carpeta cuyo rol es presentación (handlers/controllers/http/api, sea cual sea su nombre) |
+| Lógica de negocio dentro de la capa de infraestructura/adaptadores | Reglas de negocio (validaciones, cálculos de dominio) en una carpeta cuyo rol es infraestructura |
+| Acceso directo a DB desde la capa de presentación | Imports de drivers/ORM (`sql`, `gorm`, `pg`, `mongo`, etc.) en un archivo cuyo rol de capa es presentación |
+| Llamadas HTTP salientes desde la capa de dominio puro | Imports de cliente HTTP en una carpeta cuyo rol es dominio puro |
+| Constantes/strings de UI en la capa de dominio | Strings de UI, traducciones, colores en una carpeta cuyo rol es dominio |
+| Tests de integración mezclados con unit tests puros | Archivos de test que tocan red/DB ubicados donde la convención del proyecto espera tests puros |
 
-Para cada hallazgo: archivo afectado, capa actual, capa correcta, justificación basada en `.project-context/` o heurística estándar del stack.
+Para cada hallazgo: archivo afectado, rol de capa actual (y por qué se infirió ese rol), rol de capa correcto, justificación basada en `.project-context/` o en el comportamiento del código.
 
 ### 3. Detección de imports cross-domain prohibidos
 
 Construir el grafo de dependencias entre módulos a partir de los imports en archivos modificados. Detectar:
 
-| Violación | Ejemplo |
-|---|---|
-| Dominio A importa Dominio B sin abstracción | `domain/billing/` importa directamente `domain/auth/` en lugar de pasar por una interfaz |
-| Capa superior importada por inferior | `domain/` importa de `handlers/` o `infrastructure/` |
-| Import circular introducido | `pkg/a` ↔ `pkg/b` recién creado por el diff |
-| Import de paquete `internal` de otro módulo | Go: import de `internal/` ajeno; equivalente en otros stacks |
+Evaluar las violaciones por el **rol de capa/dominio** detectado en el punto 2 — los nombres de carpeta abajo son solo ilustrativos:
 
-Usar las reglas definidas en `.project-context/architecture.md` o, en su defecto, heurísticas estándar:
+| Violación (por comportamiento) | Ejemplo ilustrativo |
+|---|---|
+| Dominio A importa Dominio B sin abstracción | un dominio importa directamente otro dominio (ej. `billing` → `auth`) en lugar de pasar por una interfaz |
+| Capa superior importada por inferior | una carpeta cuyo rol es dominio importa de una cuyo rol es presentación o infraestructura |
+| Import circular introducido | dos paquetes recién acoplados en ciclo por el diff |
+| Import de paquete privado de otro módulo | Go: import de `internal/` ajeno; equivalente en otros stacks |
+
+Usar las reglas definidas en `.project-context/architecture.md` o, en su defecto, heurísticas estándar aplicadas sobre los roles de capa reales:
 - Las capas externas pueden importar internas, nunca al revés
 - Dominios distintos no se importan directamente — pasan por contratos/interfaces
-- `internal/` (Go) o equivalentes son privados del módulo
+- Los paquetes privados de un módulo (`internal/` en Go o equivalentes) no se importan desde fuera
 
 ### 4. Detección de features que debían ir a paquete compartido
 

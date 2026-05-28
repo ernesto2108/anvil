@@ -134,9 +134,7 @@ Para cada servicio o endpoint nuevo, el dashboard debe incluir:
 | 6 | Top endpoints por errores | table | top 10 por error rate |
 | 7 | Logs panel (si Elastic/Loki) | logs | filtro por `service` y `level=error` |
 
-El dashboard se entrega como:
-- **JSON model:** `grafana/dashboards/<service>.json`
-- **Provisioning YAML:** `grafana/provisioning/dashboards/<service>.yaml` (apunta al JSON)
+El dashboard se entrega como JSON model + provisioning YAML que apunta al JSON. **Las rutas donde viven estos artefactos NO se asumen** — ver "Ubicación de artefactos de infraestructura" abajo.
 
 ## Checklist de alerting
 
@@ -150,10 +148,7 @@ Para cada servicio, definir como mínimo:
 | 4 | Saturation | high | CPU/mem > 80% por 10m o DB pool > 90% por 5m |
 | 5 | SLO burn rate (si hay SLO) | critical | multi-window multi-burn-rate (1h/6h, 5m/1h) |
 
-Reglas como código:
-- **Prometheus rules:** `prometheus/rules/<service>.yaml`
-- **AlertManager routes:** `alertmanager/<service>.yaml`
-- **Grafana Alerting:** `grafana/provisioning/alerting/<service>.yaml`
+Reglas como código (Prometheus rules, AlertManager routes, o Grafana Alerting según el stack del proyecto). **Las rutas donde viven estos artefactos NO se asumen** — ver "Ubicación de artefactos de infraestructura" abajo.
 
 Cada alerta debe incluir: `summary`, `description` (con runbook URL si existe), `severity`, `service`, ruta al canal de alertas del equipo (configurado en `alert_channel` de `.project-context/project.md` o indicado por el humano).
 
@@ -167,10 +162,23 @@ Cada alerta debe incluir: `summary`, `description` (con runbook URL si existe), 
 | 4 | Data stream / alias | Uso de data streams (no índices monolíticos) para logs time-series |
 | 5 | Retention y rollover | `max_size` y `max_age` configurados en ILM hot phase |
 
-Artefactos como código:
-- **Index template:** `elasticsearch/templates/<service>-logs.json`
-- **ILM policy:** `elasticsearch/ilm/<service>-logs.json`
-- **Ingest pipeline:** `elasticsearch/pipelines/<service>-logs.json`
+Artefactos como código (index template, ILM policy, ingest pipeline). **Las rutas donde viven estos artefactos NO se asumen** — ver "Ubicación de artefactos de infraestructura" abajo.
+
+## Ubicación de artefactos de infraestructura (CRÍTICO — preguntar antes de escribir)
+
+Las configuraciones de observabilidad (dashboards, provisioning, rules de alerting, templates/ILM/pipelines de Elasticsearch) viven en rutas distintas según el proyecto — a veces en un repo de infra separado, a veces con nombres de carpeta no canónicos. **Nunca inventes paths por defecto.**
+
+Antes de escribir CUALQUIER artefacto de infraestructura:
+
+1. **Si el humano ya especificó los paths en el prompt** (o están en `.project-context/project.md`) → úsalos, no re-preguntes.
+2. **Si no están especificados** → DETENER y abrir una sección `## Necesito información` preguntando dónde viven esas configuraciones, con ejemplos concretos de lo que necesitas ubicar:
+   - dashboards de Grafana (JSON) y su provisioning YAML
+   - reglas de alerting (Prometheus rules / AlertManager / Grafana Alerting)
+   - artefactos de Elasticsearch (index templates, ILM policies, ingest pipelines)
+
+   Ejemplo: "**Rutas de artefactos de infra no provistas:** ¿Dónde viven las configs de observabilidad en tu proyecto? (ej. `infra/grafana/dashboards/`, repo separado `ops-infra`, etc.) Necesito ubicar: dashboards, alerting rules, templates de Elasticsearch."
+
+No escribas archivos en rutas asumidas — un artefacto en la ruta incorrecta no lo consume nadie.
 
 ## Patrones de detección de gaps (modo auditoría)
 
@@ -211,9 +219,7 @@ Incluir:
 
 ### Artefactos de instrumentación
 - Código OTEL: dentro del servicio, en la carpeta que corresponda al stack
-- Dashboards: `grafana/dashboards/<service>.json` + provisioning YAML
-- Alerting: `prometheus/rules/<service>.yaml` o `grafana/provisioning/alerting/<service>.yaml`
-- Elasticsearch: `elasticsearch/{templates,ilm,pipelines}/<service>-logs.json`
+- Dashboards, alerting y artefactos de Elasticsearch: en las rutas que el humano especificó (ver "Ubicación de artefactos de infraestructura"). No asumir paths por defecto.
 
 ### Actualizaciones de backlog (OBLIGATORIO cuando existen gaps)
 Agregar tareas de observabilidad a `{backlog_path}` con etiqueta `[observability]`.
@@ -235,8 +241,8 @@ Cuando se invoca con `mode: full-audit`:
 1. Usar el contexto provisto **inline en el prompt** — contiene contexto de context-init + flujos de endpoints del arquitecto
 2. **Detectar stack** desde el contexto (Go/Node/Python) y ejecutar el checklist específico de instrumentación
 3. **Auditar los tres planos** — traces, métricas, logs — por cada handler/endpoint listado por el arquitecto
-4. **Verificar dashboards** — ¿existe un dashboard de Grafana para este servicio en `grafana/dashboards/`?
-5. **Verificar alerting** — ¿existen reglas para este servicio en `prometheus/rules/` o `grafana/provisioning/alerting/`?
+4. **Verificar dashboards** — ¿existe un dashboard de Grafana para este servicio? (preguntar al humano la ubicación de dashboards si no está provista — ver "Ubicación de artefactos de infraestructura")
+5. **Verificar alerting** — ¿existen reglas de alerting para este servicio? (misma regla de ubicación que el punto 4)
 6. **Verificar Elasticsearch** — ¿existe mapping, ILM y pipeline para los logs de este servicio?
 7. **Priorizar la lectura** solo de los archivos marcados como riesgosos por el contexto (handlers, bootstrap del servicio, clients externos, config de logging)
 8. **Omitir:** tests, mocks, código generado, vendor, docs, archivos CI, Dockerfiles
