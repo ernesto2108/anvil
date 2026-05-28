@@ -179,7 +179,7 @@ grep -rn "WebSocket\|io\.connect\|socket\.on" --include="*.ts"
 
 ## Paso 3.5 — Extraer comandos operativos
 
-Leer los archivos de operación del proyecto y extraer los comandos reales. Este paso produce `ops.md`.
+Leer los archivos de operación del proyecto y extraer los comandos reales. Este paso produce `Core/workflows.md`.
 
 ### Makefile
 
@@ -298,24 +298,18 @@ Si no hay hits o MCP no está disponible → dejar `decisions/` vacío (se llena
 **Idioma obligatorio:** todo el contenido generado debe estar en español. Esto incluye encabezados, descripciones, notas, comentarios, listas, evidencias y cualquier texto narrativo. Los identificadores técnicos (nombres de archivos, funciones, paquetes, comandos, paths, snippets de código) se preservan tal como aparecen en el repo. Si un template trae encabezados en inglés, traducirlos antes de escribir.
 
 Usar los templates en `templates/`. Escribir en este orden:
-1. `project.md`
-2. `ops.md` — comandos operativos reales extraídos en el Paso 3.5
-3. `patterns.md`
-4. `contracts.md`
-5. `business-rules.md` — usar el template `templates/business-rules.tmpl.md`. Si no se detectan invariantes de negocio en bootstrap, crearlo con el encabezado mínimo:
-   ```
-   # Business Rules
-   <!-- Invariantes de negocio que cruzan dominios. -->
-   ```
-6. `dependencies.md` — usar el template `templates/dependencies.tmpl.md`. Si no se detectan dependencias entre dominios en bootstrap, crearlo con el encabezado mínimo:
-   ```
-   # Dependencies
-   <!-- Grafo de dependencias entre dominios. -->
-   ```
-7. `domains/<name>.md` — solo dominios con > 3 archivos significativos
-8. `decisions/NNN-slug.md` — solo los que tienen evidencia del Paso 6
-9. `risks.md` — incluir top-5 archivos > 300 líneas como deuda potencial
-10. `NAVIGATOR.md` — al final, con el índice de lo que se generó
+1. `Technical domain/project.md`
+2. `Core/workflows.md` — comandos operativos reales extraídos en el Paso 3.5
+3. `Core/coding-standards.md` — patrones detectados
+4. `Technical domain/contracts.md` — APIs + invariantes de negocio
+5. `Technical domain/dependencies.md`
+6. `Technical domain/domain.md` — dominios con > 3 archivos significativos
+7. `Technical domain/glossary.md` — pre-populado con entidades detectadas, marcadas como `⚠️ pendiente validación`
+8. `Technical domain/risks.md` — incluir top-5 archivos > 300 líneas como deuda potencial
+9. `decisions/NNN-slug.md` — solo los que tienen evidencia del Paso 6
+10. `Core/navigation.md` — índice de Core
+11. `Technical domain/navigation.md` — índice de Technical domain
+12. `NAVIGATOR.md` — al final, con el índice general
 
 Marcar `coverage: bootstrap` en NAVIGATOR.md.
 

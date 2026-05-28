@@ -20,17 +20,26 @@ Sistema de conocimiento acumulativo que vive en `.project-context/` al lado de `
 
 ```
 .project-context/
-├── NAVIGATOR.md           # Índice + metadatos de cobertura y staleness
-├── project.md             # Stack, arquitectura, restricciones, SOLID
-├── patterns.md            # Patrones de diseño inferidos + referencias a archivos
-├── contracts.md           # APIs REST, queues, eventos, webhooks, servicios externos
-├── business-rules.md      # Invariantes de negocio que cruzan dominios
-├── dependencies.md        # Grafo de dependencias entre dominios
-├── domains/               # Un .md por bounded context significativo
-│   └── <domain>.md
-├── decisions/             # ADRs-lite: decisiones con contexto y alternativas
+├── NAVIGATOR.md                          # INTOCABLE — índice general + metadatos
+│
+├── Core/
+│   ├── navigation.md                     # Índice de Core
+│   ├── workflows.md                      # Ramas, ambientes, deploy, comandos operativos
+│   ├── task-management.md                # Gestión de tareas, tickets, DoD
+│   └── coding-standards.md               # Naming, linting, patrones detectados
+│
+├── Technical domain/
+│   ├── navigation.md                     # Índice de Technical domain
+│   ├── project.md                        # Stack, arquitectura, restricciones, SOLID
+│   ├── domain.md                         # Entidades y bounded contexts
+│   ├── glossary.md                       # Lenguaje humano ↔ técnico
+│   ├── contracts.md                      # APIs, queues, eventos, reglas de negocio
+│   ├── dependencies.md                   # Grafo de dependencias entre dominios
+│   └── risks.md                          # Deuda técnica, gotchas, restricciones
+│
+├── decisions/                            # ADRs-lite
 │   └── NNN-<slug>.md
-└── risks.md               # Gotchas, deuda técnica, restricciones operativas
+└── runs/                                 # Reportes por run (opcional)
 ```
 
 ## Reglas de escritura

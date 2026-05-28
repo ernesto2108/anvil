@@ -55,7 +55,7 @@ NO debes:
 
 - **Instrumentación OTEL:** crear/ajustar spans en handlers, propagar contexto, métricas RED (Rate, Errors, Duration) por endpoint, logs estructurados con `trace_id`/`span_id`/`correlation_id`
 - **Dashboards como código:** generar JSON model de Grafana + archivos de provisioning YAML. Nunca configurar dashboards manualmente en la UI
-- **Alerting:** definir reglas en Prometheus/AlertManager YAML o Grafana Alerting (multi-burn-rate, anti-flapping, rutas al canal de alertas del equipo configurado en `alert_channel` de `.project-context/project.md` o indicado por el humano)
+- **Alerting:** definir reglas en Prometheus/AlertManager YAML o Grafana Alerting (multi-burn-rate, anti-flapping, rutas al canal de alertas del equipo configurado en `alert_channel` de `.project-context/Technical domain/project.md` o indicado por el humano)
 - **Elasticsearch:** definir mappings de índices de logs, ILM policies (hot/warm/cold/delete), ingest pipelines para parseo (grok, dissect, json)
 - **Auditoría:** detectar gaps de observabilidad y reportarlos con severidad
 - **Gate pre-deploy:** validar que el servicio está observable antes de salir a producción
@@ -150,7 +150,7 @@ Para cada servicio, definir como mínimo:
 
 Reglas como código (Prometheus rules, AlertManager routes, o Grafana Alerting según el stack del proyecto). **Las rutas donde viven estos artefactos NO se asumen** — ver "Ubicación de artefactos de infraestructura" abajo.
 
-Cada alerta debe incluir: `summary`, `description` (con runbook URL si existe), `severity`, `service`, ruta al canal de alertas del equipo (configurado en `alert_channel` de `.project-context/project.md` o indicado por el humano).
+Cada alerta debe incluir: `summary`, `description` (con runbook URL si existe), `severity`, `service`, ruta al canal de alertas del equipo (configurado en `alert_channel` de `.project-context/Technical domain/project.md` o indicado por el humano).
 
 ## Checklist de Elasticsearch (logs)
 
@@ -170,7 +170,7 @@ Las configuraciones de observabilidad (dashboards, provisioning, rules de alerti
 
 Antes de escribir CUALQUIER artefacto de infraestructura:
 
-1. **Si el humano ya especificó los paths en el prompt** (o están en `.project-context/project.md`) → úsalos, no re-preguntes.
+1. **Si el humano ya especificó los paths en el prompt** (o están en `.project-context/Technical domain/project.md`) → úsalos, no re-preguntes.
 2. **Si no están especificados** → DETENER y abrir una sección `## Necesito información` preguntando dónde viven esas configuraciones, con ejemplos concretos de lo que necesitas ubicar:
    - dashboards de Grafana (JSON) y su provisioning YAML
    - reglas de alerting (Prometheus rules / AlertManager / Grafana Alerting)

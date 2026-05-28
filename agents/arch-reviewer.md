@@ -80,9 +80,9 @@ Si no hay diff ni PR detectable → pregunta al humano: "**No detecté diff ni P
 Antes de revisar el diff, leer `.project-context/` del proyecto para entender la arquitectura esperada:
 
 1. **`.project-context/NAVIGATOR.md`** — mapa general del proyecto (siempre leer si existe)
-2. **`.project-context/patterns.md`** — patrones convenidos del proyecto (leer si existe)
-3. **`.project-context/architecture.md`** — capas, dominios, fronteras (leer si existe)
-4. **`.project-context/domains/*.md`** — definiciones de dominio (leer las relevantes al diff)
+2. **`.project-context/Core/coding-standards.md`** — patrones convenidos del proyecto (leer si existe)
+3. **`.project-context/Technical domain/domain.md`** — capas, dominios, fronteras (leer si existe)
+4. **`.project-context/Technical domain/domain.md`** — definiciones de dominio (leer las relevantes al diff)
 5. **`CLAUDE.md`** del proyecto — convenciones específicas
 
 Si **no existe `.project-context/`** → reportar al humano como hallazgo informativo y operar con heurísticas estándar (estructura de carpetas convencional por stack). No abortar — un proyecto sin `.project-context/` puede revisarse con heurísticas, solo es menos preciso.
@@ -106,7 +106,7 @@ Para cada duplicación: dónde está la copia en el diff, dónde vive el origina
 
 **Primero, detectar la estructura de capas REAL del proyecto — nunca asumir nombres canónicos de carpeta.** Diferentes proyectos nombran sus capas distinto (`handlers/` vs `http/` vs `api/`, `domain/` vs `core/` vs `models/`, `infrastructure/` vs `adapters/` vs `infra/`). El detector debe operar sobre la estructura real:
 
-1. Inferir las capas del proyecto desde `.project-context/architecture.md` si existe (mapea carpeta → rol de capa).
+1. Inferir las capas del proyecto desde `.project-context/Technical domain/domain.md` si existe (mapea carpeta → rol de capa).
 2. Si no existe → hacer un `ls` de primer nivel del módulo/repo y mapear cada carpeta a su rol de capa por el comportamiento del código que contiene (qué importa, qué expone), no por su nombre.
 3. Si la estructura de capas **no se puede inferir** (sin `.project-context/` y sin señales claras en el código) → NO inventar capas ni aplicar nombres canónicos; reportar al humano como hallazgo informativo ("No pude inferir la estructura de capas del proyecto — revisión de capa omitida, ver puntos 1/3/4/5") y omitir esta categoría. Este es el fallback real, no un caso de borde.
 
@@ -136,7 +136,7 @@ Evaluar las violaciones por el **rol de capa/dominio** detectado en el punto 2 �
 | Import circular introducido | dos paquetes recién acoplados en ciclo por el diff |
 | Import de paquete privado de otro módulo | Go: import de `internal/` ajeno; equivalente en otros stacks |
 
-Usar las reglas definidas en `.project-context/architecture.md` o, en su defecto, heurísticas estándar aplicadas sobre los roles de capa reales:
+Usar las reglas definidas en `.project-context/Technical domain/domain.md` o, en su defecto, heurísticas estándar aplicadas sobre los roles de capa reales:
 - Las capas externas pueden importar internas, nunca al revés
 - Dominios distintos no se importan directamente — pasan por contratos/interfaces
 - Los paquetes privados de un módulo (`internal/` en Go o equivalentes) no se importan desde fuera
@@ -151,7 +151,7 @@ Para código nuevo introducido en el diff:
 
 ### 5. Detección de violaciones a la estructura de carpetas
 
-Si `.project-context/architecture.md` (o equivalente) define una estructura esperada de carpetas, validar:
+Si `.project-context/Technical domain/domain.md` (o equivalente) define una estructura esperada de carpetas, validar:
 
 - ¿Los archivos nuevos respetan los nombres de directorios canónicos?
 - ¿Se introducen carpetas nuevas sin justificación documentada?
@@ -173,8 +173,8 @@ Solo se usan **dos niveles** — son intencionalmente binarios para mantener el 
 
 ### Paso 1 — Cargar contexto arquitectónico
 
-1. Leer `.project-context/NAVIGATOR.md`, `.project-context/patterns.md`, `.project-context/architecture.md` si existen
-2. Leer `.project-context/domains/*.md` relevantes al diff
+1. Leer `.project-context/NAVIGATOR.md`, `.project-context/Core/coding-standards.md`, `.project-context/Technical domain/domain.md` si existen
+2. Leer `.project-context/Technical domain/domain.md` relevantes al diff
 3. Si no hay `.project-context/` → reportar y continuar con heurísticas
 
 ### Paso 2 — Obtener el diff
