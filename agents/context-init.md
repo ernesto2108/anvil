@@ -77,8 +77,10 @@ No te detengas en silencio.
    - Crear los archivos base con su encabezado mínimo:
      - `NAVIGATOR.md` (raíz — INTOCABLE, no renombrar)
      - `Core/navigation.md`, `Core/workflows.md`, `Core/task-management.md`, `Core/coding-standards.md`
+     - `Core/patterns.md` (encabezado: `# Patrones de Diseño`)
      - `Technical domain/navigation.md`, `Technical domain/project.md`, `Technical domain/domain.md`, `Technical domain/glossary.md`, `Technical domain/contracts.md`, `Technical domain/dependencies.md`, `Technical domain/risks.md`
-   - **Preguntar al humano por la herramienta de gestión** (una vez, solo en `init`): "**¿Usas alguna herramienta de gestión de tareas o documentación? (ej. Linear, Jira, Notion, GitHub Issues, Obsidian). Si usas varias, menciónalas todas. Si no usas ninguna, escribe 'ninguna'.**" Guardar la respuesta literal en el campo `task_tool` del frontmatter de `project.md` (formato libre — no enum; vacío o `ninguna` significa que no hay herramienta externa). Si el humano no responde, dejar `task_tool: ""` y continuar.
+     - `Technical domain/business-rules.md` (encabezado: `# Business Rules`)
+   - **Preguntar al humano por la herramienta de gestión** (una vez, solo en `init`): "**¿Usas alguna herramienta de gestión de tareas o documentación? (ej. Linear, Jira, Notion, GitHub Issues, Obsidian). Si usas varias, menciónalas todas. Si no usas ninguna, escribe 'ninguna'.**" Guardar la respuesta literal en la sección "Herramienta de gestión" de `Core/task-management.md` (no en `project.md`; formato libre — no enum; vacío o `ninguna` significa que no hay herramienta externa). Si el humano no responde, dejar la sección en blanco y continuar.
    - Luego continuar al escaneo y poblado (no te detengas con la estructura vacía — `init` deja `.project-context/` lista para usar).
 4. **Cargar la skill `scan-project`** — define la detección de stack, qué recopilar y el formato de salida.
 5. **Escanear el codebase** siguiendo la skill. En `init`/`deep`: escaneo completo + bootstrap de Context Navigator (cargar `skills/context-nav/bootstrap.md`, ejecutar inferencia de patrones, contratos, bounded contexts y SOLID). En `regular`: solo actualizar lo que cambió desde el último run (escaneo incremental liviano).
@@ -94,6 +96,25 @@ Cuando corres en `init` o `deep`:
 2. Cargar `skills/context-nav/bootstrap.md`.
 3. Ejecutar la inferencia de patrones, contratos, bounded contexts y SOLID según `bootstrap.md`.
 4. Escribir todos los archivos en `.project-context/` usando los templates de `skills/context-nav/templates/`.
+
+  El mapeo template → archivo de destino es:
+
+  | Template | Archivo de destino |
+  |---|---|
+  | `patterns.tmpl.md` | `Core/patterns.md` |
+  | `workflows.tmpl.md` | `Core/workflows.md` |
+  | `task-management.tmpl.md` | `Core/task-management.md` |
+  | `coding-standards.tmpl.md` | `Core/coding-standards.md` |
+  | `project.tmpl.md` | `Technical domain/project.md` |
+  | `business-rules.tmpl.md` | `Technical domain/business-rules.md` |
+  | `contracts.tmpl.md` | `Technical domain/contracts.md` |
+  | `dependencies.tmpl.md` | `Technical domain/dependencies.md` |
+  | `domain.tmpl.md` | `Technical domain/domain.md` |
+  | `glossary.tmpl.md` | `Technical domain/glossary.md` |
+  | `risks.tmpl.md` | `Technical domain/risks.md` |
+  | `core-navigation.tmpl.md` | `Core/navigation.md` |
+  | `techdom-navigation.tmpl.md` | `Technical domain/navigation.md` |
+  | `navigator.tmpl.md` | `NAVIGATOR.md` |
 5. Marcar `coverage: bootstrap` en `.project-context/NAVIGATOR.md`.
 6. Informar cuántos patrones, contratos y dominios se detectaron.
 
@@ -110,11 +131,13 @@ Al crear la estructura base en `init`, los archivos arrancan con encabezado mín
 - `Core/workflows.md` → `# Workflows`
 - `Core/task-management.md` → `# Gestión de Tareas`
 - `Core/coding-standards.md` → `# Coding Standards`
+- `Core/patterns.md` → `# Patrones de Diseño`
 - `Technical domain/navigation.md` → índice de la carpeta Technical domain
 - `Technical domain/project.md` → `# Proyecto`
 - `Technical domain/domain.md` → `# Dominio`
 - `Technical domain/glossary.md` → `# Glosario`
 - `Technical domain/contracts.md` → `# Contratos`
+- `Technical domain/business-rules.md` → `# Business Rules`
 - `Technical domain/dependencies.md` → `# Dependencias`
 - `Technical domain/risks.md` → `# Riesgos`
 - Carpetas `decisions/`, `runs/` vía `mkdir -p` (vacías).
