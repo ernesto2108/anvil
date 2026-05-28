@@ -73,22 +73,22 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
 1. **Verificar inputs** (paso anterior). Si OK → continuar.
 2. **Arranque paralelo de las 3 fuentes de contexto** — lanzar al mismo tiempo, sin esperar entre ellas. El paso completa cuando las 3 terminan.
 
-   - **Fuente A — `.project-context/`:** leer `.project-context/NAVIGATOR.md`, `.project-context/project.md` y los dominios relevantes para la tarea. Capturar también el tamaño y estructura de `NAVIGATOR.md` para evaluar el gate más adelante.
+   - **Fuente A — `.project-context/`:** leer `.project-context/NAVIGATOR.md`, `.project-context/Technical domain/project.md` y los dominios relevantes para la tarea. Capturar también el tamaño y estructura de `NAVIGATOR.md` para evaluar el gate más adelante.
 
      Si el Read de `.project-context/NAVIGATOR.md` devuelve error de "archivo no encontrado" o cualquier error de tool (timeout, permisos), registrar el resultado explícitamente como **ausente** — no como contenido vacío. El gate del paso 3 trata cualquier error de Read como condición `CONTEXT_MISSING`, no como `CONTEXT_STALE`.
 
-     Además de `NAVIGATOR.md`, `project.md` y `patterns.md`, leer también los archivos en `.project-context/domains/` cuyo nombre coincida con términos del objetivo del run. Si el objetivo menciona un servicio, entidad o tecnología específica, buscar con `Glob(".project-context/domains/*.md")` y leer los matches antes de pasar al gate.
+     Además de `NAVIGATOR.md`, `Technical domain/project.md` y `Core/coding-standards.md`, leer también los archivos en `.project-context/Technical domain/domain.md` cuyo nombre coincida con términos del objetivo del run. Si el objetivo menciona un servicio, entidad o tecnología específica, buscar con `Glob(".project-context/Technical domain/domain.md")` y leer los matches antes de pasar al gate.
 
      Adicionalmente, según el tipo de pregunta del objetivo, leer estos archivos transversales si existen:
 
      | Tipo de pregunta | Archivos a leer primero |
      |---|---|
-     | "¿X depende de Y?", "¿tiene dependencia a Z?", "¿qué usa X?" | `dependencies.md`, `patterns.md`, `domains/` |
-     | "¿cuál es la regla de negocio de X?" | `business-rules.md`, `domains/` |
-     | "¿qué servicios hay?", "¿cómo está estructurado?" | `NAVIGATOR.md`, `project.md`, `ops.md` |
-     | "¿qué patrones usa?", "¿cómo se hace X en este repo?" | `patterns.md`, `domains/` |
-     | "¿qué contratos hay?", "¿qué API expone X?" | `contracts.md`, `domains/` |
-     | "¿qué riesgos hay?", "¿qué deuda técnica?" | `risks.md` |
+     | "¿X depende de Y?", "¿tiene dependencia a Z?", "¿qué usa X?" | `Technical domain/dependencies.md`, `Core/coding-standards.md`, `Technical domain/domain.md` |
+     | "¿cuál es la regla de negocio de X?" | `Technical domain/contracts.md`, `Technical domain/domain.md` |
+     | "¿qué servicios hay?", "¿cómo está estructurado?" | `NAVIGATOR.md`, `Technical domain/project.md`, `Core/workflows.md` |
+     | "¿qué patrones usa?", "¿cómo se hace X en este repo?" | `Core/coding-standards.md`, `Technical domain/domain.md` |
+     | "¿qué contratos hay?", "¿qué API expone X?" | `Technical domain/contracts.md`, `Technical domain/domain.md` |
+     | "¿qué riesgos hay?", "¿qué deuda técnica?" | `Technical domain/risks.md` |
 
      No buscar por coincidencia de nombre de dominio solamente — consultar los archivos transversales relevantes al tipo de pregunta aunque no exista un dominio con ese nombre exacto.
    - **Fuente B — Memoria:** llamar `mcp__anvil__search_memories(query=<descripción del objetivo>, mode='hybrid', limit=3)` para recuperar contexto de runs anteriores relacionados con el mismo dominio o tema.
@@ -236,7 +236,7 @@ Devolver un único bloque en este formato (el resumen persistente ya fue escrito
 - [hallazgo 2]
 
 ## Fuentes consultadas
-- .project-context/domains/X.md (local) — sección [Y]
+- .project-context/Technical domain/domain.md (local) — sección [Y]
 - internal/foo/bar.go:123-150 (local)
 - https://example.com/docs/api (web) — accedido <YYYY-MM-DD>
 

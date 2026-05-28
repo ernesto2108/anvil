@@ -70,8 +70,14 @@ No te detengas en silencio.
 1. **Recuperar memoria previa** — llamar `mcp__anvil__search_memories` para traer contexto/decisiones persistidas que enriquezcan el escaneo.
 2. **Detectar estado y modo** — `test -d <context_path>` y verificar `<context_path>/NAVIGATOR.md`. Resolver el modo según la tabla de detección automática (o el `mode` forzado).
 3. **Si `mode: init`** — crear estructura primero:
-   - `mkdir -p <context_path>/domains <context_path>/decisions <context_path>/runs`
-   - Crear los archivos base (`NAVIGATOR.md`, `project.md`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md`, `business-rules.md`, `dependencies.md`) con su encabezado mínimo.
+   - `mkdir -p <context_path>/Core`
+   - `mkdir -p "<context_path>/Technical domain"`
+   - `mkdir -p <context_path>/decisions`
+   - `mkdir -p <context_path>/runs`
+   - Crear los archivos base con su encabezado mínimo:
+     - `NAVIGATOR.md` (raíz — INTOCABLE, no renombrar)
+     - `Core/navigation.md`, `Core/workflows.md`, `Core/task-management.md`, `Core/coding-standards.md`
+     - `Technical domain/navigation.md`, `Technical domain/project.md`, `Technical domain/domain.md`, `Technical domain/glossary.md`, `Technical domain/contracts.md`, `Technical domain/dependencies.md`, `Technical domain/risks.md`
    - **Preguntar al humano por la herramienta de gestión** (una vez, solo en `init`): "**¿Usas alguna herramienta de gestión de tareas o documentación? (ej. Linear, Jira, Notion, GitHub Issues, Obsidian). Si usas varias, menciónalas todas. Si no usas ninguna, escribe 'ninguna'.**" Guardar la respuesta literal en el campo `task_tool` del frontmatter de `project.md` (formato libre — no enum; vacío o `ninguna` significa que no hay herramienta externa). Si el humano no responde, dejar `task_tool: ""` y continuar.
    - Luego continuar al escaneo y poblado (no te detengas con la estructura vacía — `init` deja `.project-context/` lista para usar).
 4. **Cargar la skill `scan-project`** — define la detección de stack, qué recopilar y el formato de salida.
@@ -99,17 +105,25 @@ Eres el único agente que hace bootstrap inicial. El `reporter` actualiza `.proj
 
 Al crear la estructura base en `init`, los archivos arrancan con encabezado mínimo y luego se pueblan en el mismo run:
 
-- `NAVIGATOR.md` — índice de `project.md`, `patterns.md`, `contracts.md`, `ops.md`, `risks.md`, `domains/`, `decisions/`, `runs/`.
-- `project.md` → `# Proyecto`
-- `patterns.md` → `# Patrones`
-- `contracts.md` → `# Contratos`
-- `ops.md` → `# Operaciones`
-- `risks.md` → `# Riesgos`
-- `business-rules.md` → `# Reglas de Negocio`
-- `dependencies.md` → `# Dependencias`
-- Carpetas `domains/`, `decisions/`, `runs/` vía `mkdir -p` (vacías).
+- `NAVIGATOR.md` (raíz — INTOCABLE, no renombrar) — índice de `Core/` y `Technical domain/`, más enlaces a `decisions/` y `runs/`.
+- `Core/navigation.md` → índice de la carpeta Core
+- `Core/workflows.md` → `# Workflows`
+- `Core/task-management.md` → `# Gestión de Tareas`
+- `Core/coding-standards.md` → `# Coding Standards`
+- `Technical domain/navigation.md` → índice de la carpeta Technical domain
+- `Technical domain/project.md` → `# Proyecto`
+- `Technical domain/domain.md` → `# Dominio`
+- `Technical domain/glossary.md` → `# Glosario`
+- `Technical domain/contracts.md` → `# Contratos`
+- `Technical domain/dependencies.md` → `# Dependencias`
+- `Technical domain/risks.md` → `# Riesgos`
+- Carpetas `decisions/`, `runs/` vía `mkdir -p` (vacías).
 
 A diferencia del antiguo `context-bootstrap`, **no te detienes con la estructura vacía**: `init` continúa al escaneo y deja `.project-context/` poblada y usable.
+
+## Pre-populado de `glossary.md`
+
+Después de detectar entidades en el código (Paso 4 — bounded contexts), pre-popular `Technical domain/glossary.md` con las entidades encontradas. Cada fila arranca con `⚠️ pendiente validación` en la columna de término humano, para que el equipo complete solo las que difieren entre lenguaje humano y técnico. **No bloquear ni preguntar al humano** — simplemente pre-poblar y continuar. El equipo valida de forma asíncrona.
 
 ## Reglas
 
@@ -125,7 +139,7 @@ A diferencia del antiguo `context-bootstrap`, **no te detienes con la estructura
 
 - **Modo ejecutado** — `init` / `deep` / `regular` (y si fue detectado o forzado).
 - **Qué se escaneó** — stack(s) detectado(s).
-- **Archivos de `.project-context/` creados/actualizados** — lista (NAVIGATOR, project, patterns, contracts, ops, risks, domains/*).
+- **Archivos de `.project-context/` creados/actualizados** — lista (NAVIGATOR, Core/*, Technical domain/*).
 - **Conteo de hallazgos clave** — patrones detectados (N), contratos (N), bounded contexts (N).
 - **Gaps detectados** (si los hay) — secciones incompletas por falta de información.
 - **Próximo paso recomendado** (si aplica) — ej. invocar al humano para clarificar el objetivo del proyecto.

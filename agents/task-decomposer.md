@@ -63,7 +63,7 @@ El `spec-writer` puede correr en dos modos (ver `agents/spec-writer.md`, §Modos
 | ARD paths | siempre | **opcionales** — si no existen, las capas se infieren del path de cada archivo | `architecture.md` + vistas relevantes — para entender capas y dependencias |
 | `task_path` | siempre | siempre | Ruta absoluta donde escribir `tasks.md` y subdirectorios `<TASK-ID>/spec.md` cuando aplique |
 | `backlog_path` | siempre | siempre | Path al `sprint-current.md` local (en `.project-context/` o el repo) |
-| `task_tool` | siempre | siempre | Leído de `.project-context/project.md`. Valor libre (ej. `Linear`, `Jira`, `Notion`) o vacío/`ninguna`. Si tiene valor, el agente **describe** al humano qué crear en esa herramienta; nunca la ejecuta |
+| `task_tool` | siempre | siempre | Leído de `.project-context/Technical domain/project.md`. Valor libre (ej. `Linear`, `Jira`, `Notion`) o vacío/`ninguna`. Si tiene valor, el agente **describe** al humano qué crear en esa herramienta; nunca la ejecuta |
 | `feature_id` | siempre | siempre | ID parent (`PROJ-FEAT-NNN`) — los `TASK-ID` derivan de este |
 | `milestone` | siempre | opcional (default: vacío) | Heredado del ARD — propagado a cada task |
 
@@ -80,7 +80,7 @@ El `spec-writer` puede correr en dos modos (ver `agents/spec-writer.md`, §Modos
 2b. **Buscar la sección `## Design References`** (presente en ambos modos cuando la tarea toca UI). Leer los campos `Type` y `Location`. Si la sección no existe o `Type: none` → la tarea no propaga referencia de diseño (saltar el enriquecimiento de diseño del Paso 3). Si `Type != none` → guardar `Type` y `Location` para enriquecer cada task que toque UI (ver Paso 3).
 3. Si hay path a `requirements.md` (spec normal o caso atípico liviano), leerlo para tener IDs `FR-N`/`NFR-N` disponibles para trazabilidad. Con spec liviano sin `requirements.md` → usar los IDs `brief-N` del spec.
 4. Si hay paths ARD (spec normal o caso atípico liviano), leer `architecture.md` y vistas para entender capas y dependencias entre componentes. Con spec liviano sin ARD → inferir capas desde el path de cada archivo (`internal/handler/` → handler; `internal/service/` → lógica; `internal/repo/` → datos; `types/` → tipos; etc.).
-5. Leer el `backlog_path` actual (archivo local) para respetar el formato y las convenciones existentes (no imponer formato nuevo). Leer `task_tool` de `.project-context/project.md` para saber si, al cerrar, debes describir al humano qué crear en su herramienta externa.
+5. Leer el `backlog_path` actual (archivo local) para respetar el formato y las convenciones existentes (no imponer formato nuevo). Leer `task_tool` de `.project-context/Technical domain/project.md` para saber si, al cerrar, debes describir al humano qué crear en su herramienta externa.
 6. **NO leer código de producción.** Verificación puntual de existencia de paths con `LS`, sí; lecturas amplias, no.
 
 ### Paso 2 — Descomponer en tasks atómicas

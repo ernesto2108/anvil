@@ -6,21 +6,20 @@ coverage: bootstrap
 
 ## Índice
 
-- [Proyecto](project.md) — stack, arquitectura, restricciones, SOLID
-- [Operaciones](ops.md) — comandos para levantar, buildear, testear y operar
-- [Patrones](patterns.md) — patrones de diseño inferidos con referencias
-- [Contratos](contracts.md) — APIs, queues, eventos, servicios externos
-- [Reglas de negocio](business-rules.md) — invariantes de negocio que cruzan dominios
-- [Dependencias](dependencies.md) — grafo de dependencias entre dominios
-- [Riesgos](risks.md) — gotchas, deuda técnica, restricciones conocidas
+### Core
+- [Workflows](Core/workflows.md) — ramas, ambientes, deploy, comandos operativos
+- [Task Management](Core/task-management.md) — gestión de tareas, tickets, definition of done
+- [Coding Standards](Core/coding-standards.md) — naming, linting, patrones de diseño detectados
 
-### Dominios activos
-
-<!-- Un item por carpeta con lógica de negocio significativa -->
-- [<domain>](domains/<domain>.md) — <una línea de responsabilidad>
+### Technical domain
+- [Proyecto](Technical%20domain/project.md) — stack, arquitectura, restricciones, SOLID
+- [Dominio](Technical%20domain/domain.md) — entidades principales y bounded contexts
+- [Glosario](Technical%20domain/glossary.md) — lenguaje del negocio ↔ lenguaje técnico
+- [Contratos](Technical%20domain/contracts.md) — APIs, queues, eventos, reglas de negocio
+- [Dependencias](Technical%20domain/dependencies.md) — grafo de dependencias entre dominios
+- [Riesgos](Technical%20domain/risks.md) — deuda técnica, gotchas, restricciones
 
 ### Decisiones arquitectónicas
-
 <!-- Solo cuando hay evidencia explícita -->
 <!-- - [NNN — titulo](decisions/NNN-slug.md) -->
 

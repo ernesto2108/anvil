@@ -12,25 +12,25 @@ A partir del diff de la implementación, mapear archivos cambiados a secciones d
 
 | Si se tocaron archivos en... | Actualizar... |
 |---|---|
-| `internal/<domain>/` | `domains/<domain>.md` — sección afectada |
-| Handlers HTTP / routes | `contracts.md` — sección REST API |
-| Queue producers/consumers | `contracts.md` — sección Message Queues |
-| Clientes externos (http, grpc) | `contracts.md` — sección Servicios externos |
-| Nuevas interfaces o estructuras con patron claro | `patterns.md` — agregar o actualizar entrada |
+| `internal/<domain>/` | `Technical domain/domain.md` — sección afectada |
+| Handlers HTTP / routes | `Technical domain/contracts.md` — sección REST API |
+| Queue producers/consumers | `Technical domain/contracts.md` — sección Message Queues |
+| Clientes externos (http, grpc) | `Technical domain/contracts.md` — sección Servicios externos |
+| Nuevas interfaces o estructuras con patrón claro | `Core/coding-standards.md` — agregar o actualizar entrada |
 | Decisión arquitectónica documentada en SPEC | `decisions/NNN-slug.md` — crear si no existe |
-| Archivos > 300 líneas introducidos | `risks.md` — agregar nota de deuda potencial |
-| Cambio que introduce, modifica o elimina una regla de negocio observable (validaciones de dominio, restricciones cross-entidad, reglas que aplican a múltiples dominios) | `business-rules.md` — sección de invariante afectada |
-| Nuevo dominio, o cambio en relaciones entre dominios (nuevo import cross-dominio, nueva dependencia de servicio, nueva FK entre bounded contexts) | `dependencies.md` — actualizar el grafo |
-| `Makefile`, `docker-compose.*`, `package.json` scripts, `scripts/` | `ops.md` — actualizar el target o comando que cambió |
-| `agents/*.md` | `domains/ai-system.md` — sección Agentes |
-| `skills/*/SKILL.md` | `domains/ai-system.md` — sección Skills |
-| `pipelines/*.yaml` | `domains/ai-system.md` — sección Pipelines |
-| `commands/*.md` | `domains/ai-system.md` — sección Commands |
+| Archivos > 300 líneas introducidos | `Technical domain/risks.md` — agregar nota de deuda potencial |
+| Cambio en validaciones de dominio o reglas cross-entidad | `Technical domain/contracts.md` — sección de invariantes |
+| Nuevo dominio, o cambio en relaciones entre dominios | `Technical domain/dependencies.md` — actualizar el grafo |
+| `Makefile`, `docker-compose.*`, `package.json` scripts, `scripts/` | `Core/workflows.md` — actualizar el target o comando que cambió |
+| `agents/*.md` | `Technical domain/domain.md` — sección Agentes (si el proyecto es Anvil) |
+| `skills/*/SKILL.md` | `Technical domain/domain.md` — sección Skills |
+| `pipelines/*.yaml` | `Technical domain/domain.md` — sección Pipelines |
+| `commands/*.md` | `Technical domain/domain.md` — sección Commands |
 | Cualquier cambio | `NAVIGATOR.md` — actualizar `last_updated` |
 
 ## Formato de actualización
 
-### Agregar entrada nueva a patterns.md
+### Agregar entrada nueva a `Core/coding-standards.md`
 
 ```markdown
 ## <NombreInferido> — <archivo principal>
@@ -40,7 +40,7 @@ A partir del diff de la implementación, mapear archivos cambiados a secciones d
 - Anti-pattern: <qué evitar>
 ```
 
-### Agregar endpoint a contracts.md
+### Agregar endpoint a `Technical domain/contracts.md`
 
 ```markdown
 ### <METHOD> <path>
