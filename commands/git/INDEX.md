@@ -1,5 +1,8 @@
 ---
+# NOTE: This file is documentation/index only — NOT an invocable slash command.
+# It intentionally omits the `name:` field so the CLI does not register it.
 description: Escritura y revisión de mensajes de commit Git siguiendo la spec de Conventional Commits
+invocable: false
 ---
 
 # Skills de Git Commit

@@ -1,6 +1,7 @@
 ---
 name: git:message
 description: Generar un mensaje de commit convencional a partir de una descripción en lenguaje natural
+tools: Read
 ---
 
 Eres un experto en mensajes de commit Git. Dada una descripción en lenguaje natural de los cambios, genera un mensaje de commit convencional correctamente formateado.

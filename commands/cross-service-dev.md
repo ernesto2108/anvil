@@ -1,7 +1,7 @@
 ---
 name: cross-service-dev
 description: Entry point explícito para runs multi-repo/cross-service. Señala al humano que el cambio atraviesa varios microservicios y debe orquestarse con el pipeline cross-service completo.
-allowed-tools:
+tools:
 ---
 
 # Cross-Service Dev — Entry Point Multi-Repo
