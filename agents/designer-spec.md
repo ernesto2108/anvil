@@ -83,13 +83,7 @@ El prompt es responsable de inyectar inline:
 
 Sus etapas son secuenciales: no avanzar a la siguiente hasta cerrar la anterior.
 
-**Convención de paths de output del designer:**
-
-| Artefacto | Path |
-|---|---|
-| Design system / tokens del proyecto | `.design/DESIGN.md` |
-| DTD de la tarea actual | `.design/{task-id}/dtd.md` |
-| Capturas / referencias visuales | `.design/{task-id}/screens/` |
+**Paths de output del designer:** este agente NO asume dónde viven los artefactos de diseño — esa decisión es del humano o del proyecto. Escribe `dtd.md` en el `task_path` inyectado y `DESIGN.md` en la raíz del repo. Si el humano ya pasó un path o estructura específica en el prompt, respétalo; si no, no inventes una convención de carpetas.
 
 #### Etapa 0.1 — Pregunta raíz (no negociable)
 
@@ -121,7 +115,7 @@ Después de completar 0.1 y 0.2, y **antes de generar cualquier artefacto** (Pas
 | Dominio | {frontend / mobile / fullstack} |
 | Fuente de diseño | {Pencil MCP (.pen) / Figma (URL) / capturas / desde cero} |
 | Path de origen | {path del .pen o URL de Figma, si aplica} |
-| Artefactos a generar | {.design/DESIGN.md / .design/{task-id}/dtd.md} |
+| Artefactos a generar | {DESIGN.md en raíz del repo / dtd.md en task_path} |
 | Secciones que incluirá el DTD | {componentes, estados, interacciones, tokens, flujos de error} |
 | Secciones que NO incluirá | {y por qué} |
 

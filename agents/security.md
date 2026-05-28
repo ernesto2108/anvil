@@ -75,7 +75,7 @@ Cargar el checklist que corresponda al stack. Verificar CADA ítem contra los ar
 | 7 | Divulgación de info en errores | medium | Retornar errores internos crudos en respuesta HTTP. Debe usar códigos de error de dominio |
 | 8 | Secretos hardcodeados | critical | API keys, passwords, JWT secrets como literales string. Debe usar env/config |
 | 9 | Crypto insegura | high | `md5`, `sha1` para passwords. Debe usar bcrypt/argon2 |
-| 10 | Middleware de auth faltante | critical | Endpoints que manejan datos de usuario sin `AccessMiddleware` |
+| 10 | Middleware de auth faltante | critical | Endpoints que manejan datos de usuario sin protección de auth. **No busques un nombre fijo de middleware** (`AccessMiddleware`, `AuthMiddleware`, etc.) — varía por proyecto y produce falsos negativos. Identifica el middleware/handler de auth por su comportamiento: grep de patrones como `jwt.Parse`, `VerifyToken`, `ValidateSession`, `context.WithValue` con claims, o decoradores/wrappers de auth, sin importar su nombre. Verifica que los endpoints sensibles pasen por ese mecanismo |
 
 ### React / TypeScript
 | # | Patrón a buscar | Riesgo | Qué buscar |

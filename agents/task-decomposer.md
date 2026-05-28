@@ -77,6 +77,7 @@ El `spec-writer` puede correr en dos modos (ver `agents/spec-writer.md`, §Modos
 2. Leer `spec.md` completo. Foco según modo:
    - **Spec normal:** `## 6. Mapa de implementación` y `## 7. Criterios de aceptación`.
    - **Spec liviano:** `## 2. Archivos a tocar`, `## 3. Criterios de aceptación` y `## 4. Decisiones inline`.
+2b. **Buscar la sección `## Design References`** (presente en ambos modos cuando la tarea toca UI). Leer los campos `Type` y `Location`. Si la sección no existe o `Type: none` → la tarea no propaga referencia de diseño (saltar el enriquecimiento de diseño del Paso 3). Si `Type != none` → guardar `Type` y `Location` para enriquecer cada task que toque UI (ver Paso 3).
 3. Si hay path a `requirements.md` (spec normal o caso atípico liviano), leerlo para tener IDs `FR-N`/`NFR-N` disponibles para trazabilidad. Con spec liviano sin `requirements.md` → usar los IDs `brief-N` del spec.
 4. Si hay paths ARD (spec normal o caso atípico liviano), leer `architecture.md` y vistas para entender capas y dependencias entre componentes. Con spec liviano sin ARD → inferir capas desde el path de cada archivo (`internal/handler/` → handler; `internal/service/` → lógica; `internal/repo/` → datos; `types/` → tipos; etc.).
 5. Leer el `backlog_path` actual (archivo local) para respetar el formato y las convenciones existentes (no imponer formato nuevo). Leer `task_tool` de `.project-context/project.md` para saber si, al cerrar, debes describir al humano qué crear en su herramienta externa.
@@ -108,18 +109,40 @@ El `spec-writer` puede correr en dos modos (ver `agents/spec-writer.md`, §Modos
 Cada task debe contener TODO lo que el developer necesita para ejecutarla sin re-leer el spec completo. Por cada task, registrar:
 
 - **Path exacto del archivo principal** (y secundarios si aplica)
+- **Agente ejecutor (OBLIGATORIO en TODAS las tasks)** — qué developer debe ejecutar la task. Valor exacto: `developer-backend`, `developer-frontend` o `developer-mobile` (nunca inventar otros valores). Inferir en este orden de precedencia:
+  1. **Por extensión/path del archivo principal:**
+     - `.dart` o path bajo `lib/` → `developer-mobile`
+     - `.tsx`, `.jsx`, `.astro`, `.ts` en contexto frontend, o path bajo `src/components/`, `src/pages/`, `src/hooks/` → `developer-frontend`
+     - `.go`, o path bajo `internal/`, `cmd/`, `pkg/`, `api/` → `developer-backend`
+     - `.py`, `.rs` → `developer-backend`
+  2. **Si el path es ambiguo** (`types/`, `shared/`, config sin extensión clara) → desempatar con el campo `Dominio` del spec: `Dominio: mobile` → `developer-mobile`; `Dominio: frontend` → `developer-frontend`; `Dominio: backend` → `developer-backend`. Si `Dominio: fullstack` → inferir por extensión/contexto (archivos de servidor → `developer-backend`; archivos de cliente → `developer-frontend`).
+  3. **Si aún no se infiere con certeza** → marcar `developer-[?]` y agregar una nota al humano en el resumen de cierre (Paso 4) listando esas tasks.
 - **Descripción de comportamiento** — el QUÉ observable, no el CÓMO
 - **Contexto de interfaces vecinas** — qué la llama (path), qué llama ella (path)
 - **Criterio de done verificable** — `type-check pasa` / `test X pasa` / `endpoint responde 200 con shape Y`
 - **Requirements que cubre** — IDs `FR-N`/`NFR-N` extraídos del spec
 - **Dependencias** — IDs de tasks anteriores (`TASK-NN`) que deben completarse primero
+- **Design reference (solo tasks con UI, y solo si `## Design References` del spec tiene `Type != none`)** — campo `Design reference` cuyo valor es el `Location` de la sección `## Design References` del `spec.md` **copiado verbatim**, sin transformar, sin completar y sin asumir estructura de carpetas ni herramienta. El humano lo respondió en el `spec-writer` (puede ser un link de Figma, un path local, "está en docs/screens/", etc.) y quedó tal cual en el spec. Una task "toca UI" si modifica componentes, pantallas, vistas o código frontend visible (`.tsx`, `.jsx`, `.astro`, widgets de pantalla). Tasks puramente backend, de tipos, de datos o de integración no-visual NO llevan este campo. El campo es OPCIONAL: si la task no toca UI o `Type: none`, se omite por completo — no escribir `Design reference: none`.
+
+### Paso 3.5 — Confirmar con el humano dónde escribir las tasks (OBLIGATORIO antes de escribir nada)
+
+Antes de escribir cualquier archivo de tasks, **pregunta al humano dónde escribirlas**. Cada proyecto tiene su propia convención (carpeta específica, archivo en la raíz, integración con Linear/Notion/GitHub Issues, etc.) — no la asumas.
+
+1. **Si el humano ya especificó el path en el prompt** (ej. "genera las tasks en `backlog/`") → no re-preguntar, usar ese path como `task_path`.
+2. **Si el humano dijo "solo muéstralas, no escribas"** (o equivalente) → mostrar las tasks directamente en el chat, en el formato de `tasks.md`, **sin escribir ningún archivo**. Saltar la escritura del Paso 4 (sub-pasos 1 y 2); la actualización del backlog también se omite salvo que el humano la pida explícitamente.
+3. **En cualquier otro caso** → preguntar y DETENER hasta tener respuesta explícita. No escribir ningún archivo de tasks sin respuesta del humano. Usar exactamente:
+
+   > ¿Dónde debo escribir las tasks?
+   > Ejemplos: `tasks/FEAT-01.md`, `docs/tasks.md`, raíz del proyecto, o indícame el path exacto.
+
+**No inventar ni asumir ningún path por defecto** — ni `tasks/`, ni `{task_path}/tasks.md`, ni ningún otro. El `task_path` de las entradas requeridas solo es válido si el humano lo proporcionó explícitamente (en el prompt o como respuesta a esta pregunta).
 
 ### Paso 4 — Escribir output y devolver el cierre
 
 1. **Escribir `{task_path}/tasks.md`** con todas las tasks en el formato definido abajo.
 2. **Para tasks ≥ 5 pts (solo con spec normal):** escribir además `{task_path}/<TASK-ID>/spec.md` self-contained — extracto del spec global con SOLO las secciones relevantes a esa task (criterios que cubre, contratos que toca, ubicación). Esto evita que el developer cargue el spec global completo para una task pequeña. **Con spec liviano este sub-paso no aplica** — ninguna task individual debería llegar a 5 pts dentro de un feature Small; si lo hace, escalar al humano en lugar de escribir el extracto.
 3. **Actualizar el backlog local vía skill `/backlog-management`** — respetar el formato existente del `backlog_path`. Si `task_tool` tiene valor, **describir al humano** qué tareas crear en esa herramienta — nunca ejecutarla.
-4. **Devolver al humano** la tabla resumida de tasks con ID, tipo, puntos, dependencias y orden de ejecución.
+4. **Devolver al humano** la tabla resumida de tasks con ID, **agente ejecutor**, tipo, puntos, dependencias y orden de ejecución. La columna `Agente` permite al humano ver de un vistazo quién ejecuta cada task sin leer cada una individualmente. Si alguna task quedó como `developer-[?]`, listarla aparte en `Acción para el humano` para que confirme el ejecutor.
 
 ## Formato de cada task en `tasks.md`
 
@@ -132,6 +155,7 @@ Cada task debe contener TODO lo que el developer necesita para ejecutarla sin re
 
 - [ ] <feature_id>-01 — [título corto] [tipo, Npts]
   - **Archivo:** `path/al/archivo.ts`
+  - **Agente:** `developer-backend` | `developer-frontend` | `developer-mobile`
   - **Qué hace:** [comportamiento observable, no implementación]
   - **Contexto:** llamada por `path/caller.ts`; llama a `path/callee.ts`
   - **Done when:** [criterio verificable: type-check, test pasa, endpoint responde X]
@@ -140,9 +164,22 @@ Cada task debe contener TODO lo que el developer necesita para ejecutarla sin re
 
 - [ ] <feature_id>-02 — [título corto] [tipo, Npts]
   - **Archivo:** `path/al/otro.ts`
+  - **Agente:** `developer-backend` | `developer-frontend` | `developer-mobile`
   - **Qué hace:** [...]
   - **Contexto:** [...]
   - **Done when:** [...]
+  - **Covers:** FR-03
+  - **Depends on:** <feature_id>-01
+
+### Ejemplo de task con UI (incluye Design reference)
+
+- [ ] <feature_id>-03 — Implementar LoginForm component [implementation, 3pts]
+  - **Archivo:** `src/components/auth/LoginForm.tsx`
+  - **Agente:** `developer-frontend` | `developer-mobile`
+  - **Qué hace:** descripción del comportamiento observable
+  - **Contexto:** llamada por `src/pages/login.tsx`; llama a `src/api/auth.ts`
+  - **Design reference:** <valor `Location` copiado verbatim del spec — p. ej. un link de Figma, un path local, o lo que el humano haya respondido>
+  - **Done when:** criterio verificable
   - **Covers:** FR-03
   - **Depends on:** <feature_id>-01
 
@@ -159,11 +196,13 @@ Cada task debe contener TODO lo que el developer necesita para ejecutarla sin re
 **Reglas del formato:**
 
 - IDs estrictamente secuenciales: `<feature_id>-01`, `<feature_id>-02`, ...
+- **`Agente:` es OBLIGATORIO en TODAS las tasks** — nunca se omite. Valor exacto: `developer-backend`, `developer-frontend` o `developer-mobile` (o `developer-[?]` solo si no se infiere con certeza, ver Paso 3). Va siempre como segundo campo, justo después de `Archivo:`.
 - `Depends on: —` cuando no hay dependencias.
 - `Covers:` solo IDs reales de la fuente:
   - **Con spec normal:** IDs `FR-N` / `NFR-N` de `requirements.md`.
   - **Con spec liviano:** IDs `brief-N` del spec liviano (preservar exactamente el ID que el `spec-writer` asignó).
   - **Setup técnico puro sin cobertura explícita (en ambos modos):** registrar `Covers: — (técnica)` y justificar en una línea por qué no mapea.
+- **`Design reference:` es un campo OPCIONAL** — aparece únicamente en tasks que tocan UI (componentes, pantallas, vistas, frontend visible) y solo cuando `## Design References` del spec trae `Type != none`. Su valor es el `Location` de esa sección **copiado verbatim** — sin transformar, sin asumir estructura de carpetas ni herramienta. En tasks sin UI o cuando `Type: none`, OMITIR el campo por completo (no escribir `Design reference: none`). El campo no rompe el template de tasks sin UI.
 - El orden de la lista ES el orden de ejecución sugerido. Topológicamente válido.
 
 ## Protocolo de escalación
@@ -229,7 +268,12 @@ Si el presupuesto se excede → escalar al humano con: `Presupuesto excedido con
 **Tasks críticas (bloqueadoras):** [lista — tasks de las que dependen ≥3 otras]
 **Decisiones abiertas:** [lista corta — si vacía, "ninguna"]
 **Backlog actualizado:** sí / no (local en `.project-context/` o repo)
-**Acción para el humano:** <si task_tool tiene valor: "crear N tasks en {task_tool}"; si no: "ninguna">
+**Acción para el humano:** <si task_tool tiene valor: "crear N tasks en {task_tool}"; si hay tasks `developer-[?]`: "confirmar ejecutor de [IDs]"; si no: "ninguna">
+
+| ID | Agente | Tipo | Pts | Depende de |
+|---|---|---|---|---|
+| <feature_id>-01 | developer-backend | setup | 2 | — |
+| <feature_id>-02 | developer-frontend | implementation | 3 | <feature_id>-01 |
 ```
 
 ## Skills

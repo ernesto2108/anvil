@@ -100,9 +100,17 @@ Si el humano no responde → **detenerse**. No hay default. No inferir el domini
 
 Si la respuesta de 0.1 fue backend → saltar 0.2 y 0.3 y continuar con el Paso 0b. Si fue frontend, mobile o fullstack, preguntar al humano:
 
-1. ¿Existe un DTD ya generado? Si sí, ¿en qué path? (convención esperada: `.design/{task-id}/dtd.md`)
-2. ¿El diseño viene de Pencil MCP (`.pen`), Figma (URL), capturas estáticas, o no hay diseño todavía?
+1. ¿Existe un DTD ya generado? Si sí, ¿en qué path?
+2. ¿Hay referencias de diseño disponibles para esta tarea?
+   - a) Archivo `.pen` (Pencil) — dame el path
+   - b) Figma — dame el link o el file ID
+   - c) Screenshots / imágenes — dame el path o pégalos
+   - d) Nada todavía — avanzo solo con el spec textual
 3. ¿El criterio "done" incluye pruebas visuales (regression), accesibilidad (WCAG), o solo funcionalidad?
+
+**Regla de no-redundancia:** si el DTD existe y ya documenta la fuente de diseño en su sección `## Design Assets` (Pencil file, screens, DTD path), o el humano ya proveyó la referencia en el prompt, NO volver a preguntar por la pregunta 2 — leer el dato de ahí. La pregunta 2 es OBLIGATORIA solo cuando hay UI y la referencia no se puede inferir del contexto ni del DTD.
+
+La respuesta a la pregunta 2 se materializa en la sección `## Design References` del `spec.md` (ver Secciones obligatorias). Aun cuando el humano responda "Nada todavía", la sección se emite con `type: none` para que aguas abajo (task-decomposer, developer-frontend) sepan que la referencia fue consultada y no quedó pendiente por olvido.
 
 Si la tarea es **frontend, mobile o fullstack con UI nueva** y **no hay DTD** → **bloquear**. No continuar. Mensaje al humano (vía `## Necesito información`):
 
@@ -357,11 +365,24 @@ _Implementa: FR-01_
 | E2E mobile (Maestro) | Sí / N/A | <razón> |
 | Visual regression | Sí / N/A | <razón> |
 | Accesibilidad (axe-core) | Sí / N/A | <razón> |
+
+## Design References
+
+<!-- OBLIGATORIO cuando la tarea toca UI (frontend/mobile/fullstack con UI nueva o cambio visual). -->
+<!-- Materializa la respuesta del humano a la pregunta 2 de la Etapa 0.2, o el dato leído del DTD (## Design Assets). -->
+<!-- Si la tarea es backend pura o frontend sin UI nueva, emitir el header con `_No aplica — tarea sin UI._`. -->
+
+- **Type:** figma | pen | screenshots | none
+- **Location:** <link de Figma, path al `.pen`, path a screens, o `none`>
+- **Notes:** <observaciones opcionales del humano — si vacío: "—">
 ```
+
+> **Regla de la sección:** si hay UI, esta sección NUNCA se omite. Si el humano respondió "Nada todavía", emitir `Type: none` y `Location: none` — esto le indica aguas abajo que la referencia fue consultada explícitamente, no olvidada. La `Location` es agnóstica de herramienta: Pencil (`.pen`), Figma (URL/file ID) y screenshots son igual de válidos. Si el DTD ya trae `## Design Assets`, copiar de ahí el path en lugar de re-preguntar al humano.
 
 **Reglas del formato (modo normal):**
 
 - Las 12 secciones están en orden fijo. NO reordenar. NO omitir.
+- **`## Design References` es una sección condicional adicional** (no cuenta entre las 12 fijas): se incluye al final solo cuando la tarea toca UI; si la tarea es backend pura, se omite o se emite con `_No aplica — tarea sin UI._`. No altera la numeración ni el orden de las 12 secciones canónicas.
 - Si una sección no aplica (ej. no hay env vars nuevas), incluir el header con el texto `_No aplica para este feature._`. NO eliminar el header — el developer cuenta con el orden.
 - Cada criterio de aceptación tiene su propio sub-header `### CA-NN — <título>`. Numeración secuencial dentro del documento.
 - La marca `_Implementa: FR-N_` (o `_Implementa: NFR-N_`, o múltiples separados por coma) va al final de cada criterio. SIN marca → criterio inválido.
@@ -409,6 +430,14 @@ _Implementa: brief-01_
 | CA-01 | unit / integration | <comportamiento> |
 
 <lista bullet de tests adicionales si el brief lo exige; si no, "_Tests mínimos suficientes — el reviewer evaluará alcance adicional._">
+
+## Design References
+
+<!-- Incluir SOLO si la tarea Small multi-archivo toca UI. Si es backend pura u otra lógica sin UI, OMITIR la sección entera. -->
+
+- **Type:** figma | pen | screenshots | none
+- **Location:** <link de Figma, path al `.pen`, path a screens, o `none`>
+- **Notes:** <observaciones opcionales — si vacío: "—">
 ```
 
 **Reglas del formato (modo liviano):**
@@ -486,6 +515,7 @@ Si el presupuesto se excede → escalar al humano con: `Presupuesto excedido en 
 **Criterios de aceptación generados:** N
 **FRs cubiertos:** X / Y total en requirements.md
 **NFRs cubiertos:** X / Y total
+**Design References:** [type + location si hay UI; "no aplica" si backend puro]
 **Decisiones abiertas:** [lista corta — si vacía, "ninguna"]
 ```
 

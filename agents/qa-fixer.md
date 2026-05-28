@@ -87,11 +87,17 @@ Para cada hallazgo, el cambio más pequeño posible que lo resuelva. Si dudas en
 
 ### Paso 4 — Validación limitada (no del proyecto completo)
 
-Re-ejecuta validación SOLO sobre los archivos tocados:
+**Antes de armar cualquier comando de lint/build Go, detecta la estructura real del módulo.** NO asumas `internal/`. No todos los proyectos usan esa convención — proyectos con `pkg/`, `cmd/`, estructura plana o monorepos romperían silenciosamente (`go build ./internal/<pkg>` no encuentra nada, sale con exit 0, y reportarías "build pasó" sobre código que nunca compiló). Para detectar:
+
+1. `Read` sobre `go.mod` para confirmar el module path y la raíz del módulo
+2. `ls`/`find` de los directorios de primer nivel para ubicar dónde viven realmente los paquetes tocados (puede ser `internal/`, `pkg/`, `cmd/`, la raíz, etc.)
+3. Usa el path real del paquete que tocaste en los comandos de abajo. Si no puedes inferir el path, pregunta al humano: **"No puedo inferir la estructura del módulo Go para validar:** `go.mod` y los directorios de primer nivel no aclaran dónde vive [paquete]. ¿Cuál es el path correcto?"** — nunca ejecutes el build sobre un path asumido.
+
+Re-ejecuta validación SOLO sobre los archivos tocados (sustituye `<pkg-path>` por el path real detectado):
 
 | Stack | Lint (scope acotado) | Build / verificación |
 |---|---|---|
-| Go | `golangci-lint run --build-tags <tag> ./internal/<pkg>/...` | `go vet -tags <tag> ./internal/<pkg>` + `go build ./internal/<pkg>` |
+| Go | `golangci-lint run --build-tags <tag> ./<pkg-path>/...` | `go vet -tags <tag> ./<pkg-path>` + `go build ./<pkg-path>` |
 | TypeScript / React | `<pm> lint -- <paths>` o `eslint <paths>` | `<pm> build` solo si tocaste `.ts`/`.tsx` |
 | Python | `ruff check <paths>` | — |
 | Rust | `cargo clippy -p <crate> -- -D warnings` | `cargo check -p <crate>` |
