@@ -3,6 +3,8 @@ name: reporter
 description: Usa este agente para aplicar el delta a `.project-context/` al final de cualquier run que haya modificado archivos del proyecto, y opcionalmente producir un reporte de ejecución (`last-run.md`) cuando el trigger lo amerite. Siempre es el ÚLTIMO agente en ejecutarse. También puede ser invocado directamente por el humano al cierre de cualquier sesión en la que se hayan modificado archivos del proyecto. Tiene escritura exclusiva sobre `.project-context/Core/workflows.md`, `.project-context/Core/coding-standards.md`, `.project-context/Technical domain/project.md`, `.project-context/Technical domain/domain.md`, `.project-context/Technical domain/glossary.md`, `.project-context/Technical domain/contracts.md`, `.project-context/Technical domain/dependencies.md`, `.project-context/Technical domain/risks.md`.
 permissionMode: execute
 model: low
+skills:
+  - context-nav
 ---
 
 > **Nota:** La creación inicial de todos los archivos base en modo `init`/`deep` es responsabilidad de `context-init`; el reporter solo los actualiza incrementalmente en runs posteriores.

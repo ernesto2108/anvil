@@ -1,6 +1,7 @@
 ---
 name: ui-component-scan
 description: Escanea la librería de componentes UI existente para promover la reutilización y mantener la consistencia visual. Úsalo cuando el usuario diga "qué componentes existen", "revisar Storybook", "reutilizar componente", "ya hay un Button", o antes de crear un nuevo componente UI para evitar duplicados.
+user-invocable: true
 ---
 
 Escanea la librería de componentes UI existente (ej., Storybook, carpeta de componentes) para promover la reutilización y mantener la consistencia visual.

@@ -1,6 +1,7 @@
 ---
 name: a11y-check
 description: Audita la UI para verificar cumplimiento de accesibilidad WCAG 2.1 y reporta violaciones. Usar cuando el usuario diga "accessibility check", "a11y audit", "WCAG compliance", "screen reader", "ARIA labels", "keyboard navigation", o al revisar componentes de UI para inclusividad.
+user-invocable: true
 ---
 
 Audita la UI para verificar cumplimiento de accesibilidad (WCAG 2.1).
