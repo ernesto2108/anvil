@@ -91,12 +91,12 @@ Formato: una frase de contexto que diga qué falta y por qué, seguida de la pre
 ## Auto-QA antes de entregar (OBLIGATORIO)
 
 1. **Build:** `flutter build` (o `flutter build apk --debug` / target relevante) — nunca entregues código que no compila. Si usas codegen, corre `build_runner` primero.
-2. **Análisis (COMPUERTA DURA):** `dart analyze <paths>` — cero problemas. Si no está disponible, pregunta antes de cerrar.
+2. **Análisis (COMPUERTA DURA):** ejecuta lint via skill `/lint` (cárgala justo antes de este paso, no al inicio de la invocación) — detecta Flutter y corre `dart analyze <paths>`, cero problemas. Si no está disponible, pregunta antes de cerrar.
 3. **Sin correcciones a ciegas** — causa raíz primero.
-4. **Sin regresiones** — corre los tests existentes vía `/run-tests`.
+4. **Sin regresiones** — ejecuta tests existentes via skill `/run-tests` (cárgala justo antes de este paso, no al inicio).
 5. **Escaneo de code smells** — elimina widgets/helpers muertos. Verifica `dispose()` de streams y subscripciones. Señala smells de diseño al humano sin refactorizar en silencio.
 
-Usa las skills `/lint` (detecta Flutter → `dart analyze`) y `/run-tests`.
+**Carga de skills `/lint` y `/run-tests`:** ambas se cargan just-in-time, NO al inicio de la invocación. Cárgalas únicamente cuando llegues al paso de Auto-QA — antes de eso son ruido.
 
 ## Output de cierre
 

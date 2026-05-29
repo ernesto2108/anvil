@@ -105,7 +105,7 @@ Re-ejecuta validación SOLO sobre los archivos tocados (sustituye `<pkg-path>` p
 
 **Prohibido:** `go vet ./...`, `<pm> lint` sin scope, builds del proyecto completo. Si crees que necesitas validación más amplia, pregunta al humano: **"El fix parece exceder el scope quirúrgico y necesitar validación amplia:** esto parece requerir una revisión más amplia de [área]. ¿Quieres que continúe o lo revisamos juntos?"** (probablemente el fix ya no es quirúrgico).
 
-Las skills `lint` y `run-tests` aceptan paths de scope — úsalas con los archivos tocados, NO sobre el proyecto entero.
+**Carga de skills `/lint` y `/run-tests`:** ambas se cargan just-in-time, NO al inicio de la invocación. Cárgalas justo antes de ejecutar la validación de este Paso 4 — antes de eso son ruido. Ambas aceptan paths de scope: úsalas con los archivos tocados, NO sobre el proyecto entero. Si un hallazgo no requiere re-ejecutar tests (p.ej. fix de lint puro), NO cargues `/run-tests`.
 
 ### Paso 5 — Actualizar `## Notas` del handoff
 

@@ -41,7 +41,8 @@ Ver sección **Integración con Herramienta de Diseño** más abajo para referen
 ## Skills
 
 Carga `/design-system` para referencia del sistema de diseño (tokens, componentes, patrones).
-Carga `/design-recipes` para recetas específicas por herramienta (Pencil: `reference/pencil.md`, Figma: `reference/figma.md`).
+
+**`/design-recipes` se carga just-in-time, NO al inicio:** cárgala justo antes del Paso 4 (Ejecutar la construcción en Pencil), cuando vayas a construir componentes visuales o ensamblar pantallas. Carga la receta específica de la herramienta resuelta (`reference/pencil.md` para `.pen`, `reference/figma.md` para Figma) — no ambas.
 
 ## Contexto de re-invocación (dentro de una orquestación)
 

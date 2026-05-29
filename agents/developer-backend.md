@@ -74,12 +74,12 @@ Formato: una frase de contexto que diga qué falta y por qué, seguida de la pre
 ## Auto-QA antes de entregar (OBLIGATORIO)
 
 1. **Build:** `go build ./<scope>/...` — nunca entregues código que no compila.
-2. **Lint (COMPUERTA DURA):** `golangci-lint run --build-tags <tag> ./<scope>/...` — cero problemas. `go vet` es un subconjunto y NO lo reemplaza. Si el linter no está disponible, pregunta antes de cerrar.
+2. **Lint (COMPUERTA DURA):** ejecuta lint via skill `/lint` (cárgala justo antes de este paso, no al inicio de la invocación) — `golangci-lint run --build-tags <tag> ./<scope>/...`, cero problemas. `go vet` es un subconjunto y NO lo reemplaza. Si el linter no está disponible, pregunta antes de cerrar.
 3. **Sin correcciones a ciegas** — causa raíz primero.
-4. **Sin regresiones** — corre los tests existentes vía `/run-tests` para confirmar que no rompiste nada.
+4. **Sin regresiones** — ejecuta tests existentes via skill `/run-tests` (cárgala justo antes de este paso, no al inicio) para verificar que no rompiste nada.
 5. **Escaneo de code smells** — elimina helpers muertos (que agregaste y nunca llamaste; fallarán el lint igual). Señala smells de diseño al humano sin refactorizar en silencio.
 
-Usa las skills `/lint` y `/run-tests` para ejecutar build, lint y tests.
+**Carga de skills `/lint` y `/run-tests`:** ambas se cargan just-in-time, NO al inicio de la invocación. Cárgalas únicamente cuando llegues al paso de Auto-QA — antes de eso son ruido.
 
 ## Output de cierre
 

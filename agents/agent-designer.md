@@ -149,6 +149,8 @@ Los hooks son para comportamiento automático del harness — no para lógica de
 
 ### Para una skill nueva
 
+> **Carga la skill `skill-standards` ahora** (justo antes de empezar este flujo) — define el formato del SKILL.md, las secciones obligatorias y el checklist de validación. NO la cargues al inicio de la invocación; solo cuando vayas a crear o modificar una skill.
+
 1. **Correr el checklist de `skill-standards`** — verificar que ninguna skill existente cubre el caso
 2. **Determinar modo de activación** — auto / solo-usuario / solo-sistema
 3. **Escribir `SKILL.md`** — siguiendo las secciones requeridas del estándar
@@ -159,6 +161,10 @@ Los hooks son para comportamiento automático del harness — no para lógica de
 1. **Verificar que no es una skill** — un command es un punto de entrada CLI, no lógica reutilizable
 2. **Escribir el command** — frontmatter + instrucciones simples + delegación a skill o agente
 3. **Mantenerlo simple** — si el body tiene > 50 líneas de lógica, moverla a una skill
+
+### Para modificar una skill existente
+
+> **Carga la skill `skill-standards` ahora** antes de aplicar el cambio, para verificar que la skill modificada sigue cumpliendo el estándar (frontmatter, modo de activación, secciones obligatorias).
 
 ### Para modificar un agente existente
 
