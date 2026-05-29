@@ -315,14 +315,14 @@ Usar para **stacks** o **niveles de despliegue**:
 
 ## Reglas de output
 
-- **Ubicación por defecto:** archivos en `{task_path}/diagrams/<nombre>.drawio`. Si el Líder pasa un path explícito, usar ese.
+- **Ubicación por defecto:** archivos en `{task_path}/diagrams/<nombre>.drawio`. Si el humano pasa un path explícito, usar ese.
 - **Un archivo `.drawio` por diagrama lógico.** No meter dos vistas distintas en un mismo archivo aunque la API de draw.io lo permita con páginas — separar facilita el versionado y el reuso.
 - **Nombre de archivo descriptivo y en kebab-case:** `order-flow.drawio`, `events-pipeline.drawio`, `deploy-prod.drawio`. NUNCA `diagram.drawio` o `untitled.drawio`.
 - **Encoding UTF-8 sin BOM.** El `<?xml version="1.0" encoding="UTF-8"?>` al inicio es opcional pero recomendado.
 
 ## Reglas
 
-- **No inventar nodos ni conexiones.** Diagramar exclusivamente lo que está en el input. Si falta información, marcarlo como pregunta abierta al Líder y NO completar con asunciones.
+- **No inventar nodos ni conexiones.** Diagramar exclusivamente lo que está en el input. Si falta información, marcarlo como pregunta abierta al humano y NO completar con asunciones.
 - **No mezclar capas.** Un diagrama de flujo de datos no incluye nodos de infra (k8s pods, ALBs) salvo que sean relevantes al flujo descrito.
 - **No omitir labels en conectores.** Toda flecha lleva label salvo que el contexto haga obvio el contenido (ej. `Cliente → API Gateway` sin label cuando el diagrama trata exclusivamente de routing).
 - **Validar XML antes de entregar.** Si el agente downstream no puede correr un parser, releer el archivo mentalmente buscando tags sin cerrar.
@@ -338,7 +338,7 @@ Usar para **stacks** o **niveles de despliegue**:
 | Edges sin source/target o con IDs inexistentes | Edge "huérfano" — draw.io lo renderiza pero queda flotante | Validar que cada `source`/`target` exista |
 | Coordenadas arbitrarias (x=137, y=223) | Conectores ortogonales quedan torcidos | Snap a grid (múltiplos de 20 o 40) |
 | Mezclar `edgeStyle=orthogonalEdgeStyle` con cruces evitables | Confunde más de lo que ayuda | Reorganizar nodos para evitar el cruce |
-| Inventar conexiones que el input no mencionó | Diagrama miente sobre la arquitectura real | Solo diagramar lo confirmado; listar gaps al Líder |
+| Inventar conexiones que el input no mencionó | Diagrama miente sobre la arquitectura real | Solo diagramar lo confirmado; listar gaps al humano |
 | Usar `page="1"` o `fit="1"` con diagramas densos | Comprime el contenido a la hoja, nodos se solapan y labels se truncan | Usar siempre `page="0"` y `fit="0"` para diagramas técnicos |
 | Más de 4 nodos en una fila horizontal dentro de un swimlane | Forma una línea apretada con labels solapados | Romper en grid top-down: `ceil(sqrt(N))` columnas |
 | Ancho fijo de 160px para labels > 15 caracteres | El label se trunca o se desborda visualmente | Calcular ancho como `max(180, label_chars * 9)` |

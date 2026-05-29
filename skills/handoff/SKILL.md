@@ -1,7 +1,7 @@
 ---
 name: handoff
 disable-model-invocation: true
-description: Continuidad de sesión para tareas Medium+. Crea, actualiza, lee y archiva notas de handoff para que los desarrolladores puedan retomar el trabajo entre sesiones sin tener que releer todo. Invocado por el desarrollador y el Líder — no directamente por el usuario. El gate de calidad es verify-handoff.sh (invocado por el Líder), no aprobación manual del usuario.
+description: Continuidad de sesión para tareas Medium+. Crea, actualiza, lee y archiva notas de handoff para que los desarrolladores puedan retomar el trabajo entre sesiones sin tener que releer todo. Invocado por el desarrollador o el humano orquestador — no directamente por el usuario. El gate de calidad es verify-handoff.sh (invocado por el humano orquestador), no aprobación manual del usuario.
 ---
 
 # Notas de Handoff
@@ -30,7 +30,7 @@ Aplica tanto si la tarea viene del backlog (con TASK-ID) como si se invoca direc
 1. Crear el directorio `.handoff/` si no existe
 2. Leer `template.md` de este skill y usarlo para escribir el archivo de handoff
 3. Completar el plan de ejecución y la tabla de uso de tokens vacía
-4. **Devolver el control al Líder con el plan** — NO presentar el plan directamente al usuario ni continuar automáticamente. El Líder lo incluirá en el output del modo Integración al final.
+4. **Devolver el control al humano con el plan** — NO presentar el plan directamente al usuario ni continuar automáticamente. El humano lo incluirá en el output del modo Integración al final.
 
 ### Actualizar (continuo, no batch al final)
 

@@ -31,12 +31,31 @@
 <!-- Exclusiones explícitas de scope. Qué esta tarea NO hace. -->
 - ...
 
+## Límites de implementación
+
+### Siempre hacer
+- ...
+
+### Preguntar antes de hacer
+- ...
+
+### Nunca hacer
+- ...
+
 ## Pre-condiciones
 
 <!-- Qué debe ser verdad / existir antes de que esta tarea pueda empezar. -->
 - [ ] Migración XXX aplicada
 - [ ] Feature YYY desplegado
 - [ ] ...
+
+## Coordinación externa
+
+<!-- Solo si hay dependencias de equipos externos que bloquean esta tarea. Si no hay, escribir "Ninguna". -->
+
+| Qué | Responsable | Deadline | Estado |
+|---|---|---|---|
+| Migración `add_notifications_table` | @equipo-db | YYYY-MM-DD | pendiente |
 
 ## Decisiones tomadas (ADR)
 
@@ -100,14 +119,14 @@
 
 3. GIVEN ... WHEN ... THEN ...
 
-## Testing Strategy (OBLIGATORIO)
+## Tests por criterio de aceptación (OBLIGATORIO)
 
-Tabla con un row por **criterio de aceptación** declarado arriba. Sin filas vacías.
-Si un criterio no es testeable automáticamente, marcar `tool=manual`.
+<!-- Una fila por AC declarado arriba. Sin filas vacías. -->
+<!-- Si no es automatizable: tool=manual. Todos los ACs deben tener row → SPEC sin row por AC es rechazado. -->
 
-| Criterio de aceptación | Tipo | Tool | Comando/pasos | Resultado esperado |
-|---|---|---|---|---|
-| <ID + descripción corta> | unit \| api \| e2e \| visual \| manual | go test \| hurl \| playwright \| agent-browser \| manual | comando exacto o pasos numerados | qué evidencia confirma el pass |
+| AC | Tipo | Tool | Test ID / archivo | Comando | Resultado esperado |
+|---|---|---|---|---|---|
+| AC-1: <descripción corta> | unit \| api \| e2e \| visual \| manual | go test \| hurl \| playwright \| agent-browser \| manual | `path/file_test.go::TestName` o `tests/api/resource.hurl` | comando exacto o pasos numerados | qué evidencia confirma el pass |
 
 **Tipos:**
 - `unit` → `go test ./...` (o stack equivalente), incluir package específico.
@@ -115,8 +134,6 @@ Si un criterio no es testeable automáticamente, marcar `tool=manual`.
 - `e2e` → flujo completo (Playwright Fase 2+; no usar en Fase 1).
 - `visual` → `agent-browser` para verificación visual antes del gate humano.
 - `manual` → no automatizable; se promueve a `features/manual-checks` en Fase 3 de LEADER-001.
-
-**Cobertura mínima:** todos los ACs deben tener row. SPEC sin esta sección o con ACs sin row → rechazado.
 
 ## Requerimientos de observabilidad
 
@@ -134,61 +151,6 @@ Si un criterio no es testeable automáticamente, marcar `tool=manual`.
 |---|---|---|---|
 | `VAR_NAME` | `valor-placeholder` | Sí / No | Para qué se usa |
 
-## Límites de implementación
-
-### Siempre hacer
-- ...
-
-### Preguntar antes de hacer
-- ...
-
-### Nunca hacer
-- ...
-
-## Tests esperados
-
-<!-- Lista cerrada. El tester implementa exactamente estos — ni más, ni menos. -->
-<!-- Sección 1: unit/integration por stack. Sección 2: automatización (E2E, API, visual, a11y). -->
-
-### Unit / Integration — por stack
-
-#### Tests Go
-- `path/to/file_test.go` — `TestFunctionName`: valida que ...
-
-#### Tests Rust
-- `src-tauri/tests/file_test.rs` — `test_function_name`: valida que ...
-
-#### Tests React/TS
-- `src/features/.../file.test.tsx` — `"description"`: valida que ...
-
-### Automatización
-
-<!-- Evaluar cuáles aplican según la tabla. Si no aplica, escribir "N/A" con justificación. -->
-
-| Tipo | ¿Aplica? | Qué validar |
-|---|---|---|
-| **E2E web** (Playwright) | Sí / N/A | Flujos: login → ..., checkout → ... |
-| **E2E mobile** (Maestro) | Sí / N/A | Flows: ... |
-| **API contract** (Hurl) | Sí / N/A | Endpoints: POST /api/..., GET /api/... |
-| **Visual regression** | Sí / N/A | Páginas: landing, dashboard |
-| **Accesibilidad** (axe) | Sí / N/A | Páginas públicas: ... |
-
-<!-- Detalle de cada tipo que aplica: -->
-
-#### E2E web (si aplica)
-- `tests/e2e/feature.spec.ts` — flujo: ...
-
-#### E2E mobile (si aplica)
-- `.maestro/feature.yaml` — flow: ...
-
-#### API contract (si aplica)
-- `tests/api/resource/crud-flow.hurl` — valida: ...
-
-#### Visual regression (si aplica)
-- En test E2E correspondiente con `toHaveScreenshot()`
-
-#### Accesibilidad (si aplica)
-- En test E2E correspondiente con axe-core
 ```
 
 ---
@@ -202,9 +164,10 @@ Si un criterio no es testeable automáticamente, marcar `tool=manual`.
 - **La sección "Utils a reutilizar" es obligatoria si el SPEC propone cualquier helper, parser, formatter, validator o util nuevo.** El architect debe ejecutar `Grep` en `internal/util/`, `pkg/util/`, `src/lib/`, `src/utils/` (o equivalente del stack) y reportar lo encontrado. Si existe un util equivalente → reusar (poner en la tabla); si no existe → marcar `NEW` y justificar
 - Decisiones de ubicación (en qué paquete/directorio va un archivo nuevo) son **decisión arquitectónica**, no detalle de implementación. El developer NO decide ubicación — solo verifica que el SPEC tenga justificación y que el path exista en disco
 - La sección de pre-condiciones es obligatoria — si está vacía, escribir "Ninguna" explícitamente
+- "Coordinación externa" es obligatoria cuando la tarea tiene dependencias de equipos externos (migraciones manuales, aprobaciones, configuraciones de infra) — si no hay, escribir "Ninguna"
 - El bridge de contratos cross-stack es obligatorio para cualquier tarea que toque 2+ stacks
 - La sección de observabilidad es obligatoria para tareas Medium+ — "N/A" requiere justificación explícita
 - La sección de variables de entorno es obligatoria — si la tarea no introduce env vars nuevas, escribir "Ninguna" explícitamente. Usar nombres estándar de la tabla en `backend.md` (ej. `REDIS_URL`, no `CACHE_ADDR`)
-- "Tests esperados" es la lista cerrada que el tester sigue — el architect define el scope, no el tester
-- La sección "Automatización" es obligatoria para tareas Medium+ — evaluar cada tipo y escribir "N/A" con justificación si no aplica. Criterios: nuevo endpoint → API contract, flujo de usuario nuevo → E2E, página pública → a11y, cambio visual → visual regression
+- "Tests por criterio de aceptación" es la lista cerrada que el tester sigue — el architect define el scope, no el tester. Una fila por AC, sin excepción.
+- Para tareas Medium+: E2E aplica a flujos de usuario nuevos, API contract a endpoints nuevos, a11y a páginas públicas, visual regression a cambios de UI. Justificar "N/A" cuando no aplica.
 - Mantener spec.md bajo 150 líneas — si es más largo, se están duplicando contratos de archivos de arquitectura
