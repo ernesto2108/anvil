@@ -1,6 +1,6 @@
 ---
 name: generate-diagram
-description: Crear diagramas Mermaid.js embebidos dentro de archivos Markdown (ARDs, READMEs, documentación). Usar cuando el usuario diga "diagrama embebido", "Mermaid", "diagrama en el markdown", "flowchart en el doc", "incluir diagrama en el ARD", "diagrama de secuencia", "ERD", o cuando un documento markdown se beneficie de una visualización inline. Para diagramas standalone editables, usar la skill `drawio` en su lugar.
+description: Crear diagramas Mermaid.js embebidos dentro de archivos Markdown (Architecture Views / ADRs, READMEs, documentación). Usar cuando el usuario diga "diagrama embebido", "Mermaid", "diagrama en el markdown", "flowchart en el doc", "incluir diagrama en Architecture Views / ADRs", "diagrama de secuencia", "ERD", o cuando un documento markdown se beneficie de una visualización inline. Para diagramas standalone editables, usar la skill `drawio` en su lugar.
 ---
 
 # Skill — generate-diagram (Mermaid embebido)
@@ -11,7 +11,7 @@ Produce bloques Mermaid.js sintácticamente válidos para embeber en archivos Ma
 
 | Necesidad | Skill correcta |
 |---|---|
-| Diagrama dentro de un `.md` (ARD, README, ADR, spec) | `generate-diagram` (Mermaid) |
+| Diagrama dentro de un `.md` (Architecture Views / ADRs, README, spec) | `generate-diagram` (Mermaid) |
 | Diagrama standalone editable (`.drawio`) para arquitectura técnica detallada con shapes ricos, message brokers, gateways | `drawio` |
 | Diagrama que viaja con la documentación y debe renderizarse en GitHub/Obsidian/Outline | `generate-diagram` |
 | Diagrama que se exporta a PNG/SVG para slides o whiteboards técnicos | `drawio` |
