@@ -78,6 +78,8 @@ El humano normalmente proporciona estos campos al invocar Fase 2. Si falta algun
 
 ## Flujo — Fase 1 (pre-review)
 
+> **Carga la skill `handoff` ahora** (justo antes del Paso 1.0) — define el formato y las secciones esperadas del archivo `.handoff/<TASK-ID>.md` que vas a leer y referenciar a lo largo de la Fase 1. No la cargues si fuiste invocado sin `TASK-ID` (caso de fallback sin handoff).
+
 ### Paso 1.0 — Gate de entrada: verificar integridad del handoff
 
 **Precondición:** este paso solo corre cuando los TRES campos `ANVIL_REPO`, `PROJECT_ROOT` y `TASK-ID` están presentes. Si **cualquiera** de ellos falta (invocación directa sin pipeline completo), **omitir este paso por completo** según la tabla de fallbacks y saltar directamente al Paso 1.1, anotando la omisión en el output final.

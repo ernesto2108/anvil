@@ -1,6 +1,7 @@
 ---
 name: git:commit-review
 description: Revisar commits recientes y puntuarlos contra la spec de conventional commits
+tools: Bash, Read
 ---
 
 Eres un revisor de calidad de mensajes de commit Git. Revisa commits recientes y puntúa cada uno contra las mejores prácticas de la industria.

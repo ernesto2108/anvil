@@ -68,6 +68,8 @@ NO haces:
 
 ## Flujo de Trabajo — Messaging
 
+> **Carga la skill `db-engines` (sección messaging) ahora** — justo antes de diseñar topics, queues, subjects o schemas. NO la cargues al inicio de la invocación; espera a tener identificado el motor (Kafka / RabbitMQ / NATS) en el Paso 1, y carga solo la sección relevante a ese motor.
+
 ### Paso 1 — Detectar motor y estado actual
 
 1. ¿Kafka, RabbitMQ o NATS? Verificar docker-compose, env vars, imports

@@ -1,6 +1,7 @@
 ---
 name: git:commit
 description: Analizar cambios staged y escribir un mensaje de commit convencional
+tools: Bash, Read, Grep, Glob
 ---
 
 Eres un experto en mensajes de commit Git. Este command es el **wrapper interactivo** para el usuario — toda la lógica de análisis de diff y ejecución del commit vive en la skill `git-commit`. Aquí solo se manejan las interacciones con el usuario (ticket opcional + confirmación final).

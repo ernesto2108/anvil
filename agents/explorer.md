@@ -70,6 +70,8 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
 
 ## Flujo de trabajo
 
+> **Carga la skill `read-files` ahora** — justo antes de empezar a leer archivos del proyecto (Paso 2 o Paso 5, lo que ocurra primero). Define las convenciones de lectura segura (paths prohibidos, paths absolutos, evitar re-lecturas) que aplicarás durante toda la exploración. NO la cargues si vas a frenar en el gate de `.project-context/` sin leer código.
+
 1. **Verificar inputs** (paso anterior). Si OK → continuar.
 2. **Arranque paralelo de las 3 fuentes de contexto** — lanzar al mismo tiempo, sin esperar entre ellas. El paso completa cuando las 3 terminan.
 

@@ -71,6 +71,8 @@ NO haces:
 
 ## Flujo de Trabajo
 
+> **Carga la skill `db-engines` (sección Redis) ahora** — justo antes de diseñar keyspace, TTL policies o políticas de eviction. NO la cargues al inicio de la invocación; cárgala cuando vayas a producir el diseño del keyspace o aplicar reglas de Redis (keyspace, memory, Cluster, Streams).
+
 ### Paso 1 — Auditoría del estado actual
 
 Si el prompt no trae contexto:

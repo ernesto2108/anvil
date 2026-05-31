@@ -119,7 +119,7 @@ EOF
 **Si el commit falla** (pre-commit hook, lint, build, formato, etc.):
 1. NO reintentar automáticamente.
 2. Capturar el output textual completo (stdout + stderr + exit code).
-3. DETENER y reportar al invocador con el error textual exacto. El invocador (típicamente el `committer`) decide cómo enrutar (por ejemplo, escalando al Líder para que invoque al developer del stack correspondiente: `developer-backend` / `developer-frontend` / `developer-mobile`).
+3. DETENER y reportar al invocador con el error textual exacto. El invocador (típicamente el `committer`) decide cómo enrutar (por ejemplo, escalando al humano para que invoque al developer del stack correspondiente: `developer-backend` / `developer-frontend` / `developer-mobile`).
 
 ## Formato de Salida
 

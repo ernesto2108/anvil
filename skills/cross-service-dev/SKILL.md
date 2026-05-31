@@ -40,8 +40,8 @@ Adicionalmente, el orquestador debe:
    Verificar que cada ruta existe en disco y aplicar la siguiente lógica por servicio:
 
    - **Repo existe localmente** → continuar normalmente con esa ruta.
-   - **Repo no existe localmente pero hay URL en `service-map.yaml`** → el Líder clona el repo a un directorio temporal (`/tmp/<nombre-servicio>-<timestamp>`), la Fase 1.5 lo explora desde ahí, y al terminar la exploración se elimina el clon temporal.
-   - **Repo no existe localmente y no hay URL en `service-map.yaml`** → STOP. El Líder pausa y le pide al usuario: URL del repo o ruta local donde está clonado. La respuesta se persiste en `service-map.local.yaml` bajo el campo `local_path` del servicio correspondiente para que futuros runs no vuelvan a preguntar.
+   - **Repo no existe localmente pero hay URL en `service-map.yaml`** → el humano clona el repo a un directorio temporal (`/tmp/<nombre-servicio>-<timestamp>`), la Fase 1.5 lo explora desde ahí, y al terminar la exploración se elimina el clon temporal.
+   - **Repo no existe localmente y no hay URL en `service-map.yaml`** → STOP. el humano pausa y le pide al usuario: URL del repo o ruta local donde está clonado. La respuesta se persiste en `service-map.local.yaml` bajo el campo `local_path` del servicio correspondiente para que futuros runs no vuelvan a preguntar.
    - **Repo no es accesible por ninguna vía** → marcar ese servicio como `sin contexto de código` en el ARD. El architect debe documentar explícitamente qué decisiones quedan sin verificar por falta de acceso al código.
 
 3. **Descubrir dependencias transitivas (OBLIGATORIO):**

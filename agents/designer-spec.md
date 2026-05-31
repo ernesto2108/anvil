@@ -30,7 +30,8 @@ NO haces:
 ## Skills
 
 Carga `/design-system` para referencia del sistema de diseño (tokens, componentes, patrones).
-Carga `/design-recipes` para recetas específicas por herramienta (Pencil: `reference/pencil.md`, Figma: `reference/figma.md`).
+
+**`/design-recipes` se carga just-in-time, NO al inicio:** cárgala justo antes del Paso 3 (Especificación Visual), cuando vayas a producir definiciones de componentes recurrentes o layouts de pantalla a partir del sistema de diseño. Si la tarea solo cubre tokens/fundamentos sin componentes nuevos, NO la cargues.
 
 ## Contexto de re-invocación (dentro de una orquestación)
 

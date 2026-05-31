@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# pre-commit — bloquea commits que incluyan archivos de test escritos por developers.
+# Los tests son responsabilidad exclusiva del agente `tester`.
+#
+# Excepción permitida: export_test.go (Go) — patrón de compilación condicional, no test real.
+
+set -euo pipefail
+
+# Recolectar archivos staged (solo los que existen — A, M, R)
+staged_files=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null) || staged_files=""
+
+if [[ -z "$staged_files" ]]; then
+  exit 0
+fi
+
+detected=()
+
+while IFS= read -r file; do
+  basename_file=$(basename "$file")
+
+  # Go: *_test.go — EXCEPTO export_test.go
+  if [[ "$basename_file" == *_test.go && "$basename_file" != "export_test.go" ]]; then
+    detected+=("  - $file")
+    continue
+  fi
+
+  # TypeScript/React: *.test.ts  *.test.tsx  *.spec.ts  *.spec.tsx
+  if [[ "$basename_file" == *.test.ts || "$basename_file" == *.test.tsx || \
+        "$basename_file" == *.spec.ts || "$basename_file" == *.spec.tsx ]]; then
+    detected+=("  - $file")
+    continue
+  fi
+
+  # Dart/Flutter: *_test.dart
+  if [[ "$basename_file" == *_test.dart ]]; then
+    detected+=("  - $file")
+    continue
+  fi
+done <<< "$staged_files"
+
+if [[ ${#detected[@]} -eq 0 ]]; then
+  exit 0
+fi
+
+echo ""
+echo "┌─────────────────────────────────────────────────────────────────┐"
+echo "│           [PRE-COMMIT BLOQUEADO]                                │"
+echo "└─────────────────────────────────────────────────────────────────┘"
+echo ""
+echo "Se detectaron archivos de test en el staged area."
+echo "Los tests deben ser escritos por el agente \`tester\`, no por los developers."
+echo ""
+echo "Archivos detectados:"
+for f in "${detected[@]}"; do
+  echo "$f"
+done
+echo ""
+echo "Para continuar:"
+echo "  1. Retira los archivos de test del staging:"
+for f in "${detected[@]}"; do
+  # Quitar el prefijo "  - " para mostrar el path limpio
+  echo "       git restore --staged ${f:4}"
+done
+echo "  2. Invoca al agente \`tester\` con el handoff correspondiente."
+echo ""
+echo "Excepción permitida: export_test.go (Go) — no es bloqueado."
+echo ""
+exit 1

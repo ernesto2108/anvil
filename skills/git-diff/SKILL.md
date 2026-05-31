@@ -1,6 +1,7 @@
 ---
 name: git-diff
 description: Inspeccionar y resumir cambios del repositorio usando git diff. Usar cuando el usuario diga "qué cambió", "muestra el diff", "revisa cambios", "resume modificaciones", o antes de crear un commit o pull request.
+user-invocable: true
 ---
 
 Inspecciona solo los cambios realizados en el repositorio usando git diff.

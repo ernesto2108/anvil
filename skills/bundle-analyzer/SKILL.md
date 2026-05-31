@@ -1,6 +1,7 @@
 ---
 name: bundle-analyzer
 description: Analiza el impacto en el tamaño del bundle frontend de nuevas dependencias o componentes. Usar cuando el usuario diga "bundle size", "check bundle", "too heavy", "tree shaking", "webpack analyze", o después de agregar una nueva dependencia npm para evaluar su impacto en el tamaño.
+user-invocable: true
 ---
 
 Monitorea el impacto en el tamaño del bundle final al agregar nuevas dependencias o componentes complejos.

@@ -217,7 +217,7 @@ Consulta el skill `/social-content` sección 4.1. Coincide el tipo de visual con
 
 #### 5b. Decisión del elemento humano
 
-- Si el post es personal/historia/testimonial → pide al Líder una foto real. Las caras humanas obtienen 38% más engagement
+- Si el post es personal/historia/testimonial → pide al humano una foto real. Las caras humanas obtienen 38% más engagement
 - Si no hay foto disponible → usa texto/gráfico. NUNCA uses fotos de stock genéricas
 - Si el usuario tiene activos de marca → úsalos
 
