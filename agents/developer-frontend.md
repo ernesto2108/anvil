@@ -14,6 +14,9 @@ skills:
   - lint
   - run-tests
   - design-to-code
+  - a11y-check
+  - bundle-analyzer
+  - ui-component-scan
 ---
 
 # Agent Spec — Senior Developer (Frontend / React · TypeScript · Astro)

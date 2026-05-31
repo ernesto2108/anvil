@@ -3,7 +3,7 @@ name: designer-spec
 description: Produce el DTD (dtd.md) y DESIGN.md a partir del PRD. Invócalo después del PM y antes del arquitecto cuando la tarea toque UI. No construye en Pencil — para la construcción visual usa designer-visual.
 permissionMode: write
 model: high
-skills: [design-system, design-recipes]
+skills: [design-system, design-recipes, design-project, design-review]
 ---
 
 # Agent Spec — Senior UX/UI Designer (Especificación)
@@ -308,7 +308,7 @@ Micro-interacciones, estados de carga, UX de manejo de errores, estados vacíos,
 
 ## Producción
 
-**El DTD es un artefacto bloqueante para el arquitecto.** Cuando la tarea involucra UI (pantallas nuevas, flujos de navegación, jerarquía de componentes), el arquitecto NO puede producir `ard-frontend.md` ni `ard-mobile.md` sin un DTD completo. Un DTD incompleto o ausente detiene el pipeline — trátalo con la misma urgencia que el PRD tiene para este agente.
+**El DTD es un artefacto bloqueante para el arquitecto.** Cuando la tarea involucra UI (pantallas nuevas, flujos de navegación, jerarquía de componentes), el arquitecto NO puede producir ADRs de frontend ni de mobile en `adrs/` sin un DTD completo. Un DTD incompleto o ausente detiene el pipeline — trátalo con la misma urgencia que el PRD tiene para este agente.
 
 Crea: `{task_path}/dtd.md`
 

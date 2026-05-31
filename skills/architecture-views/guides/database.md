@@ -1,4 +1,4 @@
-# Template: ard-database.md
+# Template: arch-database.md
 
 Inspirado en: sección "Data Storage" de Google + formato de spec DBML.
 

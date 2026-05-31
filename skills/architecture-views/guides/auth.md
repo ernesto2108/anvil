@@ -1,8 +1,8 @@
-# Template: ard-auth.md
+# Template: arch-auth.md
 
 Inspirado en: OWASP ASVS + OAuth 2.1 Security Best Current Practice + NIST SP 800-63.
 
-**Generar cuando:** la tarea tiene a auth (identidad, autorización, tokens, sesiones) como dominio central. Si la tarea solo agrega un guard de auth a un endpoint existente y la auth ya está modelada en otro lado → documentar inline en `ard-backend.md` y NO crear este archivo.
+**Generar cuando:** la tarea tiene a auth (identidad, autorización, tokens, sesiones) como dominio central. Si la tarea solo agrega un guard de auth a un endpoint existente y la auth ya está modelada en otro lado → documentar inline en `arch-backend.md` y NO crear este archivo.
 
 ## Template
 
@@ -319,5 +319,5 @@ stateDiagram-v2
 - **Authz nunca es opcional en el handler** — el endpoint declara su requirement, el middleware lo aplica. Default deny si no se declara
 - **Toda decisión de autorización se loguea** — auditoría es un requirement no negociable
 - **Las claves de firma rotan** — nunca usar la misma clave por más del periodo definido en NFRs
-- **Si esta vista existe, `ard-backend.md` debe referenciarla** (en taxonomía de errores: 401/403, y en middlewares) — no duplicar contratos
+- **Si esta vista existe, `arch-backend.md` debe referenciarla** (en taxonomía de errores: 401/403, y en middlewares) — no duplicar contratos
 - **Trazabilidad a requirements:** cada control de seguridad de la tabla "Superficie de ataque" idealmente liga a un FR/NFR de `requirements.md`

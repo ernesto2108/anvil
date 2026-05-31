@@ -1,88 +1,130 @@
 ---
 name: architecture-views
-description: Templates y guías de formato para vistas de arquitectura. Lo carga el agente architect para producir archivos de arquitectura por dominio con specs ejecutables (SDD). Usar cuando el architect necesita templates de vistas.
-disable-model-invocation: true
+description: Guía al `architect` a producir Architecture Views ligeras (formato arc42 + C4) por dominio. Las vistas capturan la estructura del sistema — el "qué" — y conviven con los ADRs (que capturan el "por qué"). Usar cuando el architect necesite documentar la estructura del sistema, contenedores, componentes o despliegue desde múltiples perspectivas (backend, frontend, mobile, database, infra).
 ---
 
-# Vistas de Arquitectura — Templates y Guía de Formato
-
-Skill de referencia para el agente architect. Provee templates para cada vista de arquitectura con formatos de Spec Driven Development (SDD).
+# Architecture Views — arc42 + C4 ligero
 
 ## Filosofía
 
-Los documentos de arquitectura sirven a dos audiencias:
-1. **Humanos** — developers, revisores, futuros maintainers necesitan contexto, razones, trade-offs
-2. **Máquinas** — agentes, CI, generadores de código necesitan specs ejecutables que puedan consumir y validar
+Las **Architecture Views** responden a *¿cómo está estructurado el sistema?*. Los **ADRs** responden a *¿por qué está estructurado así?*. Ambos artefactos coexisten y se complementan:
 
-Cada vista balancea ambas. Las secciones narrativas explican "por qué"; las secciones de spec definen "qué" en formato legible por máquinas.
+| Artefacto | Pregunta | Formato | Ubicación |
+|---|---|---|---|
+| Architecture View | ¿Cómo? (estructura) | arc42 + C4 ligero | `arch-<dominio>.md` (raíz o `docs/arch/`) |
+| ADR | ¿Por qué? (decisión) | Nygard | `adrs/ADR-NNN-<slug>.md` |
 
-## Cuándo usar cada formato
+Una vista NO es un ADR agregado — es un mapa estructural por dominio. Un ADR NO es una vista — es el registro de una decisión puntual con contexto, alternativas y consecuencias.
 
-El criterio primario es **cuántos dominios toca la tarea**, no los puntos de historia. El tamaño influye en la profundidad de cada vista (cuánto detalle, cuántos diagramas, cuántos specs ejecutables), pero no en si el archivo es por dominio o genérico — siempre es por dominio.
+## Cuándo producir vistas
 
-| Alcance de la tarea | Output |
-|---|---|
-| Single-dominio Small (1-5 pts) | Una sola vista de dominio: `ard-<dominio>.md` — narrativa pura, sin specs ejecutables ni diagramas extensos |
-| Single-dominio Medium (5-8 pts) | Una sola vista de dominio: `ard-<dominio>.md` con specs ejecutables del dominio (OpenAPI, DBML, etc.) |
-| Multi-dominio (2+ dominios, cualquier tamaño) | Una vista por dominio: `ard-backend.md` + `ard-database.md` + … — cada archivo cubre solo su dominio, sin consolidación |
-| Large (8+ pts), multi-servicio | Todas las vistas aplicables, specs SDD completos, bridge de contratos entre vistas |
+El `architect` produce una Architecture View por cada dominio relevante al feature:
 
-**Regla dura:** `architecture.md` genérico **NO es un output válido en ningún caso**. La narrativa de contexto, objetivos, no-objetivos y concerns transversales vive **dentro** de la vista de dominio correspondiente (sección `## Contexto y alcance` y siguientes). Para multi-dominio, las preocupaciones transversales se documentan en la vista del dominio que las origina, con referencia cruzada desde las demás vistas.
+- `arch-backend.md` — servicios, módulos, capas, integraciones backend
+- `arch-frontend.md` — jerarquía de componentes, routing, estado, contratos con backend
+- `arch-mobile.md` — pantallas, navegación, estado, integraciones nativas
+- `arch-database.md` — entidades, relaciones, particionamiento, estrategia de migración
+- `arch-infra.md` — topología de despliegue, redes, observabilidad, secrets
+- `arch-api.md` — *(opcional)* contratos de API como producto (SDK público, OpenAPI compartido entre múltiples consumidores). Solo si la API es dominio central; si es endpoint interno, documentar dentro de `arch-backend.md`.
+- `arch-auth.md` — *(opcional)* identidad, autorización, tokens, sesiones. Solo si auth es dominio central; si es solo un guard sobre un endpoint, documentar dentro de `arch-backend.md`.
+- `arch-<otro-dominio>.md` — cualquier dominio cohesivo del sistema
 
-## Nombrado de archivos (OBLIGATORIO)
+Una vista cubre **una perspectiva** del sistema. No mezclar dominios en un solo archivo.
 
-Cada dominio tiene su propio archivo. Usar exactamente estos nombres.
+## Nomenclatura — `arch-<dominio>.md` (NUNCA `ard-<dominio>.md`)
 
-| Archivo | Cuándo crearlo |
-|---|---|
-| `ard-backend.md` | Servicios backend, APIs internas, lógica de dominio server-side (Go, Rust, Python, etc.) |
-| `ard-database.md` | Schema, migraciones, índices, patrones de acceso a datos |
-| `ard-frontend.md` | UI web, jerarquía de componentes (React, Astro, etc.), rutas, estado cliente |
-| `ard-mobile.md` | iOS/Android/Flutter — navegación, offline/sync, push, platform channels |
-| `ard-infrastructure.md` | Topología de despliegue, IaC, brokers/colas, observabilidad, CI/CD |
-| `ard-api.md` | Contrato de API cross-stack cuando la API es el dominio central (SDK público, OpenAPI compartido) |
-| `ard-auth.md` | Cuando auth (identidad, autorización, tokens, sesiones) es el dominio central |
+El nombre de los archivos es **siempre** `arch-<dominio>.md`. El prefijo `ard-` está deprecado y prohibido.
 
-❌ `architecture.md` genérico no es un output válido — usar siempre vistas de dominio nombradas.
+## Guides por dominio
 
-El orquestador verifica que las vistas de dominio relevantes existan antes de invocar al `spec-writer`. Archivos faltantes → se re-invoca al architect.
+Cargar el guide correspondiente al dominio antes de producir la vista. Los guides contienen el template detallado con secciones específicas, tabla de archivos involucrados, NFRs cuantificadas y contratos de interfaz.
 
-## Guías — cargar por vista
-
-Cada guía contiene el template + reglas de formato para una vista. Cargar SOLO las guías relevantes a la tarea.
-
-| Vista | Guía | Cuándo cargar |
+| Dominio | Guide | Cuándo cargar |
 |---|---|---|
-| Backend (`ard-backend.md`) | `guides/backend.md` | Trabajo de backend |
-| Frontend web (`ard-frontend.md`) | `guides/frontend.md` | Trabajo de frontend web |
-| Mobile (`ard-mobile.md`) | `guides/mobile.md` | Trabajo de mobile (Flutter, RN, nativo) |
-| Base de datos (`ard-database.md`) | `guides/database.md` | Cambios de DB |
-| Infraestructura (`ard-infrastructure.md`) | `guides/infrastructure.md` | Cambios de infra |
-| API cross-stack (`ard-api.md`) | `guides/api.md` | Contrato de API es el dominio central |
-| Auth (`ard-auth.md`) | `guides/auth.md` | Auth es el dominio central |
-| Convenciones transversales (MADR, etc.) | `guides/overview.md` | Solo para consultar formato MADR de ADRs y convenciones — **no produce archivo overview** |
+| backend | `guides/backend.md` | al producir `arch-backend.md` |
+| frontend | `guides/frontend.md` | al producir `arch-frontend.md` |
+| mobile | `guides/mobile.md` | al producir `arch-mobile.md` |
+| database | `guides/database.md` | al producir `arch-database.md` |
+| infrastructure | `guides/infrastructure.md` | al producir `arch-infra.md` |
+| api | `guides/api.md` | al producir `arch-api.md` |
+| auth | `guides/auth.md` | al producir `arch-auth.md` |
+| overview | `guides/overview.md` | siempre — visión general del sistema y secciones comunes embebidas |
 
-**Orden de generación (obligatorio):** vistas de dominio (en el orden en que el dominio aparece en la cadena de impacto: datos → backend → contratos → consumidores) → `adrs/`. No existe paso de "overview" separado — cada vista de dominio se autocontiene. El `spec.md` lo produce el `spec-writer` en una invocación separada después del cierre del architect — NO cargar `guides/spec.md` desde el architect.
+## Estructura mínima de una vista (arc42 + C4)
 
-## Consistencia de contratos cross-vista
+Cada `arch-<dominio>.md` debe contener al menos estas tres secciones:
 
-Cuando el architect genera múltiples vistas, los contratos DEBEN ser consistentes:
+````markdown
+# Architecture View — <dominio>
 
-1. **Schema OpenAPI backend ↔ Interface TypeScript frontend** — mismos nombres de campo, mismos tipos, mismo required/optional
-2. **Schema OpenAPI/gRPC backend ↔ Modelos Dart/Kotlin/Swift mobile** — mismos nombres de campo, mismos tipos
-3. **Tipos de persistencia backend ↔ Schema intent DB** — mismas columnas, mismos tipos, mismas constraints
-4. **Env vars de infra ↔ Referencias de config backend** — mismos nombres de variables
-5. **Push notification payloads infra/backend ↔ Handlers mobile** — misma estructura de payload
+> Feature: <feature_id> | Milestone: <milestone>
 
-**Regla:** Definir el contrato UNA VEZ en la vista primaria (usualmente backend), luego referenciar o derivar en vistas secundarias. Nunca duplicar con formas diferentes.
+## 1. Vista (C4 — contexto o contenedores)
 
-## Checklist de validación (auto-check del architect antes de cerrar)
+<Diagrama Mermaid embebido — nivel C4 apropiado al dominio:>
+- Para `arch-backend.md` / `arch-infra.md` → nivel **Contenedores** (servicios, DBs, brokers)
+- Para `arch-frontend.md` / `arch-mobile.md` → nivel **Componentes** (jerarquía + estado)
+- Para `arch-database.md` → `erDiagram` (entidades + relaciones)
 
-- [ ] Cada decisión en las vistas de dominio (o en su ADR correspondiente) tiene una razón ("por qué")
-- [ ] Contratos cross-vista son consistentes (mismas formas)
-- [ ] Todos los paths referenciados verificados con Glob/Grep
-- [ ] Archivos/paths nuevos marcados como `NEW`
-- [ ] Spec OpenAPI es YAML válido (si aplica)
-- [ ] DBML/DDL es sintácticamente correcto (si aplica)
-- [ ] Las reglas de convención no contradicen la arquitectura
-- [ ] Diagramas legibles (no más de 15 nodos por diagrama) — usar skill `generate-diagram` para producir bloques Mermaid con sintaxis válida
+```mermaid
+<diagrama>
+```
+
+## 2. Componentes principales
+
+<Tabla o lista — para cada componente del diagrama:>
+- **Nombre / path** — responsabilidad en una línea
+- **Depende de** — lista corta de componentes upstream
+- **Expuesto a** — lista corta de componentes downstream
+
+## 3. Atributos de calidad relevantes
+
+<Solo los que aplican al dominio. Una línea por atributo con valor concreto:>
+- **Latencia objetivo:** p99 < 300ms (si aplica)
+- **Disponibilidad:** SLO 99.9% (si aplica)
+- **Seguridad:** auth method, boundaries de confianza
+- **Escalabilidad:** dimensión de crecimiento esperado
+- **Observabilidad:** logs/metrics/traces que el dominio emite
+````
+
+## Reglas duras
+
+1. **Una vista por dominio.** No combinar backend + frontend en el mismo archivo.
+2. **Al menos un diagrama Mermaid embebido.** Sin diagrama, no es una vista — es prosa.
+3. **Las vistas NO duplican ADRs.** Si la vista necesita justificar una decisión, referenciar el ADR (`Ver ADR-NNN`). El razonamiento vive en el ADR, no en la vista.
+4. **Las vistas son ligeras.** Máx 2 páginas por archivo. Si crece más → partir en sub-vistas (`arch-backend-auth.md`, `arch-backend-events.md`).
+5. **Diagramas válidos.** Validar la sintaxis Mermaid con la skill `generate-diagram` antes de cerrar el archivo.
+6. **Componentes referenciados existen.** Si la vista menciona un path/módulo del repo, debe existir (o estar marcado como `NEW`).
+
+## Relación con los ADRs
+
+- La vista lista los componentes; los ADRs justifican las decisiones que dieron forma a esos componentes.
+- Si una decisión estructural cambia (ej. se introduce un broker entre dos servicios) → primero se escribe el ADR, luego se actualiza la vista.
+- Si una vista contradice un ADR → la vista está desactualizada, corregir la vista, no el ADR.
+
+## Output del architect
+
+El `architect` produce **ambos** artefactos en su run:
+
+1. **Architecture Views** (`arch-<dominio>.md`) — el mapa estructural del sistema desde las perspectivas relevantes al feature.
+2. **ADRs** (`adrs/ADR-NNN-<slug>.md`) — los registros de decisión Nygard para cada decisión arquitectónica significativa.
+
+Las vistas primero (estructura), los ADRs emergen mientras se toman las decisiones que dan forma a esa estructura.
+
+## Consumidores aguas abajo
+
+- `spec-writer` — lee **ambos** (vistas + ADRs) para producir `spec.md`.
+- `task-decomposer` — lee `arch-<dominio>.md` para entender capas y componentes, y `adrs/` para entender restricciones de decisiones.
+- `dba` / `dba-nosql` — leen `arch-database.md` + ADRs relevantes.
+- `diagrammer` — recibe `arch-<dominio>.md` como fuente de vistas a expandir en `.drawio`, y ADRs como contexto de decisiones.
+- Cualquier developer / reviewer — la vista es el mapa de orientación; los ADRs explican por qué.
+
+## Checklist de validación (antes de cerrar un `arch-<dominio>.md`)
+
+- [ ] Nombre de archivo: `arch-<dominio>.md` (no `ard-`)
+- [ ] Las tres secciones presentes: Vista, Componentes principales, Atributos de calidad
+- [ ] Al menos un diagrama Mermaid embebido y válido
+- [ ] Componentes referenciados existen en el repo o están marcados `NEW`
+- [ ] Atributos de calidad cuantificados cuando aplican (números, no adjetivos)
+- [ ] Decisiones que justifican la estructura referencian ADRs por número, no las re-explican
+- [ ] Tamaño ≤ 2 páginas

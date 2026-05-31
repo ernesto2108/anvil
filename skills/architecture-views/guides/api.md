@@ -1,8 +1,8 @@
-# Template: ard-api.md
+# Template: arch-api.md
 
 Inspirado en: Zalando RESTful API Guidelines + Stripe API design + Microsoft REST API Guidelines + OpenAPI 3.1 spec.
 
-**Generar cuando:** la API es el dominio central de la tarea. Es decir, la API es un producto en sí mismo — SDK público, OpenAPI compartido entre múltiples consumidores (frontend + mobile + partners), contrato versionado que vive más allá de un único servicio. Si la API es solo un endpoint interno de un servicio → documentar inline en `ard-backend.md` y NO crear este archivo.
+**Generar cuando:** la API es el dominio central de la tarea. Es decir, la API es un producto en sí mismo — SDK público, OpenAPI compartido entre múltiples consumidores (frontend + mobile + partners), contrato versionado que vive más allá de un único servicio. Si la API es solo un endpoint interno de un servicio → documentar inline en `arch-backend.md` y NO crear este archivo.
 
 ## Template
 
@@ -377,6 +377,6 @@ flowchart TD
 - **La tabla de consumidores se actualiza cuando aparece o se va un consumidor** — auditorías de deprecation dependen de ella
 - **Rate limiting es obligatorio en endpoints públicos** — al menos para tier `anonymous` y `authenticated`
 - **Formato de error es uniforme en toda la API** — los clientes parsean un solo shape
-- **Si esta vista existe, `ard-backend.md` referencia los contratos pero no los duplica** — single source of truth
+- **Si esta vista existe, `arch-backend.md` referencia los contratos pero no los duplica** — single source of truth
 - **El changelog del spec se versiona en git** — los cambios se reviewan como código, no como docs
 - **Trazabilidad a requirements:** cada endpoint nuevo idealmente liga a un FR de `requirements.md`

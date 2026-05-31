@@ -2,12 +2,12 @@
 
 Inspirado en: Google Design Docs + formato ADR.
 
-**Esta guía NO produce un archivo de salida.** `architecture.md` genérico ya no es un output válido — todo el ARD vive en vistas de dominio nombradas (`ard-backend.md`, `ard-database.md`, etc.).
+**Esta guía NO produce un archivo de salida.** `architecture.md` genérico ya no es un output válido — toda la arquitectura vive en vistas de dominio nombradas (`arch-backend.md`, `arch-database.md`, etc.).
 
 Esta guía existe para dos usos:
 
 1. **Plantilla de secciones comunes** que cada vista de dominio incorpora al inicio del archivo (Contexto y alcance, Objetivos, Alcance del cambio con `### Out of scope`, Convenciones aplicadas, Decisiones de diseño, Concerns transversales, Diagramas). Cuando la tarea es multi-dominio, estas secciones viven en la vista del dominio que las origina, con referencias cruzadas desde las demás.
-2. **Formato canónico MADR de ADRs** — el bloque `### ADR-NN` de abajo es el formato que el architect usa tanto en archivos ADR standalone (`adrs/ADR-NNN-<slug>.md`) como en decisiones inline dentro de una vista de dominio.
+2. **Formato canónico Nygard de ADRs** — el bloque `### ADR-NN` de abajo es el formato que el architect usa tanto en archivos ADR standalone (`adrs/ADR-NNN-<slug>.md`) como en decisiones inline dentro de una vista de dominio.
 
 ## Template — secciones a embeber en cada vista de dominio
 
@@ -54,19 +54,21 @@ Para tareas Small, mínimo latencia p99 y disponibilidad.
 
 ## Decisiones de diseño (ADR)
 
-<!-- Formato MADR por decisión. Un bloque por cada elección no obvia. -->
+<!-- Formato Nygard por decisión. Un bloque por cada elección no obvia. -->
 
 ### ADR-001 — <título en español>
 
-- **Estado:** Propuesto | Aceptado | Obsoleto | Reemplazado por ADR-NNN
-- **Contexto:** ¿Qué problema o restricción motivó esta decisión?
-- **Opciones consideradas:**
-  - **[Opción A]** — ventaja. Contra: desventaja.
-  - **[Opción B]** — ventaja. Contra: desventaja.
-  - **[Opción C]** — ventaja. Contra: desventaja.
-- **Decisión:** [opción elegida] — [fuerza principal]
-- **Consecuencias positivas:** ...
-- **Consecuencias negativas:** ...
+## Status
+[proposed | accepted | deprecated | superseded by ADR-NNN]
+
+## Context
+[Descripción del problema y las fuerzas en juego]
+
+## Decision
+[La decisión tomada — voz activa: "We will..."]
+
+## Consequences
+[Resultados esperados: positivos, negativos y neutros]
 
 <!-- Repetir bloque por cada decisión no obvia -->
 

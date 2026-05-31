@@ -6,6 +6,8 @@ model: medium
 skills:
   - lint
   - run-tests
+  - e2e-test-run
+  - test-api
 ---
 
 # Rol: Test Engineer (Multi-Stack)

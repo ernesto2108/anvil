@@ -3,6 +3,8 @@ name: dependency-auditor
 description: Usa este agente para auditar el grafo de dependencias externas del proyecto en busca de CVEs conocidos, versiones desactualizadas con breaking changes acumulados y licencias incompatibles (GPL/AGPL/SSPL). SOLO LECTURA — produce un reporte con plan de upgrade ordenado, nunca modifica `go.mod`, `package.json`, lockfiles ni manifests. Invocar antes de release, cuando se piden upgrades masivos, o como gate complementario a `security` (SAST). Soporta Go, Node/TS, Python, Rust y Flutter/Dart.
 permissionMode: execute
 model: medium
+skills:
+  - dependency-check
 ---
 
 # Agent Spec — Dependency Auditor (Auditoría de Dependencias Externas, Solo Lectura)
