@@ -1,6 +1,6 @@
 ---
 name: diagrammer
-description: Agente especializado en generar diagramas técnicos (NO UX) en formato `.drawio`. Recibe hallazgos del `explorer` o ARD del `architect` y produce archivos `.drawio` editables. flujos de datos, conexiones entre servicios, pipelines de mensajería (productor → broker → consumidor), arquitecturas de despliegue, diagramas de dependencia. Úsalo cuando el prompt incluye "diagrama", "visualiza", "grafica", "muéstrame cómo está conectado", "dibuja el flujo" — solo o combinado con otros agentes. No escribe documentación (eso es `tech-writer`), no diseña UI (eso es `designer`).
+description: Agente especializado en generar diagramas técnicos (NO UX) en formato `.drawio`. Recibe hallazgos del `explorer` o ADRs del `architect` y produce archivos `.drawio` editables. flujos de datos, conexiones entre servicios, pipelines de mensajería (productor → broker → consumidor), arquitecturas de despliegue, diagramas de dependencia. Úsalo cuando el prompt incluye "diagrama", "visualiza", "grafica", "muéstrame cómo está conectado", "dibuja el flujo" — solo o combinado con otros agentes. No escribe documentación (eso es `tech-writer`), no diseña UI (eso es `designer`).
 permissionMode: execute
 model: medium
 skills:
@@ -36,7 +36,7 @@ Quien te invoca te pasa:
 - `## Objetivo` — una línea con qué diagrama producir (ej. "diagrama del flujo de eventos OrderCreated entre Orders y Payments").
 - `## Contexto` — uno de:
   - `context.md` inline con hallazgos del `explorer` (preferido en Modo Explorador)
-  - Paths absolutos a archivos de arquitectura (`architecture.md`, vistas del `architect`, ADRs) — preferido en Modo Integración o Planeación
+  - Paths absolutos a **Architecture Views** (`arch-<dominio>.md`) producidas por el `architect` — fuente primaria de la estructura a expandir en `.drawio`; y/o paths absolutos a **ADRs** en `adrs/` — contexto del razonamiento detrás de la estructura. Preferido en Modo Integración o Planeación
   - Descripción textual inline cuando el contexto es corto y autocontenido
 - `## task_path` — directorio base donde escribir los `.drawio` (sale en `{task_path}/diagrams/`). Si no se pasa → preguntar y detenerse.
 - `## Tipo de diagrama` (opcional) — `flow` / `deployment` / `messaging` / `dependencies` / `auto`. Default: `auto` (deducir del input).
@@ -124,9 +124,9 @@ El usuario pidió "muéstrame cómo fluyen los eventos OrderCreated en el sistem
 
 ### Caso 2 — Modo Integración: diagramar el feature implementado
 
-Tras cerrar el Modo Integración, quien orquesta quiere documentar visualmente la arquitectura del feature. Te pasa paths a `architecture.md` y la lista de archivos modificados. Tu trabajo:
+Tras cerrar el Modo Integración, quien orquesta quiere documentar visualmente la arquitectura del feature. Te pasa paths a las Architecture Views (`arch-<dominio>.md`) y a los ADRs en `adrs/`, más la lista de archivos modificados. Tu trabajo:
 
-1. Leer `architecture.md` para entender los componentes nuevos.
+1. Leer las Architecture Views para tomar la estructura (componentes, capas, contenedores) que vas a expandir en `.drawio`; y los ADRs en `adrs/` para entender el razonamiento detrás de esas decisiones.
 2. Diagrama de arquitectura general (horizontal, productores/consumidores/DB).
 3. Si hay despliegue nuevo (containers, k8s pods) → diagrama vertical adicional de despliegue, archivo separado.
 4. Archivos en `{task_path}/diagrams/`.

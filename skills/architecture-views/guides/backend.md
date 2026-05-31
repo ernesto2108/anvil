@@ -1,4 +1,4 @@
-# Template: ard-backend.md
+# Template: arch-backend.md
 
 Inspirado en: diseño spec-driven de Stripe + bflorat Application View.
 
@@ -300,7 +300,7 @@ Los fragmentos OpenAPI/AsyncAPI/proto en este documento son **borradores**. El a
 
 ### Reglas de archivos spec
 
-- **El archivo spec es la fuente de verdad** — el fragmento en `ard-backend.md` es documentación de diseño, el archivo en `api/` o `proto/` es el contrato ejecutable
+- **El archivo spec es la fuente de verdad** — el fragmento en `arch-backend.md` es documentación de diseño, el archivo en `api/` o `proto/` es el contrato ejecutable
 - Si el archivo ya existe → **extenderlo** con los nuevos endpoints/eventos/RPCs. No sobrescribirlo
 - Si el archivo no existe → **crearlo** con la estructura mínima (info, servers, los contratos de esta tarea)
 - El developer implementa contra el archivo spec, no contra el fragmento del markdown
@@ -323,7 +323,7 @@ buf lint proto/
 ### Cuándo NO generar archivos spec
 
 - **Tareas Small** que no tocan endpoints, eventos ni RPCs → no aplica
-- **Tauri commands / IPC** → no hay estándar de spec ejecutable; documentar solo en `ard-backend.md`
+- **Tauri commands / IPC** → no hay estándar de spec ejecutable; documentar solo en `arch-backend.md`
 - **Endpoints internos sin consumidores externos** → evaluar; si solo lo consume el frontend del mismo repo, el spec es recomendado pero no obligatorio
 
 ## Reglas

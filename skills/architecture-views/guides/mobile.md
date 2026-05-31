@@ -1,4 +1,4 @@
-# Template: ard-mobile.md
+# Template: arch-mobile.md
 
 Inspirado en: Flutter architecture guide + Android App Architecture + iOS Human Interface Guidelines.
 

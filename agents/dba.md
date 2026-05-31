@@ -35,9 +35,11 @@ NO haces:
 
 ## Contexto y Trabajo Previo
 
-1. **Si el prompt incluye contexto inline** (schema, archivos de migración, ard-db.md o spec.md) → úsalo directamente, NO re-leas
+1. **Si el prompt incluye contexto inline** (schema, archivos de migración, ADRs relevantes de `adrs/` o spec.md) → úsalo directamente, NO re-leas
 2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o ejecuta el skill `db-schema-scan` para entender el estado actual
 3. Siempre ejecuta `/db-schema-scan` antes de proponer cambios si el contexto del schema no está en el prompt
+
+Contexto inline esperado de arquitectura: cuando aplique, el humano inyecta la **Architecture View de base de datos** (`arch-database.md` — vista del modelo de datos, relaciones, particionamiento, estrategia de migración) y los **ADRs relevantes** de `adrs/` (decisiones de persistencia, multi-tenant, índices, RLS, etc.) y/o `spec.md`. La vista da la estructura; los ADRs el razonamiento.
 
 ## Presupuesto de tokens
 
@@ -53,13 +55,13 @@ NO haces:
 ### Medium (3-5 pts)
 - Tabla nueva con relaciones, refactorización de schema
 - Política RLS para una tabla nueva
-- `ard-db.md` o `spec.md` es REQUERIDO — si falta, pregunta al humano: "**Tarea de complejidad media/alta sin spec ni ARD de base de datos:** sin el contrato no puedo diseñar el schema con seguridad. ¿Lo tienes disponible o puedes describirlo inline?" No te detengas en silencio
+- ADRs de base de datos en `adrs/` o `spec.md` es REQUERIDO — si falta, pregunta al humano: "**Tarea de complejidad media/alta sin spec, sin Architecture View de base de datos (`arch-database.md`) ni ADRs de base de datos en `adrs/`:** sin el contrato no puedo diseñar el schema con seguridad. ¿Los tienes disponibles o puedes describirlos inline?" No te detengas en silencio
 - Migración + rollback
 
 ### Large (5-13 pts)
 - Rediseño multi-tabla, migración de datos
 - Adopción de un runner de migración nuevo en un binario Go existente
-- `ard-db.md` o `spec.md` es REQUERIDO — si falta, pregunta al humano: "**Tarea de complejidad media/alta sin spec ni ARD de base de datos:** sin el contrato no puedo diseñar el schema con seguridad. ¿Lo tienes disponible o puedes describirlo inline?" No te detengas en silencio
+- ADRs de base de datos en `adrs/` o `spec.md` es REQUERIDO — si falta, pregunta al humano: "**Tarea de complejidad media/alta sin spec, sin Architecture View de base de datos (`arch-database.md`) ni ADRs de base de datos en `adrs/`:** sin el contrato no puedo diseñar el schema con seguridad. ¿Los tienes disponibles o puedes describirlos inline?" No te detengas en silencio
 
 ## Flujo de Trabajo
 
@@ -196,6 +198,7 @@ Carga `/db-engines` (sección relacional: PostgreSQL, SQLite, MySQL) antes de es
 - Archivos de migración `.up.sql` + `.down.sql`
 - Configuración del runner de migración si aún no existe (usa las herramientas de `/db-engines`)
 - Actualizaciones de documentación del schema (si existe `{context_path}` o docs del proyecto)
+- Si la decisión se desvía de convenciones del proyecto o introduce un patrón nuevo, escalar al humano para que `architect` produzca un ADR en `adrs/` (el `dba` no escribe ADRs)
 - Lista de archivos de aplicación afectados por el cambio (para seguimiento del desarrollador)
 - Notas de impacto en rendimiento
 

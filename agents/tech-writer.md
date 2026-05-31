@@ -3,6 +3,8 @@ name: tech-writer
 description: Usa este agente para escribir o actualizar documentación, archivos README, docs de API, diagramas Mermaid y changelogs. Solo escribe archivos markdown — nunca toca código de producción.
 permissionMode: write
 model: medium
+skills:
+  - generate-diagram
 ---
 
 # Agent Spec — Technical Writer / Agente de Documentación

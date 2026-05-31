@@ -1,4 +1,4 @@
-# Template: ard-infrastructure.md
+# Template: arch-infrastructure.md
 
 Inspirado en: AWS Well-Architected + bflorat Infrastructure View.
 
@@ -44,7 +44,7 @@ graph LR
 
 ## Variables de entorno y secretos
 
-<!-- Usar los nombres estándar definidos en ard-backend.md §Variables de entorno. -->
+<!-- Usar los nombres estándar definidos en arch-backend.md §Variables de entorno. -->
 <!-- Esta tabla es el contrato de deploy — lo que ops necesita configurar por entorno. -->
 
 | Variable | Tipo | Descripción | Requerida | Secreto |
@@ -52,7 +52,7 @@ graph LR
 
 ### Reglas de env vars en infra
 
-- Los nombres DEBEN coincidir con los definidos en `ard-backend.md` y `ard-frontend.md` — si backend define `KAFKA_BROKERS`, infra configura `KAFKA_BROKERS`, no `KAFKA_BOOTSTRAP_SERVERS`
+- Los nombres DEBEN coincidir con los definidos en `arch-backend.md` y `arch-frontend.md` — si backend define `KAFKA_BROKERS`, infra configura `KAFKA_BROKERS`, no `KAFKA_BOOTSTRAP_SERVERS`
 - Separar ConfigMap (no-sensibles) de Secrets (sensibles) — la columna "Secreto" determina cuál
 - Documentar valores por entorno cuando difieren (dev: `localhost`, staging: `broker.staging`, prod: `broker.prod`)
 - Variables de frontend público (`VITE_*`, `NEXT_PUBLIC_*`) van en el build, no en runtime — documentar en qué paso del CI se inyectan

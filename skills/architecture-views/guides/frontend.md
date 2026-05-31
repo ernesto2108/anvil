@@ -1,4 +1,4 @@
-# Template: ard-frontend.md
+# Template: arch-frontend.md
 
 Inspirado en: rcherny Front-End Architecture Checklist + diseño component-driven.
 

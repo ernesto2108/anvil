@@ -10,6 +10,8 @@ skills:
   - go-conventions
   - lint
   - run-tests
+  - python-conventions
+  - rust-conventions
 ---
 
 # Agent Spec — Senior Developer (Backend / Go)

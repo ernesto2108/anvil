@@ -178,10 +178,10 @@ Devuelve al humano con:
 
 **Nota:** La descomposición en tareas y la gestión del backlog son responsabilidad del **`task-decomposer`** — no del Architect. La cadena después de tu PRD depende del tamaño de la tarea:
 
-- **Tareas Medium+:** `requirements` transforma tu PRD en requirements EARS → `architect` produce el ARD (decisiones técnicas) → `spec-writer` produce `spec.md` (contrato implementable) → `task-decomposer` produce las tasks atómicas y actualiza el backlog.
+- **Tareas Medium+:** `requirements` transforma tu PRD en requirements EARS → `architect` produce ADRs en `adrs/` (decisiones técnicas) → `spec-writer` produce `spec.md` (contrato implementable) → `task-decomposer` produce las tasks atómicas y actualiza el backlog.
 - **Tareas Small:** (sin `requirements`) → `architect` o `spec-writer liviano` → `task-decomposer`.
 
-El milestone se hereda del ARD y se propaga por esta cadena.
+El milestone se hereda de los ADRs y se propaga por esta cadena.
 
 ## Referencia — Presupuesto de tokens
 
