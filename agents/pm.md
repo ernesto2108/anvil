@@ -167,7 +167,7 @@ Devuelve al humano con:
    - **Plataforma:** web | mobile | both
    - **Naturaleza:** nuevo | mejora visual | mejora funcional | ambas
    - **Stack:** `backend | frontend | fullstack` — usa exactamente estos valores; es el dato que el humano debe pasar a `architect` y `spec-writer` para que no lo pregunten de nuevo en su Etapa 0.1.
-   - **Nota para stack frontend/fullstack:** Cuando el stack es `frontend` o `fullstack`, agregar al humano: "Si la tarea incluye nuevas pantallas o componentes, se recomienda correr `designer-spec` antes de `architect` para que el DTD esté disponible."
+   - **Nota para stack frontend/fullstack:** Cuando el stack es `frontend` o `fullstack`, agregar al humano: "Si la tarea incluye nuevas pantallas o componentes, se recomienda correr `designer-spec` antes de `architect` para que el Design Spec esté disponible."
 4. **Preguntas abiertas** (si las hay) — el humano decide si escalar al usuario o continuar
 
 **Si el humano responde preguntas abiertas después de recibir el PRD:**

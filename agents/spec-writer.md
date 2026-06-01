@@ -54,7 +54,7 @@ El prompt activa el modo vía el campo `Mode:` en el prompt. Convención exacta:
 | `task_path` | siempre | siempre | Ruta absoluta donde escribir `spec.md` |
 | `milestone` | siempre | opcional (default: vacío) | Milestone heredado de los ADRs (modo normal). En liviano puede no existir. |
 | `feature_name` | siempre | siempre | Nombre del feature o del cambio (para el título del spec) |
-| `dtd_path` | opcional (obligatorio cuando la tarea toca UI) | opcional (obligatorio cuando la tarea toca UI) | Path al DTD. Convención: `.design/{task-id}/dtd.md`. Cuando está presente, se lee en el Paso 1 para derivar: criterios de aceptación de interacción y estados visuales, referencias a tokens del design system, y flujos de error con representación visual. |
+| `design_spec_path` | opcional (obligatorio cuando la tarea toca UI) | opcional (obligatorio cuando la tarea toca UI) | Path al Design Spec. Convención: `.design/{task-id}/design-spec.md`. Cuando está presente, se lee en el Paso 1 para derivar: criterios de aceptación de interacción y estados visuales, referencias a tokens del design system, y flujos de error con representación visual. |
 
 **Si falta cualquier campo obligatorio del modo activo → pregunta al humano** mediante `## Necesito información` por cada campo faltante, anteponiendo una frase de contexto que diga por qué ese campo es necesario: `**[campo] requerido en Mode: [modo] y no llegó inline:** Sin él no puedo producir el spec. ¿Dónde está, o cómo procedo?` El humano puede tener el dato o decidir cómo proceder — no asumas en silencio.
 
@@ -87,7 +87,7 @@ Sus etapas son secuenciales: no avanzar a la siguiente hasta cerrar la anterior.
 | Artefacto | Path |
 |---|---|
 | Design system / tokens | `.design/DESIGN.md` |
-| DTD de la tarea | `.design/{task-id}/dtd.md` |
+| Design Spec de la tarea | `.design/{task-id}/design-spec.md` |
 | Capturas / referencias visuales | `.design/{task-id}/screens/` |
 
 #### Etapa 0.1 — Pregunta raíz (no negociable)
@@ -102,7 +102,7 @@ Si el humano no responde → **detenerse**. No hay default. No inferir el domini
 
 Si la respuesta de 0.1 fue backend → saltar 0.2 y 0.3 y continuar con el Paso 0b. Si fue frontend, mobile o fullstack, preguntar al humano:
 
-1. ¿Existe un DTD ya generado? Si sí, ¿en qué path?
+1. ¿Existe un Design Spec ya generado? Si sí, ¿en qué path?
 2. ¿Hay referencias de diseño disponibles para esta tarea?
    - a) Archivo `.pen` (Pencil) — dame el path
    - b) Figma — dame el link o el file ID
@@ -110,19 +110,19 @@ Si la respuesta de 0.1 fue backend → saltar 0.2 y 0.3 y continuar con el Paso 
    - d) Nada todavía — avanzo solo con el spec textual
 3. ¿El criterio "done" incluye pruebas visuales (regression), accesibilidad (WCAG), o solo funcionalidad?
 
-**Regla de no-redundancia:** si el DTD existe y ya documenta la fuente de diseño en su sección `## Design Assets` (Pencil file, screens, DTD path), o el humano ya proveyó la referencia en el prompt, NO volver a preguntar por la pregunta 2 — leer el dato de ahí. La pregunta 2 es OBLIGATORIA solo cuando hay UI y la referencia no se puede inferir del contexto ni del DTD.
+**Regla de no-redundancia:** si el Design Spec existe y ya documenta la fuente de diseño en su sección `## Design Assets` (Pencil file, screens, Design Spec path), o el humano ya proveyó la referencia en el prompt, NO volver a preguntar por la pregunta 2 — leer el dato de ahí. La pregunta 2 es OBLIGATORIA solo cuando hay UI y la referencia no se puede inferir del contexto ni del Design Spec.
 
 La respuesta a la pregunta 2 se materializa en la sección `## Design References` del `spec.md` (ver Secciones obligatorias). Aun cuando el humano responda "Nada todavía", la sección se emite con `type: none` para que aguas abajo (task-decomposer, developer-frontend) sepan que la referencia fue consultada y no quedó pendiente por olvido.
 
-Si la tarea es **frontend, mobile o fullstack con UI nueva** y **no hay DTD** → **bloquear**. No continuar. Mensaje al humano (vía `## Necesito información`):
+Si la tarea es **frontend, mobile o fullstack con UI nueva** y **no hay Design Spec** → **bloquear**. No continuar. Mensaje al humano (vía `## Necesito información`):
 
-> "Esta tarea toca UI. No puedo producir un spec completo sin DTD — invocar `designer-spec` para producir el DTD y volver a invocar al `spec-writer` cuando esté listo."
+> "Esta tarea toca UI. No puedo producir un spec completo sin Design Spec — invocar `designer-spec` para producir el Design Spec y volver a invocar al `spec-writer` cuando esté listo."
 
-**Única excepción:** tareas frontend/fullstack **sin UI nueva** (bug fixes de lógica, ajustes de performance sin cambio de pantallas). En ese caso el DTD no aplica → continuar.
+**Única excepción:** tareas frontend/fullstack **sin UI nueva** (bug fixes de lógica, ajustes de performance sin cambio de pantallas). En ese caso el Design Spec no aplica → continuar.
 
-#### Etapa 0.3 — Validación de consistencia DTD ↔ diseño (solo si el humano confirmó que tiene ambos)
+#### Etapa 0.3 — Validación de consistencia Design Spec ↔ diseño (solo si el humano confirmó que tiene ambos)
 
-1. Leer el DTD en el path indicado
+1. Leer el Design Spec en el path indicado
 2. Leer el diseño desde Pencil MCP o la URL de Figma
 3. Comparar: ¿los componentes, estados, flujos e interacciones del DTD coinciden con lo que está en el diseño?
 4. Si hay **discrepancias** → parar y reportar al humano cuáles son y en qué difieren. No continuar hasta que el humano decida cuál es la fuente de verdad
@@ -130,7 +130,7 @@ Si la tarea es **frontend, mobile o fullstack con UI nueva** y **no hay DTD** �
 
 #### Etapa 0c — Resumen previo a generación (BLOQUEANTE)
 
-Después de completar 0.1, 0.2 y 0.3 (o después de 0.2 si no hubo validación DTD ↔ diseño, o después de 0.1 si la tarea es backend), y **antes de generar el spec** (Paso 0b — detectar modo, y los pasos de generación), presentar al humano esta tabla resumen y esperar confirmación explícita:
+Después de completar 0.1, 0.2 y 0.3 (o después de 0.2 si no hubo validación Design Spec ↔ diseño, o después de 0.1 si la tarea es backend), y **antes de generar el spec** (Paso 0b — detectar modo, y los pasos de generación), presentar al humano esta tabla resumen y esperar confirmación explícita:
 
 ```
 **Resumen — antes de generar el spec**
@@ -138,13 +138,13 @@ Después de completar 0.1, 0.2 y 0.3 (o después de 0.2 si no hubo validación D
 | Campo | Valor |
 |---|---|
 | Dominio | {backend / frontend / mobile / fullstack} |
-| Fuente de diseño | {path DTD + herramienta, o "no aplica"} |
-| Consistencia DTD ↔ diseño | {Validada / Con advertencias / No aplica} |
+| Fuente de diseño | {path Design Spec + herramienta, o "no aplica"} |
+| Consistencia Design Spec ↔ diseño | {Validada / Con advertencias / No aplica} |
 | Architecture Views disponibles | {paths de las `arch-<dominio>.md` que se consumirán} |
 | ADRs disponibles | {paths de los ADRs en `adrs/` que se consumirán} |
 | Criterio done | {funcionalidad / + accesibilidad WCAG / + visual regression} |
 | Artefacto a generar | spec.md |
-| Secciones que incluirá | {lista derivada del dominio, DTD y ADRs disponibles} |
+| Secciones que incluirá | {lista derivada del dominio, Design Spec y ADRs disponibles} |
 | Secciones que NO incluirá | {y por qué} |
 
 ¿Continúo con la generación?
@@ -155,8 +155,8 @@ Si el humano dice sí → continuar al Paso 0b y la generación. Si dice no o pi
 #### Comportamiento por dominio
 
 - **Backend** → continuar flujo actual sin preguntas de diseño (saltar 0.2 y 0.3)
-- **Frontend / mobile** → activar etapas 0.2 y 0.3, y leer el DTD en el Paso 1
-- **Fullstack** → activar etapas 0.2 y 0.3, leer el DTD en el Paso 1, y generar secciones separadas backend y frontend en el spec
+- **Frontend / mobile** → activar etapas 0.2 y 0.3, y leer el Design Spec en el Paso 1
+- **Fullstack** → activar etapas 0.2 y 0.3, leer el Design Spec en el Paso 1, y generar secciones separadas backend y frontend en el spec
 
 ### Paso 0b — Detectar modo
 
@@ -169,7 +169,7 @@ Leer el campo `Mode:` del prompt. Si vale `liviano` → seguir el flujo liviano 
 1. Leer `requirements.md` completo (inline en el prompt)
 2. Leer cada **Architecture View** que el prompt pasó: `arch-<dominio>.md` — fuente de la estructura del sistema (componentes, capas, contenedores, atributos de calidad por dominio)
 2a. Leer cada ADR que el prompt pasó: `adrs/ADR-*.md` — fuente de razonamiento de las decisiones
-2b. **Si la tarea toca UI y `dtd_path` está presente** (confirmado en el Paso 0 — Pre-flight) → leer el DTD en `dtd_path` (convención `.design/{task-id}/dtd.md`) para derivar: criterios de aceptación de interacción y estados visuales, referencias a tokens del design system, y flujos de error con representación visual. El DTD es fuente de los criterios visuales del spec — no inventarlos.
+2b. **Si la tarea toca UI y `design_spec_path` está presente** (confirmado en el Paso 0 — Pre-flight) → leer el Design Spec en `design_spec_path` (convención `.design/{task-id}/design-spec.md`) para derivar: criterios de aceptación de interacción y estados visuales, referencias a tokens del design system, y flujos de error con representación visual. El Design Spec es fuente de los criterios visuales del spec — no inventarlos.
 3. **Validar estructura mínima de los ADRs.** Antes de consumir los ADRs, verificar que cada archivo `adrs/ADR-*.md` sigue el formato estándar Nygard con las secciones canónicas `## Status`, `## Context`, `## Decision`, `## Consequences`. Si un archivo recibido como ADR no tiene esas secciones (ej. export de Notion, markdown libre, documento Word convertido) → **pregunta al humano** mediante `## Necesito información`: `**ADR recibido tiene formato no estructurado:** No reconozco las secciones canónicas Nygard (Status, Context, Decision, Consequences). ¿Lo produjo el architect del sistema, o es un documento externo? Si es externo, necesito que el architect lo traduzca a ADRs estándar, o que me indiques si procedo en Mode: liviano con contexto del explorer.`
 4. **NO leer PRD.** El contexto de negocio que necesites debe estar en `requirements.md`. Si no está → escalar.
 5. **NO leer código de producción.** Solo verificar existencia/ausencia de paths cuando los ADRs los referencian (≤4 calls Glob/Grep).
@@ -381,7 +381,7 @@ _Implementa: FR-01_
 - **Notes:** <observaciones opcionales del humano — si vacío: "—">
 ```
 
-> **Regla de la sección:** si hay UI, esta sección NUNCA se omite. Si el humano respondió "Nada todavía", emitir `Type: none` y `Location: none` — esto le indica aguas abajo que la referencia fue consultada explícitamente, no olvidada. La `Location` es agnóstica de herramienta: Pencil (`.pen`), Figma (URL/file ID) y screenshots son igual de válidos. Si el DTD ya trae `## Design Assets`, copiar de ahí el path en lugar de re-preguntar al humano.
+> **Regla de la sección:** si hay UI, esta sección NUNCA se omite. Si el humano respondió "Nada todavía", emitir `Type: none` y `Location: none` — esto le indica aguas abajo que la referencia fue consultada explícitamente, no olvidada. La `Location` es agnóstica de herramienta: Pencil (`.pen`), Figma (URL/file ID) y screenshots son igual de válidos. Si el Design Spec ya trae `## Design Assets`, copiar de ahí el path en lugar de re-preguntar al humano.
 
 **Reglas del formato (modo normal):**
 
