@@ -421,7 +421,7 @@ Nunca empezar desde la estructura de código.
 
 Antes de cerrar y reportar al humano, verificar:
 
-- [ ] Cada **Architecture View** sigue las tres secciones obligatorias (Vista C4 con diagrama Mermaid + Componentes principales + Atributos de calidad relevantes), checklist completo de la skill `architecture-views`
+- [ ] Cada **Architecture View** sigue las cuatro secciones obligatorias (Vista C4 con diagrama Mermaid + Componentes principales (blackbox) + Runtime View (sequenceDiagram) + Atributos de calidad relevantes), checklist completo de la skill `architecture-views`
 - [ ] Hay al menos una Architecture View por dominio relevante al feature (backend, frontend, mobile, database, infra según aplique)
 - [ ] Cada ADR sigue el formato estándar Nygard (`## Status`, `## Context`, `## Decision`, `## Consequences`)
 - [ ] Cada ADR tiene un solo concern (una decisión por archivo)
