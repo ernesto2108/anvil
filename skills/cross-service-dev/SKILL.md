@@ -121,12 +121,33 @@ Un agente QA ve el diff combinado de todos los servicios. Foco en:
 
 **GATE: puntuación < 7 → DETENER**
 
+### Fase 5.5 — Actualizar service-map.yaml (1 agente service-map-updater, CONDICIONAL)
+
+**Condición de activación:** el diff combinado del run toca al menos uno de:
+- Handlers HTTP (rutas, endpoints, controllers)
+- Archivos `.proto` o `.graphql`
+- Definiciones de eventos (publishers/subscribers, payloads)
+- Schemas de BD compartidos (tablas con readers cross-service)
+
+**Si el diff NO toca contratos → omitir esta fase.** El agente reporta "No hay cambios de contrato en este run" y el orquestador continúa a Fase 6.
+
+**Si el diff sí toca contratos:**
+
+1. El agente `service-map-updater` lee el diff consolidado de todos los servicios del run.
+2. Actualiza `{service_map_path}`:
+   - Agrega entradas nuevas (endpoints, eventos, dependencias descubiertas)
+   - Modifica las que cambiaron (firmas, payloads, consumers)
+   - **Propone** eliminar las obsoletas — la eliminación requiere **confirmación humana explícita** antes de aplicarse
+3. Output: diff aplicado a `service-map.yaml` + lista de eliminaciones propuestas pendientes de confirmación.
+
+> Esta fase reemplaza el paso manual **6b** original — si se ejecuta, ya deja `service-map.yaml` consistente con el nuevo estado.
+
 ### Fase 6 — Documentar + Reportar
 
 **6a.** Agregar a `{reports_path}/cross-service-changes.md`:
 - Fecha, operación, scope, cambios por servicio, contratos, trabajo pendiente, orden de deploy
 
-**6b.** Actualizar `{service_map_path}` para reflejar el nuevo estado
+**6b.** Actualizar `{service_map_path}` para reflejar el nuevo estado — **omitir si la Fase 5.5 ya lo actualizó**
 
 **6c.** Agente reporter → `{reports_path}/last-run.md`
 
@@ -144,6 +165,7 @@ Un agente QA ve el diff combinado de todos los servicios. Foco en:
 | Testing | tester | N | Sí |
 | QA | qa | 1 | — |
 | Seguridad | security | 0-1 | — |
+| Actualizar service-map | service-map-updater | 0-1 (condicional: solo si el diff toca handlers HTTP, `.proto`/`.graphql`, eventos o schemas compartidos) | — |
 | Reporte | reporter | 1 | — |
 
 ## Reglas Clave

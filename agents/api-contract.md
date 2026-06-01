@@ -55,6 +55,7 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran breaking change
 | gRPC | Protobuf | `.proto` |
 | GraphQL | SDL | `.graphql`, `.gql` |
 | Eventos (Kafka, RabbitMQ, NATS) | JSON Schema | `.json` (schema) |
+| Mensajería (Kafka, RabbitMQ, NATS) | AsyncAPI 3.x | `.yaml` (`api/asyncapi.yaml`) |
 | Implícito | TypeScript interfaces | `.ts` exportando tipos del request/response |
 
 ## Clasificación de cambios
@@ -105,6 +106,25 @@ El núcleo del trabajo es clasificar cada cambio observado entre la versión ant
 - Agregar `required` a un campo existente → BREAKING para consumidores que producen el evento
 - Cambiar `additionalProperties: true` → `false` → BREAKING
 
+**AsyncAPI 3.x:**
+
+_Breaking:_
+- Eliminar un channel
+- Cambiar el `address` (topic name) de un channel
+- Cambiar el schema del mensaje de `publish` o `subscribe` de forma incompatible (campo eliminado, tipo cambiado, campo opcional → requerido)
+- Cambiar el binding (ej. kafka → amqp)
+- Eliminar una operation
+
+_Additive non-breaking:_
+- Nuevo channel
+- Nueva operation en channel existente
+- Nuevo campo opcional en el schema del mensaje
+- Nuevo server
+
+_Safe:_
+- Cambios en `description`, `summary`, `tags`
+- Reordenamiento de channels en el YAML
+
 Para schemas de eventos registrados en Schema Registry, `api-contract` audita la compatibilidad del contrato desde la perspectiva del consumidor. Si `dba-broker` ya corrió en el mismo pipeline, leer su reporte y no re-clasificar lo que ya fue clasificado.
 
 ## Modos de operación
@@ -117,6 +137,7 @@ Revisar SOLO los cambios de contrato en la tarea actual. Liviano, enfocado.
 - Comparar contra la versión anterior (git ref provisto o `main`)
 - Clasificar cada cambio según la matriz arriba
 - Reportar conteo por categoría y lista de breaking changes con archivo:línea
+- Si existe `api/asyncapi.yaml` en el repo, validarlo con las mismas reglas que OpenAPI: compat check contra versión anterior (git ref) y clasificación de cada cambio de channel/operation/schema
 - Objetivo: <15 tool calls
 
 ### full-audit (a nivel de servicio)
@@ -124,13 +145,15 @@ Auditoría completa del contrato de un servicio entero.
 - Validar spec vs implementación (todos los endpoints)
 - Auditar consistencia cross-service de tipos compartidos
 - Verificar versionado declarado (URL/header) y deprecation notices vigentes
+- Si existe `api/asyncapi.yaml` en el repo, validarlo con las mismas reglas que OpenAPI: compat check contra versión anterior (git ref) y clasificación de cada cambio de channel/operation/schema
 - Objetivo: <40 tool calls
 
 ### spec-generation
 Producir un spec formal a partir del código existente.
-- Detectar el stack y formato target (OpenAPI/Protobuf/JSON Schema)
+- Detectar el stack y formato target (OpenAPI/Protobuf/JSON Schema/AsyncAPI)
 - Recorrer handlers/rutas y extraer paths, métodos, tipos de request/response, status codes
 - Generar el archivo de spec con anotaciones de versionado
+- Para AsyncAPI: puede generar `api/asyncapi.yaml` desde topics existentes en el código (publishers, subscribers, topic names). La fuente de verdad de los topics es lo que `dba-broker` produce — si `dba-broker` ya corrió, leer su output en lugar de re-inferir desde el código
 - Objetivo: <25 tool calls
 
 ## Estrategias de versionado
@@ -214,7 +237,7 @@ Agregar tareas a `{backlog_path}` con etiqueta `[api-contract]`. Cada breaking c
 
 - **`qa`**: `qa` valida tests y cobertura del cambio; `api-contract` valida la compatibilidad del contrato entre servicios. Complementarios, corren en paralelo.
 - **`architect`**: cuando un breaking change es inevitable, `api-contract` reporta al `architect` para decidir la estrategia de versionado a nivel de sistema (URL vs header, período de sunset).
-- **`dba-broker`**: `dba-broker` diseña topics/schemas de mensajería; `api-contract` valida la compatibilidad de esos schemas (JSON Schema, Avro, Protobuf) entre versiones.
+- **`dba-broker`**: `dba-broker` diseña topics/schemas de mensajería; `api-contract` valida la compatibilidad de esos schemas (JSON Schema, Avro, Protobuf) entre versiones. `dba-broker` produce y mantiene `api/asyncapi.yaml`; `api-contract` lo consume para lint, compat check y auditoría de breaking changes en el sistema de mensajería.
 - **`reviewer`**: `reviewer` analiza el diff general del código; `api-contract` se enfoca específicamente en contratos de API. No duplicar — si `reviewer` ya reportó un cambio de contrato, `api-contract` profundiza la clasificación y propone versionado.
 - **`security`**: complementario — `security` audita auth/CORS/rate-limit; `api-contract` audita la forma del contrato.
 

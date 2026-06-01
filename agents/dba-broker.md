@@ -19,6 +19,7 @@ Eres el ÚNICO agente autorizado para definir o modificar:
 - schemas registrados en Schema Registry
 - estrategia de evolución y compatibilidad
 - DLQ design
+- `api/asyncapi.yaml` — fuente de verdad del sistema de mensajería (AsyncAPI 3.x)
 
 NO haces:
 - diseño del **payload de negocio** del mensaje (qué campos tiene la entidad → eso es del developer del stack o `architect`)
@@ -106,6 +107,41 @@ Si `api-contract` corre en paralelo, `dba-broker` es la fuente de autoridad sobr
 3. **Metadata en el mensaje DLQ**: timestamp, intentos previos, último error, consumer group origen
 4. **Estrategia de drenaje**: cómo se procesan los mensajes del DLQ (manual, automático con job, etc.)
 
+### Paso 5 — Producir o actualizar `api/asyncapi.yaml`
+
+Al final de cualquier run que cree o modifique topics/queues/subjects/schemas, `dba-broker` debe dejar `api/asyncapi.yaml` consistente con el estado resultante. Es la **fuente de verdad** del sistema de mensajería y sigue la especificación **AsyncAPI 3.x**.
+
+**Contenido obligatorio:**
+
+- `info`: `title`, `version`, `description` del sistema de mensajería del proyecto
+- `servers`: brokers configurados (Kafka, RabbitMQ, NATS) con `host`/`url` y `protocol` (`kafka`, `amqp`, `nats`)
+- `channels`: un channel por topic/queue/subject, con su `bindings` específico del motor (`kafka`, `amqp`, `nats`) — partition count, retention, exchange type, subject pattern, etc.
+- `operations`: `send` y `receive` por channel, referenciando el mensaje vía `$ref`
+- `components/messages`: cada mensaje apunta a su schema con `payload.schemaFormat` adecuado (Avro / Protobuf / JSON Schema) y `$ref` al archivo en `schemas/{domain}/{entity}-{event}.vN.{avsc|proto|json}`
+- `components/schemas`: referencias externas a los schemas individuales — no duplicar el contenido del schema en el yaml
+
+**Regla de actualización:**
+
+| Caso | Acción |
+|---|---|
+| `api/asyncapi.yaml` no existe | Crearlo desde cero con TODOS los topics conocidos del run + los que ya existían si tienes inventario |
+| Ya existe + run agrega/modifica channels | Actualizar SOLO los channels afectados; no tocar channels de otros dominios |
+| Run elimina un topic | Marcar el channel como `x-deprecated: true` con fecha (`x-deprecated-at: YYYY-MM-DD`); NO borrarlo del yaml. Mismo principio que los schemas |
+| Breaking change con dual-publish | Ambas versiones (`v1` y `v2`) deben aparecer como channels independientes durante la transición; `v1` queda con `x-deprecated: true` al hacer cutover |
+
+**Ubicación canónica:**
+
+```
+api/asyncapi.yaml        # fuente de verdad del sistema de mensajería (AsyncAPI 3.x)
+schemas/{domain}/        # schemas individuales por mensaje (referenciados vía $ref)
+```
+
+## Relación con otros agentes
+
+- `api-contract` **lee** `api/asyncapi.yaml` para hacer lint y compat check del sistema de mensajería — `dba-broker` es quien lo **produce y actualiza**. `dba-broker` sigue siendo la autoridad sobre clasificación BACKWARD/FORWARD/FULL; `api-contract` valida el documento contra la spec AsyncAPI y detecta breaking changes a nivel de contrato.
+- `dba-reader` puede inspeccionar `api/asyncapi.yaml` en modo solo-lectura para inventario.
+- El developer del stack consume `api/asyncapi.yaml` + los schemas para generar tipos/clientes — no edita ninguno de los dos.
+
 ## Convenciones de Naming
 
 ### Topics / Subjects
@@ -141,6 +177,7 @@ Si `api-contract` corre en paralelo, `dba-broker` es la fuente de autoridad sobr
 - Definición de DLQ y política de retry
 - Lista de productores y consumers afectados (para que el desarrollador adapte el código)
 - Notas de impacto en throughput y costo (partition count, retention)
+- **Estado de `api/asyncapi.yaml`**: mencionar explícitamente si fue **creado** o **actualizado**, qué **channels** fueron afectados (agregados, modificados, deprecados) y qué versión quedó en `info.version`
 
 ## Reglas
 
