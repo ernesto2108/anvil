@@ -194,7 +194,7 @@ Sus etapas son secuenciales: no avanzar a la siguiente hasta cerrar la anterior.
 | Artefacto | Path |
 |---|---|
 | Design system / tokens | `.design/DESIGN.md` |
-| DTD de la tarea | `.design/{task-id}/dtd.md` |
+| Design Spec de la tarea | `.design/{task-id}/design-spec.md` |
 | Capturas / referencias visuales | `.design/{task-id}/screens/` |
 
 ### Etapa 0.1 — Pregunta raíz (no negociable)
@@ -209,19 +209,19 @@ Si el humano no responde → **detenerse**. No hay default. No inferir el domini
 
 Si la respuesta de 0.1 fue backend → saltar 0.2 y 0.3 y continuar con el Pre-check normal. Si fue frontend, mobile o fullstack, preguntar al humano:
 
-1. ¿Existe un DTD ya generado? Si sí, ¿en qué path? (convención esperada: `.design/{task-id}/dtd.md`)
+1. ¿Existe un Design Spec ya generado? Si sí, ¿en qué path? (convención esperada: `.design/{task-id}/design-spec.md`)
 2. ¿El diseño viene de Pencil MCP (`.pen`), Figma (URL), capturas estáticas, o no hay diseño todavía?
 3. ¿El criterio "done" incluye pruebas visuales (regression), accesibilidad (WCAG), o solo funcionalidad?
 
-> **Dependencia frontend (DTD bloqueante para UI):** Si el stack es `frontend` o `fullstack` y la tarea involucra UI (pantallas nuevas, jerarquías de componentes, flujos de navegación), el DTD es **obligatorio y bloqueante**. Si el humano confirma que NO existe → **bloquearse**. No proceder. Indicar al humano que debe correr `designer-spec` primero.
+> **Dependencia frontend (Design Spec bloqueante para UI):** Si el stack es `frontend` o `fullstack` y la tarea involucra UI (pantallas nuevas, jerarquías de componentes, flujos de navegación), el Design Spec es **obligatorio y bloqueante**. Si el humano confirma que NO existe → **bloquearse**. No proceder. Indicar al humano que debe correr `designer-spec` primero.
 >
-> Única excepción: si la tarea frontend/fullstack **no** involucra UI nueva (cambios de lógica, fixes de bug, ajustes de performance), el DTD no aplica.
+> Única excepción: si la tarea frontend/fullstack **no** involucra UI nueva (cambios de lógica, fixes de bug, ajustes de performance), el Design Spec no aplica.
 
-### Etapa 0.3 — Validación de consistencia DTD ↔ diseño (solo si el humano confirmó que tiene ambos)
+### Etapa 0.3 — Validación de consistencia Design Spec ↔ diseño (solo si el humano confirmó que tiene ambos)
 
-1. Leer el DTD en el path indicado
+1. Leer el Design Spec en el path indicado
 2. Leer el diseño desde Pencil MCP o la URL de Figma
-3. Comparar: ¿los componentes, estados, flujos e interacciones del DTD coinciden con lo que está en el diseño?
+3. Comparar: ¿los componentes, estados, flujos e interacciones del Design Spec coinciden con lo que está en el diseño?
 4. Si hay **discrepancias** → parar y reportar al humano cuáles son. No continuar hasta que el humano decida cuál es la fuente de verdad
 5. Si **coinciden** → continuar con la generación de ADRs
 
@@ -235,8 +235,8 @@ Antes de generar cualquier ADR, presentar al humano esta tabla y esperar confirm
 | Campo | Valor |
 |---|---|
 | Dominio | {backend / frontend / mobile / fullstack} |
-| Fuente de diseño | {path DTD + herramienta, o "no aplica"} |
-| Consistencia DTD ↔ diseño | {Validada / Con advertencias / No aplica} |
+| Fuente de diseño | {path Design Spec + herramienta, o "no aplica"} |
+| Consistencia Design Spec ↔ diseño | {Validada / Con advertencias / No aplica} |
 | Criterio done | {funcionalidad / + accesibilidad WCAG / + visual regression} |
 | Architecture Views previstas | {lista corta de `arch-<dominio>.md` que pienso producir — uno por dominio relevante} |
 | ADRs previstos | {lista corta de títulos de ADR que pienso producir} |
@@ -253,7 +253,7 @@ Si el humano dice sí → continuar al Pre-check y la generación. Si dice no o 
 
 1. **`requirements.md` inline (producido por el agente `requirements`)** → entrada primaria. Contiene la lista estructurada de FRs/NFRs con IDs trazables.
 2. PRD inline → entrada secundaria, **solo para contexto de negocio**.
-3. Si el contenido del DTD está en el prompt → usarlo, NO releer el archivo
+3. Si el contenido del Design Spec está en el prompt → usarlo, NO releer el archivo
 4. Si el contenido de context.md está en el prompt → usarlo, NO releer el archivo
 5. **Si no hay `requirements.md` en el prompt NI path → pregunta al humano** vía `## Necesito información`. Excepción: tareas Small (1-5 pts) donde explícitamente se saltó `requirements`.
 6. Si `requirements.md` tiene `## Decisiones abiertas` con items no resueltos → **pregunta al humano cómo resolverlas** antes de continuar.
@@ -421,7 +421,7 @@ Nunca empezar desde la estructura de código.
 
 Antes de cerrar y reportar al humano, verificar:
 
-- [ ] Cada **Architecture View** sigue las tres secciones obligatorias (Vista C4 con diagrama Mermaid + Componentes principales + Atributos de calidad relevantes), checklist completo de la skill `architecture-views`
+- [ ] Cada **Architecture View** sigue las cuatro secciones obligatorias (Vista C4 con diagrama Mermaid + Componentes principales (blackbox) + Runtime View (sequenceDiagram) + Atributos de calidad relevantes), checklist completo de la skill `architecture-views`
 - [ ] Hay al menos una Architecture View por dominio relevante al feature (backend, frontend, mobile, database, infra según aplique)
 - [ ] Cada ADR sigue el formato estándar Nygard (`## Status`, `## Context`, `## Decision`, `## Consequences`)
 - [ ] Cada ADR tiene un solo concern (una decisión por archivo)

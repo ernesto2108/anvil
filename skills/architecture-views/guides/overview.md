@@ -1,12 +1,10 @@
 # Guía: Convenciones transversales (Overview)
 
-Inspirado en: Google Design Docs + formato ADR.
-
-**Esta guía NO produce un archivo de salida.** `architecture.md` genérico ya no es un output válido — toda la arquitectura vive en vistas de dominio nombradas (`arch-backend.md`, `arch-database.md`, etc.).
+> **Naturaleza de esta guía.** Es un **template de referencia con secciones comunes**, no un archivo de salida propio. NO se produce un `overview.md` ni un `architecture.md` genérico — toda la arquitectura vive en vistas de dominio nombradas (`arch-backend.md`, `arch-database.md`, etc.). Esta guía se carga **siempre** (ver SKILL.md) para que el architect tenga a mano las secciones comunes a embeber en cada vista de dominio y el formato canónico Nygard de ADRs.
 
 Esta guía existe para dos usos:
 
-1. **Plantilla de secciones comunes** que cada vista de dominio incorpora al inicio del archivo (Contexto y alcance, Objetivos, Alcance del cambio con `### Out of scope`, Convenciones aplicadas, Decisiones de diseño, Concerns transversales, Diagramas). Cuando la tarea es multi-dominio, estas secciones viven en la vista del dominio que las origina, con referencias cruzadas desde las demás.
+1. **Plantilla de secciones comunes** que cada vista de dominio incorpora al inicio del archivo (Contexto y alcance, Objetivos, Convenciones aplicadas, Decisiones de diseño, Concerns transversales, Diagramas). Cuando la tarea es multi-dominio, estas secciones viven en la vista del dominio que las origina, con referencias cruzadas desde las demás. **El scope del feature (qué se hace y qué NO se hace en este cambio) NO va aquí — pertenece a `spec.md`.** Las Architecture Views documentan la estructura estable del sistema, no el alcance efímero de un cambio.
 2. **Formato canónico Nygard de ADRs** — el bloque `### ADR-NN` de abajo es el formato que el architect usa tanto en archivos ADR standalone (`adrs/ADR-NNN-<slug>.md`) como en decisiones inline dentro de una vista de dominio.
 
 ## Template — secciones a embeber en cada vista de dominio
@@ -38,14 +36,6 @@ Para tareas Small, mínimo latencia p99 y disponibilidad.
 ## Objetivos
 
 - ...
-
-## Alcance del cambio
-
-### In scope
-- <qué sistemas, módulos, archivos y comportamientos ESTÁN incluidos en este cambio>
-
-### Out of scope
-- <qué NO está incluido — explícito, no asumido>
 
 ## Convenciones aplicadas
 

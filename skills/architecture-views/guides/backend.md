@@ -1,7 +1,5 @@
 # Template: arch-backend.md
 
-Inspirado en: diseño spec-driven de Stripe + bflorat Application View.
-
 **Generar cuando:** hay trabajo de backend involucrado.
 
 ## Template
@@ -9,25 +7,32 @@ Inspirado en: diseño spec-driven de Stripe + bflorat Application View.
 ```markdown
 # Arquitectura Backend — <TASK-ID>
 
-## Alcance del cambio
+## Vista de contenedores (C4 L2) — whitebox del backend
 
-### In scope
-- <qué sistemas, módulos, archivos y comportamientos ESTÁN incluidos en este cambio>
+<!-- Diagrama estructural obligatorio: servicios, módulos, DBs y brokers que componen el backend de este feature. Es la vista whitebox arc42 § 5 / C4 Container. -->
 
-### Out of scope
-- <qué NO está incluido — explícito, no asumido>
+```mermaid
+graph LR
+  Client[Cliente] --> API[API Service]
+  API --> Domain[Módulo de dominio]
+  Domain --> Repo[(Repositorio / DB)]
+  Domain --> Broker[[Broker async]]
+  Broker --> Worker[Worker]
+```
 
-### Archivos involucrados
+> Mostrar SOLO los contenedores que participan en este feature. Los contratos ejecutables (OpenAPI/AsyncAPI/proto/Tauri) viven en el **Anexo — Contratos de interfaz** al final.
 
-| Archivo | Acción | Capa | Justificación |
+---
+
+## Componentes principales
+
+<!-- arc42 § 5 building-blocks (blackbox). Una fila por contenedor del diagrama. Describir responsabilidad y dependencias, NO la implementación interna. -->
+
+| Componente / path | Responsabilidad | Depende de | Expuesto a |
 |---|---|---|---|
-| `path/al/archivo` | CREATE / MODIFY / DELETE | dominio / handler / repo / infra / ui | razón de ubicación |
+| `services/<svc>/api` | Acepta requests HTTP, valida payload, delega al módulo de dominio | `domain` | Cliente externo via API Gateway |
 
-<!--
-Instrucción para el architect: poblar esta tabla con TODOS los archivos que toca el feature.
-Los archivos NEW (acción CREATE) deben tener justificación de ubicación explícita.
-Esta tabla es el contrato de handoff hacia el `spec-writer`.
--->
+> Llenar una fila por cada nodo del diagrama de Vista. Marcar con `NEW` los componentes que esta tarea introduce.
 
 ---
 
@@ -59,9 +64,136 @@ Esta tabla es el contrato de handoff hacia el `spec-writer`.
 
 ---
 
-## Contratos REST (OpenAPI) — incluir si aplica
+## Patrones de comunicación elegidos
 
-<!-- Spec ejecutable — fragmento YAML. -->
+> Esta sección enumera las garantías y políticas que el dominio backend asume; los contratos ejecutables (esquemas YAML/proto) viven en el **Anexo — Contratos de interfaz** al final.
+
+**Para eventos async (si aplica):**
+- **Garantías de entrega:** at-most-once / at-least-once / exactly-once
+- **Orden:** global / por partition key / sin garantía
+- **Idempotencia:** cómo el consumidor detecta duplicados (eventId, ventana de dedup)
+- **Dead letter:** qué pasa si el consumer falla N veces
+
+---
+
+## Casos de uso
+
+<!-- Ports & adapters: qué hace el sistema, no cómo -->
+- ...
+
+## Runtime View
+
+<!-- arc42 § 6 / C4 Dynamic. Diagrama de secuencia del escenario principal. Incluir happy path + path de fallo crítico (timeout, retry, fallback). -->
+
+### <Flujo principal>
+
+```mermaid
+sequenceDiagram
+  ...
+```
+
+## Taxonomía de errores
+
+| Código / tipo | Retryable | Descripción | Cuándo ocurre |
+|---|---|---|---|
+
+## Variables de entorno — incluir si aplica
+
+<!-- Listar TODAS las env vars nuevas que esta feature introduce. -->
+<!-- El developer las agrega al .env.example del proyecto. -->
+
+| Variable | Ejemplo | Descripción | Secreto |
+|---|---|---|---|
+| `<SERVICE>_<PROPERTY>` | `valor-ejemplo` | Qué configura | Sí / No |
+
+<!-- Ejemplo:
+| `KAFKA_BROKERS` | `localhost:9092` | Brokers de Kafka, separados por coma | No |
+| `KAFKA_SASL_PASSWORD` | `change-me` | Password SASL para Kafka | Sí |
+| `REDIS_URL` | `redis://localhost:6379/0` | URL de conexión a Redis | No |
+| `STRIPE_API_KEY` | `sk_test_...` | API key de Stripe | Sí |
+-->
+```
+
+### `.env.example`
+
+El developer DEBE agregar al `.env.example` del proyecto todas las env vars nuevas con valores placeholder:
+
+```env
+# Feature: <TASK-ID>
+KAFKA_BROKERS=localhost:9092
+KAFKA_GROUP_ID=my-service
+KAFKA_SASL_PASSWORD=change-me
+```
+
+**Reglas del `.env.example`:**
+- Se commitea a git — es documentación de configuración requerida
+- Valores placeholder que muestren el formato esperado, nunca secrets reales
+- Agrupar por feature o servicio con comentarios
+- `.env` (con valores reales) va en `.gitignore` — nunca en el repo
+
+```
+
+## Estrategia de persistencia
+
+- **Concurrencia:** ...
+- **Idempotencia:** clave de idempotencia, ventana de deduplicación
+- **Reintentos / backoff:** política, límite de intentos
+- **Manejo de fallos:** qué pasa si el downstream no responde
+
+## Preguntas abiertas
+
+| # | Pregunta | Impacto si no se resuelve | Responsable | Deadline |
+|---|----------|--------------------------|-------------|----------|
+| 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
+
+> Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
+
+## Anexo — Referencia de configuración
+
+> **Referencia operativa.** Este anexo centraliza las convenciones de naming y variables comunes como referencia rápida. La configuración de entorno canónica vive en `.env.example` y el runbook del proyecto.
+
+### Convenciones de naming
+
+- **Casing:** `SCREAMING_SNAKE_CASE` siempre
+- **Prefijo por servicio:** `DB_*`, `REDIS_*`, `KAFKA_*`, `AWS_*`, `OTEL_*`
+- **URLs completas:** sufijo `_URL` (ej. `DATABASE_URL`, `REDIS_URL`, `AMQP_URL`)
+- **Componentes separados:** `_HOST`, `_PORT`, `_NAME`, `_USER` cuando se necesita granularidad
+- **Secretos:** sufijo `_SECRET`, `_KEY`, `_PASSWORD`, `_TOKEN` — nunca `_PASS`
+- **Booleanos:** `ENABLE_*` o `*_ENABLED` con valores `true`/`false`
+- **APIs externas:** `<SERVICE>_API_KEY`, `<SERVICE>_API_URL`
+
+### Nombres estándar por infraestructura
+
+| Infraestructura | Variables estándar |
+|---|---|
+| **Base de datos** | `DATABASE_URL`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSL_MODE`, `DB_MAX_OPEN_CONNS` |
+| **Redis** | `REDIS_URL`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DB` |
+| **Kafka** | `KAFKA_BROKERS`, `KAFKA_GROUP_ID`, `KAFKA_TOPIC_PREFIX`, `KAFKA_SASL_USERNAME`, `KAFKA_SASL_PASSWORD` |
+| **NATS** | `NATS_URL`, `NATS_TOKEN`, `NATS_CLUSTER_ID` |
+| **RabbitMQ** | `AMQP_URL`, `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`, `RABBITMQ_VHOST` |
+| **AWS** | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET`, `SQS_QUEUE_URL`, `SNS_TOPIC_ARN` |
+| **GCP** | `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_PROJECT`, `GCS_BUCKET` |
+| **SMTP** | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` |
+| **Auth/JWT** | `JWT_SECRET`, `JWT_EXPIRY`, `JWT_ISSUER`, `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET` |
+| **HTTP server** | `PORT`, `HOST`, `APP_ENV`, `LOG_LEVEL` |
+| **Observabilidad** | `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `SENTRY_DSN` |
+
+**Regla:** usar los nombres estándar de la tabla cuando existan. No inventar nombres propios para infra conocida (ej. no usar `CACHE_ADDR` cuando el estándar es `REDIS_URL`).
+
+### Mapping a Docker / Kubernetes
+
+| Herramienta | Config no-sensible | Secrets |
+|---|---|---|
+| **docker-compose** | `environment:` o `env_file: .env` | `secrets:` de Docker Swarm, o `.env` excluido de imagen |
+| **K8s ConfigMap** | `envFrom: configMapRef` | `envFrom: secretRef` o `secretKeyRef` individual |
+
+ConfigMap/Secret names en `kebab-case` (ej. `app-config`). Keys internas en `SCREAMING_SNAKE_CASE`.
+
+## Anexo — Contratos de interfaz
+
+> **Fragmento ilustrativo.** La fuente de verdad es el archivo de spec externo (`api/openapi.yaml`, `api/asyncapi.yaml`, `proto/<package>/v1/*.proto`). Los YAML/proto aquí son borradores de diseño; el developer y el tester leen el archivo canónico del repo.
+
+### REST (OpenAPI) — incluir si aplica
 
 ```yaml
 openapi: "3.1.0"
@@ -94,11 +226,7 @@ components:
           type: string
 ```
 
----
-
-## Contratos de eventos / mensajes (AsyncAPI) — incluir si aplica
-
-<!-- Usar formato AsyncAPI para Kafka topics, RabbitMQ exchanges, SQS queues, etc. -->
+### Eventos / mensajes (AsyncAPI) — incluir si aplica
 
 ```yaml
 asyncapi: "3.0.0"
@@ -140,14 +268,7 @@ operations:
       $ref: "#/channels/<channelName>"
 ```
 
-**Garantías de entrega:** at-most-once / at-least-once / exactly-once
-**Orden:** global / por partition key / sin garantía
-**Idempotencia:** cómo el consumidor detecta duplicados (eventId, ventana de dedup)
-**Dead letter:** qué pasa si el consumer falla N veces
-
----
-
-## Contratos gRPC — incluir si aplica
+### gRPC — incluir si aplica
 
 ```proto
 service <ServiceName> {
@@ -161,9 +282,7 @@ message <RequestMsg> {
 }
 ```
 
----
-
-## Contratos Tauri commands (desktop IPC) — incluir si aplica
+### Tauri commands (desktop IPC) — incluir si aplica
 
 ```yaml
 commands:
@@ -173,115 +292,6 @@ commands:
     returns: Vec<DtoType>
     notes: "..."
 ```
-
----
-
-## Casos de uso
-
-<!-- Ports & adapters: qué hace el sistema, no cómo -->
-- ...
-
-## Comportamiento runtime
-
-### <Flujo principal>
-
-```mermaid
-sequenceDiagram
-  ...
-```
-
-## Taxonomía de errores
-
-| Código / tipo | Retryable | Descripción | Cuándo ocurre |
-|---|---|---|---|
-
-## Variables de entorno — incluir si aplica
-
-<!-- Listar TODAS las env vars nuevas que esta feature introduce. -->
-<!-- El developer las agrega al .env.example del proyecto. -->
-
-| Variable | Ejemplo | Descripción | Secreto |
-|---|---|---|---|
-| `<SERVICE>_<PROPERTY>` | `valor-ejemplo` | Qué configura | Sí / No |
-
-<!-- Ejemplo:
-| `KAFKA_BROKERS` | `localhost:9092` | Brokers de Kafka, separados por coma | No |
-| `KAFKA_SASL_PASSWORD` | `change-me` | Password SASL para Kafka | Sí |
-| `REDIS_URL` | `redis://localhost:6379/0` | URL de conexión a Redis | No |
-| `STRIPE_API_KEY` | `sk_test_...` | API key de Stripe | Sí |
--->
-```
-
-### Convenciones de naming
-
-- **Casing:** `SCREAMING_SNAKE_CASE` siempre
-- **Prefijo por servicio:** `DB_*`, `REDIS_*`, `KAFKA_*`, `AWS_*`, `OTEL_*`
-- **URLs completas:** sufijo `_URL` (ej. `DATABASE_URL`, `REDIS_URL`, `AMQP_URL`)
-- **Componentes separados:** `_HOST`, `_PORT`, `_NAME`, `_USER` cuando se necesita granularidad
-- **Secretos:** sufijo `_SECRET`, `_KEY`, `_PASSWORD`, `_TOKEN` — nunca `_PASS`
-- **Booleanos:** `ENABLE_*` o `*_ENABLED` con valores `true`/`false`
-- **APIs externas:** `<SERVICE>_API_KEY`, `<SERVICE>_API_URL`
-
-### Nombres estándar por infraestructura
-
-| Infraestructura | Variables estándar |
-|---|---|
-| **Base de datos** | `DATABASE_URL`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSL_MODE`, `DB_MAX_OPEN_CONNS` |
-| **Redis** | `REDIS_URL`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DB` |
-| **Kafka** | `KAFKA_BROKERS`, `KAFKA_GROUP_ID`, `KAFKA_TOPIC_PREFIX`, `KAFKA_SASL_USERNAME`, `KAFKA_SASL_PASSWORD` |
-| **NATS** | `NATS_URL`, `NATS_TOKEN`, `NATS_CLUSTER_ID` |
-| **RabbitMQ** | `AMQP_URL`, `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`, `RABBITMQ_VHOST` |
-| **AWS** | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET`, `SQS_QUEUE_URL`, `SNS_TOPIC_ARN` |
-| **GCP** | `GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_CLOUD_PROJECT`, `GCS_BUCKET` |
-| **SMTP** | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` |
-| **Auth/JWT** | `JWT_SECRET`, `JWT_EXPIRY`, `JWT_ISSUER`, `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET` |
-| **HTTP server** | `PORT`, `HOST`, `APP_ENV`, `LOG_LEVEL` |
-| **Observabilidad** | `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `SENTRY_DSN` |
-
-**Regla:** usar los nombres estándar de la tabla cuando existan. No inventar nombres propios para infra conocida (ej. no usar `CACHE_ADDR` cuando el estándar es `REDIS_URL`).
-
-### `.env.example`
-
-El developer DEBE agregar al `.env.example` del proyecto todas las env vars nuevas con valores placeholder:
-
-```env
-# Feature: <TASK-ID>
-KAFKA_BROKERS=localhost:9092
-KAFKA_GROUP_ID=my-service
-KAFKA_SASL_PASSWORD=change-me
-```
-
-**Reglas del `.env.example`:**
-- Se commitea a git — es documentación de configuración requerida
-- Valores placeholder que muestren el formato esperado, nunca secrets reales
-- Agrupar por feature o servicio con comentarios
-- `.env` (con valores reales) va en `.gitignore` — nunca en el repo
-
-### Mapping a Docker / Kubernetes
-
-| Herramienta | Config no-sensible | Secrets |
-|---|---|---|
-| **docker-compose** | `environment:` o `env_file: .env` | `secrets:` de Docker Swarm, o `.env` excluido de imagen |
-| **K8s ConfigMap** | `envFrom: configMapRef` | `envFrom: secretRef` o `secretKeyRef` individual |
-
-ConfigMap/Secret names en `kebab-case` (ej. `app-config`). Keys internas en `SCREAMING_SNAKE_CASE`.
-
-```
-
-## Estrategia de persistencia
-
-- **Concurrencia:** ...
-- **Idempotencia:** clave de idempotencia, ventana de deduplicación
-- **Reintentos / backoff:** política, límite de intentos
-- **Manejo de fallos:** qué pasa si el downstream no responde
-
-## Preguntas abiertas
-
-| # | Pregunta | Impacto si no se resuelve | Responsable | Deadline |
-|---|----------|--------------------------|-------------|----------|
-| 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
-
-> Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
 ```
 
 ## Archivos de spec ejecutables (OBLIGATORIO para tareas Medium+)

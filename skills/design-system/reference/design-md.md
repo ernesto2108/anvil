@@ -4,13 +4,13 @@ Formato estándar para el archivo `DESIGN.md` que vive en la raíz del repo. Es 
 
 ## Cuándo generarlo
 
-- El DTD incluye tokens nuevos o modificados (colores, tipografía, spacing, componentes) → generar/actualizar `DESIGN.md`
-- El DTD solo modifica pantallas sin cambiar tokens → omitir este paso
+- El Design Spec incluye tokens nuevos o modificados (colores, tipografía, spacing, componentes) → generar/actualizar `DESIGN.md`
+- El Design Spec solo modifica pantallas sin cambiar tokens → omitir este paso
 - Siempre en sync con el archivo `.pen` — si cambian tokens en una sesión futura, actualizar `DESIGN.md` en la misma invocación
 
 ## Cómo derivar los valores
 
-Tomar los valores directamente de los tokens definidos en el DTD (sección "Design Tokens"). No re-leer el archivo `.pen` — los valores ya están en contexto.
+Tomar los valores directamente de los tokens definidos en el Design Spec (sección "Design Tokens"). No re-leer el archivo `.pen` — los valores ya están en contexto.
 
 ## Template
 
@@ -89,7 +89,7 @@ components:
       disabled:
         backgroundColor: "{colors.neutral.200}"
         textColor: "{colors.neutral.400}"
-  # ... resto de componentes del DTD
+  # ... resto de componentes del Design Spec
 modes:
   light:
     background: "{colors.neutral.50}"

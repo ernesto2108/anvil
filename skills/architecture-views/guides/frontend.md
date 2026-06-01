@@ -1,35 +1,11 @@
 # Template: arch-frontend.md
 
-Inspirado en: rcherny Front-End Architecture Checklist + diseño component-driven.
-
 **Generar cuando:** hay trabajo de frontend involucrado.
 
 ## Template
 
 ```markdown
 # Arquitectura Frontend — <TASK-ID>
-
-## Alcance del cambio
-
-### In scope
-- <qué sistemas, módulos, archivos y comportamientos ESTÁN incluidos en este cambio>
-
-### Out of scope
-- <qué NO está incluido — explícito, no asumido>
-
-### Archivos involucrados
-
-| Archivo | Acción | Capa | Justificación |
-|---|---|---|---|
-| `path/al/archivo` | CREATE / MODIFY / DELETE | dominio / handler / repo / infra / ui | razón de ubicación |
-
-<!--
-Instrucción para el architect: poblar esta tabla con TODOS los archivos que toca el feature.
-Los archivos NEW (acción CREATE) deben tener justificación de ubicación explícita.
-Esta tabla es el contrato de handoff hacia el `spec-writer`.
--->
-
----
 
 ## Restricciones no-funcionales
 
@@ -60,6 +36,8 @@ Esta tabla es el contrato de handoff hacia el `spec-writer`.
 
 ## Jerarquía de componentes
 
+<!-- arc42 § 5 / C4 Component. Diagrama estructural obligatorio: páginas, layouts y componentes principales que componen la vista. -->
+
 ```mermaid
 graph TD
   Page --> Layout
@@ -68,30 +46,15 @@ graph TD
   ComponentA --> SubComponent1
 ```
 
-## Contratos de tipos
+## Componentes principales
 
-<!-- Interfaces TypeScript. Deben coincidir con contratos backend exactamente — mismos nombres de campo, mismos tipos. -->
+<!-- arc42 § 5 building-blocks (blackbox). Una fila por componente del diagrama. Describir responsabilidad, estado consumido y eventos emitidos, NO implementación interna. -->
 
-```typescript
-// Derivado de contratos REST/command del backend
-interface <ResponseDTO> {
-  id: string;
-  // ...
-}
+| Screen / Componente | Responsabilidad | Estado que consume | Eventos que emite |
+|---|---|---|---|
+| `<PageName>` | Punto de entrada de la ruta; orquesta layout y componentes hijos | `<Feature>State` (store global) | `route:enter`, `route:leave` |
 
-// Props del componente
-interface <ComponentName>Props {
-  data: <ResponseDTO>;
-  onAction: (id: string) => void;
-}
-
-// Forma del store / estado
-interface <Feature>State {
-  items: <ResponseDTO>[];
-  loading: boolean;
-  error: string | null;
-}
-```
+> Llenar una fila por cada nodo del diagrama. Marcar con `NEW` los componentes que esta tarea introduce.
 
 ## Capa de integración
 
@@ -135,39 +98,20 @@ stateDiagram-v2
 |---|---|---|---|
 | `VITE_API_URL` | `http://localhost:8080` | Vite | URL base de la API |
 
-### Convenciones por framework
-
-| Framework | Prefijo obligatorio | Acceso en código | Archivo |
-|---|---|---|---|
-| **Vite** | `VITE_` | `import.meta.env.VITE_*` | `.env`, `.env.local` |
-| **Next.js** | `NEXT_PUBLIC_` | `process.env.NEXT_PUBLIC_*` | `.env.local` |
-| **Create React App** | `REACT_APP_` | `process.env.REACT_APP_*` | `.env` |
-| **Astro** | `PUBLIC_` | `import.meta.env.PUBLIC_*` | `.env` |
-| **Nuxt** | `NUXT_PUBLIC_` | `useRuntimeConfig().public.*` | `.env` |
-
 **Reglas:**
 - Sin el prefijo del framework, la variable NO se expone al cliente — esto es intencional (seguridad)
 - **Nunca** poner API keys, secrets, o tokens en env vars del cliente — son visibles en el bundle
 - Env vars del cliente van en `.env.example` con el prefijo correcto
 - Variables server-side (SSR de Next/Nuxt) no necesitan prefijo público — tratarlas como backend
 
-### Variables comunes de frontend
-
-| Variable | Uso |
-|---|---|
-| `VITE_API_URL` / `NEXT_PUBLIC_API_URL` | URL base del backend |
-| `VITE_WS_URL` / `NEXT_PUBLIC_WS_URL` | URL del WebSocket |
-| `VITE_APP_ENV` | Entorno (development / staging / production) |
-| `VITE_SENTRY_DSN` | DSN de Sentry para error tracking del cliente |
-| `VITE_ANALYTICS_ID` | ID de Google Analytics / Plausible / etc. |
-| `VITE_FEATURE_*` | Feature flags del cliente |
-
 ## Rutas y navegación
 
 | Ruta | Componente | Guard | Lazy |
 |---|---|---|---|
 
-## Flujo de datos
+## Runtime View
+
+<!-- arc42 § 6 / C4 Dynamic. Flujo de datos del escenario principal: acción del usuario → componente → store/hook → cliente HTTP → backend → re-render. Incluir happy path + path de fallo (error, loading, retry). -->
 
 ```mermaid
 sequenceDiagram
@@ -181,6 +125,58 @@ sequenceDiagram
 | 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
 
 > Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
+
+## Anexo — Contratos de tipos
+
+> **Referencia de diseño.** Los tipos/interfaces/clases exactas se definen en `spec.md` durante la implementación. Este anexo documenta la intención del contrato para alinear frontend y backend antes de implementar.
+
+<!-- Interfaces TypeScript. Deben coincidir con contratos backend exactamente — mismos nombres de campo, mismos tipos. -->
+
+```typescript
+// Derivado de contratos REST/command del backend
+interface <ResponseDTO> {
+  id: string;
+  // ...
+}
+
+// Props del componente
+interface <ComponentName>Props {
+  data: <ResponseDTO>;
+  onAction: (id: string) => void;
+}
+
+// Forma del store / estado
+interface <Feature>State {
+  items: <ResponseDTO>[];
+  loading: boolean;
+  error: string | null;
+}
+```
+
+## Anexo — Referencia de configuración
+
+> **Referencia operativa.** Este anexo centraliza las convenciones de naming y variables comunes como referencia rápida. La configuración de entorno canónica vive en `.env.example` y el runbook del proyecto.
+
+### Convenciones por framework
+
+| Framework | Prefijo obligatorio | Acceso en código | Archivo |
+|---|---|---|---|
+| **Vite** | `VITE_` | `import.meta.env.VITE_*` | `.env`, `.env.local` |
+| **Next.js** | `NEXT_PUBLIC_` | `process.env.NEXT_PUBLIC_*` | `.env.local` |
+| **Create React App** | `REACT_APP_` | `process.env.REACT_APP_*` | `.env` |
+| **Astro** | `PUBLIC_` | `import.meta.env.PUBLIC_*` | `.env` |
+| **Nuxt** | `NUXT_PUBLIC_` | `useRuntimeConfig().public.*` | `.env` |
+
+### Variables comunes de frontend
+
+| Variable | Uso |
+|---|---|
+| `VITE_API_URL` / `NEXT_PUBLIC_API_URL` | URL base del backend |
+| `VITE_WS_URL` / `NEXT_PUBLIC_WS_URL` | URL del WebSocket |
+| `VITE_APP_ENV` | Entorno (development / staging / production) |
+| `VITE_SENTRY_DSN` | DSN de Sentry para error tracking del cliente |
+| `VITE_ANALYTICS_ID` | ID de Google Analytics / Plausible / etc. |
+| `VITE_FEATURE_*` | Feature flags del cliente |
 ```
 
 ## Reglas

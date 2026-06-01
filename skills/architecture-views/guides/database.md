@@ -1,7 +1,5 @@
 # Template: arch-database.md
 
-Inspirado en: sección "Data Storage" de Google + formato de spec DBML.
-
 **Generar cuando:** hay cambios de base de datos involucrados.
 
 ## Template
@@ -9,28 +7,26 @@ Inspirado en: sección "Data Storage" de Google + formato de spec DBML.
 ```markdown
 # Arquitectura de Base de Datos — <TASK-ID>
 
-## Alcance del cambio
+## Vista (Diagrama ERD)
 
-### In scope
-- <qué sistemas, módulos, archivos y comportamientos ESTÁN incluidos en este cambio>
+<!-- arc42 § 5 / C4 Container nivel datos. Diagrama estructural obligatorio: entidades y sus relaciones que componen el dominio de datos de este feature. -->
 
-### Out of scope
-- <qué NO está incluido — explícito, no asumido>
+```mermaid
+erDiagram
+  ...
+```
 
-### Archivos involucrados
+> El diagrama es la fuente principal de la vista. Las definiciones ejecutables (DBML / SQL DDL) viven en el **Anexo — Schema** al final de este documento y en los archivos de migración del repo.
 
-| Archivo | Acción | Capa | Justificación |
+## Componentes principales
+
+<!-- arc42 § 5 building-blocks (blackbox). Una fila por entidad del ERD. Describir responsabilidad, relaciones clave y servicio dueño. -->
+
+| Entidad / tabla | Responsabilidad | Relaciones clave | Owner (servicio) |
 |---|---|---|---|
-| `path/al/archivo` | CREATE / MODIFY / DELETE | dominio / handler / repo / infra / ui | razón de ubicación |
+| `<table_name>` | Almacena el agregado raíz de `<feature>` | FK a `<other_table>` | `services/<svc>` |
 
-<!--
-Instrucción para el architect: poblar esta tabla con TODOS los archivos que toca el feature
-(migraciones, schemas DBML, scripts SQL, modelos de persistencia, etc.).
-Los archivos NEW (acción CREATE) deben tener justificación de ubicación explícita.
-Esta tabla es el contrato de handoff hacia el `spec-writer`.
--->
-
----
+> Llenar una fila por cada entidad del ERD. Marcar con `NEW` las tablas/columnas que esta tarea introduce.
 
 ## Restricciones no-funcionales
 
@@ -48,9 +44,56 @@ Esta tabla es el contrato de handoff hacia el `spec-writer`.
 
 ---
 
-## Schema intent
+## Estrategia de migración
 
-<!-- Formato DBML — spec ejecutable. El agente DBA genera migraciones de esto. -->
+- **Tipo de gestión:** [migraciones en repo / SQL manual / sync tool / otro]
+- **Estado de la DB:** [nueva / existente en dev / existente en producción]
+- **Compatibilidad hacia atrás:** ...
+- **Orden de deploy:** [migración antes de código / código antes de migración / simultáneo]
+- **Plan de rollback:** ...
+- **Backfill de datos:** ...
+- **Riesgos de producción:** [bloqueos de tabla, downtime estimado, datos afectados]
+
+## Índices recomendados
+
+| Índice | Columnas | Justificación (qué query lo necesita) |
+|---|---|---|
+
+## Patrones de consulta
+
+<!-- Patrones de query esperados e implicaciones de rendimiento -->
+- ...
+
+## Runtime View
+
+<!-- arc42 § 6 / C4 Dynamic. Diagrama de secuencia del flujo principal de datos: write path (validación → transacción → commit → outbox) o read path (cache → query → projection). Incluir contención (locks, isolation level) o consistencia eventual si aplica. -->
+
+```mermaid
+sequenceDiagram
+  participant App
+  participant DB
+  participant Cache
+  App->>Cache: lookup
+  Cache-->>App: miss
+  App->>DB: SELECT ...
+  DB-->>App: rows
+  App->>Cache: set (TTL)
+  App-->>App: response
+```
+
+## Preguntas abiertas
+
+| # | Pregunta | Impacto si no se resuelve | Responsable | Deadline |
+|---|----------|--------------------------|-------------|----------|
+| 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
+
+> Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
+
+## Anexo — Schema
+
+> **Fragmento ilustrativo.** La fuente de verdad es el archivo de migración SQL en el repo. El DBML/SQL aquí es un borrador de diseño para comunicar la intención del schema; el agente DBA genera las migraciones canónicas a partir de esta intención.
+
+<!-- Formato DBML — borrador de diseño legible. -->
 
 ```dbml
 Table <table_name> {
@@ -76,41 +119,6 @@ ALTER TABLE runs ADD COLUMN status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE runs ADD COLUMN finished_at DATETIME;
 CREATE INDEX idx_runs_status ON runs(status);
 ```
-
-## Estrategia de migración
-
-- **Tipo de gestión:** [migraciones en repo / SQL manual / sync tool / otro]
-- **Estado de la DB:** [nueva / existente en dev / existente en producción]
-- **Compatibilidad hacia atrás:** ...
-- **Orden de deploy:** [migración antes de código / código antes de migración / simultáneo]
-- **Plan de rollback:** ...
-- **Backfill de datos:** ...
-- **Riesgos de producción:** [bloqueos de tabla, downtime estimado, datos afectados]
-
-## Índices recomendados
-
-| Índice | Columnas | Justificación (qué query lo necesita) |
-|---|---|---|
-
-## Patrones de consulta
-
-<!-- Patrones de query esperados e implicaciones de rendimiento -->
-- ...
-
-## Diagrama ERD
-
-```mermaid
-erDiagram
-  ...
-```
-
-## Preguntas abiertas
-
-| # | Pregunta | Impacto si no se resuelve | Responsable | Deadline |
-|---|----------|--------------------------|-------------|----------|
-| 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
-
-> Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
 ```
 
 ## Patrones de acceso — incluir si aplica

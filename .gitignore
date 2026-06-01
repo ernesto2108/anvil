@@ -2,6 +2,7 @@
 .handoff/
 .workspace
 AGENTS.md
+!skills/**/agents.md
 
 # Go binary
 /anvil

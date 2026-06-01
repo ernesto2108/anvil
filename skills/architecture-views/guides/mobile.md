@@ -1,7 +1,5 @@
 # Template: arch-mobile.md
 
-Inspirado en: Flutter architecture guide + Android App Architecture + iOS Human Interface Guidelines.
-
 **Generar cuando:** hay trabajo de mobile involucrado (Flutter, React Native, Swift, Kotlin).
 
 ## Template
@@ -43,7 +41,7 @@ Inspirado en: Flutter architecture guide + Android App Architecture + iOS Human 
 
 ## Navegación
 
-<!-- Stack-based, tab-based, drawer, modal flows -->
+<!-- arc42 § 5 / C4 Component. Stack-based, tab-based, drawer, modal flows. Diagrama estructural obligatorio de la composición de screens. -->
 
 ```mermaid
 graph TD
@@ -53,6 +51,16 @@ graph TD
   HomeStack --> DetailScreen
   DetailScreen --> EditModal
 ```
+
+## Componentes principales
+
+<!-- arc42 § 5 building-blocks (blackbox). Una fila por screen/componente principal del diagrama. Describir responsabilidad, estado consumido y eventos emitidos. -->
+
+| Screen / Componente | Responsabilidad | Estado que consume | Eventos que emite |
+|---|---|---|---|
+| `HomeScreen` | Vista principal post-login; lista de items | `<Feature>State` via BLoC/Provider | `home:refresh`, `home:item-tap` |
+
+> Llenar una fila por cada screen/componente del diagrama. Marcar con `NEW` los que esta tarea introduce.
 
 | Ruta / Screen | Stack | Guard (auth, permisos) | Deep link path |
 |---|---|---|---|
@@ -64,23 +72,25 @@ graph TD
 
 ---
 
-## Contratos de tipos
+## Runtime View
 
-<!-- Modelos Dart/Kotlin/Swift. Deben coincidir con contratos backend exactamente. -->
+<!-- arc42 § 6 / C4 Dynamic. Diagrama de secuencia del escenario principal del usuario: screen → bloc/cubit → repo → backend → estado → re-render. Incluir happy path + path de fallo (offline, error de red, token expirado). -->
 
-```dart
-// Derivado de contratos REST/gRPC del backend
-class ResponseDTO {
-  final String id;
-  // ...
-}
-
-// Estado de la feature
-class FeatureState {
-  final List<ResponseDTO> items;
-  final bool loading;
-  final String? error;
-}
+```mermaid
+sequenceDiagram
+  participant User
+  participant Screen
+  participant State as Bloc/Cubit/Provider
+  participant Repo
+  participant Backend
+  User->>Screen: acción
+  Screen->>State: dispatch evento
+  State->>Repo: solicitar datos
+  Repo->>Backend: HTTP/gRPC
+  Backend-->>Repo: respuesta
+  Repo-->>State: modelo
+  State-->>Screen: nuevo estado
+  Screen-->>User: render
 ```
 
 ---
@@ -154,26 +164,6 @@ stateDiagram-v2
 |---|---|---|---|
 | `API_BASE_URL` | `https://api.example.com` | Build flavor / scheme | URL base de la API |
 
-### Mecanismos por framework
-
-| Framework | Cómo se inyecta config | Archivo / herramienta |
-|---|---|---|
-| **Flutter** | `--dart-define=KEY=VALUE` en build, o `flutter_dotenv` | `.env` + `flutter_dotenv` package, o `--dart-define` |
-| **React Native** | `react-native-config` | `.env`, `.env.staging`, `.env.production` |
-| **Native iOS** | Xcode schemes + `Info.plist` / xcconfig | `.xcconfig` por environment |
-| **Native Android** | Build flavors + `BuildConfig` | `build.gradle` productFlavors |
-
-### Variables comunes de mobile
-
-| Variable | Uso |
-|---|---|
-| `API_BASE_URL` | URL base del backend |
-| `WS_URL` | URL del WebSocket |
-| `APP_ENV` | Entorno (dev / staging / prod) |
-| `SENTRY_DSN` | DSN de Sentry para crash reporting |
-| `ANALYTICS_KEY` | Key de analytics (Firebase, Amplitude, etc.) |
-| `FEATURE_*` | Feature flags |
-
 **Reglas:**
 - **Nunca** hardcodear URLs o keys en código fuente — siempre inyectar via config
 - Secrets (API keys privadas) van en secure storage del dispositivo o se obtienen post-auth — nunca en el bundle
@@ -212,6 +202,51 @@ stateDiagram-v2
 | 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
 
 > Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
+
+## Anexo — Contratos de tipos
+
+> **Referencia de diseño.** Los tipos/interfaces/clases exactas se definen en `spec.md` durante la implementación. Este anexo documenta la intención del contrato para alinear mobile y backend antes de implementar.
+
+<!-- Modelos Dart/Kotlin/Swift. Deben coincidir con contratos backend exactamente. -->
+
+```dart
+// Derivado de contratos REST/gRPC del backend
+class ResponseDTO {
+  final String id;
+  // ...
+}
+
+// Estado de la feature
+class FeatureState {
+  final List<ResponseDTO> items;
+  final bool loading;
+  final String? error;
+}
+```
+
+## Anexo — Referencia de configuración
+
+> **Referencia operativa.** Este anexo centraliza las convenciones de naming y variables comunes como referencia rápida. La configuración de entorno canónica vive en el `.env.example` (o equivalente del framework) y el runbook del proyecto.
+
+### Mecanismos por framework
+
+| Framework | Cómo se inyecta config | Archivo / herramienta |
+|---|---|---|
+| **Flutter** | `--dart-define=KEY=VALUE` en build, o `flutter_dotenv` | `.env` + `flutter_dotenv` package, o `--dart-define` |
+| **React Native** | `react-native-config` | `.env`, `.env.staging`, `.env.production` |
+| **Native iOS** | Xcode schemes + `Info.plist` / xcconfig | `.xcconfig` por environment |
+| **Native Android** | Build flavors + `BuildConfig` | `build.gradle` productFlavors |
+
+### Variables comunes de mobile
+
+| Variable | Uso |
+|---|---|
+| `API_BASE_URL` | URL base del backend |
+| `WS_URL` | URL del WebSocket |
+| `APP_ENV` | Entorno (dev / staging / prod) |
+| `SENTRY_DSN` | DSN de Sentry para crash reporting |
+| `ANALYTICS_KEY` | Key de analytics (Firebase, Amplitude, etc.) |
+| `FEATURE_*` | Feature flags |
 ```
 
 ## Reglas
