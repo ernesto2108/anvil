@@ -1,7 +1,5 @@
 # Template: arch-infrastructure.md
 
-Inspirado en: AWS Well-Architected + bflorat Infrastructure View.
-
 **Generar cuando:** hay cambios de infraestructura involucrados.
 
 ## Template
@@ -24,6 +22,8 @@ Inspirado en: AWS Well-Architected + bflorat Infrastructure View.
 
 ## Topología de despliegue
 
+<!-- arc42 § 7 Deployment View / C4 Deployment. Diagrama estructural obligatorio de cómo se despliegan los contenedores en la infraestructura. -->
+
 ```mermaid
 graph LR
   Client --> Gateway
@@ -31,6 +31,34 @@ graph LR
   ServiceA --> DB[(Database)]
   ServiceA --> Broker[[Broker]]
   Broker --> Worker
+```
+
+## Componentes principales
+
+<!-- arc42 § 5 building-blocks (blackbox) aplicado al nivel de despliegue. Una fila por nodo del diagrama. Describir responsabilidad y exposición. -->
+
+| Componente / path | Responsabilidad | Depende de | Expuesto a |
+|---|---|---|---|
+| `api-gateway` | Routing, TLS termination, rate limiting | Servicios upstream | Internet público |
+
+> Llenar una fila por cada nodo del diagrama de topología. Marcar con `NEW` los componentes que esta tarea introduce.
+
+## Runtime View
+
+<!-- arc42 § 6 / C4 Dynamic. Mostrar el flujo principal de un request o evento atravesando la infraestructura: client → gateway → service → broker/db → respuesta. Incluir path de fallo (failover, retry, escalado automático). -->
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant Gateway
+  participant Service
+  participant DB
+  Client->>Gateway: request
+  Gateway->>Service: forward
+  Service->>DB: query
+  DB-->>Service: result
+  Service-->>Gateway: response
+  Gateway-->>Client: response
 ```
 
 ## Brokers y colas — incluir si aplica
@@ -49,13 +77,6 @@ graph LR
 
 | Variable | Tipo | Descripción | Requerida | Secreto |
 |---|---|---|---|---|
-
-### Reglas de env vars en infra
-
-- Los nombres DEBEN coincidir con los definidos en `arch-backend.md` y `arch-frontend.md` — si backend define `KAFKA_BROKERS`, infra configura `KAFKA_BROKERS`, no `KAFKA_BOOTSTRAP_SERVERS`
-- Separar ConfigMap (no-sensibles) de Secrets (sensibles) — la columna "Secreto" determina cuál
-- Documentar valores por entorno cuando difieren (dev: `localhost`, staging: `broker.staging`, prod: `broker.prod`)
-- Variables de frontend público (`VITE_*`, `NEXT_PUBLIC_*`) van en el build, no en runtime — documentar en qué paso del CI se inyectan
 
 ## Escalabilidad
 
@@ -101,6 +122,17 @@ graph LR
 | 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
 
 > Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
+
+## Anexo — Referencia de configuración
+
+> **Referencia operativa.** Este anexo centraliza las reglas de naming y mapping a ConfigMap/Secrets como referencia rápida. La configuración canónica vive en los manifests de despliegue del proyecto.
+
+### Reglas de env vars en infra
+
+- Los nombres DEBEN coincidir con los definidos en `arch-backend.md` y `arch-frontend.md` — si backend define `KAFKA_BROKERS`, infra configura `KAFKA_BROKERS`, no `KAFKA_BOOTSTRAP_SERVERS`
+- Separar ConfigMap (no-sensibles) de Secrets (sensibles) — la columna "Secreto" determina cuál
+- Documentar valores por entorno cuando difieren (dev: `localhost`, staging: `broker.staging`, prod: `broker.prod`)
+- Variables de frontend público (`VITE_*`, `NEXT_PUBLIC_*`) van en el build, no en runtime — documentar en qué paso del CI se inyectan
 ```
 
 ## Reglas

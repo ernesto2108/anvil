@@ -1,7 +1,5 @@
 # Template: arch-api.md
 
-Inspirado en: Zalando RESTful API Guidelines + Stripe API design + Microsoft REST API Guidelines + OpenAPI 3.1 spec.
-
 **Generar cuando:** la API es el dominio central de la tarea. Es decir, la API es un producto en sí mismo — SDK público, OpenAPI compartido entre múltiples consumidores (frontend + mobile + partners), contrato versionado que vive más allá de un único servicio. Si la API es solo un endpoint interno de un servicio → documentar inline en `arch-backend.md` y NO crear este archivo.
 
 ## Template
@@ -9,28 +7,37 @@ Inspirado en: Zalando RESTful API Guidelines + Stripe API design + Microsoft RES
 ```markdown
 # Arquitectura de API — <TASK-ID>
 
-## Alcance del cambio
+## Vista (Topología del contrato)
 
-### In scope
-- <qué endpoints, schemas, versiones y consumidores ESTÁN incluidos en este cambio>
+<!-- arc42 § 5 / C4 Container. Diagrama estructural obligatorio de la API: consumidores, gateway, versiones activas y handlers. Es la vista whitebox del dominio API. -->
 
-### Out of scope
-- <qué NO está incluido — explícito, no asumido>
+```mermaid
+flowchart LR
+  FE[Frontend]
+  Mob[Mobile]
+  Partner[Partner]
+  Gateway[API Gateway]
+  V1[API v1]
+  V2[API v2]
+  FE --> Gateway
+  Mob --> Gateway
+  Partner --> Gateway
+  Gateway --> V1
+  Gateway --> V2
+```
 
-### Archivos involucrados
+> El diagrama es la fuente principal de la vista. Los fragmentos OpenAPI/AsyncAPI ejecutables viven en el **Anexo — Contratos de interfaz** al final de este documento y en los archivos de spec del repo (`api/openapi.yaml`, `api/asyncapi.yaml`).
 
-| Archivo | Acción | Capa | Justificación |
+## Componentes principales
+
+<!-- arc42 § 5 building-blocks (blackbox). Una fila por nodo del diagrama de topología. Describir responsabilidad, dependencias y consumidores expuestos. -->
+
+| Componente / path | Responsabilidad | Depende de | Expuesto a |
 |---|---|---|---|
-| `path/al/archivo` | CREATE / MODIFY / DELETE | dominio / handler / repo / infra / ui | razón de ubicación |
+| `API Gateway` | Routing, auth, rate limiting, versioning | Versiones activas (v1, v2) | Frontend, Mobile, Partners |
+| `API v1` | Handlers de la versión 1 del contrato | Servicios de dominio | Gateway |
 
-<!--
-Instrucción para el architect: poblar esta tabla con TODOS los archivos que toca el feature
-(spec OpenAPI/AsyncAPI/proto, generadores de cliente, tests de contrato, docs publicadas, etc.).
-Los archivos NEW (acción CREATE) deben tener justificación de ubicación explícita.
-Esta tabla es el contrato de handoff hacia el `spec-writer`.
--->
-
----
+> Llenar una fila por cada nodo del diagrama de Vista. Marcar con `NEW` los componentes que esta tarea introduce.
 
 ## Restricciones no-funcionales
 
@@ -68,62 +75,7 @@ Esta tabla es el contrato de handoff hacia el `spec-writer`.
 
 **Regla:** el archivo en `api/` o `proto/` es **canónico** — los fragmentos de este documento son borradores para diseño. El developer y los consumidores leen el archivo canónico.
 
-### Fragmento del contrato (borrador de diseño)
-
-```yaml
-openapi: "3.1.0"
-info:
-  title: <API Name>
-  version: 1.0.0
-  description: ...
-
-servers:
-  - url: https://api.example.com/v1
-    description: Production
-  - url: https://api.staging.example.com/v1
-    description: Staging
-
-paths:
-  /api/v1/<resource>:
-    get:
-      operationId: list<Resource>
-      summary: ...
-      parameters:
-        - name: cursor
-          in: query
-          schema: { type: string }
-        - name: limit
-          in: query
-          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
-      responses:
-        "200":
-          description: ...
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/<Resource>Page"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "429":
-          $ref: "#/components/responses/RateLimited"
-
-components:
-  schemas:
-    <Resource>:
-      type: object
-      required: [id, createdAt]
-      properties:
-        id: { type: string, format: ulid }
-        createdAt: { type: string, format: date-time }
-  responses:
-    Unauthorized:
-      description: ...
-    RateLimited:
-      description: ...
-      headers:
-        Retry-After:
-          schema: { type: integer }
-```
+> Ver fragmento ejecutable en el **Anexo — Contratos de interfaz** al final.
 
 ### Convenciones obligatorias
 
@@ -331,6 +283,21 @@ Retry-After: 42        # solo en 429
 
 ---
 
+## Runtime View
+
+<!-- arc42 § 6 / C4 Dynamic. Diagrama de secuencia del flujo principal de un request a la API: consumer → gateway → versión activa → handler → respuesta. Incluir path de versión deprecada (header `Deprecation`/`Sunset`) y/o path de rate limiting (429). -->
+
+```mermaid
+sequenceDiagram
+  participant Consumer
+  participant Gateway
+  participant API as API vN
+  Consumer->>Gateway: request (Accept: application/vnd.api+json;v=N)
+  Gateway->>API: route
+  API-->>Gateway: 200 OK + headers de versión
+  Gateway-->>Consumer: response
+```
+
 ## Diagramas
 
 ### Flujo de versionado y deprecación
@@ -367,6 +334,65 @@ flowchart TD
 | 1 | [pregunta concreta] | [qué se bloquea] | [persona/rol] | [fecha o "antes de implementación"] |
 
 > Si no hay preguntas abiertas, escribir explícitamente: "Ninguna — todas las ambigüedades fueron resueltas en el diseño."
+
+## Anexo — Contratos de interfaz
+
+> **Fragmento ilustrativo.** La fuente de verdad es el archivo de spec externo (`api/openapi.yaml`, `api/asyncapi.yaml`, `proto/<package>/v1/*.proto`). El YAML aquí es un borrador de diseño; los consumidores y el developer leen el archivo canónico.
+
+```yaml
+openapi: "3.1.0"
+info:
+  title: <API Name>
+  version: 1.0.0
+  description: ...
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+  - url: https://api.staging.example.com/v1
+    description: Staging
+
+paths:
+  /api/v1/<resource>:
+    get:
+      operationId: list<Resource>
+      summary: ...
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: ...
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/<Resource>Page"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+components:
+  schemas:
+    <Resource>:
+      type: object
+      required: [id, createdAt]
+      properties:
+        id: { type: string, format: ulid }
+        createdAt: { type: string, format: date-time }
+  responses:
+    Unauthorized:
+      description: ...
+    RateLimited:
+      description: ...
+      headers:
+        Retry-After:
+          schema: { type: integer }
+```
 ```
 
 ## Reglas

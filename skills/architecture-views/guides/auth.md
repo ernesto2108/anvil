@@ -1,7 +1,5 @@
 # Template: arch-auth.md
 
-Inspirado en: OWASP ASVS + OAuth 2.1 Security Best Current Practice + NIST SP 800-63.
-
 **Generar cuando:** la tarea tiene a auth (identidad, autorización, tokens, sesiones) como dominio central. Si la tarea solo agrega un guard de auth a un endpoint existente y la auth ya está modelada en otro lado → documentar inline en `arch-backend.md` y NO crear este archivo.
 
 ## Template
@@ -9,29 +7,33 @@ Inspirado en: OWASP ASVS + OAuth 2.1 Security Best Current Practice + NIST SP 80
 ```markdown
 # Arquitectura de Autenticación / Autorización — <TASK-ID>
 
-## Alcance del cambio
+## Vista (C4 — componentes del sistema de auth)
 
-### In scope
-- <qué actores, flujos, políticas y componentes de identidad ESTÁN incluidos en este cambio>
+<!-- arc42 § 5 / C4 Component. Diagrama estructural obligatorio (whitebox) del sistema de auth. Mostrar los componentes que participan en la autenticación: cliente, módulo de auth del backend, IdP externo (si aplica), token store, user store. Marcar con `NEW` los componentes nuevos. -->
 
-### Out of scope
-- <qué NO está incluido — explícito, no asumido>
+```mermaid
+flowchart LR
+  Client[Cliente SPA/Mobile] --> AuthModule[Auth Module]
+  AuthModule --> IdP[Identity Provider]
+  AuthModule --> TokenStore[(Token Store / Redis)]
+  AuthModule --> UserStore[(User Store / DB)]
+  IdP --> JWKS[JWKS Endpoint]
+```
 
-### Archivos involucrados
+> Los flujos dinámicos (login, refresh, logout) viven en la sección **Runtime View — Flujos de autenticación** más abajo. Esta vista es solo estructural.
 
-| Archivo | Acción | Capa | Justificación |
+## Componentes principales
+
+<!-- arc42 § 5 building-blocks (blackbox). Una fila por componente del diagrama. Describir responsabilidad y dependencias. -->
+
+| Componente | Responsabilidad | Depende de | Expuesto a |
 |---|---|---|---|
-| `path/al/archivo` | CREATE / MODIFY / DELETE | dominio / handler / repo / infra / ui | razón de ubicación |
+| `Auth Module` | Validación de tokens, emisión de sesiones, enforcement de authz | IdP, Token Store, User Store | Handlers del backend |
+| `Identity Provider` | Emisión y firma de tokens (login, refresh) | — | Cliente, Auth Module |
+| `Token Store` | Persistencia de refresh tokens / revocation list | — | Auth Module |
+| `User Store` | Registro local de usuarios y claims persistidos | — | Auth Module |
 
-<!--
-Instrucción para el architect: poblar esta tabla con TODOS los archivos que toca el feature
-(middlewares de auth, policies de autorización, modelos de usuario/sesión, integraciones con IdP,
-endpoints de login/logout/refresh, etc.).
-Los archivos NEW (acción CREATE) deben tener justificación de ubicación explícita.
-Esta tabla es el contrato de handoff hacia el `spec-writer`.
--->
-
----
+> Llenar una fila por cada nodo del diagrama. Marcar con `NEW` los componentes que esta tarea introduce.
 
 ## Restricciones no-funcionales
 
@@ -79,7 +81,9 @@ Esta tabla es el contrato de handoff hacia el `spec-writer`.
 
 ---
 
-## Flujos de autenticación
+## Runtime View — Flujos de autenticación
+
+<!-- Esta sección cumple el rol de Runtime View (arc42 § 6 / C4 Dynamic) para el dominio auth: los flujos de login/logout/refresh con sus sequenceDiagrams son el escenario principal del dominio. -->
 
 ### Estrategia elegida
 
