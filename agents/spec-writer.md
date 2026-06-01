@@ -124,7 +124,7 @@ Si la tarea es **frontend, mobile o fullstack con UI nueva** y **no hay Design S
 
 1. Leer el Design Spec en el path indicado
 2. Leer el diseño desde Pencil MCP o la URL de Figma
-3. Comparar: ¿los componentes, estados, flujos e interacciones del DTD coinciden con lo que está en el diseño?
+3. Comparar: ¿los componentes, estados, flujos e interacciones del Design Spec coinciden con lo que está en el diseño?
 4. Si hay **discrepancias** → parar y reportar al humano cuáles son y en qué difieren. No continuar hasta que el humano decida cuál es la fuente de verdad
 5. Si **coinciden** → continuar con la generación del spec
 
@@ -373,7 +373,7 @@ _Implementa: FR-01_
 ## Design References
 
 <!-- OBLIGATORIO cuando la tarea toca UI (frontend/mobile/fullstack con UI nueva o cambio visual). -->
-<!-- Materializa la respuesta del humano a la pregunta 2 de la Etapa 0.2, o el dato leído del DTD (## Design Assets). -->
+<!-- Materializa la respuesta del humano a la pregunta 2 de la Etapa 0.2, o el dato leído del Design Spec (## Design Assets). -->
 <!-- Si la tarea es backend pura o frontend sin UI nueva, emitir el header con `_No aplica — tarea sin UI._`. -->
 
 - **Type:** figma | pen | screenshots | none
