@@ -17,10 +17,32 @@
 
 ---
 
+## Secciones del spec.md
+
+| Sección | Condición de inclusión |
+|---|---|
+| Contexto y objetivo | Siempre |
+| No-objetivos | Siempre |
+| Criterios de aceptación | Siempre |
+| Testing strategy | Siempre |
+| Pre-condiciones | Si el cambio tiene dependencias de estado previo |
+| Decisiones / alternativas consideradas | Si hay ADRs o decisiones en el brief |
+| Mapa de contratos | Si hay contratos entre componentes (cross-stack o explícitos en ADRs) |
+| Mapa de implementación | Si hay Architecture Views, ADRs, o el brief es suficientemente detallado |
+| Observabilidad | Si hay NFRs de observabilidad o el cambio lo amerita |
+| Variables de entorno nuevas | Si el cambio introduce env vars |
+| Coordinación externa | Si hay dependencias de equipos externos |
+| Design references | Si la tarea toca UI |
+
+---
+
 ## Template
 
 ```markdown
 # SPEC: <Nombre del feature> — <TASK-ID>
+
+> Inputs consumidos: {lista de lo que existía — requirements.md / ADRs / Architecture Views / brief inline}
+> Milestone: <milestone> (si existe)
 
 ## Contexto y objetivo
 
@@ -29,17 +51,6 @@
 ## No-objetivos
 
 <!-- Exclusiones explícitas de scope. Qué esta tarea NO hace. -->
-- ...
-
-## Límites de implementación
-
-### Siempre hacer
-- ...
-
-### Preguntar antes de hacer
-- ...
-
-### Nunca hacer
 - ...
 
 ## Pre-condiciones
