@@ -1,6 +1,6 @@
 # Template: spec.md
 
-**Generado por:** agente `spec-writer`, después de recibir el ARD del `architect`.
+**Generado por:** agente `spec-writer` a partir del contexto disponible (brief, requirements, ADRs, Architecture Views, resumen del explorer, o cualquier combinación).
 **Consumido por:** los developers de stack (`developer-backend` / `developer-frontend` / `developer-mobile`), `tester`, `QA`, `task-decomposer`.
 
 ## Qué ES y qué NO ES el spec.md
@@ -41,8 +41,19 @@
 ```markdown
 # SPEC: <Nombre del feature> — <TASK-ID>
 
-> Inputs consumidos: {lista de lo que existía — requirements.md / ADRs / Architecture Views / brief inline}
 > Milestone: <milestone> (si existe)
+
+## Fuentes consumidas
+
+| Fuente | Tipo | Origen |
+|---|---|---|
+| {nombre descriptivo} | brief \| requirements \| arch-view \| adr \| explorer \| design \| repo | {path local, URL, repo, o "inline en el prompt"} |
+
+<!--
+Columna **Tipo**: `brief`, `requirements`, `arch-view`, `adr`, `explorer`, `design`, `repo`.
+Columna **Origen**: path absoluto local, URL (Linear, GitHub, Figma, Jira), nombre del repo (`github.com/org/repo`), o `inline en el prompt`.
+Una fila por fuente consumida. Si solo hubo brief inline, una sola fila con `brief` / `inline en el prompt`.
+-->
 
 ## Contexto y objetivo
 
@@ -107,7 +118,7 @@
 
 ### Utils a reutilizar (verificación previa OBLIGATORIA)
 
-<!-- Antes de proponer un util/helper nuevo, el architect ejecuta Grep en directorios -->
+<!-- Antes de proponer un util/helper nuevo, el spec-writer (o el explorer si ya exploró el repo) ejecuta Grep en directorios -->
 <!-- de utilidades comunes (`internal/util/`, `pkg/util/`, `src/lib/`, `src/utils/`) -->
 <!-- y reporta el resultado. NO crear un util nuevo sin descartar primero los existentes. -->
 
@@ -177,7 +188,7 @@
 
 ## Reglas
 
-- spec.md se genera DESPUÉS de todas las vistas de arquitectura — las referencia, no al revés
+- spec.md referencia las vistas de arquitectura cuando existen — no las duplica. Si no hay vistas, trabaja con el contexto disponible (brief, ADRs, resumen del explorer).
 - Cada AC debe ser testeable tal cual — "el sistema funciona correctamente" no es un AC
 - El mapa de implementación debe listar cada archivo que el developer tocará — sin sorpresas a mitad de tarea
 - **Cada archivo con acción CREATE debe tener "Ubicación: por qué aquí"** anclado en un archivo vecino existente o en el patrón del módulo. Sin esa columna llena → SPEC incompleto, el developer rebota la tarea ("SPEC sin justificación de ubicación para `X` — reinvocar architect")

@@ -1,6 +1,6 @@
 ---
 name: spec-writer
-description: Provee el template accionable y las reglas de formato para producir `spec.md` a partir del contexto disponible (requirements, ADRs, Architecture Views, brief inline, o combinación de estos). Usar siempre al inicio de la invocación del agente `spec-writer`, antes de leer inputs o emitir el spec.
+description: Provee el template accionable y las reglas de formato para producir `spec.md` a partir del contexto disponible (requirements, ADRs, Architecture Views, brief inline, o combinación de estos, resumen del explorer, código existente del repo). Usar siempre al inicio de la invocación del agente `spec-writer`, antes de leer inputs o emitir el spec.
 ---
 
 # Spec Writer — Template accionable de `spec.md`
@@ -17,7 +17,7 @@ El `spec.md` es el contrato self-contained que el developer consume sin re-leer 
 
 ## Cuándo cargar
 
-- **Siempre** al inicio de la invocación del agente `spec-writer`, antes del Paso 0 — Pre-flight.
+- Al inicio del **Paso 2** del agente `spec-writer` — antes de leer ningún input confirmado. Cargarlo antes garantiza que el template y las condiciones de inclusión estén disponibles al momento de construir el spec.
 - Antes de emitir cualquier `spec.md`.
 
 ## Guides por dominio
