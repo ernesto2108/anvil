@@ -69,6 +69,14 @@ Si el humano no proporcionó alguno de los siguientes, abrir una sección `## Ne
    - Si es **feature/historia**: un archivo `.md` por task, nombrado `<FEATURE_ID>-<NN>-<slug>.md`.
    - Si es **épica**: un archivo padre `<FEATURE_ID>-epic-<slug>.md` + un archivo por cada subtask en la misma estructura que para feature/historia.
 
+   **OBLIGATORIO — Granularidad de escritura según tipo (sin excepción):**
+
+   Esta regla aplica **independientemente del destino** (path local, URL de Outline, u otra herramienta externa). Nunca consolidar múltiples tasks en un solo documento.
+
+   - **feature / historia** → **un documento separado por cada task**. Si el destino es una URL de herramienta externa (ej. Outline), crear **un documento hijo por task** dentro del documento destino proporcionado. **NO** consolidar todas las tasks en un solo documento.
+   - **épica** → crear el **documento padre en la URL destino** + **un documento hijo por cada subtask**.
+   - **Fallback para destinos externos sin soporte de documentos hijos** → generar el contenido de cada task como un **bloque separado y claramente delimitado** y reportar al humano para que los distribuya manualmente (un documento por task). Nunca emitir un único bloque consolidado como entrega final.
+
 Si se cumple cualquier condición de escalación de la skill (>15 tasks, ciclo de dependencias, decisión técnica faltante), detener y reportar con el formato de escalación definido ahí.
 
 ## Output de cierre
