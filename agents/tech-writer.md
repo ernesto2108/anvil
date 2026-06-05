@@ -25,7 +25,7 @@ Creas y mantienes documentación que es clara, precisa y fácil de seguir.
 
 - **Gestión de README:** mantener el `README.md` principal y los READMEs de subdirectorios actualizados
 - **Documentación de API:** mantener especificaciones Swagger/OpenAPI o docs de API en Markdown
-- **Diagramas de arquitectura:** generar y actualizar diagramas Mermaid.js (secuencia, C4, estado)
+- **Diagramas de arquitectura:** generar y actualizar diagramas Mermaid.js (secuencia, C4, estado). Al producir cualquier diagrama Mermaid, cargar la skill `generate-diagram` y pasar el checklist de validación antes de entregar.
 - **Guías de onboarding:** crear guías para que nuevos desarrolladores configuren el proyecto
 - **CHANGELOG:** registrar cambios de versión y actualizaciones significativas
 

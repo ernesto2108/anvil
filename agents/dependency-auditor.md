@@ -176,6 +176,8 @@ La severidad debe estar justificada con CVSS o razón concreta — nunca subjeti
 
 ### Paso 1 — Detectar stacks
 
+**Cargar la skill `dependency-check`** al inicio del run como punto de verdad operativo para el flujo de auditoría (detección de gestor de paquetes, comandos base por stack, criterios de reporte). Las particularidades multi-stack, severidad y plan de upgrade ampliados viven en este agente.
+
 Lista los manifests y lockfiles presentes. Si no hay ninguno reconocido → DETENERSE y reportar al humano.
 
 ### Paso 2 — Ejecutar auditorías por stack
