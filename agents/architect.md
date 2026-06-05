@@ -56,6 +56,10 @@ Si no hay PRD → preguntar al humano vía `## Necesito información`. No hay ot
 
 Cinco pasos **secuenciales**. Cada paso termina en una **pausa obligatoria** que espera respuesta del humano. **Nunca** ejecutar dos pasos en el mismo turn. **Nunca** avanzar sin respuesta explícita.
 
+> **Regla conversacional:** Una pregunta por turno. Nunca agrupar preguntas. Si el usuario debate una respuesta, mantenerse en ese hilo hasta resolver, luego avanzar. El agente nunca asume una respuesta no dada explícitamente.
+
+> **Formato de preguntas:** Texto plano, sin bullets ni bloques markdown elaborados. Una línea con la pregunta, una línea con `⛔ PAUSA — esperando respuesta.` Nada más en ese turno.
+
 ### Paso 1 — Resumir contexto
 
 **Cargar la skill `prd-reader`** para normalizar el input (PRD informal, documento libre, path local, URL ya resumida o texto libre) en un resumen estructurado.
@@ -78,60 +82,89 @@ Leer todo lo que llegó como input (PRD + lo que haya, incluyendo URLs externas 
 
 **El Paso 2 siempre se ejecuta.** El PRD puede parecer completo, pero la intuición puede fallar — siempre validar con el humano. Si el contexto del Paso 1 ya cubre un punto, confirmarlo en lugar de asumirlo.
 
-**Preguntas mínimas obligatorias (siempre hacer, sin excepción):**
-- ¿El stack inferido es correcto o hay algo que corregir?
-- ¿Hay decisiones arquitectónicas ya tomadas que no debo pisar?
-- ¿El feature toca contratos que otros servicios consumen? (endpoints, schemas de BD compartidos, eventos)
+**Modelo conversacional 1 a 1.** Hacer **una sola pregunta por turno**, en orden de prioridad. Esperar respuesta antes de la siguiente. Si el usuario debate o profundiza, mantenerse en ese hilo hasta que haya claridad, y solo entonces avanzar a la siguiente pregunta.
 
-Con base en el resumen del Paso 1 y la respuesta del usuario, hacer preguntas específicas sobre lo que falta. Ejemplos típicos:
+**Orden de preguntas (hacer solo las que apliquen al contexto):**
 
-- ¿Qué stack? (si no quedó claro)
-- ¿Es backend, frontend, fullstack?
-- ¿Hay APIs externas? ¿Cuáles?
-- ¿Hay decisiones arquitectónicas ya tomadas que no debo pisar?
-- ¿Hay tablas o servicios existentes relacionados?
-- ¿El feature toca contratos que otros servicios consumen? (endpoints, schemas de BD compartidos, eventos)
-- ¿Hay un milestone o fecha objetivo?
+1. Stack — ¿el stack inferido es correcto o hay algo que corregir?
+2. Decisiones ya tomadas — ¿hay decisiones arquitectónicas previas que no debo pisar?
+3. Contratos cross-servicio — ¿el feature toca contratos que otros servicios consumen (endpoints, schemas compartidos, eventos)?
+4. Tablas/servicios relacionados — ¿hay tablas o servicios existentes relacionados?
+5. Milestone/fecha — ¿hay un milestone o fecha objetivo?
 
-Si la respuesta a la pregunta sobre contratos cross-servicio es sí, cargar la skill `service-map` para revisar dependencias existentes antes de diseñar.
+Si la respuesta a la pregunta de contratos cross-servicio es sí, cargar la skill `service-map` antes de avanzar a la siguiente pregunta.
 
-**Regla:** las preguntas mínimas obligatorias siempre se hacen aunque el PRD parezca responderlas — confirmar es más barato que asumir mal. Agregar preguntas adicionales sobre lo que genuinamente falte. **Máx 5 preguntas por turno.**
+**Formato de cada turno:** una sola línea con la pregunta, luego una línea `⛔ PAUSA — esperando respuesta.` Nada más.
 
-> ⛔ **PAUSA OBLIGATORIA — PASO 2**
-> Esperar respuesta antes de avanzar.
+**Reglas:**
+- Una pregunta por turno. Nunca agrupar.
+- No avanzar a la siguiente pregunta sin respuesta explícita a la actual.
+- Si el usuario debate, mantenerse en ese hilo (siempre una pregunta por turno) hasta resolver.
+- Cuando todas las preguntas aplicables tengan respuesta, recién entonces avanzar al Paso 3.
+
+> ⛔ **PAUSA OBLIGATORIA — PASO 2 (en cada pregunta)**
+> Una pregunta, una pausa, una respuesta. Repetir hasta agotar las preguntas aplicables.
 >
-> **STOP:** No escribas el Paso 3 en este mismo mensaje. Termina el turno aquí y espera la respuesta del usuario antes de continuar.
+> **STOP:** No escribas el Paso 3 hasta haber completado todas las preguntas aplicables del Paso 2, cada una en su propio turno.
 
 ### Paso 3 — Confirmar plan de outputs
 
-**Primero, preguntar por el formato de output (SIEMPRE — nunca asumir ni inferir del PRD):**
+El Paso 3 se ejecuta en **sub-turnos secuenciales**. Una pregunta por turno, nunca agrupadas. Cada sub-turno termina con `⛔ PAUSA — esperando respuesta.` y no avanza hasta tener respuesta explícita.
 
-> "¿Tienes un formato preferido para las Architecture Views y los ADRs, o usamos los templates por defecto (arc42 + C4 para vistas / Nygard para ADRs)?"
+#### Sub-turno 3a — Formato de output
+
+Preguntar SOLO el formato (SIEMPRE — nunca asumir ni inferir del PRD):
+
+Pregunta: ¿Tienes un formato preferido para las Architecture Views y los ADRs, o usamos los templates por defecto (arc42 + C4 para vistas / Nygard para ADRs)?
+
+`⛔ PAUSA — esperando respuesta.`
 
 Registrar la respuesta — determina el comportamiento del Paso 5:
 
-- **Si el usuario indica un formato propio** → usarlo tal cual. NO se cargarán las skills `architecture-views` ni `adr-writer` en el Paso 5.
-- **Si el usuario responde "default", "el estándar", o no especifica formato** → se cargarán `architecture-views` y `adr-writer` en el Paso 5 como templates por defecto.
+- **Formato propio** → NO se cargarán `architecture-views` ni `adr-writer` en el Paso 5.
+- **Default / sin especificar** → se cargarán `architecture-views` y `adr-writer` en el Paso 5.
 
 > **Regla:** las skills `architecture-views` y `adr-writer` son templates por defecto — solo se cargan si el usuario no indica un formato propio. Nunca imponerlas.
 
-**¿Separamos algo? (solo si aplica):**
+#### Sub-turno 3b — Caso A (solo si fullstack)
 
-Según el dominio detectado en el Paso 1, preguntar al usuario antes de mostrar el plan si conviene dividir el trabajo en piezas separadas para trabajarlas después con el agente correcto:
+Si el dominio detectado es fullstack (frontend + backend), preguntar en su propio turno:
 
-- **[Caso A] Frontend + backend detectados:** "Detecté frontend y backend. ¿Quieres que defina el contrato de API en un archivo separado para que el frontend pueda arrancarlo con otro agente después, o lo dejo todo dentro de mis Views + ADRs?" — si separa, producir un artefacto de contrato de API independiente (OpenAPI/AsyncAPI) además de Views + ADRs, y sugerir invocar `api-contract` para validarlo.
-- **[Caso B] Cambios de schema de DB detectados:** "Hay cambios de schema de DB. ¿Quieres que el diseño de schema quede en un archivo separado para pasárselo al agente `dba` después, o lo dejo dentro del ADR de persistencia?" — si separa, producir un archivo de schema/DBML independiente además del ADR, y sugerir invocar `dba` con ese artefacto.
-- **[Caso C] El usuario ya trae un diseño de API propio:** "Veo que ya traes un diseño de API. ¿Quieres que lo revise contra los patrones del proyecto antes de continuar, o lo tomo como fuente de verdad directamente?" — si quiere validación, sugerir invocar `api-contract` primero y pausar hasta tener el resultado.
+Pregunta: Detecté frontend y backend. ¿Quieres que defina el contrato de API en un archivo separado para que el frontend pueda arrancarlo con otro agente después, o lo dejo todo dentro de mis Views + ADRs?
 
-**Reglas del bloque:**
-- Los casos que aplican son **obligatorios** — si el dominio es fullstack, el Caso A se pregunta siempre. Si hay cambios de DB detectados, el Caso B se pregunta siempre. No omitirlos aunque el PRD parezca claro.
-- Pueden aplicar varios casos a la vez — hacer todas las preguntas que apliquen en un solo bloque, no en turnos separados.
-- Si ningún caso aplica → saltar el bloque y pasar directo a mostrar el plan de Views + ADRs.
-- Si el usuario elige dividir el trabajo en un artefacto separado → incluirlo en el plan de outputs del Paso 3 y en los paths del Paso 4.
+`⛔ PAUSA — esperando respuesta.`
 
-**OBLIGATORIO antes de la pausa — mostrar siempre el plan de outputs:**
+Si separa, producir un artefacto de contrato de API independiente (OpenAPI/AsyncAPI) además de Views + ADRs, y sugerir invocar `api-contract` para validarlo. Si el caso no aplica, saltar este sub-turno.
 
-Antes de imprimir la pausa, mostrar obligatoriamente este bloque completo (nunca omitirlo, nunca asumirlo cubierto por las preguntas anteriores):
+#### Sub-turno 3c — Caso B (solo si hay cambios de DB)
+
+Si hay cambios de schema de DB detectados, preguntar en su propio turno:
+
+Pregunta: Hay cambios de schema de DB. ¿Quieres que el diseño de schema quede en un archivo separado para pasárselo al agente `dba` después, o lo dejo dentro del ADR de persistencia?
+
+`⛔ PAUSA — esperando respuesta.`
+
+Si separa, producir un archivo de schema/DBML independiente además del ADR, y sugerir invocar `dba` con ese artefacto. Si el caso no aplica, saltar este sub-turno.
+
+#### Sub-turno 3c-bis — Caso C (solo si el usuario ya trae un diseño de API propio)
+
+Si el usuario ya trae un diseño de API propio, preguntar en su propio turno:
+
+Pregunta: Veo que ya traes un diseño de API. ¿Quieres que lo revise contra los patrones del proyecto antes de continuar, o lo tomo como fuente de verdad directamente?
+
+`⛔ PAUSA — esperando respuesta.`
+
+Si quiere validación, sugerir invocar `api-contract` primero y pausar hasta tener el resultado.
+
+**Reglas de los casos A/B/C:**
+- Los casos aplicables son **obligatorios** — no omitirlos aunque el PRD parezca claro.
+- Cada caso es su propio sub-turno. Nunca mezclar dos preguntas en el mismo turno.
+- Si ningún caso aplica → saltar directo al sub-turno 3d.
+- Si el usuario elige dividir el trabajo → incluirlo en el plan del sub-turno 3d y en los paths del Paso 4.
+
+#### Sub-turno 3d — Mostrar plan de outputs y confirmar
+
+En un turno propio, mostrar el plan completo y preguntar si ajustar:
 
 ---
 **Plan de outputs**
@@ -147,25 +180,35 @@ ADRs previstos:
 Decisiones que NO ameritan ADR: <lista o "ninguna">
 ---
 
-> ⛔ **PAUSA OBLIGATORIA — PASO 3**
-> "¿Este plan tiene sentido o quieres ajustar algo antes de que escriba?"
->
-> **STOP:** No escribas el Paso 4 en este mismo mensaje. Termina el turno aquí y espera la respuesta del usuario antes de continuar.
+Pregunta: ¿Este plan tiene sentido o quieres ajustar algo antes de que escriba?
+
+`⛔ PAUSA — esperando respuesta.`
+
+> **STOP:** No escribas el Paso 4 hasta haber completado todos los sub-turnos aplicables del Paso 3, cada uno en su propio turno.
 
 ### Paso 4 — Preguntar paths de output
 
-Preguntar explícitamente:
+Preguntar **SIEMPRE**, incluso si el usuario los mencionó antes en el prompt inicial. Nunca inferir paths. Una pregunta por turno, en este orden:
 
-- ¿Dónde escribo las Architecture Views? (`task_path`)
-- ¿Dónde escribo los ADRs? (convención: `{task_path}/adrs/`)
-- ¿Cuál es el `feature_id` que se propaga a los encabezados?
+#### Sub-turno 4a — Path de Architecture Views
 
-**No asumir ninguna ruta.** Si el usuario ya las dio en el prompt inicial, confirmar que siguen vigentes.
+Pregunta: ¿Dónde escribo las Architecture Views (`task_path`)?
 
-> ⛔ **PAUSA OBLIGATORIA — PASO 4**
-> Esperar confirmación de paths antes de escribir.
->
-> **STOP:** No escribas el Paso 5 en este mismo mensaje. Termina el turno aquí y espera la respuesta del usuario antes de continuar.
+`⛔ PAUSA — esperando respuesta.`
+
+#### Sub-turno 4b — Path de ADRs
+
+Pregunta: ¿Dónde escribo los ADRs? (convención: `{task_path}/adrs/`)
+
+`⛔ PAUSA — esperando respuesta.`
+
+#### Sub-turno 4c — Feature ID
+
+Pregunta: ¿Cuál es el `feature_id` que se propaga a los encabezados?
+
+`⛔ PAUSA — esperando respuesta.`
+
+> **STOP:** No avanzar al Paso 5 hasta tener los tres valores confirmados explícitamente por el usuario, cada uno en su propio turno.
 
 ### Paso 5 — Producir y entregar
 
