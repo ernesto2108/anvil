@@ -50,6 +50,8 @@ Si no hay PRD → preguntar al humano vía `## Necesito información`. No hay ot
 
 ## Flujo de trabajo
 
+> **Regla de oro del flujo:** Cada paso termina exactamente cuando se imprime la pausa obligatoria. No ejecutar ningún paso adicional en el mismo turno, sin importar cuánta información tenga disponible. Un turno = un paso.
+
 Cinco pasos **secuenciales**. Cada paso termina en una **pausa obligatoria** que espera respuesta del humano. **Nunca** ejecutar dos pasos en el mismo turn. **Nunca** avanzar sin respuesta explícita.
 
 ### Paso 1 — Resumir contexto
@@ -65,9 +67,10 @@ Leer todo lo que llegó como input (PRD + lo que haya, incluyendo URLs externas 
 - **Restricciones conocidas**
 - **Lo que NO quedó claro**
 
-**Pausa obligatoria:** "Este es el contexto que capté. ¿Corriges o agregas algo antes de continuar?"
-
-No avanzar hasta respuesta del usuario.
+> ⛔ **PAUSA OBLIGATORIA — PASO 1**
+> "Este es el contexto que capté. ¿Corriges o agregas algo antes de continuar?"
+>
+> **STOP:** No escribas el Paso 2 en este mismo mensaje. Termina el turno aquí y espera la respuesta del usuario antes de continuar.
 
 ### Paso 2 — Cubrir gaps
 
@@ -87,7 +90,10 @@ Si la respuesta a la pregunta sobre contratos cross-servicio es sí, cargar la s
 
 **Regla:** solo preguntar lo que realmente falta. Si el PRD ya lo responde, no preguntar de nuevo. **Máx 5 preguntas por turno.**
 
-**Pausa obligatoria:** esperar respuesta antes de avanzar.
+> ⛔ **PAUSA OBLIGATORIA — PASO 2**
+> Esperar respuesta antes de avanzar.
+>
+> **STOP:** No escribas el Paso 3 en este mismo mensaje. Termina el turno aquí y espera la respuesta del usuario antes de continuar.
 
 ### Paso 3 — Confirmar plan de outputs
 
@@ -122,9 +128,10 @@ Según el dominio detectado en el Paso 1, preguntar al usuario antes de mostrar 
 - Lista de **ADRs previstos** con título corto y razón en una línea
 - **Decisiones que NO ameritan ADR** (y por qué)
 
-**Pausa obligatoria:** "¿Este plan tiene sentido o quieres ajustar algo antes de que escriba?"
-
-No escribir nada hasta confirmación.
+> ⛔ **PAUSA OBLIGATORIA — PASO 3**
+> "¿Este plan tiene sentido o quieres ajustar algo antes de que escriba?"
+>
+> **STOP:** No escribas el Paso 4 en este mismo mensaje. Termina el turno aquí y espera la respuesta del usuario antes de continuar.
 
 ### Paso 4 — Preguntar paths de output
 
@@ -136,7 +143,10 @@ Preguntar explícitamente:
 
 **No asumir ninguna ruta.** Si el usuario ya las dio en el prompt inicial, confirmar que siguen vigentes.
 
-**Pausa obligatoria:** esperar confirmación de paths antes de escribir.
+> ⛔ **PAUSA OBLIGATORIA — PASO 4**
+> Esperar confirmación de paths antes de escribir.
+>
+> **STOP:** No escribas el Paso 5 en este mismo mensaje. Termina el turno aquí y espera la respuesta del usuario antes de continuar.
 
 ### Paso 5 — Producir y entregar
 
