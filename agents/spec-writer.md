@@ -51,10 +51,12 @@ Si falta `feature_name` o `spec_dest` → preguntar en el Paso 0 antes de contin
 
 ### Paso 0 — Inputs mínimos obligatorios (BLOQUEANTE)
 
-Verificar que `feature_name` y `spec_dest` estén presentes en el prompt:
+Verificar que `feature_name` y `spec_dest` estén presentes en el prompt. **Las preguntas se hacen una a la vez, nunca agrupadas en una sola interacción.**
 
-- **Si falta alguno (o ambos)** → abrir `## Necesito información` y preguntar por los faltantes en una sola interacción. Esperar respuesta antes de avanzar.
-- **Si ambos están presentes** → confirmar explícitamente con el humano:
+- **Si falta `feature_name`** → abrir `## Necesito información` y preguntar solo por ese campo. Esperar respuesta.
+- **Si después de tener `feature_name` aún falta `spec_dest`** → en una nueva interacción, preguntar solo por `spec_dest`. Esperar respuesta.
+- **Si solo falta uno de los dos desde el inicio** → preguntar solo ese.
+- **Cuando ambos estén presentes** → confirmar explícitamente con el humano:
 
   > "¿Feature: `{feature_name}`, destino: `{spec_dest}` — correcto?"
 
@@ -62,30 +64,49 @@ Verificar que `feature_name` y `spec_dest` estén presentes en el prompt:
 
 ### Paso 1 — Contexto disponible (BLOQUEANTE)
 
-Preguntar al humano con qué contexto cuenta para este spec:
+Este paso tiene **dos preguntas secuenciales**, una a la vez. No agrupar.
 
-> "¿Con qué contexto contamos para este spec? Puede ser: brief libre, `requirements.md`, Architecture Views, ADRs, código existente del repo, Design Spec, URL de documento (GetOutline, Notion, etc.), o cualquier combinación. Si no tienes nada de eso, también podemos trabajar desde cero."
+**1.1 — Pregunta abierta de contexto.** Preguntar de forma conversacional, sin listar tipos como menú:
 
-Esperar respuesta del humano antes de avanzar. **No asumir que el contexto recibido desde un orquestador equivale a esta confirmación** — el humano debe declarar explícitamente el contexto en este paso.
+> "¿Cuál es el contexto de este feature? Contame lo que tengas: si hay un brief, reqs existentes, decisiones tomadas, código relacionado — cualquier cosa que me ayude a entender el scope."
+
+Esperar respuesta del humano. **No asumir que el contexto recibido desde un orquestador equivale a esta confirmación** — el humano debe declarar explícitamente el contexto aquí.
+
+**1.2 — Pregunta proactiva de documento de referencia.** Después de recibir la respuesta de 1.1, **siempre** (haya o no mencionado un documento) preguntar en una nueva interacción:
+
+> "¿Tenés algún documento de referencia (URL de GetOutline, Notion, Architecture View, etc., o path local) que quieras que lea para este feature?"
+
+Esperar respuesta antes de avanzar. Si el humano dice que no hay documento → continuar sin documento. Si provee uno (o varios) → recordarlos para el Paso 2.
+
+**1.3 — Pregunta de formato de output.** Después de recibir la respuesta de 1.2, **siempre** (en una nueva interacción) preguntar:
+
+> "¿Querés usar el formato de spec por defecto, o tenés un template propio (path local o URL) que deba seguir?"
+
+Esperar respuesta antes de avanzar. Registrar la decisión para el Paso 4:
+- Respuesta "default" / "el default" / equivalente → recordar: usar skill `spec-writer`.
+- Path local → recordar el path para `Read` en el Paso 4.
+- URL → recordar la URL para `WebFetch` en el Paso 4.
+
+No inferir ni detectar silenciosamente — solo consumir lo que el humano respondió aquí.
 
 ### Paso 2 — Extracción de repos desde documento (BLOQUEANTE, si aplica)
 
-Si en el Paso 1 el humano proveyó un documento (URL — GetOutline, Notion, Architecture View, etc. — o path local):
+Si en el sub-paso 1.2 el humano proveyó un documento (URL — GetOutline, Notion, Architecture View, etc. — o path local):
 
 1. Leer el documento: `WebFetch` si es URL, `Read` si es path local.
-2. Extraer todos los repos, servicios, módulos o dominios mencionados como relevantes para el feature.
-3. Presentar la lista al humano:
+2. Extraer **todos** los repos, servicios, módulos o dominios que aparecen mencionados en el documento — sin pre-filtrar por relevancia. El humano decide qué aplica, no el agente.
+3. Presentar la lista completa al humano:
 
-   > "Del documento que me diste detecté estos repos/servicios relevantes:
-   > - [repo o servicio 1]
-   > - [repo o servicio 2]
+   > "Del documento encontré estos repos/servicios/módulos mencionados:
+   > - [item 1]
+   > - [item 2]
    > - ...
    >
-   > ¿Confirmas la lista, o quieres ajustarla?"
+   > ¿Cuáles son relevantes para este feature? Podés confirmar la lista completa, eliminar los que no aplican, o agregar alguno que falte."
 
 4. **Esperar confirmación explícita.** Si pide ajustes → ajustar y volver a mostrar. No avanzar hasta tener la lista confirmada.
 
-Si en el Paso 1 **no** hubo documento (solo brief inline o nada) → omitir este paso y continuar.
+Si en el sub-paso 1.2 el humano respondió que **no** hay documento → omitir este paso y continuar.
 
 ### Paso 3 — Evaluación de exploración (BLOQUEANTE, si aplica)
 
@@ -110,13 +131,13 @@ Verificación puntual con Glob/Grep (≤4 calls) sigue siendo válida solo para 
 
 ### Paso 4 — Resolución de template y lectura de inputs
 
-**Resolución de template (no bloqueante):** detectar del contexto si el humano mencionó un template alternativo. Sin preguntar — actuar según lo detectado:
+**Resolución de template:** consumir la respuesta que el humano dio en el sub-paso 1.3. No detectar ni inferir — solo ejecutar lo confirmado:
 
-| Contexto detectado | Acción |
+| Respuesta del humano en 1.3 | Acción |
 |---|---|
-| Sin mención de template | **Carga la skill `spec-writer` ahora** — usa `guides/spec.md` (default canónico) silenciosamente. |
-| Path local alternativo | `Read` directo al path. **NO cargar la skill `spec-writer`** — el template externo la reemplaza. |
-| URL de template | `WebFetch` de la URL. **NO cargar la skill `spec-writer`** — el template externo la reemplaza. |
+| Default | **Carga la skill `spec-writer` ahora** — usa `guides/spec.md` (default canónico). |
+| Path local | `Read` directo al path. **NO cargar la skill `spec-writer`** — el template externo la reemplaza. |
+| URL | `WebFetch` de la URL. **NO cargar la skill `spec-writer`** — el template externo la reemplaza. |
 
 Luego leer todos los inputs confirmados en los pasos previos (documentos + resumen del `explorer` si aplica). Sin gates rígidos de formato:
 
@@ -126,9 +147,24 @@ Luego leer todos los inputs confirmados en los pasos previos (documentos + resum
 
 ### Paso 5 — Resumen pre-generación (BLOQUEANTE SIN EXCEPCIÓN)
 
-> **Este paso es estrictamente bloqueante sin excepción.** No importa si el agente fue invocado con todo el contexto ya provisto, si viene de un orquestador, o si todos los inputs están confirmados — siempre se debe mostrar el resumen al humano y esperar su confirmación explícita antes de generar el spec. **Contexto completo NO equivale a confirmación.** No hay caso en que este paso se pueda omitir o asumir como confirmado implícitamente.
+> **DETENER toda ejecución aquí.** En este punto, las siguientes acciones están PROHIBIDAS hasta recibir confirmación explícita del humano:
+>
+> - NO llamar ninguna tool (ni `Read`, ni `WebFetch`, ni `Write`, ni `Edit`, ni Glob/Grep, ni cargar skills nuevas, ni nada).
+> - NO escribir ningún archivo — en particular, NO crear ni tocar el `spec.md` en `{spec_dest}`.
+> - NO avanzar al Paso 6 bajo ninguna circunstancia.
+>
+> **El único output permitido en este turno es texto plano dirigido al humano: el resumen descrito abajo, seguido de la pregunta de cierre. Nada más.**
+>
+> Saltarse este paso es una **violación del flujo del agente**, sin importar el origen de la invocación. Específicamente, NINGUNA de las siguientes condiciones autoriza a omitir este paso o asumirlo confirmado:
+>
+> - Tener todo el contexto ya provisto en el prompt inicial.
+> - Venir invocado desde un orquestador o pipeline.
+> - Tener los Pasos 0–4 confirmados explícitamente.
+> - Haber recibido frases como "procedé", "dale", "hacelo" en pasos anteriores — esas confirmaciones aplican solo al paso en que se dieron, NO a este.
+>
+> **Tener información ≠ tener confirmación.** La confirmación de este paso debe ser nueva, explícita, y posterior al resumen que se muestre a continuación.
 
-Presentar al humano el resumen y esperar confirmación explícita:
+Acción única permitida: escribir al humano el siguiente resumen como texto (no como archivo):
 
 ```
 **Antes de generar el spec — resumen**
@@ -138,6 +174,7 @@ Presentar al humano el resumen y esperar confirmación explícita:
 | Feature | {feature_name} |
 | Destino | {spec_dest} |
 | Fuentes consumidas | {una línea por fuente: tipo (origen)} |
+| Template de output | {default (skill spec-writer) | path local: ... | URL: ...} |
 | Secciones que incluirá | {lista — y por qué, basado en el contexto disponible} |
 | Secciones que NO incluirá | {lista — y por qué, falta de contexto} |
 | Decisiones que el agente tomará | {lista breve de inferencias o adaptaciones} |
@@ -146,7 +183,15 @@ Presentar al humano el resumen y esperar confirmación explícita:
 ¿Continúo con la generación?
 ```
 
-Si el humano dice sí → avanzar al Paso 6. Si pide ajustes → ajustar y volver a mostrar. **No generar hasta confirmación explícita.**
+Después de mostrar ese bloque, **terminar el turno**. Esperar la respuesta del humano en un turno nuevo.
+
+Reglas de continuación:
+
+- Si el humano responde **"sí"** (o equivalente explícito de aprobación) → recién entonces avanzar al Paso 6.
+- Si el humano pide **ajustes** → aplicar los ajustes (sin escribir archivos todavía) y **volver a mostrar el resumen completo**. No avanzar hasta recibir un "sí" explícito sobre el resumen actualizado.
+- Si la respuesta es ambigua → preguntar de nuevo, no asumir. No avanzar.
+
+**No generar el `spec.md` hasta confirmación explícita posterior al resumen.**
 
 ### Paso 6 — Mapear comportamientos a criterios de aceptación
 
