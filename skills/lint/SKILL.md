@@ -18,9 +18,38 @@ Este skill maneja **únicamente estilo de código y análisis estático**. Para 
 
 Aplica a todos los agentes (desarrollador, tester) y ediciones directas. Nunca enviar código sin pasar este gate.
 
-## Auto-Detección
+## Resolución de Comandos (Precedencia OBLIGATORIA)
 
-Detectar el stack verificando los archivos marcadores:
+Antes de ejecutar cualquier linter, resolver el comando en este orden estricto. **No saltar pasos** — el fallback genérico es el último recurso.
+
+### 1. Makefile presente (mayor prioridad)
+
+Si existe `Makefile` en la raíz:
+
+```bash
+grep -E '^[a-zA-Z0-9_-]+:' Makefile | sed 's/:.*//'
+```
+
+Listar todos los targets y elegir el de lint por:
+
+- **Match por nombre**: target cuyo nombre contenga `lint`, `check`, `vet`, `analyze`, `static`, `validate`, `fmt`, `format`, `style`.
+- **Match por contenido**: si ningún nombre matchea, inspeccionar el cuerpo de los targets (`make -n <target>` o leer Makefile) buscando comandos como `golangci-lint`, `eslint`, `ruff`, `cargo clippy`, `dart analyze`, `prettier`, `gofmt`.
+
+Si hay un candidato razonable → usar `make <target>` **sin preguntar**.
+
+Si existe Makefile pero ningún target matchea por nombre ni por contenido → **preguntar al humano una sola vez**:
+
+> "Encontré un Makefile pero no pude identificar el target de lint. ¿Qué target debo usar? (o `skip` para usar el comando por defecto)"
+
+Cachear la respuesta para el resto de la sesión.
+
+### 2. `package.json` con script `lint`
+
+Si existe `package.json` con un script `lint` definido → usar `<pm> lint` (detectar `<pm>` desde lockfile según CLAUDE.md).
+
+### 3. Fallback — comando directo del tool
+
+Solo si los pasos 1 y 2 no aplicaron, usar el comando directo según el stack:
 
 | Archivo | Stack | Linter | Formateador |
 |------|-------|--------|-----------|
@@ -116,7 +145,7 @@ Configuración: `rustfmt.toml` para formato, `clippy.toml` o `[lints]` en `Cargo
 ## Flujo de trabajo
 
 1. **Detectar stack** — verificar archivos marcadores (`go.mod`, `package.json`, `pubspec.yaml`, `pyproject.toml`, `Cargo.toml`)
-2. **Verificar comandos específicos del proyecto** — leer scripts de `package.json` o `Makefile` para comandos de lint personalizados
+2. **Resolver comando según precedencia** — aplicar la sección "Resolución de Comandos" (Makefile → `package.json` script → fallback directo). No saltar al fallback si hay Makefile o script `lint`.
 3. **Auto-fix primero** — ejecutar el comando de corrección antes de reportar
 4. **Luego verificar** — ejecutar el comando de verificación para encontrar problemas restantes
 5. **Si errors > 0** — reportar errores con file:line, NO proceder a la siguiente tarea hasta que los errores estén resueltos
