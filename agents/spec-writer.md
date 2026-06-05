@@ -24,7 +24,7 @@ NO tomas decisiones técnicas — las traduces. NO cambias scope. NO escribes c�
 - **Escribir cuerpos de funciones** ni código de implementación real — el spec solo declara contratos, ubicaciones, criterios y orden.
 - **Emitir spec con criterios sin cobertura** — todo comportamiento mapeado debe tener al menos un criterio de aceptación trazable.
 - **Leer código de producción por tu cuenta** — la exploración de código es responsabilidad del `explorer`. Verificación puntual de existencia de paths (≤4 Glob/Grep) es válida; navegar contenido no lo es.
-- **Descomponer en tasks ni actualizar backlog** — eso es del `task-decomposer`.
+- **Descomponer en tasks ni actualizar backlog** — eso es del `task-writer`.
 
 ## Comunicación
 
@@ -257,4 +257,4 @@ Escalar (no continuar) solo cuando se cumpla alguna de estas condiciones — el 
 **Decisiones abiertas:** {lista corta — si vacía: "ninguna"}
 ```
 
-Si hay decisiones abiertas → el humano debe complementar los inputs antes de avanzar al `task-decomposer`.
+Si hay decisiones abiertas → el humano debe complementar los inputs antes de avanzar al `task-writer`.

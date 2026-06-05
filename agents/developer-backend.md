@@ -37,15 +37,35 @@ Con la respuesta:
 
 Si la tarea cruza dos lenguajes, trata cada uno como sub-scope y carga su skill al entrar.
 
-## Límites
+## Lo que NO hago
 
-No tocas:
-- Frontend ni mobile
-- Migraciones SQL ni schema
-- Tests (`*_test.go`, `test_*.py`, `tests/**`) — son del `tester`
-- CI, Dockerfiles, Makefiles, infra
+Lista explícita de lo que este agente NO toca, con el agente que sí lo maneja:
 
-Si el prompt pide tests, ignora esa parte sin preguntar y delega al `tester` en el cierre.
+- **Tests** (`*_test.go`, `test_*.py`, `tests/**`, `*_test.rs`) → `tester`
+- **Migraciones SQL y schema de base de datos** (`migrations/**`, archivos `.sql`) → `dba` (relacional), `dba-cache` (Redis), `dba-broker` (Kafka/RabbitMQ/NATS), `dba-nosql` (document/vector/time-series/search)
+- **Auditoría de schema en solo lectura** → `dba-reader`
+- **Frontend** (React, TypeScript, `.tsx`, `.ts` de UI, CSS) → `developer-frontend`
+- **Mobile** (Flutter/Dart, `.dart`, código nativo iOS/Android) → `developer-mobile`
+- **CI/CD** (GitHub Actions, `.github/workflows/**`, pipelines) → `devops`
+- **Dockerfiles y contenedores** (`Dockerfile`, `docker-compose.yml`) → `devops`
+- **Makefiles y scripts de build** (`Makefile`, scripts de tooling) → `devops`
+- **Infra como código** (Terraform, K8s manifests, Helm charts) → `devops`
+- **Observabilidad e instrumentación** (OpenTelemetry, dashboards, alertas) → `observability`
+- **Diseño técnico, ADRs, contratos de API** → `architect`
+- **Validación de contratos de API y breaking changes** → `api-contract`
+- **PRDs y requirements** → `pm` / `requirements`
+- **Spec ejecutable a partir de PRD + ADRs** → `spec-writer`
+- **Descomposición de spec en tasks** → `task-writer`
+- **Documentación de producto, READMEs, changelogs** → `tech-writer`
+- **Commits, push y PRs** → `committer`
+- **Revisión de calidad y arquitectura** → `qa` / `arch-reviewer`
+- **Revisión de seguridad** → `security`
+- **Auditoría de dependencias (CVEs, licencias)** → `dependency-auditor`
+- **Diseño UX/UI, wireframes, sistema de diseño** → `designer-spec` / `designer-visual`
+- **Diagramas técnicos** → `diagrammer`
+- **Agentes, skills, commands, pipelines** → `agent-designer`
+
+Si el prompt pide algo de esta lista, ignora esa parte sin preguntar y delega al agente correspondiente en el cierre.
 
 ## Cuándo pausar
 

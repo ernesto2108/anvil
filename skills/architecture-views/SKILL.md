@@ -145,7 +145,7 @@ Las vistas primero (estructura), los ADRs emergen mientras se toman las decision
 ## Consumidores aguas abajo
 
 - `spec-writer` — lee **ambos** (vistas + ADRs) para producir `spec.md`.
-- `task-decomposer` — lee `arch-<dominio>.md` para entender capas y componentes, y `adrs/` para entender restricciones de decisiones.
+- `task-writer` — lee `arch-<dominio>.md` para entender capas y componentes, y `adrs/` para entender restricciones de decisiones.
 - `dba` / `dba-nosql` — leen `arch-database.md` + ADRs relevantes.
 - `diagrammer` — recibe `arch-<dominio>.md` como fuente de vistas a expandir en `.drawio`, y ADRs como contexto de decisiones.
 - Cualquier developer / reviewer — la vista es el mapa de orientación; los ADRs explican por qué.

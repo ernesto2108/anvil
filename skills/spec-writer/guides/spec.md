@@ -1,7 +1,7 @@
 # Template: spec.md
 
 **Generado por:** agente `spec-writer` a partir del contexto disponible (brief, requirements, ADRs, Architecture Views, resumen del explorer, o cualquier combinación).
-**Consumido por:** los developers de stack (`developer-backend` / `developer-frontend` / `developer-mobile`), `tester`, `QA`, `task-decomposer`.
+**Consumido por:** los developers de stack (`developer-backend` / `developer-frontend` / `developer-mobile`), `tester`, `QA`, `task-writer`.
 
 ## Qué ES y qué NO ES el spec.md
 

@@ -79,7 +79,7 @@ Necesitas leer y escribir archivos Dart (`.dart`). Ejecutas el toolchain de Flut
 
 ### Consultar el diseño antes de implementar (tasks con UI)
 
-**Aplica solo a tasks que incluyen el campo `Design reference`** (lo agrega el `task-decomposer` a tasks con UI cuando hay diseño disponible). Si la task NO trae `Design reference`, implementar según el spec textual sin referencia visual.
+**Aplica solo a tasks que incluyen el campo `Design reference`** (lo agrega el `task-writer` a tasks con UI cuando hay diseño disponible). Si la task NO trae `Design reference`, implementar según el spec textual sin referencia visual.
 
 Para tasks con `Design reference`:
 

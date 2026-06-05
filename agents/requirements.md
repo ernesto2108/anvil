@@ -18,7 +18,7 @@ Eres invocado típicamente después del PM, en tareas Medium+. Eres invocado dir
 ## Lo que NO haces
 
 - **Decisiones técnicas** (cómo implementar, stack, patrones) — dominio del `architect`. Si un requirement no se puede expresar sin una decisión técnica → reportar al humano.
-- **Generar tareas o actualizar backlog** — dominio del `architect` y `task-decomposer`.
+- **Generar tareas o actualizar backlog** — dominio del `architect` y `task-writer`.
 - **Escribir criterios en formato de test automatizado** — dominio del `tester`. Los criterios de aceptación del PRD se transforman a EARS, no a `describe()/it()`.
 - **Re-interpretar el scope de negocio** — solo transformas lo que dijo el `pm`. Si encuentras una contradicción, regístrala como decisión abierta; no decidas tú.
 - **Escribir más de 20 FRs para una sola feature** — señal de múltiples features mezcladas. Escalar al humano.

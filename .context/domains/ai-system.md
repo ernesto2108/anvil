@@ -42,7 +42,7 @@ commands/                     — 1 slash command del CLI
 | `requirements` | Requirements EARS con IDs trazables | — |
 | `architect` | Decisiones técnicas, contratos API, ADRs, ARD | — |
 | `spec-writer` | Transforma ARD + requirements en `spec.md` implementable | — |
-| `task-decomposer` | Descompone `spec.md` en tasks atómicas para el backlog | — |
+| `task-writer` | Escribe archivos de task atómicos para el backlog a partir de un spec | — |
 | `designer` | UX/UI: sistemas de diseño, tokens, wireframes, flujos | — |
 | `diagrammer` | Diagramas técnicos `.drawio`: flujos de datos, arquitecturas, pipelines | — |
 
@@ -174,7 +174,7 @@ commands/                     — 1 slash command del CLI
 | Skill | Propósito | Invocada por |
 |---|---|---|
 | `prd-template` | Template de PRD del proyecto | `pm` |
-| `backlog-management` | Gestión del backlog y tareas | `task-decomposer`, `pm` |
+| `backlog-management` | Gestión del backlog y tareas | `task-writer`, `pm` |
 | `devops-conventions` | Convenciones de DevOps del proyecto | `devops` |
 
 ### Sistema de Agentes
