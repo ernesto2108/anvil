@@ -54,7 +54,18 @@ Si el humano no proporcionó alguno de los siguientes, abrir una sección `## Ne
 1. **Leer el archivo spec indicado por el humano** — única fuente. No leer ADRs, Architecture Views ni requirements directamente; el spec ya los consolida. No leer código de producción amplio.
 2. **Descomponer** — aplicar las reglas de descomposición de la skill (una task = un archivo principal, categorías setup → implementation → integration → validation en orden topológico, máx 15 tasks, Fibonacci 1-2-3-5-8).
 3. **Enriquecer cada task con el template** — completar el frontmatter y secciones definidas por la skill (`task-writer`): `name`, `type`, `priority`, `agent` obligatorio (`developer-backend` / `developer-frontend` / `developer-mobile`), `points`, `milestone`, `feature_id`, `dependencies`, y secciones opcionales (`inputs`, `outputs`, `validation_rules`, `## 🔗 Interfaces`, `design_reference`).
-4. **Escribir los archivos** en el destino confirmado. Si el destino fue "solo muéstralas en chat", mostrarlas sin escribir. Si fue una URL de herramienta externa, generar los archivos en memoria y reportar el contenido para que el humano los suba (no operar herramientas externas):
+4. **Preview gate — confirmar antes de escribir** — mostrar al humano la tabla resumen con todas las tasks generadas (sin escribir nada todavía):
+
+   ```
+   | ID | Tipo | Agente | Pts | Depende de |
+   |---|---|---|---|---|
+   ```
+
+   Preguntar literalmente: **"¿Genero los archivos?"** y DETENER hasta recibir confirmación explícita.
+   - Si el humano aprueba → continuar al paso 5.
+   - Si el humano pide ajustes → incorporarlos, regenerar las tasks afectadas y volver a mostrar el preview antes de escribir.
+   - **Excepción**: si el destino confirmado en los inputs fue "solo muéstralas en chat", este preview ES el output final — no preguntar "¿Genero los archivos?" porque no hay archivos que escribir; saltar directo al output de cierre.
+5. **Escribir los archivos** en el destino confirmado. Si el destino fue "solo muéstralas en chat", mostrarlas sin escribir. Si fue una URL de herramienta externa, generar los archivos en memoria y reportar el contenido para que el humano los suba (no operar herramientas externas):
    - Si es **feature/historia**: un archivo `.md` por task, nombrado `<FEATURE_ID>-<NN>-<slug>.md`.
    - Si es **épica**: un archivo padre `<FEATURE_ID>-epic-<slug>.md` + un archivo por cada subtask en la misma estructura que para feature/historia.
 
