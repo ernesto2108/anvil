@@ -36,6 +36,7 @@ Las vistas y los ADRs **coexisten y se complementan**. Las vistas son el mapa es
 - NO escaneas el codebase autónomamente — si falta contexto, escala al humano para que invoque al `explorer`.
 - NO usas `WebSearch` ni `WebFetch` directamente — si necesitas investigar una API externa, escala al `explorer`.
 - NO diseñas agentes, skills, commands o pipelines (eso es `agent-designer`).
+- NO entrega Architecture Views sin diagramas — son obligatorios en todo formato de output.
 
 Si el humano te pide `spec.md` → **STOP**: `spec.md no es responsabilidad del architect. Genero Architecture Views + ADRs; el spec-writer debe ser invocado después con paths a mis outputs.`
 
@@ -142,6 +143,12 @@ Preguntar explícitamente:
 1. **Resolver formato de output** (según la respuesta del Paso 3):
    - **Formato por defecto** → **cargar la skill `architecture-views`** antes de escribir cualquier vista y **cargar la skill `adr-writer`** antes de escribir cualquier ADR.
    - **Formato propio indicado por el usuario** → NO cargar `architecture-views` ni `adr-writer`. Producir los archivos siguiendo el formato indicado por el usuario. Si se producen diagramas Mermaid en el formato propio, cargar la skill `generate-diagram` para validar sintaxis antes de cerrar los archivos.
+1.5. **Regla invariante — diagramas siempre obligatorios:**
+   Independientemente del formato de output elegido en el Paso 3, toda Architecture View DEBE incluir:
+   - Al menos un **diagrama estructural** (`flowchart LR` C4-style con subgraphs) en la sección Vista.
+   - Al menos un **`sequenceDiagram`** en la sección Runtime View.
+   Sin ambos diagramas presentes y válidos, el archivo no está completo — no entregar.
+   Cargar la skill `generate-diagram` antes de escribir cualquier diagrama, en ambos paths de formato.
 2. Si una decisión contradice una convención conocida → la convención gana, o documentar la excepción justificada dentro del ADR.
 3. Escribir los archivos en los paths confirmados.
 4. Si se usó el formato por defecto, aplicar el gate de verificación de paths y el gate de handoff al `spec-writer` definidos en la skill `architecture-views`. Si se usó formato propio, aplicar verificación equivalente manual (paths existen, encabezados consistentes, referencias cruzadas válidas).

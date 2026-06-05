@@ -30,11 +30,10 @@ Usar el keyword exacto de apertura. Mermaid v10+ deprecó `graph` — usar siemp
 | Diagrama de clases | `classDiagram` | Estructura de tipos, herencia, interfaces |
 | Diagrama Entidad-Relación | `erDiagram` | Schema de base de datos, relaciones entre tablas |
 | Máquina de estados | `stateDiagram-v2` | FSMs, ciclos de vida, transiciones |
-| C4 Contexto | `C4Context` | Vista de sistema de alto nivel (requiere plugin en algunos renderers) |
-| C4 Containers | `C4Container` | Vista de contenedores (requiere plugin en algunos renderers) |
+| C4-style (flowchart) | `flowchart LR` | Vistas C4 L1 Context, L2 Container, L3 Component — usando subgraphs y convenciones de color/shape C4 |
 | Git graph | `gitGraph` | Estrategia de branching, releases |
 
-**Nota sobre C4:** algunos renderers (GitHub básico, Obsidian sin plugin) no soportan `C4Context`/`C4Container`. Si el documento se va a renderizar fuera de un entorno con plugin Mermaid actualizado, preferir `flowchart LR` con `subgraph` para representar contextos y contenedores.
+**Nota sobre C4 nativo:** Los keywords `C4Context`, `C4Container`, `C4Component`, `C4Dynamic` y `C4Deployment` de Mermaid son **experimentales** — la sintaxis puede cambiar en cualquier release sin aviso. No usarlos en documentación de larga vida. Usar en su lugar `flowchart LR` con subgraphs siguiendo las convenciones C4-style de la sección de patrones de esta skill.
 
 ---
 
@@ -159,18 +158,106 @@ classDiagram
 
 ---
 
+## Patrones C4 con flowchart estable
+
+Estos patrones reemplazan a los keywords experimentales `C4Context`/`C4Container`. Usan `flowchart` (estable desde Mermaid v8) y convenciones visuales C4-style aplicadas mediante shapes y labels.
+
+### Convenciones visuales C4-style
+
+- **Personas/actores:** forma redonda `(["Nombre"])` o `([Nombre])`
+- **Sistemas externos:** caja simple `["[Sistema Externo]\nNombre"]`
+- **Contenedores:** caja con tipo en label `["[Container: tipo]\nNombre"]`
+- **Componentes:** caja con tipo en label `["[Component]\nNombre"]`
+- **Bases de datos:** forma cilindro `[("Nombre")]`
+- **Boundaries de sistema/container:** agrupar con `subgraph`
+
+### C4 Level 1 — System Context
+
+El sistema en su entorno: usuarios y sistemas externos con los que interactúa.
+
+```mermaid
+flowchart LR
+    user(["Usuario Final"])
+    admin(["Administrador"])
+
+    subgraph sistema ["[Sistema de Software] Mi Sistema"]
+        app["[Aplicación Web]\nFrontend React"]
+        api["[API Service]\nBackend Go"]
+    end
+
+    ext_email["[Sistema Externo]\nServicio de Email"]
+    ext_pay["[Sistema Externo]\nPasarela de Pagos"]
+
+    user --> app
+    admin --> app
+    api -- "envía notificaciones" --> ext_email
+    api -- "procesa pagos" --> ext_pay
+```
+
+### C4 Level 2 — Container
+
+Los contenedores desplegables del sistema (apps, servicios, bases de datos, brokers).
+
+```mermaid
+flowchart LR
+    user(["[Persona]\nUsuario"])
+
+    subgraph boundary ["[Sistema] Mi Sistema"]
+        spa["[Container: SPA]\nReact / TypeScript"]
+        api["[Container: API]\nGo / HTTP REST"]
+        worker["[Container: Worker]\nGo / Cola de jobs"]
+        db[("[ Container: DB]\nPostgreSQL")]
+        cache[("[Container: Cache]\nRedis")]
+    end
+
+    ext["[Sistema Externo]\nEmail Provider"]
+
+    user --> spa
+    spa -- "HTTPS/JSON" --> api
+    api -- "queries" --> db
+    api -- "cache reads" --> cache
+    api -- "publica job" --> worker
+    worker -- "envía email" --> ext
+```
+
+### C4 Level 3 — Component
+
+Los componentes internos de un container específico.
+
+```mermaid
+flowchart TD
+    subgraph api ["[Container] API Service"]
+        router["[Component]\nRouter / Middleware"]
+        handler["[Component]\nOrders Handler"]
+        svc["[Component]\nOrders Service"]
+        repo["[Component]\nOrders Repository"]
+        events["[Component]\nEvent Publisher"]
+    end
+
+    db[("PostgreSQL")]
+    bus["Event Bus"]
+
+    router --> handler
+    handler --> svc
+    svc --> repo
+    svc --> events
+    repo --> db
+    events --> bus
+```
+
+---
+
 ## Checklist de validación (OBLIGATORIO antes de entregar)
 
 Antes de cerrar cualquier documento que incluya un bloque Mermaid, verificar cada punto:
 
-- [ ] El bloque abre con el keyword correcto (`flowchart LR`/`TD`, `sequenceDiagram`, `erDiagram`, `classDiagram`, `stateDiagram-v2`, `C4Context`/`C4Container`, `gitGraph`). **Nunca `graph`** — está deprecated en Mermaid v10+.
+- [ ] El bloque abre con el keyword correcto (`flowchart LR`/`TD`, `sequenceDiagram`, `erDiagram`, `classDiagram`, `stateDiagram-v2`, `gitGraph`). **Nunca `graph`** — está deprecated en Mermaid v10+.
+- [ ] Si se representa arquitectura estilo C4, usar `flowchart LR` con subgraphs (nunca `C4Context`/`C4Container` — son experimentales en Mermaid y su sintaxis puede cambiar sin aviso).
 - [ ] Todos los nodos referenciados en edges/flechas están definidos en el diagrama (no hay edges huérfanos a IDs inexistentes).
 - [ ] Ningún label sin comillas contiene `:`, `(`, `)`, `/`, `#`, `&` o `"` interno.
 - [ ] Todos los subgraphs tienen ID sin espacios ni caracteres especiales y cierran con `end`.
 - [ ] El bloque está encerrado en triple backtick con `mermaid` como language tag: ` ```mermaid ... ``` `.
 - [ ] El diagrama cabe en una pantalla estándar (objetivo ≤15 nodos, ≤20 edges). Si excede, partir en varios diagramas con un foco distinto cada uno.
-- [ ] Si se usa `C4Context`/`C4Container`, está documentado en el texto que requiere plugin Mermaid actualizado.
-
 Si algún ítem falla → corregir antes de entregar.
 
 ---
@@ -188,6 +275,7 @@ Si algún ítem falla → corregir antes de entregar.
 | `A --> B --> ` (edge incompleto) | `A --> B` | Edges colgantes producen errores opacos |
 | Definir `B` solo en un edge `A --> B` y nunca darle forma | `A --> B[Etiqueta de B]` | Sin forma definida, el nodo aparece como ID literal |
 | Mezclar `participant` y nodos de flowchart | Elegir UNO: o `sequenceDiagram` o `flowchart` | Cada keyword tiene su propio léxico |
+| `C4Context` / `C4Container` | `flowchart LR` con subgraphs | Syntax experimental en Mermaid — puede romperse con cualquier upgrade |
 
 ---
 
@@ -196,6 +284,6 @@ Si algún ítem falla → corregir antes de entregar.
 - Colocar siempre el diagrama dentro de un bloque ` ```mermaid ... ``` `.
 - Un diagrama por bloque — no concatenar dos tipos distintos en el mismo bloque.
 - Preferir **diagramas de secuencia** para flujos asíncronos complejos (orden de mensajes importa).
-- Preferir **flowchart** para vistas de arquitectura cuando el renderer no soporta C4.
+- Preferir **flowchart** con subgraphs y convenciones C4-style para vistas de arquitectura (los keywords nativos `C4*` son experimentales y no se usan).
 - Preferir **ER** para schema de base de datos — nunca usar flowchart para representar tablas.
 - Mantener el diagrama **simple y enfocado**: una idea por diagrama. Si necesitas mostrar dos vistas (datos y secuencia), produce dos diagramas separados.
