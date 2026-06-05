@@ -52,6 +52,8 @@ Si no hay PRD → preguntar al humano vía `## Necesito información`. No hay ot
 
 > **Regla de oro del flujo:** Cada paso termina exactamente cuando se imprime la pausa obligatoria. No ejecutar ningún paso adicional en el mismo turno, sin importar cuánta información tenga disponible. Un turno = un paso.
 
+> **Principio de validación:** El PRD puede indicar cosas con claridad, pero la intuición del agente puede fallar. Siempre confirmar con el humano antes de asumir. Una pregunta de más cuesta un mensaje; un diseño mal orientado cuesta días.
+
 Cinco pasos **secuenciales**. Cada paso termina en una **pausa obligatoria** que espera respuesta del humano. **Nunca** ejecutar dos pasos en el mismo turn. **Nunca** avanzar sin respuesta explícita.
 
 ### Paso 1 — Resumir contexto
@@ -74,7 +76,12 @@ Leer todo lo que llegó como input (PRD + lo que haya, incluyendo URLs externas 
 
 ### Paso 2 — Cubrir gaps
 
-Si tras la respuesta del Paso 1 no quedaron gaps y el contexto es suficiente, saltar directamente al Paso 3.
+**El Paso 2 siempre se ejecuta.** El PRD puede parecer completo, pero la intuición puede fallar — siempre validar con el humano. Si el contexto del Paso 1 ya cubre un punto, confirmarlo en lugar de asumirlo.
+
+**Preguntas mínimas obligatorias (siempre hacer, sin excepción):**
+- ¿El stack inferido es correcto o hay algo que corregir?
+- ¿Hay decisiones arquitectónicas ya tomadas que no debo pisar?
+- ¿El feature toca contratos que otros servicios consumen? (endpoints, schemas de BD compartidos, eventos)
 
 Con base en el resumen del Paso 1 y la respuesta del usuario, hacer preguntas específicas sobre lo que falta. Ejemplos típicos:
 
@@ -88,7 +95,7 @@ Con base en el resumen del Paso 1 y la respuesta del usuario, hacer preguntas es
 
 Si la respuesta a la pregunta sobre contratos cross-servicio es sí, cargar la skill `service-map` para revisar dependencias existentes antes de diseñar.
 
-**Regla:** solo preguntar lo que realmente falta. Si el PRD ya lo responde, no preguntar de nuevo. **Máx 5 preguntas por turno.**
+**Regla:** las preguntas mínimas obligatorias siempre se hacen aunque el PRD parezca responderlas — confirmar es más barato que asumir mal. Agregar preguntas adicionales sobre lo que genuinamente falte. **Máx 5 preguntas por turno.**
 
 > ⛔ **PAUSA OBLIGATORIA — PASO 2**
 > Esperar respuesta antes de avanzar.
@@ -97,7 +104,7 @@ Si la respuesta a la pregunta sobre contratos cross-servicio es sí, cargar la s
 
 ### Paso 3 — Confirmar plan de outputs
 
-**Primero, preguntar por el formato de output:**
+**Primero, preguntar por el formato de output (SIEMPRE — nunca asumir ni inferir del PRD):**
 
 > "¿Tienes un formato preferido para las Architecture Views y los ADRs, o usamos los templates por defecto (arc42 + C4 para vistas / Nygard para ADRs)?"
 
@@ -117,16 +124,28 @@ Según el dominio detectado en el Paso 1, preguntar al usuario antes de mostrar 
 - **[Caso C] El usuario ya trae un diseño de API propio:** "Veo que ya traes un diseño de API. ¿Quieres que lo revise contra los patrones del proyecto antes de continuar, o lo tomo como fuente de verdad directamente?" — si quiere validación, sugerir invocar `api-contract` primero y pausar hasta tener el resultado.
 
 **Reglas del bloque:**
-- Solo preguntar el caso que aplica — no preguntar si el dominio es puramente backend sin DB ni API compartida.
+- Los casos que aplican son **obligatorios** — si el dominio es fullstack, el Caso A se pregunta siempre. Si hay cambios de DB detectados, el Caso B se pregunta siempre. No omitirlos aunque el PRD parezca claro.
 - Pueden aplicar varios casos a la vez — hacer todas las preguntas que apliquen en un solo bloque, no en turnos separados.
 - Si ningún caso aplica → saltar el bloque y pasar directo a mostrar el plan de Views + ADRs.
 - Si el usuario elige dividir el trabajo en un artefacto separado → incluirlo en el plan de outputs del Paso 3 y en los paths del Paso 4.
 
-**Luego, mostrar al usuario un resumen breve de lo que se planea producir:**
+**OBLIGATORIO antes de la pausa — mostrar siempre el plan de outputs:**
 
-- Lista de **Architecture Views** (`arch-<dominio>.md`) con su perspectiva
-- Lista de **ADRs previstos** con título corto y razón en una línea
-- **Decisiones que NO ameritan ADR** (y por qué)
+Antes de imprimir la pausa, mostrar obligatoriamente este bloque completo (nunca omitirlo, nunca asumirlo cubierto por las preguntas anteriores):
+
+---
+**Plan de outputs**
+
+Architecture Views a producir:
+- `arch-<dominio>.md` — <perspectiva en una línea>
+- (una línea por cada vista prevista)
+
+ADRs previstos:
+- `ADR-001-<slug>` — <razón en una línea>
+- (una línea por cada ADR previsto)
+
+Decisiones que NO ameritan ADR: <lista o "ninguna">
+---
 
 > ⛔ **PAUSA OBLIGATORIA — PASO 3**
 > "¿Este plan tiene sentido o quieres ajustar algo antes de que escriba?"
