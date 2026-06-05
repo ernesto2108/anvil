@@ -1,6 +1,6 @@
 ---
 name: run-tests
-description: Ejecutar tests del proyecto con detector de race conditions y cobertura. Auto-detecta el stack (Go, React, Flutter). Usar cuando el usuario diga "run tests", "test this", "check coverage", "run vitest", "go test", "flutter test", o después de implementar código que necesita verificación.
+description: Ejecutar tests del proyecto con detector de race conditions y cobertura. Auto-detecta el stack (Go, React, Flutter, Python, Rust). Usar cuando el usuario diga "run tests", "test this", "check coverage", "run vitest", "go test", "flutter test", "pytest", "cargo test", o después de implementar código que necesita verificación.
 ---
 
 # Run Tests
@@ -14,6 +14,8 @@ Detectar el stack verificando los archivos marcadores en la raíz del proyecto:
 | `go.mod` | Go | `go test ./... -race -cover -count=1` |
 | `package.json` | Node/React | `<pm> exec vitest run --coverage` o `<pm> test -- --coverage` (detectar `<pm>` según CLAUDE.md — preferir `pnpm`) |
 | `pubspec.yaml` | Flutter | `flutter test --coverage` |
+| `pyproject.toml` | Python | `pytest --tb=short -q` |
+| `Cargo.toml` | Rust | `cargo test` |
 
 Si se detectan múltiples stacks, ejecutar los tests de cada stack por separado.
 
@@ -82,6 +84,40 @@ flutter test --reporter expanded
 ```
 
 Solución de problemas: fallos de golden — `flutter test --update-goldens`. Tests inestables — verificar `pumpAndSettle()` faltante o futures sin resolver. Ver cobertura: `genhtml coverage/lcov.info -o coverage/html`.
+
+### Python
+
+```bash
+pytest --tb=short -q
+
+# Con cobertura
+pytest --tb=short -q --cov=. --cov-report=term-missing
+
+# Archivo específico
+pytest path/to/test_file.py -v
+```
+
+Flags:
+- `--tb=short`: tracebacks concisos
+- `-q`: output limpio (quiet)
+- `--cov=.`: cobertura del directorio actual
+- `--cov-report=term-missing`: muestra líneas no cubiertas
+
+Configuración: `pyproject.toml` (sección `[tool.pytest.ini_options]`) o `pytest.ini`.
+
+### Rust
+
+```bash
+cargo test
+
+# Con output de tests que pasan
+cargo test -- --nocapture
+
+# Test específico
+cargo test nombre_del_test
+```
+
+Por defecto `cargo test` ejecuta tests unitarios + de integración + doc-tests. Usa `--release` para tests con optimizaciones.
 
 ## Analizar Resultados
 

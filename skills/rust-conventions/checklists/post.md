@@ -1,8 +1,5 @@
 # Checklist Post-Implementación
 
-- [ ] `cargo fmt --check` — formato correcto
-- [ ] `cargo clippy -- -D warnings` — sin errores de lint
-- [ ] `cargo test --workspace` — todos los tests pasan
 - [ ] Sin `.unwrap()` ni `panic!()` en código de librería
 - [ ] Cada bloque `unsafe` tiene comentario `// SAFETY:`
 - [ ] Cada `?` tiene `.context()` o `.with_context()`

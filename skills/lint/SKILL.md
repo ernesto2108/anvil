@@ -1,6 +1,6 @@
 ---
 name: lint
-description: Ejecutar linters y formateadores. Auto-detecta el stack (Go, React, Flutter). Usar cuando el usuario diga "lint", "revisar estilo de código", "formatear código", "ejecutar eslint", "ejecutar prettier", "golangci-lint", "dart analyze", o después de escribir código que debe validarse. OBLIGATORIO después de cualquier modificación de código — invocar antes de considerar cualquier tarea de código como terminada.
+description: Ejecutar linters y formateadores. Auto-detecta el stack (Go, React, Flutter, Python, Rust). Usar cuando el usuario diga "lint", "revisar estilo de código", "formatear código", "ejecutar eslint", "ejecutar prettier", "golangci-lint", "dart analyze", "ruff", "cargo clippy", o después de escribir código que debe validarse. OBLIGATORIO después de cualquier modificación de código — invocar antes de considerar cualquier tarea de código como terminada.
 ---
 
 # Lint
@@ -27,6 +27,8 @@ Detectar el stack verificando los archivos marcadores:
 | `go.mod` | Go | `golangci-lint run ./...` | `gofmt` (built-in) |
 | `package.json` | React/Node | `<pm> exec eslint .` | `<pm> exec prettier --check .` |
 | `pubspec.yaml` | Flutter | `dart analyze` | `dart format --set-exit-if-changed .` |
+| `pyproject.toml` o `*.py` | Python | `ruff check .` | `ruff format --check .` |
+| `Cargo.toml` o `*.rs` | Rust | `cargo clippy -- -D warnings` | `cargo fmt --check` |
 
 Si se detectan múltiples stacks, lintear cada uno por separado.
 
@@ -85,9 +87,35 @@ Configuración: `analysis_options.yaml`. Recomendado: `flutter_lints` o `very_go
 
 Problemas comunes auto-corregibles: imports no utilizados, constructores `const` faltantes, preferir `final` para variables inmutables.
 
+### Python
+
+```bash
+ruff check .
+ruff format --check .
+
+# Auto-fix
+ruff check --fix .
+ruff format .
+```
+
+Configuración: `pyproject.toml` (sección `[tool.ruff]`) o `ruff.toml`. Ruff reemplaza flake8, black e isort en una sola herramienta.
+
+### Rust
+
+```bash
+cargo fmt --check
+cargo clippy -- -D warnings
+
+# Auto-fix
+cargo fmt
+cargo clippy --fix -- -D warnings
+```
+
+Configuración: `rustfmt.toml` para formato, `clippy.toml` o `[lints]` en `Cargo.toml` para clippy. El flag `-D warnings` trata cualquier warning como error.
+
 ## Flujo de trabajo
 
-1. **Detectar stack** — verificar archivos marcadores (`go.mod`, `package.json`, `pubspec.yaml`)
+1. **Detectar stack** — verificar archivos marcadores (`go.mod`, `package.json`, `pubspec.yaml`, `pyproject.toml`, `Cargo.toml`)
 2. **Verificar comandos específicos del proyecto** — leer scripts de `package.json` o `Makefile` para comandos de lint personalizados
 3. **Auto-fix primero** — ejecutar el comando de corrección antes de reportar
 4. **Luego verificar** — ejecutar el comando de verificación para encontrar problemas restantes
