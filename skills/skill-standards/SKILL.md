@@ -1,18 +1,23 @@
 ---
 name: skill-standards
-description: Estándares y checklist para crear nuevas skills. Úsalo al crear una nueva skill, revisar la calidad de una skill, o cuando el usuario dice "create a skill", "nueva skill", "plantilla de skill", "checklist de skill". Asegura que todas las skills sigan el estándar abierto Agent Skills y las convenciones del proyecto.
-disable-model-invocation: true
+description: Estándares y checklist para crear o modificar skills. Úsalo cuando el usuario diga "create a skill", "nueva skill", "plantilla de skill", "checklist de skill", "modificar skill existente", o cuando el agent-designer vaya a escribir o revisar un SKILL.md.
 ---
 
 # Estándares de Creación de Skills
 
 Estos son los estándares obligatorios para cada skill en este proyecto. Basados en el estándar abierto Agent Skills (agentskills.io), las mejores prácticas de Anthropic, y lecciones aprendidas de nuestra propia iteración.
 
+## Filosofía
+
+1. **Procedimiento sobre identidad** — una skill enseña cómo hacer, no quién eres. Si el contenido dice "Eres el especialista en X", es un agente disfrazado.
+2. **Divulgación progresiva** — el SKILL.md contiene lo esencial (< 500 líneas); los detalles van en archivos de referencia que se cargan bajo demanda.
+3. **Reutilización como criterio de existencia** — una skill justifica su existencia solo si la consumen 2+ agentes o si es un guardrail del sistema. Si la usa solo un agente, la lógica va en el spec de ese agente.
+
 ## Checklist Pre-Creación
 
 Antes de escribir una nueva skill, verificar:
 
-- [ ] Ninguna skill existente ya cubre este caso de uso (revisar `~/.claude/skills/`)
+- [ ] Ninguna skill existente ya cubre este caso de uso (revisar el directorio de skills del proyecto)
 - [ ] La skill tiene una única responsabilidad clara
 - [ ] Sabes si debe ser auto-invocable, solo-usuario, o solo-sistema
 
@@ -162,6 +167,18 @@ Crear `evals/evals.json` con:
 ## Compatibilidad Cross-Agent
 
 Las skills viven en `~/.claude/skills/` con un symlink en `~/.agents/skills/` para descubrimiento cross-agent (Cursor, Codex, Gemini CLI, etc.). No se necesita trabajo extra — el symlink lo maneja.
+
+## Detección de Anti-Patrones
+
+| Anti-Patrón | Señal | Severidad | Corrección |
+|---|---|---|---|
+| Skill con routing logic | Contiene "derivar a", "invocar a", "escalar a" + nombre de agente | error | Mover lógica al agente que la consume |
+| Skill con lenguaje de rol | Contiene "Eres el", "Tu rol es", "Actúas como" | error | Reescribir como instrucción procedimental |
+| SKILL.md > 500 líneas | `wc -l SKILL.md` > 500 | warning | Extraer detalle a `reference.md` dentro del directorio |
+| Descripción sin "Úsalo cuando" | No contiene la frase "Úsalo cuando" | warning | Agregar condiciones de activación con palabras clave |
+| Flag contradictorio | `disable-model-invocation: true` en una skill que un agente carga en su flujo | error | Eliminar el flag o cambiar a `user-invocable: false` según el caso |
+| Path hardcodeado | Rutas absolutas con `~`, `/home/`, `/Users/` en el contenido | warning | Usar referencias relativas o genéricas |
+| Falta sección Filosofía (skills de convenciones) | No existe `## Filosofía` en el cuerpo | warning | Agregar 3 principios que guíen las decisiones |
 
 ## Checklist de Calidad (ejecutar después de crear una skill)
 
