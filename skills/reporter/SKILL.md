@@ -1,22 +1,13 @@
 ---
 name: reporter
-description: Usa este agente para aplicar el delta a `.project-context/` al final de cualquier run que haya modificado archivos del proyecto, y opcionalmente producir un reporte de ejecución (`last-run.md`) cuando el trigger lo amerite. Siempre es el ÚLTIMO agente en ejecutarse. También puede ser invocado directamente por el humano al cierre de cualquier sesión en la que se hayan modificado archivos del proyecto. Tiene escritura exclusiva sobre `.project-context/Core/workflows.md`, `.project-context/Core/coding-standards.md`, `.project-context/Technical domain/project.md`, `.project-context/Technical domain/domain.md`, `.project-context/Technical domain/glossary.md`, `.project-context/Technical domain/contracts.md`, `.project-context/Technical domain/dependencies.md`, `.project-context/Technical domain/risks.md`.
-permissionMode: execute
-model: low
-skills:
-  - context-nav
+description: Aplica el delta a `.project-context/` al final de cualquier run que haya modificado archivos del proyecto, y opcionalmente produce un reporte de ejecución (`last-run.md`) bajo triggers especiales. Siempre es el último paso del pipeline. Tiene escritura exclusiva sobre los archivos Core/* y Technical domain/* de `.project-context/`.
+user-invocable: true
+consumers: []
 ---
 
 > **Nota:** La creación inicial de todos los archivos base en modo `init`/`deep` es responsabilidad de `context-init`; el reporter solo los actualiza incrementalmente en runs posteriores.
 
-# Rol: Reporter
-
-Tipo: solo lectura sobre código y handoffs; escritura sobre `.project-context/` (delta) y el archivo de reporte cuando aplica.
-
-## Capacidades requeridas
-
-- Escribir y editar archivos dentro de `.project-context/`.
-- Acceso a un sistema de memoria (Anvil MCP o equivalente) para consultar contexto previo y cerrar el ciclo del run.
+Transformación determinista que cierra el ciclo de un run: lee diffs y handoffs, aplica el delta a `.project-context/` (Core/* y Technical domain/*), persiste el handoff en memoria, y opcionalmente produce un `last-run.md` bajo triggers especiales. Solo lectura sobre código; escritura sobre `.project-context/` y el archivo de reporte cuando aplica. Nunca modifica código fuente.
 
 ## Cuándo se ejecuta el reporter (GATING)
 
@@ -95,7 +86,7 @@ El humano provee las rutas exactas (`task_path`, `reports_path`). Si no se prove
 ### Modo delta-only
 
 1. Recibir: lista de archivos modificados (inline en el prompt)
-2. Aplicar delta a `.project-context/` (ver sección "Responsabilidad: delta a Context Navigator")
+2. Leer `skills/context-nav/update.md` para obtener la tabla de mapeo (fuente de verdad del mapeo archivos → secciones de `.project-context/`) y aplicar delta a `.project-context/` (ver sección "Responsabilidad: delta a Context Navigator")
 3. **Persistir handoff en memoria (cierre del ciclo, OBLIGATORIO si hay handoff)** — ver sección "Cierre del ciclo" abajo
 4. Devolver al humano: lista de archivos de `.project-context/` actualizados
 
@@ -129,7 +120,7 @@ Esta es la responsabilidad **principal** del reporter desde la auditoría de per
 
 Al final de cada run con archivos modificados, si `.project-context/NAVIGATOR.md` existe en el proyecto, aplicar un delta:
 
-1. Cargar `skills/context-nav/update.md` — define qué sección actualizar según archivos cambiados
+1. Leer el archivo `skills/context-nav/update.md` — define qué sección actualizar según archivos cambiados
 2. Mapear los archivos modificados a secciones de `.project-context/` usando la tabla de `update.md` (fuente de verdad única del mapeo)
 3. Aplicar edits puntuales — **nunca sobreescribir archivos completos**
 4. Actualizar `last_updated` en `.project-context/NAVIGATOR.md` **siempre** que el reporter haya escrito o editado al menos un archivo de `.project-context/` en este run. No requiere instrucción explícita del humano. El reporter tiene permiso de `Edit[.project-context/NAVIGATOR.md]` precisamente para esto y es su responsabilidad por defecto. Si el run no tocó ningún archivo de `.project-context/`, no hay nada que actualizar
@@ -195,4 +186,3 @@ Comparación vs ejecución anterior: +X% / -X% (si disponible)
 - Si se omitió `last-run.md`: indicar que el modo fue delta-only
 - Bloqueadores (si los hay) — ej. delta no aplicable porque faltó `.project-context/NAVIGATOR.md`
 - Si se agotó el presupuesto de edits (7): incluir la sección `## Items pendientes de documentar` con los archivos/secciones que quedaron sin actualizar y el motivo
-

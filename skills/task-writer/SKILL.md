@@ -141,8 +141,60 @@ Detener y reportar al humano cuando:
 | Dependencia circular detectada | `Ciclo detectado: [A → B → C → A]. Re-invocar spec-writer para resolver el orden.` |
 | Una task requiere decisión técnica no presente en el spec | `Task [X] requiere decisión [Y] no resuelta en el spec. Re-invocar spec-writer.` |
 
-## Presupuesto
+## Flujo de ejecución
 
-- Objetivo: 8K tokens | Máximo: 15K tokens
-- Máx llamadas a herramientas: 8 (lectura del spec + verificación puntual ≤4 LS/Glob)
-- No leer código de producción amplio
+### Inputs requeridos
+
+Antes de comenzar, verificar que el humano haya proporcionado:
+
+- **Path del spec** — archivo fuente (puede llamarse de cualquier forma)
+- **Tipo** — feature/historia o épica
+- **Destino de escritura** — path local, URL de herramienta externa, o "solo muéstralas en chat"
+
+Si falta alguno, abrir una sección `## Necesito información` con solo las preguntas pendientes y DETENER hasta recibir respuesta.
+
+### Pasos
+
+1. **Leer el spec** — única fuente. No leer ADRs, Architecture Views ni requirements directamente; el spec ya los consolida. No leer código de producción amplio.
+2. **Descomponer** — aplicar las reglas de descomposición definidas arriba (orden topológico setup → implementation → integration → validation, máx 15 tasks, Fibonacci 1-2-3-5-8).
+3. **Enriquecer cada task** con el template: completar `name`, `type`, `priority`, `agent`, `points`, `milestone`, `feature_id`, `dependencies`, y secciones opcionales (`inputs`, `outputs`, `validation_rules`, `## 🔗 Interfaces`, `design_reference`).
+4. **Preview gate** — mostrar al humano la tabla resumen antes de escribir nada:
+
+   ```
+   | ID | Tipo | Agente | Pts | Depende de |
+   |---|---|---|---|---|
+   ```
+
+   Preguntar literalmente: **"¿Genero los archivos?"** y DETENER hasta recibir confirmación explícita.
+   - Si aprueba → continuar al paso 5.
+   - Si pide ajustes → incorporarlos, regenerar tasks afectadas y volver al preview.
+   - **Excepción**: si el destino fue "solo muéstralas en chat", el preview ES el output final — no preguntar "¿Genero los archivos?".
+
+5. **Escribir los archivos** en el destino confirmado:
+   - **feature/historia**: un archivo `.md` por task, nombrado `<FEATURE_ID>-<NN>-<slug>.md`.
+   - **épica**: un archivo padre `<FEATURE_ID>-epic-<slug>.md` + un archivo por cada subtask.
+   - **Destino externo**: generar en memoria y reportar el contenido para que el humano lo suba — no operar herramientas externas.
+   - **Regla de granularidad (sin excepción):** nunca consolidar múltiples tasks en un solo documento, independientemente del destino.
+
+Si se cumple cualquier condición de escalación, detener y reportar con el formato definido en `## Protocolo de escalación`.
+
+### Output de cierre
+
+Máx 100 palabras. Los archivos ya están escritos — no repetir su contenido.
+
+~~~
+✅ Tasks generadas — <feature_id>
+
+**Tipo:** feature / épica
+**Archivos generados:** N tasks (+ 1 archivo padre si épica)
+**Total pts:** P
+**Orden de ejecución:** <ID-01> → <ID-02> → ...
+**Tasks críticas (bloqueadoras):** [lista]
+**Decisiones abiertas:** [lista o "ninguna"]
+**Acción para el humano:** [tasks developer-[?] a confirmar, o "ninguna"]
+
+| ID | Tipo | Agente | Pts | Depende de |
+|---|---|---|---|---|
+| <FEATURE_ID>-01-<slug> | setup | developer-backend | 2 | — |
+| <FEATURE_ID>-02-<slug> | implementation | developer-frontend | 3 | 01 |
+~~~

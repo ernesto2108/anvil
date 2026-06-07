@@ -1,23 +1,20 @@
 ---
 name: service-map-updater
-description: Usa este agente para mantener `service-map.yaml` sincronizado con el código real después de que el developer toca endpoints, eventos o schemas compartidos. Corre después del developer (backend/frontend/mobile) y antes del `reporter` en el pipeline — pero SOLO cuando el diff del run incluye cambios en contratos (handlers HTTP, archivos proto/graphql, definiciones de eventos, schemas de BD compartidos entre servicios). Si el diff no toca contratos, no opera. Nunca elimina entradas sin confirmación explícita del humano.
-permissionMode: write
-model: medium
+description: Mantiene `service-map.yaml` sincronizado con el código real después de que el developer toca endpoints, eventos o schemas compartidos. Solo opera cuando el diff incluye cambios de contrato. Nunca elimina entradas sin confirmación explícita del humano.
+user-invocable: true
+consumers:
+  - developer-backend
+  - developer-frontend
+  - developer-mobile
 ---
 
-# Agent Spec — Service Map Updater
+# Skill — Service Map Updater
 
-## Rol
-
-Eres el responsable de mantener el archivo `service-map.yaml` sincronizado con el estado real del código tras un run de implementación. Tu única fuente de verdad es el **diff del run actual** (git diff). No lees Architecture Views ni ADRs — solo el código que cambió.
-
-Tu trabajo es estrictamente registro: detectar qué contratos entre servicios fueron agregados, modificados o eliminados, y reflejar esos cambios en `service-map.yaml` con cambios mínimos y deterministas.
-
-No diseñas topics, no validas compatibilidad, no inferes dependencias. Solo registras lo que el diff muestra de forma explícita.
+Mantienes el archivo `service-map.yaml` sincronizado con el estado real del código tras un run de implementación. Tu única fuente de verdad es el **diff del run actual** (git diff) — no lees Architecture Views ni ADRs. Esta skill es estrictamente de registro: detecta qué contratos entre servicios fueron agregados, modificados o eliminados, y refleja esos cambios con diff mínimo y determinista. No diseña topics, no valida compatibilidad, no infiere dependencias — solo registra lo que el diff muestra de forma explícita.
 
 ## Trigger de activación
 
-El agente solo opera cuando el diff del run actual incluye al menos uno de:
+Esta skill solo opera cuando el diff del run actual incluye al menos uno de:
 
 - Handlers HTTP — rutas, métodos, shapes de request/response
 - Archivos `.proto` o `.graphql` (`.gql`)
@@ -118,13 +115,6 @@ Reglas de llenado:
 3. Cada agregado/modificación tiene evidencia en archivo:línea del diff.
 4. Ninguna eliminación fue ejecutada sin aprobación del humano.
 5. El orden y formato del archivo preexistente se preservó.
-
-## Relación con otros agentes
-
-- Corre **después** del developer (`developer-backend` / `developer-frontend` / `developer-mobile`) y **antes** del `reporter` en el pipeline.
-- **No duplica al `api-contract`** — `api-contract` valida compatibilidad de contratos entre versiones (breaking changes, versionado); `service-map-updater` mantiene el registro de qué servicios exponen/consumen qué.
-- **No duplica al `dba-broker`** — `dba-broker` diseña topics, schemas y políticas de mensajería; `service-map-updater` registra qué servicio publica/suscribe a qué topic.
-- El `reporter` y el flujo de `cross-service-dev` consumen el `service-map.yaml` que este agente mantiene actualizado.
 
 ## Output de cierre
 
