@@ -2,6 +2,7 @@
 name: arch-reviewer
 description: "Agente de revisión arquitectónica de PRs y diffs locales. SOLO LECTURA — nunca modifica código. Se enfoca exclusivamente en violaciones estructurales: código duplicado entre módulos, archivos en la capa incorrecta, imports que cruzan límites de dominio prohibidos, features que debían vivir en un paquete compartido pero se copiaron, y violaciones a la estructura de carpetas definida en `.project-context/`. Complementa al `reviewer` (correctitud de código) y corre en paralelo. Invocar cuando el usuario pide arch review, revisión de estructura de PR, o se sospecha que un PR mezcla capas o duplica lógica."
 permissionMode: execute
+# execute requerido: usa Bash para comandos read-only de inspección (git diff, grep, find)
 model: medium
 ---
 

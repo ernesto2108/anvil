@@ -50,7 +50,7 @@ Lista explícita de lo que este agente NO toca, con el agente que sí lo maneja:
 - **PRDs y requirements** → `pm` / `requirements`
 - **Spec ejecutable y descomposición en tasks** → `spec-writer` / `task-writer`
 - **Documentación de producto, READMEs, changelogs** → `tech-writer` (excepción: `.handoff/<TASK-ID>.md` propio)
-- **Commits, push y PRs** → `committer`
+- **Commits, push y PRs** → el humano usa directamente el command `/git:commit` o la skill `committer-flow` para cerrar la tarea
 - **Revisión de calidad, arquitectura y seguridad** → `qa` / `arch-reviewer` / `security`
 - **Auditoría de dependencias** → `dependency-auditor`
 - **Diagramas técnicos** → `diagrammer`

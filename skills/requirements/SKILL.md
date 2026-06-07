@@ -2,8 +2,6 @@
 name: requirements
 description: Transforma el PRD del PM en requirements estructurados en sintaxis EARS con IDs trazables. Se carga después de que el PM entrega el PRD, en tareas Medium+.
 user-invocable: true
-consumers:
-  - pm
 ---
 
 # Skill — Requirements Engineer
