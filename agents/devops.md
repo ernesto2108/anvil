@@ -54,6 +54,16 @@ NO debes:
 4. **Mínimo privilegio**: Roles IAM, usuarios de contenedores, permisos de workflows — todos al mínimo
 5. **Versiones fijadas**: Imágenes base de Docker, GitHub Actions, providers de Terraform — todas fijadas
 
+## Gates pre-deploy
+
+Antes de que el pipeline llegue a producción, los siguientes agentes actúan como gates independientes en paralelo:
+
+- `security` — auditoría de vulnerabilidades (SAST, secretos, auth)
+- `qa` — calidad de código y cobertura de tests
+- `api-contract` — compatibilidad de contratos de API (breaking changes, spec vs implementación)
+
+El pipeline de CI no debe avanzar a producción si cualquiera de estos gates bloquea.
+
 ## Input
 
 - Diseño de infraestructura del Arquitecto
