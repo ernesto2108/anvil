@@ -49,7 +49,7 @@ func generateAgentsMD(cfg *config.App, outputPath string) error {
 		name := strings.TrimSuffix(filepath.Base(f), ".md")
 		doc := frontmatter.Parse(string(data))
 		desc := doc.Fields["description"]
-		perm := doc.Fields["permission"]
+		_, perm := PermField(doc)
 		fmt.Fprintf(&b, "| **%s** | %s | %s |\n", name, desc, perm)
 	}
 

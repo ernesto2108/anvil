@@ -12,12 +12,25 @@ import (
 // AgentData holds the parsed data for a single agent file, passed to the
 // provider-specific formatting callback.
 type AgentData struct {
-	Name     string             // base filename (e.g. "developer.md")
-	RawData  []byte             // raw file bytes
-	Content  string             // string(RawData)
+	Name     string               // base filename (e.g. "developer.md")
+	RawData  []byte               // raw file bytes
+	Content  string               // string(RawData)
 	Doc      frontmatter.Document // parsed frontmatter + body
-	Tier     string             // frontmatter "model" value
-	Perm     string             // frontmatter "permission" value
+	Tier     string               // frontmatter "model" value
+	Perm     string               // resolved permission value (from "permissionMode" or "permission")
+	PermKey  string               // actual frontmatter key used ("permissionMode" or "permission")
+}
+
+// PermField returns the permission field key and value from a parsed frontmatter document.
+// Agents use "permissionMode" (preferred) or "permission" for the permission level.
+func PermField(doc frontmatter.Document) (key, value string) {
+	if v := doc.Fields["permissionMode"]; v != "" {
+		return "permissionMode", v
+	}
+	if v := doc.Fields["permission"]; v != "" {
+		return "permission", v
+	}
+	return "", ""
 }
 
 // AdaptFunc is the provider-specific callback that formats an agent file
@@ -61,13 +74,15 @@ func deployAgents(cfg *config.App, agentDst string, ts *TargetStats, adapt Adapt
 		content := string(data)
 		doc := frontmatter.Parse(content)
 
+		permKey, permVal := PermField(doc)
 		agent := AgentData{
 			Name:    name,
 			RawData: data,
 			Content: content,
 			Doc:     doc,
 			Tier:    doc.Fields["model"],
-			Perm:    doc.Fields["permission"],
+			Perm:    permVal,
+			PermKey: permKey,
 		}
 
 		adapted := adapt(cfg, agent)

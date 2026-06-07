@@ -197,6 +197,12 @@ func registryBrowse(cfg *config.App, git *gitutil.Repo) {
 	// Reconcile: upgrade stale symlinks to resolved copies
 	reconcileAgents(cfg, targetPaths)
 
+	// Reconcile permissions: re-resolve permissionMode/permission in existing deployed copies
+	reconcilePermissions(cfg, targetPaths)
+
+	// Prune: remove deployed items whose source no longer exists in the repo
+	pruneOrphans(cfg, targetPaths)
+
 	// Sync metadata files (CLAUDE.md, GEMINI.md, AGENTS.md)
 	fmt.Println()
 	output.Info("Syncing metadata files...")
@@ -420,12 +426,12 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 				content = frontmatter.ReplaceField(content, "model", tier, model)
 			}
 		}
-		perm := doc.Fields["permission"]
+		permKey, perm := deploy.PermField(doc)
 		if config.IsPerm(perm) {
 			tools := cfg.ResolvePermission(perm, targetName)
 			if tools != "" {
-				content = frontmatter.ReplaceField(content, "permission", perm, tools)
-				content = frontmatter.RenameField(content, "permission", "tools")
+				content = frontmatter.ReplaceField(content, permKey, perm, tools)
+				content = frontmatter.RenameField(content, permKey, "tools")
 			}
 		}
 		// Remove any existing symlink to avoid writing through it to the source
@@ -449,7 +455,7 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 
 		desc := doc.Fields["description"]
 		tier := doc.Fields["model"]
-		perm := doc.Fields["permission"]
+		_, perm := deploy.PermField(doc)
 
 		resolved := tier
 		if config.IsTier(tier) {
@@ -617,6 +623,106 @@ func uninstallFromTarget(it tui.Item, targetName, targetPath string) {
 	}
 }
 
+// pruneOrphans removes deployed items from targets whose source no longer exists
+// in the repo. This handles the case where an agent/skill/command was installed
+// but later deleted from the source repo — without this, files remain stuck in
+// target dirs forever since scanAgents/scanSkills/scanCommands only read the repo.
+func pruneOrphans(cfg *config.App, targetPaths map[string]string) {
+	pruned := 0
+
+	for targetName, basePath := range targetPaths {
+		// Agents: files with managed-by: anvil whose repo source is gone
+		agentDir := filepath.Join(basePath, config.CompAgents)
+		if entries, err := os.ReadDir(agentDir); err == nil {
+			for _, e := range entries {
+				if e.IsDir() || filepath.Ext(e.Name()) != ".md" {
+					continue
+				}
+				path := filepath.Join(agentDir, e.Name())
+				if !deploy.IsManagedByAnvil(path) {
+					continue
+				}
+				name := strings.TrimSuffix(e.Name(), ".md")
+				src := filepath.Join(cfg.RepoDir, config.CompAgents, name+".md")
+				if !fileutil.Exists(src) {
+					if err := os.Remove(path); err == nil {
+						output.Info("  %s pruned orphan agent %q from %s", output.Yellow("⌫"), name, targetName)
+						pruned++
+					}
+				}
+			}
+		}
+
+		// Skills: symlinks whose repo source dir is gone.
+		// Note: os.ReadDir uses Lstat, so e.IsDir() is false for symlinks (even valid ones).
+		// We must use fileutil.IsSymlink (Lstat-based) to detect them.
+		skillsDir := filepath.Join(basePath, config.CompSkills)
+		if entries, err := os.ReadDir(skillsDir); err == nil {
+			for _, e := range entries {
+				name := e.Name()
+				path := filepath.Join(skillsDir, name)
+				if !fileutil.IsSymlink(path) {
+					continue
+				}
+				src := filepath.Join(cfg.RepoDir, config.CompSkills, name)
+				if !fileutil.IsDir(src) {
+					if err := os.Remove(path); err == nil {
+						output.Info("  %s pruned orphan skill %q from %s", output.Yellow("⌫"), name, targetName)
+						pruned++
+					}
+				}
+			}
+		}
+
+		// Commands: files with managed-by: anvil or symlinks to repo whose source is gone
+		cmdDir := filepath.Join(basePath, config.CompCommands)
+		if entries, err := os.ReadDir(cmdDir); err == nil {
+			for _, e := range entries {
+				if e.IsDir() || filepath.Ext(e.Name()) != ".md" {
+					continue
+				}
+				path := filepath.Join(cmdDir, e.Name())
+				if !deploy.IsManagedByAnvil(path) {
+					continue
+				}
+				name := strings.TrimSuffix(e.Name(), ".md")
+				src := filepath.Join(cfg.RepoDir, config.CompCommands, name+".md")
+				if !fileutil.Exists(src) {
+					if err := os.Remove(path); err == nil {
+						output.Info("  %s pruned orphan command %q from %s", output.Yellow("⌫"), name, targetName)
+						pruned++
+					}
+				}
+			}
+		}
+
+		// Gemini commands (.toml format) — no managed-by but we can check source
+		if targetName == config.TargetGemini {
+			if entries, err := os.ReadDir(cmdDir); err == nil {
+				for _, e := range entries {
+					if filepath.Ext(e.Name()) != ".toml" {
+						continue
+					}
+					name := strings.TrimSuffix(e.Name(), ".toml")
+					srcMd := filepath.Join(cfg.RepoDir, config.CompCommands, name+".md")
+					if !fileutil.Exists(srcMd) {
+						path := filepath.Join(cmdDir, e.Name())
+						if err := os.Remove(path); err == nil {
+							output.Info("  %s pruned orphan command %q from %s", output.Yellow("⌫"), name, targetName)
+							pruned++
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if pruned > 0 {
+		fmt.Println()
+		output.Info("Pruned %d orphaned item(s) from targets", pruned)
+	}
+}
+
 // reconcileAgents finds agent symlinks in target dirs and upgrades them
 // to resolved copies with proper model/permission values from config.
 func reconcileAgents(cfg *config.App, targetPaths map[string]string) {
@@ -650,14 +756,13 @@ func reconcileAgents(cfg *config.App, targetPaths map[string]string) {
 					content = frontmatter.ReplaceField(content, "model", tier, model)
 				}
 			}
-			perm := doc.Fields["permission"]
+			permKey, perm := deploy.PermField(doc)
 			if config.IsPerm(perm) {
 				tools := cfg.ResolvePermission(perm, targetName)
 				if tools != "" {
-					content = frontmatter.ReplaceField(content, "permission", perm, tools)
-					// Claude uses "tools:" instead of "permission:" in frontmatter
+					content = frontmatter.ReplaceField(content, permKey, perm, tools)
 					if targetName == config.TargetClaude {
-						content = frontmatter.RenameField(content, "permission", "tools")
+						content = frontmatter.RenameField(content, permKey, "tools")
 					}
 				}
 			}
@@ -674,6 +779,55 @@ func reconcileAgents(cfg *config.App, targetPaths map[string]string) {
 	if upgraded > 0 {
 		fmt.Println()
 		output.Info("Reconciled %d agent(s): symlink → resolved copy", upgraded)
+	}
+}
+
+// reconcilePermissions re-resolves the permission field in existing deployed agent copies.
+// Handles agents deployed before the permissionMode fix: they have "permissionMode: X"
+// untouched in the target file instead of "tools: Bash,Edit,...".
+func reconcilePermissions(cfg *config.App, targetPaths map[string]string) {
+	fixed := 0
+	for targetName, basePath := range targetPaths {
+		agentDir := filepath.Join(basePath, config.CompAgents)
+		entries, err := os.ReadDir(agentDir)
+		if err != nil {
+			continue
+		}
+		for _, e := range entries {
+			if e.IsDir() || filepath.Ext(e.Name()) != ".md" {
+				continue
+			}
+			path := filepath.Join(agentDir, e.Name())
+			if !deploy.IsManagedByAnvil(path) {
+				continue
+			}
+			data, err := os.ReadFile(path)
+			if err != nil {
+				continue
+			}
+			content := string(data)
+			doc := frontmatter.Parse(content)
+			permKey, perm := deploy.PermField(doc)
+			// Only act if the permission field is still unresolved (value is a perm level, not tool list)
+			if permKey == "" || !config.IsPerm(perm) {
+				continue
+			}
+			tools := cfg.ResolvePermission(perm, targetName)
+			if tools == "" {
+				continue
+			}
+			content = frontmatter.ReplaceField(content, permKey, perm, tools)
+			content = frontmatter.RenameField(content, permKey, "tools")
+			if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+				output.Error("  reconcile permissions %s: %s", e.Name(), err)
+				continue
+			}
+			fixed++
+		}
+	}
+	if fixed > 0 {
+		fmt.Println()
+		output.Info("Reconciled permissions in %d agent(s): permissionMode → tools", fixed)
 	}
 }
 
