@@ -1,8 +1,7 @@
 ---
 name: reporter
-description: Aplica el delta a `.project-context/` al final de cualquier run que haya modificado archivos del proyecto, y opcionalmente produce un reporte de ejecución (`last-run.md`) bajo triggers especiales. Siempre es el último paso del pipeline. Tiene escritura exclusiva sobre los archivos Core/* y Technical domain/* de `.project-context/`.
+description: Aplica el delta a `.project-context/` al cierre de un run que modificó archivos, y opcionalmente produce un reporte de ejecución (`last-run.md`) bajo triggers especiales. Tiene escritura exclusiva sobre los archivos Core/* y Technical domain/* de `.project-context/`. Úsalo cuando el humano diga "cerrar run", "actualizar contexto", "aplicar delta", "last-run", "reporte de ejecución", o al finalizar cualquier tarea/bug fix con archivos modificados después de que los tests pasen.
 user-invocable: true
-consumers: []
 ---
 
 > **Nota:** La creación inicial de todos los archivos base en modo `init`/`deep` es responsabilidad de `context-init`; el reporter solo los actualiza incrementalmente en runs posteriores.
@@ -16,8 +15,6 @@ El reporter tiene **dos responsabilidades distintas** que se activan con trigger
 ### Responsabilidad #1 — Delta a `.project-context/` (OBLIGATORIO si el run modificó archivos)
 
 **Ejecutar SIEMPRE que el run haya modificado cualquier archivo del proyecto** (código, configs, docs del repo, specs de agentes, etc.). En particular, **al cierre de cualquier tarea o bug fix, después de que los tests pasen**, invocar al reporter es parte obligatoria del flujo de cierre — al mismo nivel que correr los tests, no una opción. Actualizar `.project-context/` es parte del "done" de la tarea. El reporter no se auto-invoca (lo invoca el humano que orquesta), pero el sistema espera que se invoque siempre que se cierre una tarea con archivos modificados. No es opcional.
-
-El humano ya no tiene permisos de escritura sobre `.project-context/Core/workflows.md`, `.project-context/Core/coding-standards.md`, `.project-context/Technical domain/project.md`, `.project-context/Technical domain/domain.md`, `.project-context/Technical domain/glossary.md`, `.project-context/Technical domain/contracts.md`, `.project-context/Technical domain/dependencies.md`, `.project-context/Technical domain/risks.md` — esa escritura se transfirió al reporter.
 
 En este modo el reporter:
 - Aplica el delta a `.project-context/` siguiendo el mapeo de `skills/context-nav/update.md` (fuente de verdad única del mapeo)
@@ -82,6 +79,13 @@ El reporter tiene dos misiones según el modo:
 El humano provee las rutas exactas (`task_path`, `reports_path`). Si no se proveen y el modo requiere `last-run.md`, pregunta al humano: "**Modo con reporte pero sin `reports_path` en el prompt:** Necesito dónde escribir `last-run.md`. ¿Cuál es el `reports_path`?". No te detengas en silencio. Para modo delta-only el `reports_path` no es necesario.
 
 ## Flujo de trabajo
+
+### Gate 0 — Verificar dependencia `context-nav` (OBLIGATORIO antes de cualquier modo)
+
+Antes de ejecutar cualquier modo, verificar que `skills/context-nav/update.md` existe en el proyecto activo. Esa skill es la fuente de verdad única del mapeo archivos → secciones de `.project-context/` y el reporter no puede aplicar el delta sin ella.
+
+- Si `skills/context-nav/update.md` **no existe** → DETENER y reportar al humano: "Dependencia requerida ausente: `skills/context-nav/update.md` no está presente en el proyecto. El reporter no puede aplicar el delta a `.project-context/` sin esta skill. Instalar `context-nav` antes de reintentar."
+- Si existe → continuar con el modo correspondiente.
 
 ### Modo delta-only
 
