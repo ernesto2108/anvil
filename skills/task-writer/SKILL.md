@@ -1,15 +1,20 @@
 ---
 name: task-writer
-description: Reglas para escribir archivos de task atómicos a partir de un archivo spec. Define los templates de task individual y archivo padre (épica/historia), categorías, inferencia del agente ejecutor y protocolo de escalación. Usada exclusivamente por el agente `task-writer`.
+description: Reglas para escribir archivos de task atómicos a partir de un archivo spec. Define los templates de task individual y archivo padre (épica/historia), categorías, inferencia del agente ejecutor y protocolo de escalación. Úsalo cuando el usuario diga "escribir tasks", "descomponer spec", "generar archivos de task", "crear tasks", "task-writer", "descomponer feature" o "descomponer épica".
+user-invocable: true
 ---
 
-# Task Writer
+Esta skill define cómo traducir un archivo spec en un conjunto de archivos `.md` independientes — uno por task — y, cuando aplica, un archivo padre de épica que los agrupa. No cubre actualización del backlog ni transiciones de estado.
 
-Esta skill define cómo el `task-writer` traduce un archivo spec en un conjunto de archivos `.md` independientes — uno por task — y, cuando aplica, un archivo padre de épica que los agrupa. No cubre actualización del backlog ni transiciones de estado; eso vive en `backlog-management`.
+## Filosofía
+
+1. Una task = un archivo = una preocupación.
+2. El task-writer no decide implementación — solo descompone.
+3. Sin confirmación del humano, no se escribe nada.
 
 ## Tipos de descomposición
 
-El agente pregunta al inicio qué tipo de trabajo es:
+Preguntar al inicio qué tipo de trabajo es:
 
 - **feature / historia** → genera archivos individuales de task (uno por task).
 - **épica** → genera 1 archivo padre + archivos individuales por cada subtask.
@@ -40,24 +45,24 @@ validation_rules:
 
 # {name}
 
-## 🎯 Objetivo
+## Objetivo
 [Comportamiento observable esperado — el QUÉ, no el CÓMO]
 
-## 📋 Contexto Técnico
+## Contexto Técnico
 [Tabla, endpoint, contrato u otra referencia técnica extraída del spec]
 
-## 🔗 Interfaces
+## Interfaces
 - Llamado por: `path/caller`
 - Llama a: `path/callee`
 
-## ✅ Criterios de Aceptación
+## Criterios de Aceptación
 - [ ] [criterio verificable]
 ```
 
 **Reglas del template:**
 
 - `inputs`, `outputs` y `validation_rules` son opcionales — omitir si no aplican a la task.
-- `## 🔗 Interfaces` es opcional — omitir si la task no tiene vecinos claros.
+- `## Interfaces` es opcional — omitir si la task no tiene vecinos claros.
 - `dependencies: []` cuando no hay dependencias; si las hay, listar los `name` de las tasks que deben completarse primero.
 - Sin sección "Pasos de Ejecución" — el task-writer no sabe implementación.
 
@@ -77,10 +82,10 @@ subtasks:
 
 # {name}
 
-## 🎯 Objetivo
+## Objetivo
 [Descripción del valor de negocio de la épica]
 
-## 📋 Subtareas
+## Subtareas
 
 | ID | Tipo | Agente | Pts | Depende de |
 |---|---|---|---|---|
@@ -141,7 +146,7 @@ Detener y reportar al humano cuando:
 | Dependencia circular detectada | `Ciclo detectado: [A → B → C → A]. Re-invocar spec-writer para resolver el orden.` |
 | Una task requiere decisión técnica no presente en el spec | `Task [X] requiere decisión [Y] no resuelta en el spec. Re-invocar spec-writer.` |
 
-## Flujo de ejecución
+## Flujo de Trabajo
 
 ### Inputs requeridos
 
@@ -157,7 +162,7 @@ Si falta alguno, abrir una sección `## Necesito información` con solo las preg
 
 1. **Leer el spec** — única fuente. No leer ADRs, Architecture Views ni requirements directamente; el spec ya los consolida. No leer código de producción amplio.
 2. **Descomponer** — aplicar las reglas de descomposición definidas arriba (orden topológico setup → implementation → integration → validation, máx 15 tasks, Fibonacci 1-2-3-5-8).
-3. **Enriquecer cada task** con el template: completar `name`, `type`, `priority`, `agent`, `points`, `milestone`, `feature_id`, `dependencies`, y secciones opcionales (`inputs`, `outputs`, `validation_rules`, `## 🔗 Interfaces`, `design_reference`).
+3. **Enriquecer cada task** con el template: completar `name`, `type`, `priority`, `agent`, `points`, `milestone`, `feature_id`, `dependencies`, y secciones opcionales (`inputs`, `outputs`, `validation_rules`, `## Interfaces`, `design_reference`).
 4. **Preview gate** — mostrar al humano la tabla resumen antes de escribir nada:
 
    ```
@@ -178,12 +183,12 @@ Si falta alguno, abrir una sección `## Necesito información` con solo las preg
 
 Si se cumple cualquier condición de escalación, detener y reportar con el formato definido en `## Protocolo de escalación`.
 
-### Output de cierre
+## Formato de Salida
 
 Máx 100 palabras. Los archivos ya están escritos — no repetir su contenido.
 
 ~~~
-✅ Tasks generadas — <feature_id>
+Tasks generadas — <feature_id>
 
 **Tipo:** feature / épica
 **Archivos generados:** N tasks (+ 1 archivo padre si épica)
