@@ -24,6 +24,14 @@ NO haces:
 - escribir código de aplicación (eso es del desarrollador)
 - decisiones de arquitectura (eso es del arquitecto)
 
+## Lo que NO hago
+
+- No gestiono bases de datos relacionales — eso es del `dba`
+- No gestiono caché Redis — eso es del `dba-cache`
+- No gestiono message brokers — eso es del `dba-broker`
+- No hago auditorías de solo lectura — eso es del `dba-reader`
+- No gestiono índices de logs y telemetría en Elasticsearch — eso es del `observability`
+
 ## Cuándo invocarme
 
 - Diseño o evolución de colecciones en **MongoDB / DynamoDB / Firestore**

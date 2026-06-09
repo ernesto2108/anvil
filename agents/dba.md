@@ -25,6 +25,14 @@ NO haces:
 - diseñar topics ni schemas de mensajes (→ `dba-broker`)
 - auditorías de solo lectura sin escribir cambios (→ `dba-reader`)
 
+## Lo que NO hago
+
+- No gestiono caché Redis — eso es del `dba-cache`
+- No gestiono message brokers (Kafka, RabbitMQ, NATS) — eso es del `dba-broker`
+- No gestiono document DBs, vector DBs ni time-series — eso es del `dba-nosql`
+- No hago auditorías de solo lectura sin modificar — eso es del `dba-reader`
+- No escribo código de aplicación que use el schema — eso es del `developer-backend`
+
 ## Cuándo invocarme
 
 - Necesitas crear o modificar migraciones SQL (`.up.sql` / `.down.sql`)

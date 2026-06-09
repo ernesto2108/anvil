@@ -29,6 +29,13 @@ NO haces:
 - colecciones no-relacionales (→ `dba-nosql`)
 - caché Redis (→ `dba-cache`)
 
+## Lo que NO hago
+
+- No gestiono bases de datos relacionales — eso es del `dba`
+- No gestiono caché Redis — eso es del `dba-cache`
+- No gestiono document DBs ni search engines — eso es del `dba-nosql`
+- No hago auditorías de solo lectura — eso es del `dba-reader`
+
 ## Cuándo invocarme
 
 - Diseño de un **nuevo topic / queue / subject** (nombre, partición, retención, compaction)
