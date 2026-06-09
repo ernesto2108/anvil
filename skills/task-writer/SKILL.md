@@ -1,7 +1,7 @@
 ---
 name: task-writer
 description: Reglas para escribir archivos de task atómicos a partir de un archivo spec. Define los templates de task individual y archivo padre (épica/historia), categorías, inferencia del agente ejecutor y protocolo de escalación. Úsalo cuando el usuario diga "escribir tasks", "descomponer spec", "generar archivos de task", "crear tasks", "task-writer", "descomponer feature" o "descomponer épica".
-user-invocable: true
+disable-model-invocation: true
 ---
 
 Esta skill define cómo traducir un archivo spec en un conjunto de archivos `.md` independientes — uno por task — y, cuando aplica, un archivo padre de épica que los agrupa. No cubre actualización del backlog ni transiciones de estado.
@@ -30,9 +30,9 @@ Cada task es un archivo `.md` independiente con este formato exacto:
 name: "<FEATURE_ID>-<NN>-<slug-corto>"
 type: "setup" | "implementation" | "integration" | "validation"
 priority: "HIGH" | "MEDIUM" | "LOW"
-agent: "developer-backend" | "developer-frontend" | "developer-mobile"
+agent: "developer-backend" | "developer-frontend" | "developer-mobile" | "tester" | "dba" | "dba-cache" | "dba-broker" | "dba-nosql" | "devops" | "tech-writer" | "security" | "observability" | "diagrammer"
 points: 1 | 2 | 3 | 5 | 8
-milestone: "<milestone>"
+milestone: "<milestone>" (opcional)
 feature_id: "<FEATURE_ID>"
 dependencies: []
 inputs:
@@ -65,6 +65,7 @@ validation_rules:
 - `## Interfaces` es opcional — omitir si la task no tiene vecinos claros.
 - `dependencies: []` cuando no hay dependencias; si las hay, listar los `name` de las tasks que deben completarse primero.
 - Sin sección "Pasos de Ejecución" — el task-writer no sabe implementación.
+- Si el spec no declara milestones → omitir el campo o usar `tbd`.
 
 ## Template — archivo padre (épica)
 
@@ -73,7 +74,7 @@ validation_rules:
 name: "<FEATURE_ID>-epic-<slug>"
 type: "epic"
 priority: "HIGH" | "MEDIUM" | "LOW"
-milestone: "<milestone>"
+milestone: "<milestone>" (opcional)
 feature_id: "<FEATURE_ID>"
 subtasks:
   - "<FEATURE_ID>-01-<slug>"
@@ -91,9 +92,13 @@ subtasks:
 |---|---|---|---|---|
 | <FEATURE_ID>-01-<slug> | implementation | developer-backend | 3 | — |
 | <FEATURE_ID>-02-<slug> | integration | developer-frontend | 2 | 01 |
+| <FEATURE_ID>-03-<slug> | validation | tester | 2 | 02 |
+| <FEATURE_ID>-04-<slug> | setup | dba | 1 | — |
 
 **Total pts:** N
 ```
+
+Si el spec no declara milestones → omitir el campo o usar `tbd`.
 
 ## Categorías de task
 
@@ -113,18 +118,48 @@ subtasks:
 5. Una preocupación por task — si toca backend Y frontend/mobile, separar en dos tasks.
 6. Tests son SIEMPRE una task separada de la implementación.
 7. Las dependencias deben ser explícitas — listar los `name` de tasks previas en `dependencies`.
-8. Puntos Fibonacci: 1, 2, 3, 5, 8. Si una task se estima en 13+ → dividir.
+8. **Puntos Fibonacci:** 1, 2, 3, 5, 8. Si una task se estima en 13+ → dividir.
+
+| Puntos | Referencia |
+|--------|-----------|
+| 1 | Cambio de configuración, variable de entorno, schema trivial |
+| 2 | Un handler o función simple con tests unitarios |
+| 3 | Servicio o repositorio con lógica moderada |
+| 5 | Integración end-to-end entre componentes existentes |
+| 8 | Componente nuevo complejo; si supera 8 → considerar dividir |
+
+Tasks de tipo `setup` raramente superan 2 pts. Tasks de tipo `validation` raramente superan 3 pts.
+
+### Inferencia de prioridad
+
+| Prioridad | Criterio |
+|-----------|----------|
+| HIGH | Task de tipo `setup` que bloquea ≥2 tasks dependientes; task en el camino crítico del sprint |
+| MEDIUM | Task independiente o paralelizable; default cuando no hay criterio explícito en el spec |
+| LOW | Documentación, diagramas, tareas de observabilidad o cleanup |
+
+Si el spec declara prioridad explícita para un feature → heredar. Si no → aplicar tabla.
 
 ## Inferencia del agente ejecutor
 
-`agent` es obligatorio en todas las tasks. Valores exactos: `developer-backend`, `developer-frontend`, `developer-mobile`. Inferir en este orden:
+`agent` es obligatorio en todas las tasks. Valores exactos permitidos: `developer-backend`, `developer-frontend`, `developer-mobile`, `tester`, `dba`, `dba-cache`, `dba-broker`, `dba-nosql`, `devops`, `tech-writer`, `security`, `observability`, `diagrammer`. Inferir en este orden:
 
-1. **Por extensión/path del archivo principal:**
+1. **Por extensión/path del archivo principal o keywords de la task:**
    - `.dart` o path bajo `lib/` → `developer-mobile`
    - `.tsx`, `.jsx`, `.astro`, `.ts` en contexto frontend, o path bajo `src/components/`, `src/pages/`, `src/hooks/` → `developer-frontend`
    - `.go`, `.py`, `.rs`, o path bajo `internal/`, `cmd/`, `pkg/`, `api/` → `developer-backend`
+   - `.sql` o path bajo `migrations/`, `schema/` → `dba`
+   - `*redis*`, `*cache*` en nombre de archivo o descripción de la task → `dba-cache`
+   - `*kafka*`, `*rabbitmq*`, `*nats*`, `*broker*`, `*topic*`, `*queue*` → `dba-broker`
+   - `*mongo*`, `*firestore*`, `*dynamo*`, `*vector*`, `*embedding*`, `*elasticsearch*` → `dba-nosql`
+   - Path bajo `.github/workflows/`, `Dockerfile`, `docker-compose*`, `*.tf`, `kubernetes/`, `k8s/` → `devops`
+   - Task de tipo `validation` que refiere a archivos de test (`*_test.go`, `*.spec.ts`, `*.test.ts`, `*_test.dart`) → `tester`
+   - Task que refiere a `*.md`, `README`, `CHANGELOG`, documentación → `tech-writer`
+   - Keywords de seguridad: `auth`, `JWT`, `CVE`, `RBAC`, `CORS`, `pentest`, `vulnerability` → `security`
+   - Keywords de observabilidad: `OpenTelemetry`, `metrics`, `traces`, `dashboard`, `alerting`, `Grafana`, `Prometheus` → `observability`
+   - Task que produce `.drawio` o tiene keywords `diagrama`, `diagram` → `diagrammer`
 2. **Si el path es ambiguo** → desempatar con el campo `Dominio` del spec (`mobile`, `frontend`, `backend`, `fullstack`).
-3. **Si aún no se infiere** → marcar `developer-[?]` y listar en el output de cierre.
+3. **Si aún no se infiere** → marcar `developer-[?]` o `[agente-?]` según corresponda, y listar en el output de cierre.
 
 ## Design reference
 
@@ -200,6 +235,7 @@ Tasks generadas — <feature_id>
 
 | ID | Tipo | Agente | Pts | Depende de |
 |---|---|---|---|---|
-| <FEATURE_ID>-01-<slug> | setup | developer-backend | 2 | — |
-| <FEATURE_ID>-02-<slug> | implementation | developer-frontend | 3 | 01 |
+| <FEATURE_ID>-01-<slug> | setup | dba | 2 | — |
+| <FEATURE_ID>-02-<slug> | implementation | developer-backend | 3 | 01 |
+| <FEATURE_ID>-03-<slug> | validation | tester | 2 | 02 |
 ~~~
