@@ -1,178 +1,169 @@
 ---
 name: cross-service-dev
-description: Orquesta agentes en múltiples repos de microservicios en una sola sesión. Usar cuando el usuario diga "implement across services", "this touches X and Y services", "cross-service feature", "work on multiple repos", "remove this endpoint from all services", "deprecate this across services", "refactor cross-service", o describa cualquier cambio (crear, actualizar, eliminar, deprecar) que requiera trabajo coordinado en 2+ servicios. Extiende el workflow de orchestrate para escenarios multi-repo. Requiere service-map.yaml para resolver rutas de repos.
+description: Protocolo procedimental para coordinar trabajo cross-service en múltiples repos de microservicios en una sola sesión. Úsalo cuando el usuario diga "implement across services", "this touches X and Y services", "cross-service feature", "work on multiple repos", "remove this endpoint from all services", "deprecate this across services", "refactor cross-service", o describa cualquier cambio (crear, actualizar, eliminar, deprecar) que requiera trabajo coordinado en 2+ servicios. Define fases, gates y formato de salida. Requiere service-map.yaml para resolver rutas de repos.
 disable-model-invocation: true
 ---
 
-# Cross-Service Dev — Orquestación Multi-Repo
+# Cross-Service Dev — Protocolo Multi-Repo
 
-## Propósito
+## Filosofía
 
-Extender el workflow de `orchestrate` para coordinar agentes en múltiples repos de microservicios en una sesión. Los mismos agentes, los mismos gates — el orquestador resuelve rutas, descubre dependencias y enruta agentes a los repos correctos.
-
-```
-orchestrate          = pipeline para 1 repo
-cross-service-dev    = orchestrate × N repos (coordinado)
-```
+1. **Mismos gates que un run de un solo repo** — multi-repo no relaja el pipeline; lo replica coordinado.
+2. **Cero omisión silenciosa** — todo servicio afectado debe aparecer en el scope o ser declarado explícitamente como excluido con justificación.
+3. **Contexto cross-service consolidado** — las decisiones de diseño y QA se toman sobre el conjunto completo, no por repo aislado.
 
 ## Prerequisitos
 
-- `service-map.yaml` existe en `{service_map_path}` (archivo local en `.project-context/service-map.yaml` o el repo)
-- Los repos de servicios afectados están en disco (local_path debe resolver)
-- Si existe `service-map.local.yaml`, usarlo para overrides de rutas locales
+- `service-map.yaml` existe en `{service_map_path}` (en `.project-context/service-map.yaml` o el repo)
+- Los repos de servicios afectados están en disco (`local_path` resuelve)
+- Si existe `service-map.local.yaml`, se usa para overrides de rutas locales
 
----
+## Flujo de Trabajo
 
-## Workflow
+### Fase 1 — Descubrimiento y scope
 
-### Fase 1 — Descubrimiento PM (agente pm)
-
-Invocar al agente pm con la solicitud del usuario + ruta del vault. El PM maneja el descubrimiento en español.
-
-Adicionalmente, el orquestador debe:
-
-1. **Clasificar el tipo de operación:** Create | Update | Delete | Deprecate
+1. **Clasificar la operación:** Create | Update | Delete | Deprecate.
 
 2. **Resolver rutas de servicio desde service-map.yaml:**
    ```
    full_path = projects_root + "/" + service.local_path
    ```
-   Verificar que cada ruta existe en disco y aplicar la siguiente lógica por servicio:
-
-   - **Repo existe localmente** → continuar normalmente con esa ruta.
-   - **Repo no existe localmente pero hay URL en `service-map.yaml`** → el humano clona el repo a un directorio temporal (`/tmp/<nombre-servicio>-<timestamp>`), la Fase 1.5 lo explora desde ahí, y al terminar la exploración se elimina el clon temporal.
-   - **Repo no existe localmente y no hay URL en `service-map.yaml`** → STOP. el humano pausa y le pide al usuario: URL del repo o ruta local donde está clonado. La respuesta se persiste en `service-map.local.yaml` bajo el campo `local_path` del servicio correspondiente para que futuros runs no vuelvan a preguntar.
-   - **Repo no es accesible por ninguna vía** → marcar ese servicio como `sin contexto de código` en el ARD. El architect debe documentar explícitamente qué decisiones quedan sin verificar por falta de acceso al código.
+   Verificar que cada ruta existe en disco y aplicar:
+   - **Repo existe localmente** → continuar con esa ruta.
+   - **Repo no existe localmente pero hay URL en `service-map.yaml`** → clonar a directorio temporal (`/tmp/<nombre-servicio>-<timestamp>`); la Fase 1.5 lo explora desde ahí; al terminar, eliminar el clon temporal.
+   - **Repo no existe localmente y no hay URL** → DETENER. Pedir al usuario URL del repo o ruta local. Persistir la respuesta en `service-map.local.yaml` bajo `local_path`.
+   - **Repo no accesible por ninguna vía** → marcar como `sin contexto de código` en el documento de diseño. Documentar explícitamente qué decisiones quedan sin verificar por falta de acceso.
 
 3. **Descubrir dependencias transitivas (OBLIGATORIO):**
-   Para cada servicio que se está cambiando, verificar service-map.yaml:
-   - ¿Quién consume este endpoint? (consumed_by)
-   - ¿Quién se suscribe a este evento? (consumed_by en publishes)
-   - ¿Quién lee esta tabla? (readers en shared_database)
-   - ¿Quién depende de este servicio? (depends_on)
+   Por cada servicio en scope, consultar service-map.yaml:
+   - ¿Quién consume este endpoint? (`consumed_by`)
+   - ¿Quién se suscribe a este evento? (`consumed_by` en `publishes`)
+   - ¿Quién lee esta tabla? (`readers` en `shared_database`)
+   - ¿Quién depende de este servicio? (`depends_on`)
 
-   **Si se encuentran servicios adicionales → DETENERSE y reportar al usuario antes de continuar.**
+   **Si aparecen servicios adicionales → DETENER y reportar al usuario antes de continuar.**
    Reglas:
    - NUNCA omitir silenciosamente servicios afectados
    - DELETE/DEPRECATE → la verificación transitiva es CRÍTICA
    - UPDATE con cambios de contrato → todos los consumidores están afectados
 
-4. El PM escribe **un** PRD local en `{task_path}/prd.md` (en `.project-context/` o el repo):
-   - Debe listar TODOS los servicios en scope bajo Dependencias
-   - Debe notar los servicios omitidos como pendientes
-   - Debe especificar el tipo de operación
-   - Si el proyecto tiene `task_tool` configurado (campo de `.project-context/project.md`), al finalizar **indicar al humano** que vincule el PRD en esa herramienta — nunca ejecutar acciones en ella
+4. **Producto de la fase:** un PRD local en `{task_path}/prd.md` que:
+   - Lista TODOS los servicios en scope bajo Dependencias
+   - Anota los servicios excluidos como pendientes con justificación
+   - Especifica el tipo de operación
+   - Si el proyecto tiene `task_tool` configurado en `.project-context/project.md`, indicar al humano que vincule el PRD en esa herramienta — nunca ejecutar acciones en ella
 
-### Fase 1.5 — Exploración de código por repo (N agentes explorer, OBLIGATORIO)
+### Fase 1.5 — Exploración de código por repo (OBLIGATORIA)
 
-Esta fase es obligatoria y no se puede saltar. Garantiza que el architect reciba contexto técnico real de cada servicio antes de tomar decisiones de diseño.
+Esta fase no se puede saltar. Garantiza contexto técnico real de cada servicio antes de decisiones de diseño.
 
-Por cada repo resuelto en la Fase 1, el orquestador:
+Por cada repo resuelto en la Fase 1:
 
-1. **Spawnea un agente `explorer`** con el objetivo de leer firmas de función, contratos de API, schemas, estructuras de evento, tipos y cualquier interfaz relevante al scope de la tarea. Cuando hay 2+ repos → en paralelo.
+1. **Explorar el repo** leyendo firmas de función, contratos de API, schemas, estructuras de evento, tipos e interfaces relevantes al scope. Cuando hay 2+ repos → ejecutar en paralelo.
 
-2. **Inputs por explorer:**
-   - La ruta local del repo (`full_path` resuelto en Fase 1, o el clon temporal cuando aplique)
-   - Los paths específicos dentro del repo que la tarea va a tocar (tomados del PRD del PM en Fase 1)
+2. **Inputs de la exploración:**
+   - Ruta local del repo (`full_path` o el clon temporal cuando aplique)
+   - Paths específicos dentro del repo que la tarea va a tocar (tomados del PRD)
 
-3. **Output por explorer:** un bloque `## Contexto técnico — <nombre-servicio>` con firmas, contratos, schemas y tipos relevantes.
+3. **Output por repo:** un bloque `## Contexto técnico — <nombre-servicio>` con firmas, contratos, schemas y tipos relevantes.
 
-4. **Consolidación:** el orquestador concatena los bloques de cada explorer en un único documento. Este documento consolidado es lo que resuelve el `{context_path}` referenciado en la Fase 2 como input del architect.
+4. **Consolidación:** concatenar los bloques de cada repo en un único documento, que resuelve `{context_path}` como input de la Fase 2.
 
-**Servicios marcados como `sin contexto de código` en la Fase 1 se omiten en esta fase** — el bloque consolidado debe anotarlos explícitamente como faltantes para que el architect lo refleje en el ARD.
+**Servicios marcados como `sin contexto de código` se omiten en esta fase** — anotarlos explícitamente como faltantes en el bloque consolidado.
 
-### Fase 2 — Arquitectura (1 agente architect)
+### Fase 2 — Arquitectura
 
-Un arquitecto recibe:
+Inputs:
 - PRD (inline o desde `{task_path}/prd.md`)
-- `{context_path}` de **cada** servicio en scope
+- `{context_path}` consolidado con bloques de cada servicio en scope
 
-Produce un solo `{task_path}/design.md` con:
+Producto: `{task_path}/design.md` con:
 - Una sección por servicio
 - Definiciones de contrato (compartidas)
 - Orden de ejecución
 - Propiedad de migración
 
-**GATE: veto del architect → DETENER**
+**GATE: veto arquitectónico → DETENER.**
 
-### Fase 3 — Implementación (N agentes developer)
+### Fase 3 — Implementación
 
-Un agente developer por servicio. Cada uno recibe:
+Por cada servicio: una unidad de implementación independiente que recibe:
 - PRD (inline o desde `{task_path}/prd.md`)
 - `{task_path}/design.md`
 - Skill de convención a cargar
-- La ruta de su servicio específico como directorio de trabajo
+- Ruta del servicio como directorio de trabajo
 
-**Paralelismo:** servicios independientes → en paralelo. Si B depende de la salida de A → secuencial.
-**DBA:** 0-1 agente, ejecuta antes que los developers si se necesita migración.
-**Operaciones DELETE:** orden inverso — consumidores primero, productor último.
+Reglas de orden:
+- **Paralelismo:** servicios independientes → en paralelo. Si B depende de la salida de A → secuencial.
+- **Migraciones de BD:** se ejecutan antes que el resto de la implementación del servicio afectado.
+- **Operaciones DELETE:** orden inverso — consumidores primero, productor último.
 
-### Fase 4 — Testing (N agentes tester, en paralelo)
+### Fase 4 — Testing
 
-Un tester por servicio modificado. Todos ejecutan en paralelo.
+Por cada servicio modificado: un ciclo de tests propio. Todos en paralelo cuando sea posible.
 
-### Fase 5 — QA (1 agente QA)
+### Fase 5 — QA cross-service
 
-Un agente QA ve el diff combinado de todos los servicios. Foco en:
+QA sobre el diff combinado de todos los servicios. Foco en:
 - Consistencia de contrato entre productor y consumidores
 - Coincidencia de payloads de eventos
 - Alineación de tipos de API
-- Consistencia de DB en tablas compartidas
+- Consistencia de BD en tablas compartidas
 
-**GATE: puntuación < 7 → DETENER**
+**GATE: puntuación QA < 7 → DETENER.**
 
-### Fase 5.5 — Actualizar service-map.yaml (1 agente service-map-updater, CONDICIONAL)
+### Fase 5.5 — Actualizar service-map.yaml (CONDICIONAL)
 
-**Condición de activación:** el diff combinado del run toca al menos uno de:
+**Activación:** el diff combinado del run toca al menos uno de:
 - Handlers HTTP (rutas, endpoints, controllers)
 - Archivos `.proto` o `.graphql`
 - Definiciones de eventos (publishers/subscribers, payloads)
 - Schemas de BD compartidos (tablas con readers cross-service)
 
-**Si el diff NO toca contratos → omitir esta fase.** El agente reporta "No hay cambios de contrato en este run" y el orquestador continúa a Fase 6.
+**Si el diff NO toca contratos → omitir esta fase.** Reportar "No hay cambios de contrato en este run" y continuar a Fase 6.
 
 **Si el diff sí toca contratos:**
-
-1. El agente `service-map-updater` lee el diff consolidado de todos los servicios del run.
-2. Actualiza `{service_map_path}`:
-   - Agrega entradas nuevas (endpoints, eventos, dependencias descubiertas)
-   - Modifica las que cambiaron (firmas, payloads, consumers)
-   - **Propone** eliminar las obsoletas — la eliminación requiere **confirmación humana explícita** antes de aplicarse
+1. Leer el diff consolidado de todos los servicios del run.
+2. Actualizar `{service_map_path}`:
+   - Agregar entradas nuevas (endpoints, eventos, dependencias descubiertas)
+   - Modificar las que cambiaron (firmas, payloads, consumers)
+   - **Proponer** eliminar las obsoletas — la eliminación requiere **confirmación humana explícita** antes de aplicarse
 3. Output: diff aplicado a `service-map.yaml` + lista de eliminaciones propuestas pendientes de confirmación.
 
-> Esta fase reemplaza el paso manual **6b** original — si se ejecuta, ya deja `service-map.yaml` consistente con el nuevo estado.
+> Si esta fase se ejecuta, ya deja `service-map.yaml` consistente con el nuevo estado y la Fase 6 omite su actualización manual.
 
-### Fase 6 — Documentar + Reportar
+### Fase 6 — Documentar y reportar
 
 **6a.** Agregar a `{reports_path}/cross-service-changes.md`:
-- Fecha, operación, scope, cambios por servicio, contratos, trabajo pendiente, orden de deploy
+- Fecha, operación, scope, cambios por servicio, contratos tocados, trabajo pendiente, orden de deploy
 
-**6b.** Actualizar `{service_map_path}` para reflejar el nuevo estado — **omitir si la Fase 5.5 ya lo actualizó**
+**6b.** Actualizar `{service_map_path}` para reflejar el nuevo estado — **omitir si la Fase 5.5 ya lo actualizó**.
 
-**6c.** Agente reporter → `{reports_path}/last-run.md`
-
----
-
-## Resumen de enrutamiento de agentes
-
-| Fase | Agente | Cantidad | ¿En paralelo? |
-|-------|-------|-------|-----------|
-| PM | pm | 1 | — |
-| Exploración por repo | explorer | N | Sí (cuando hay 2+ repos) |
-| Arquitectura | architect | 1 | — |
-| Migración DB | dba | 0-1 | — |
-| Implementación | developer | N | Sí (cuando son independientes) |
-| Testing | tester | N | Sí |
-| QA | qa | 1 | — |
-| Seguridad | security | 0-1 | — |
-| Actualizar service-map | service-map-updater | 0-1 (condicional: solo si el diff toca handlers HTTP, `.proto`/`.graphql`, eventos o schemas compartidos) | — |
-| Reporte | reporter | 1 | — |
+**6c.** Generar reporte de cierre del run en `{reports_path}/last-run.md`.
 
 ## Reglas Clave
 
-1. Los mismos agentes, los mismos gates que orchestrate
-2. Architect y QA ven TODOS los servicios — contexto cross-service completo
-3. Developer y Tester son por servicio — guiados por design.md consolidado
+1. Los mismos gates que un pipeline single-repo
+2. La arquitectura y el QA ven TODOS los servicios — contexto cross-service completo
+3. Implementación y testing son por servicio — guiados por el `design.md` consolidado
 4. NUNCA omitir silenciosamente servicios afectados
-5. El orden de eliminación es inverso al de creación — consumidores primero, productor último
+5. Orden de eliminación inverso al de creación — consumidores primero, productor último
 6. Todos los docs centralizados en `.project-context/` o el repo — sin duplicación entre repos
+
+## Formato de Salida
+
+Al cerrar el run, producir:
+
+```
+## Cross-Service Run — <operación>
+- Servicios en scope: <lista>
+- Servicios excluidos: <lista + razón>
+- PRD: {task_path}/prd.md
+- Design: {task_path}/design.md
+- QA score: <n>/10
+- service-map.yaml actualizado: sí | no | propuestas pendientes
+- Cambios documentados en: {reports_path}/cross-service-changes.md
+- Reporte de run: {reports_path}/last-run.md
+- Orden de deploy: <lista ordenada>
+- Trabajo pendiente: <lista>
+```

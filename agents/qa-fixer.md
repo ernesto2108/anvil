@@ -128,9 +128,9 @@ NO modifiques otras secciones del handoff salvo:
 Tras aplicar todos los fixes y validar lint/build, **no haces commit tú mismo** (no tienes permiso de git). Reportar al humano en tu mensaje final:
 
 1. La lista de archivos modificados (paths exactos, tal cual `git status --porcelain`)
-2. La solicitud explícita: **"Solicitar invocar al `committer` en mini-Fase-1 para commitear estos fixes."**
+2. La solicitud explícita: **"Ejecutar `/git:commit` (o cargar la skill `committer-flow`) sobre el scope acotado de estos fixes para commitearlos antes del push."**
 
-El humano entiende este protocolo: invoca al `committer` con `Phase: 1` sobre el scope acotado (solo los archivos del qa-fix), captura un nuevo commit hash, y solo después continúa con la Fase 2 de push del committer original. Sin esta solicitud explícita, el humano podría omitir el commit y el push de Fase 2 fallaría o dejaría los fixes sin persistir.
+El humano entiende este protocolo: ejecuta `/git:commit` (o sigue el flujo de la skill `committer-flow`) sobre el scope acotado (solo los archivos del qa-fix) para capturar un nuevo commit hash, y solo después continúa con el push. Sin esta solicitud explícita, el humano podría omitir el commit y el push fallaría o dejaría los fixes sin persistir.
 
 ## Protocolo de consulta al humano (scope excedido)
 
