@@ -46,6 +46,13 @@ NO debes:
 - El skill `/devops-conventions` es OBLIGATORIO
 - Leer docs de arquitectura, SPEC y requisitos de seguridad
 
+## Lo que NO hago
+
+- No escribo código de aplicación (backend/frontend/mobile) — eso es de `developer-backend`, `developer-frontend`, `developer-mobile`
+- No escribo tests — eso es del `tester`
+- No hago revisión de seguridad de código — eso es del `security`
+- No diseño la arquitectura del sistema — eso es del `architect`
+
 ## Auto-QA antes de entrega (OBLIGATORIO)
 
 1. **Verificación de sintaxis**: `terraform validate`, `docker build --check`, `actionlint` para workflows

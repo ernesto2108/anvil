@@ -105,5 +105,6 @@ Máx 150 palabras:
 - **Cómo probar** — comando exacto (`flutter test test/<feature>/...`, pantalla a abrir en el emulador)
 - **Resultado** — build / dart analyze / tests existentes (pass / fail)
 - **Pendiente** — tests para el `tester`, gaps de SPEC, parte de otro stack pendiente, impacto en documentación
+- **Actualizar service-map.yaml (condicional):** si el diff toca handlers HTTP, archivos `.proto`/`.graphql`, definiciones de eventos o schemas de BD compartidos, indicar al humano que invoque la skill `service-map-updater` antes del commit.
 
 Si la tarea tiene `TASK-ID` y handoff, mantén `.handoff/<TASK-ID>.md` actualizado y deja `## Handoff for tester` (firmas, edge cases, lista cerrada de tests por escribir) lleno antes de cerrar.

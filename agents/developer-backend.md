@@ -84,3 +84,4 @@ Máx 150 palabras:
 - **Cómo probar** — comando exacto
 - **Resultado** — build / lint / tests existentes (pass / fail)
 - **Pendiente** — tests para el `tester`, gaps, impacto en otros stacks
+- **Actualizar service-map.yaml (condicional):** si el diff toca handlers HTTP, archivos `.proto`/`.graphql`, definiciones de eventos o schemas de BD compartidos, indicar al humano que invoque la skill `service-map-updater` antes del commit.

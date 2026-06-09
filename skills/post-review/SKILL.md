@@ -1,6 +1,6 @@
 ---
 name: post-review
-description: "Skill de revisión post-desarrollo con checklists específicos por stack para Go, React, React Native, Terraform y PostgreSQL"
+description: "Skill de revisión post-desarrollo con checklists específicos por stack para Go, React, React Native, Terraform y PostgreSQL. Úsalo cuando el reviewer o qa terminen una revisión de código y se necesite el checklist post-revisión por stack (Go, React, React Native, Terraform, PostgreSQL)."
 ---
 
 # Post-Review Skill — Dispatcher

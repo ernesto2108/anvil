@@ -112,5 +112,6 @@ Máx 150 palabras. El código es el artefacto primario — no repitas bloques.
 - **Cómo probar** — comando exacto (`<pm> test`, ruta a abrir en browser)
 - **Resultado** — build / type-check / lint / tests existentes (pass / fail)
 - **Pendiente** — tests para el `tester`, gaps de SPEC, parte de otro stack pendiente, impacto en docs detectado
+- **Actualizar service-map.yaml (condicional):** si el diff toca handlers HTTP, archivos `.proto`/`.graphql`, definiciones de eventos o schemas de BD compartidos, indicar al humano que invoque la skill `service-map-updater` antes del commit.
 
 Si la tarea tiene `TASK-ID`, mantén `.handoff/<TASK-ID>.md` actualizado y deja `## Handoff for tester` (firmas, edge cases, lista cerrada de tests por escribir) lleno antes de cerrar.

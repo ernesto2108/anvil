@@ -1,6 +1,6 @@
 ---
 name: adr-writer
-description: Guía al `architect` a producir ADRs (Architecture Decision Records) en formato Nygard estándar. Define el formato exacto, qué decisiones ameritan un ADR, la regla de contratos-no-código, el orden de generación, la regla de schema DB y el presupuesto de tokens. Cargar antes de producir cualquier ADR.
+description: Guía al `architect` a producir ADRs (Architecture Decision Records) en formato Nygard estándar. Define el formato exacto, qué decisiones ameritan un ADR, la regla de contratos-no-código, el orden de generación, la regla de schema DB y el presupuesto de tokens. Cargar antes de producir cualquier ADR. Úsalo cuando el usuario diga 'escribir ADR', 'documentar decisión técnica', 'Architecture Decision Record', 'registrar decisión', o cuando el architect tome una decisión de diseño relevante.
 ---
 
 # ADR Writer — formato Nygard estándar

@@ -1,6 +1,6 @@
 ---
 name: code-review-rubric
-description: Rúbrica de puntuación y formato de reporte para revisiones de código. Define criterios de evaluación, escala de puntuación y estructura de salida. Usado por el agente QA y cualquiera que revise calidad de código.
+description: Rúbrica de puntuación y formato de reporte para revisiones de código. Define criterios de evaluación, escala de puntuación y estructura de salida. Usado por el agente QA y cualquiera que revise calidad de código. Úsalo cuando el usuario pida 'revisar código', 'code review', 'rubrica de revisión', o cuando el reviewer o qa evalúen un PR o diff.
 ---
 
 # Rúbrica de Revisión de Código

@@ -1,7 +1,7 @@
 ---
 name: context-nav
 disable-model-invocation: true
-description: Sistema de contexto vivo para proyectos. Lee `.project-context/` al iniciar sesión, escribe deltas después de cada implementación. Aplica en modo directo y en pipeline, con o sin agentes.
+description: Sistema de contexto vivo para proyectos. Lee `.project-context/` al iniciar sesión, escribe deltas después de cada implementación. Aplica en modo directo y en pipeline, con o sin agentes. Úsalo cuando se necesite navegar o actualizar el contexto del proyecto en .project-context/, o cuando context-init lo cargue durante el bootstrap de sesión.
 ---
 
 # Context Navigator
