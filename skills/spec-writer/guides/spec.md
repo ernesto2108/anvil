@@ -28,7 +28,6 @@
 | Pre-condiciones | Si el cambio tiene dependencias de estado previo |
 | Decisiones tomadas (ADR) | Si hay ADRs o decisiones en el brief |
 | Mapa de contratos (cross-stack) | Si hay contratos entre componentes (cross-stack o explícitos en ADRs) |
-| Mapa de implementación | Si hay Architecture Views, ADRs, o el brief es suficientemente detallado |
 | Requerimientos de observabilidad | Si hay NFRs de observabilidad o el cambio lo amerita |
 | Variables de entorno nuevas | Si el cambio introduce env vars |
 | Coordinación externa | Si hay dependencias de equipos externos |
@@ -104,58 +103,40 @@ Una fila por fuente consumida. Si solo hubo brief inline, una sola fila con `bri
 | Productor | Topic / Queue | Contrato (evento) | Consumidor |
 |---|---|---|---|
 
-## Mapa de implementación
-
-<!-- Plan a nivel de archivo. Acción = CREATE / MODIFY / DELETE. -->
-<!-- Esto es lo que el developer sigue — ser específico sobre qué cambia, no cómo. -->
-<!-- Para acción = CREATE: la columna "Ubicación: por qué aquí" es OBLIGATORIA y debe anclar -->
-<!-- la decisión en un archivo vecino existente o en el patrón del módulo. -->
-
-| Archivo | Acción | Qué cambia | Ubicación: por qué aquí | Referencia | Fase |
-|---|---|---|---|---|---|
-| `internal/dashboard/store/runs.go` | MODIFY | Agregar método `UpdateToolUseDuration` | — (existente) | architecture-backend.md §writer | 1 |
-| `internal/dashboard/store/cache.go` | CREATE | Cache LRU de runs por proyecto | Sigue el patrón de `internal/dashboard/store/runs.go` (mismo bounded context — persistencia). NO va en `internal/cache/` porque es específico de runs, no util genérico. | architecture-backend.md §cache | 1 |
-
-### Utils a reutilizar (verificación previa OBLIGATORIA)
-
-<!-- Antes de proponer un util/helper nuevo, el spec-writer (o el explorer si ya exploró el repo) ejecuta Grep en directorios -->
-<!-- de utilidades comunes (`internal/util/`, `pkg/util/`, `src/lib/`, `src/utils/`) -->
-<!-- y reporta el resultado. NO crear un util nuevo sin descartar primero los existentes. -->
-
-| Necesidad | Util existente reutilizable | Ubicación |
-|---|---|---|
-| Parsear duración ISO-8601 | `ParseDuration` | `internal/util/timefmt.go` |
-| Hash SHA-256 de payload | (ninguno encontrado — proponer `internal/util/hash.go`) | NEW |
-
 ## Criterios de aceptación
 
 <!-- Testeables. Formato: GIVEN / WHEN / THEN. Uno por comportamiento observable. -->
+<!-- Obligatorio: cada AC debe incluir una línea "→ Ejemplo:" con input concreto y output esperado. -->
+<!-- El ejemplo debe ser verificable por el humano sin leer código. -->
 <!-- Agrupar por feature si hay múltiples features en scope. -->
 
 ### <Feature 1>
 
 1. GIVEN ... WHEN ... THEN ...
-2. GIVEN ... WHEN ... THEN ...
+   → Ejemplo: [dato concreto de input] → [resultado observable esperado]
 
-### <Feature 2>
+## Señales de alerta
 
-3. GIVEN ... WHEN ... THEN ...
+<!-- Comportamientos que NO deben ocurrir. Verificables sin leer código. -->
+<!-- Obligatoria para features Medium+. Si no aplica, escribir "Ninguna." -->
 
-## Tests por criterio de aceptación (OBLIGATORIO)
+- [descripción de lo que no debe pasar]
 
-<!-- Una fila por AC declarado arriba. Sin filas vacías. -->
-<!-- Si no es automatizable: tool=manual. Todos los ACs deben tener row → SPEC sin row por AC es rechazado. -->
+## Tests por criterio de aceptación
 
-| AC | Tipo | Tool | Test ID / archivo | Comando | Resultado esperado |
-|---|---|---|---|---|---|
-| AC-1: <descripción corta> | unit \| api \| e2e \| visual \| manual | go test \| hurl \| playwright \| agent-browser \| manual | `path/file_test.go::TestName` o `tests/api/resource.hurl` | comando exacto o pasos numerados | qué evidencia confirma el pass |
+<!-- Una fila por AC declarado. Sin paths de archivos ni comandos exactos — eso es del tester. -->
+<!-- El spec declara qué debe verificarse y con qué tipo de test. -->
+
+| AC | Tipo | Qué verifica |
+|---|---|---|
+| AC-1: <descripción corta> | unit \| api \| e2e \| visual \| manual | descripción del comportamiento que verifica, en lenguaje de dominio |
 
 **Tipos:**
-- `unit` → `go test ./...` (o stack equivalente), incluir package específico.
-- `api` → contract test Hurl sobre endpoint MCP o HTTP.
-- `e2e` → flujo completo (Playwright Fase 2+; no usar en Fase 1).
-- `visual` → `agent-browser` para verificación visual antes del gate humano.
-- `manual` → no automatizable; se promueve a `features/manual-checks` en Fase 3 de LEADER-001.
+- `unit` → lógica interna aislada
+- `api` → contrato HTTP o MCP observable externamente
+- `e2e` → flujo completo de usuario
+- `visual` → verificación visual de UI
+- `manual` → no automatizable; describe los pasos
 
 ## Requerimientos de observabilidad
 
@@ -190,9 +171,6 @@ Una fila por fuente consumida. Si solo hubo brief inline, una sola fila con `bri
 
 - spec.md referencia las vistas de arquitectura cuando existen — no las duplica. Si no hay vistas, trabaja con el contexto disponible (brief, ADRs, resumen del explorer).
 - Cada AC debe ser testeable tal cual — "el sistema funciona correctamente" no es un AC
-- El mapa de implementación debe listar cada archivo que el developer tocará — sin sorpresas a mitad de tarea
-- **Cada archivo con acción CREATE debe tener "Ubicación: por qué aquí"** anclado en un archivo vecino existente o en el patrón del módulo. Sin esa columna llena → SPEC incompleto, el developer rebota la tarea ("SPEC sin justificación de ubicación para `X` — reinvocar architect")
-- **La sección "Utils a reutilizar" es obligatoria si el SPEC propone cualquier helper, parser, formatter, validator o util nuevo.** El architect debe ejecutar `Grep` en `internal/util/`, `pkg/util/`, `src/lib/`, `src/utils/` (o equivalente del stack) y reportar lo encontrado. Si existe un util equivalente → reusar (poner en la tabla); si no existe → marcar `NEW` y justificar
 - Decisiones de ubicación (en qué paquete/directorio va un archivo nuevo) son **decisión arquitectónica**, no detalle de implementación. El developer NO decide ubicación — solo verifica que el SPEC tenga justificación y que el path exista en disco
 - La sección `## Pre-condiciones` se incluye **solo si el cambio tiene dependencias de estado previo**. Si se incluye y no hay nada concreto que listar, escribir "Ninguna" explícitamente.
 - La sección `## Coordinación externa` se incluye **solo si hay dependencias de equipos externos** que bloquean el feature. Si no hay dependencias externas, omitir la sección.
@@ -202,3 +180,6 @@ Una fila por fuente consumida. Si solo hubo brief inline, una sola fila con `bri
 - "Tests por criterio de aceptación" es la lista cerrada que el tester sigue — el architect define el scope, no el tester. Una fila por AC, sin excepción.
 - Para tareas Medium+: E2E aplica a flujos de usuario nuevos, API contract a endpoints nuevos, a11y a páginas públicas, visual regression a cambios de UI. Justificar "N/A" cuando no aplica.
 - Mantener spec.md bajo 150 líneas — si es más largo, se están duplicando contratos de archivos de arquitectura
+- **Cada AC debe tener una línea "→ Ejemplo:"** con input concreto y output observable por el humano. Sin ejemplo → AC incompleto.
+- **"Señales de alerta" es obligatoria en features Medium+.** Lista lo que NO debe ocurrir — más fácil de detectar en code review que lo que sí debe ocurrir.
+- El spec no incluye paths de archivos, nombres de métodos ni comandos de implementación — eso es responsabilidad del developer-agent y el task-writer.

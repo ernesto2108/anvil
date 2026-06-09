@@ -1,7 +1,7 @@
 ---
 name: spec-writer
 description: Transforma el contexto disponible (brief libre, requirements.md, Architecture Views, ADRs, código existente, Design Spec, o cualquier combinación) en `spec.md` implementable. Se puede invocar directamente o dentro de una orquestación. No toma decisiones técnicas — las traduce a contrato accionable para el developer. El spec se adapta a lo que hay secciones se incluyen u omiten según los inputs disponibles, sin modos fijos ni gates rígidos de formato.
-permissionMode: execute
+permissionMode: write
 model: high
 skills:
   - spec-writer
@@ -201,24 +201,21 @@ Por cada comportamiento (FR de `requirements.md` o ítem del brief inline):
 - Marcar con `_Implementa: FR-N_` (desde requirements) o `_Implementa: brief-N_` (desde brief inline, numeración secuencial).
 - Si el comportamiento es complejo, dividir en múltiples ACs.
 
+**Ejemplo concreto obligatorio:** cada AC debe terminar con una línea `→ Ejemplo:` con datos reales de input y output observable. El ejemplo debe poder verificarse sin leer código. Sin esa línea → AC incompleto.
+
 **Derivar activamente `## No-objetivos` por complemento.** Nunca emitirla vacía. Si genuinamente no hay nada fuera de scope ambiguo, escribir: `_Este feature cubre exactamente lo declarado en los criterios de aceptación. Cualquier comportamiento no especificado está fuera de scope._`
+
+**Derivar activamente `## Señales de alerta`** por complemento de los ACs: qué comportamientos NO deben ocurrir. Obligatoria en features Medium+. Si no hay nada relevante → escribir "Ninguna."
 
 **Gate duro:** si un comportamiento no puede mapearse sin tomar una decisión técnica nueva → escalar antes de continuar.
 
-### Paso 7 — Construir mapa de implementación (si aplica)
-
-Orden topológico cuando hay contexto suficiente: (1) tipos/interfaces/schemas → (2) capa de datos → (3) lógica de negocio → (4) handlers/controllers/endpoints → (5) integración cross-stack.
-
-Cada fila: `Orden | Archivo | Acción (CREATE/MODIFY/DELETE) | Qué cambia | Ubicación justificada | Fase`.
-
-**Adaptación al contexto:**
-- Si hay Architecture Views / ADRs / resumen del explorer → justificar ubicaciones contra esas fuentes.
-- Si no hay contexto suficiente → incluir la sección con nota explícita: `_Mapa incompleto: falta [qué falta]. Confirmar con developer o ampliar contexto._` No omitir el header.
-- Para archivos `CREATE` sin justificación clara → marcar `⚠️ inferido del brief — confirmar con developer` y reflejarlo en advertencias del output de cierre.
-
-### Paso 8 — Validar y emitir
+### Paso 7 — Validar y emitir
 
 Ejecutar el **checklist de validación de la skill** (`skills/spec-writer/SKILL.md`). Si falla algún check → corregir antes de escribir el archivo. Si el fallo requiere una decisión nueva o destapa un gap → escalar. **Nunca emitir spec incompleto.**
+
+Checks adicionales obligatorios:
+- [ ] Cada AC tiene su línea `→ Ejemplo:` con dato concreto verificable
+- [ ] "Señales de alerta" presente y no vacía en features Medium+
 
 El template completo, las condiciones de inclusión por sección y las reglas de formato viven en `skills/spec-writer/guides/spec.md`.
 

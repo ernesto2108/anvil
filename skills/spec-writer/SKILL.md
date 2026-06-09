@@ -1,6 +1,6 @@
 ---
 name: spec-writer
-description: Provee el template accionable y las reglas de formato para producir `spec.md` a partir del contexto disponible (requirements, ADRs, Architecture Views, brief inline, o combinación de estos, resumen del explorer, código existente del repo). Usar siempre al inicio de la invocación del agente `spec-writer`, antes de leer inputs o emitir el spec.
+description: Provee el template canónico y reglas de formato para producir spec.md. Úsalo cuando el agente spec-writer genera un spec, cuando se materializa un spec.md, o cuando se valida la estructura de un spec.md existente.
 ---
 
 # Spec Writer — Template accionable de `spec.md`
@@ -17,7 +17,7 @@ El `spec.md` es el contrato self-contained que el developer consume sin re-leer 
 
 ## Cuándo cargar
 
-- Al inicio del **Paso 2** del agente `spec-writer` — antes de leer ningún input confirmado. Cargarlo antes garantiza que el template y las condiciones de inclusión estén disponibles al momento de construir el spec.
+- Al inicio del **Paso 4** del agente `spec-writer` — antes de leer ningún input confirmado. Cargarlo antes garantiza que el template y las condiciones de inclusión estén disponibles al momento de construir el spec.
 - Antes de emitir cualquier `spec.md`.
 
 ## Guides por dominio
@@ -33,18 +33,16 @@ Cargar el guide correspondiente antes de materializar el `spec.md`. El guide con
 ## Reglas duras (extracto — el detalle vive en `guides/spec.md`)
 
 1. **Cada archivo con acción `CREATE` debe tener "Ubicación: por qué aquí"** anclado en un archivo vecino existente o en el patrón del módulo. Sin esa columna llena → spec inválido.
-2. **La sección "Utils a reutilizar" es obligatoria** si el spec propone cualquier helper, parser, formatter, validator o util nuevo. Justificar la ausencia de equivalentes existentes.
-3. **Cada criterio de aceptación debe ser testeable tal cual** — formato `GIVEN / WHEN / THEN`, con marca `_Implementa: FR-N_` (si vino de `requirements.md`) o `_Implementa: brief-N_` (si vino del brief inline).
-4. **Tabla "Tests por criterio de aceptación" sin filas vacías.** Una fila por AC declarado, sin excepción.
-5. **Si una sección no aplica, mantener el header con `_No aplica._`** — no eliminar headers; el developer cuenta con el orden fijo.
-6. **El spec NO duplica contratos** de las Architecture Views — los referencia.
+2. **Cada criterio de aceptación debe ser testeable tal cual** — formato `GIVEN / WHEN / THEN`, con marca `_Implementa: FR-N_` (si vino de `requirements.md`) o `_Implementa: brief-N_` (si vino del brief inline).
+3. **Tabla "Tests por criterio de aceptación" sin filas vacías.** Una fila por AC declarado, sin excepción.
+4. **Si una sección no aplica, mantener el header con `_No aplica._`** — no eliminar headers; el developer cuenta con el orden fijo.
+5. **El spec NO duplica contratos** de las Architecture Views — los referencia.
 
 ## Checklist de validación (antes de cerrar el `spec.md`)
 
 - [ ] Secciones aplicables al contexto disponible presentes y en orden
 - [ ] Cada AC tiene su marca `_Implementa: FR-N_` (si vino de requirements) o `_Implementa: brief-N_` (si vino de brief inline)
 - [ ] Cada archivo `CREATE` del Mapa de implementación tiene justificación de ubicación
-- [ ] "Utils a reutilizar" completa si el spec introduce helpers nuevos
 - [ ] Tabla "Tests por criterio de aceptación" cubre todos los ACs declarados
 - [ ] `## No-objetivos` NO está vacía
 - [ ] `## Design References` presente cuando la tarea toca UI
