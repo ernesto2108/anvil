@@ -1,18 +1,25 @@
 ---
 name: scan-project
-disable-model-invocation: true
-description: Escanear la estructura del repo y escribir context.md en el vault con el objetivo del producto y un snapshot técnico. Usar al iniciar una nueva sesión, cuando el usuario diga "scan the project", "what stack is this", "analyze the repo", o cuando context.md esté ausente o desactualizado.
+# Esta skill es operacional y solo debe ejecutarse cuando el agente host `context-init` la carga; no debe ser invocada directamente por el usuario ni sugerida por el harness de forma autónoma.
+user-invocable: false
+description: Escanear la estructura del repo y escribir el snapshot técnico en `.project-context/` con el objetivo del producto. Úsalo cuando el usuario diga "scan the project", "what stack is this", "analyze the repo", al iniciar una nueva sesión, o cuando `.project-context/` esté ausente o desactualizado.
 ---
 
 # Scan Project
 
 Descubrir la estructura REAL del repositorio y las herramientas utilizadas. NO asumir ninguna arquitectura ni nombres de carpetas. Reflejar el proyecto exactamente como existe.
 
+## Filosofía
+
+1. **Reflejar el proyecto como existe, no como debería ser.**
+2. **Grep-first antes de leer archivos completos.**
+3. **Concisión: un snapshot legible es más útil que un inventario exhaustivo.**
+
 ## Paso 1: Objetivo del Producto
 
 Si el contexto del objetivo del producto está ausente o desactualizado en `{context_path}` (siempre dentro de `.project-context/`), hacer estas preguntas primero:
-1. "What is the project objective in 3-6 lines?"
-2. "What non-negotiable rules must I always respect?"
+1. "¿Cuál es el objetivo del proyecto en 3-6 líneas?"
+2. "¿Qué reglas no negociables debo respetar siempre?"
 
 ## Paso 2: Detectar Stacks
 

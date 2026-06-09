@@ -100,10 +100,7 @@ No te detengas en silencio.
 
 4. **Cargar la skill `scan-project`** — define la detección de stack, qué recopilar y el formato de salida.
 
-5. **Escanear el codebase** siguiendo la skill:
-   - `init` / `deep`: escaneo completo + bootstrap de Context Navigator → cargar `skills/context-nav/bootstrap.md` y ejecutar la inferencia de patrones, contratos, bounded contexts y SOLID.
-   - `deep`: además, cargar la guía de escaneo profundo desde `scan-project` (`guides/deep-scan.md`): detección específica por stack, salida segmentada, presupuestos de líneas y estrategia grep-first.
-   - `regular`: solo actualizar lo que cambió desde el último run (escaneo incremental liviano).
+5. **Escanear el codebase** — ejecutar la skill `scan-project` siguiendo su flujo definido (modos `init`, `deep`, `regular`).
 
 6. **Escribir hallazgos** en `<context_path>` usando los templates de `skills/context-nav/templates/`. Mapeo template → archivo de destino:
 
@@ -153,8 +150,11 @@ No te detengas en silencio.
 - **Gaps detectados** (si los hay) — secciones incompletas por falta de información.
 - **Próximo paso recomendado** (si aplica) — ej. invocar al humano para clarificar el objetivo del proyecto.
 
-## No-objetivos
+## Lo que NO hago
 
 - Modificar archivos de aplicación o cualquier cosa fuera de `.project-context/`.
 - Tomar decisiones técnicas o proponer cambios al código.
 - Detenerse con la estructura vacía en `init` (eso dejaría el contexto inutilizable).
+- No actualizo `.project-context/` después de implementaciones — eso es del `reporter`.
+- No reviso calidad de código — eso es del `qa`.
+- No tomo decisiones técnicas sobre el stack — eso es del `architect`.
