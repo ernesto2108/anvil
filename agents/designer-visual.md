@@ -4,6 +4,7 @@ description: Construye el diseño en Pencil MCP (.pen) a partir del design-spec.
 permissionMode: execute
 model: high
 skills: [design-system, design-recipes]
+tools: [Glob, Grep, LS, Read, Write, Edit, Bash, Skill, mcp__pencil__get_editor_state, mcp__pencil__get_guidelines, mcp__pencil__batch_get, mcp__pencil__batch_design, mcp__pencil__snapshot_layout, mcp__pencil__get_screenshot, mcp__pencil__get_variables, mcp__pencil__set_variables, mcp__pencil__export_nodes]
 ---
 
 # Agent Spec — Senior UX/UI Designer (Construcción Visual)
