@@ -102,6 +102,29 @@ No te detengas en silencio.
 
 5. **Escanear el codebase** — ejecutar la skill `scan-project` siguiendo su flujo definido (modos `init`, `deep`, `regular`).
 
+5.5. **Validación con el humano** (solo en `init` y `deep`; en `regular` se omite porque el contexto ya fue validado previamente) — antes de escribir nada en `.project-context/`, consolidar las inferencias críticas del escaneo y presentarlas al humano para confirmación. Son críticas aquellas donde una suposición incorrecta contaminaría todo el contexto:
+
+   - Restricciones no negociables detectadas
+   - Mecanismo de autenticación entre servicios
+   - Estrategia de migraciones (herramienta, directorio, cómo se corren)
+   - Servicios detectados en el ecosistema (para `service-map.yaml`)
+   - Reglas de negocio inferidas (invariantes detectadas en el código)
+
+   Presentar en formato compacto:
+
+   ```
+   Antes de escribir el contexto, confirma estas inferencias:
+
+   - Auth entre servicios: [ninguna — mismo cluster inferido desde X]  ¿correcto?
+   - Migraciones: [golang-migrate en migrations/ — inferido desde go.mod]  ¿correcto?
+   - Servicios detectados: [users-service, orders-service]  ¿faltan o sobran?
+   - Restricción detectada: [no usar HTTP público]  ¿correcto?
+
+   Responde confirmando o corrigiendo cada punto. Puedes escribir "todo correcto" si no hay cambios.
+   ```
+
+   Esperar la respuesta del humano y aplicar las correcciones antes de escribir cualquier archivo. Si responde "todo correcto", continuar directamente al Paso 6.
+
 6. **Escribir hallazgos** en `<context_path>` usando los templates de `skills/context-nav/templates/`. Mapeo template → archivo de destino:
 
    | Template | Archivo de destino |
@@ -120,6 +143,7 @@ No te detengas en silencio.
    | `core-navigation.tmpl.md` | `Core/navigation.md` |
    | `techdom-navigation.tmpl.md` | `Technical domain/navigation.md` |
    | `navigator.tmpl.md` | `NAVIGATOR.md` |
+   | `service-map.tmpl.yaml` | `service-map.yaml` |
 
 7. **Pre-popular `Technical domain/glossary.md`** — después de detectar entidades en el código (bounded contexts del Paso 5), pre-poblar el glosario con esas entidades. Cada fila arranca con `⚠️ pendiente validación` en la columna de término humano, para que el equipo complete solo las que difieren entre lenguaje humano y técnico. **No bloquear ni preguntar al humano** — pre-poblar y continuar; el equipo valida de forma asíncrona.
 
@@ -137,6 +161,7 @@ No te detengas en silencio.
 - **No asumir valores** — solo hechos. No proponer cambios al código.
 - **Respetar los presupuestos de líneas** de `scan-project` — la concisión es un requisito.
 - **Idempotencia en `regular`** — no reescribir lo que no cambió.
+- **Nunca escribir inferencias críticas en `.project-context/` sin confirmación humana previa (Paso 5.5)** — en modo `init` y `deep`.
 - **Idioma obligatorio:** todo el contenido escrito en `.project-context/` debe estar en español (encabezados, descripciones, notas, riesgos, decisiones, patrones, dominios). Los identificadores técnicos (nombres de archivos, funciones, paquetes, comandos, paths) se preservan literalmente. Si un template trae encabezados en inglés, traducirlos antes de escribir.
 
 ## Output de cierre

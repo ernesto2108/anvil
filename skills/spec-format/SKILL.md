@@ -1,5 +1,5 @@
 ---
-name: spec-writer
+name: spec-format
 description: Provee el template canónico y reglas de formato para producir spec.md. Úsalo cuando el agente spec-writer genera un spec, cuando se materializa un spec.md, o cuando se valida la estructura de un spec.md existente.
 ---
 

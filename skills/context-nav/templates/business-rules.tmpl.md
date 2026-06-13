@@ -31,3 +31,21 @@ last_updated: <YYYY-MM-DD>
 - **Dominios involucrados:** <dominio A>, <dominio B>
 - **Dónde se aplica:** `<path>:<line>`
 - **Por qué:** <razón de negocio>
+
+## Modelo de autenticación y autorización
+
+<!-- Cómo se autentica el sistema internamente y externamente -->
+
+### Autenticación entre servicios
+- **Mecanismo interno:** <ninguno — mismo cluster / mTLS / JWT interno / API key>
+- **Razón:** <por qué se eligió este mecanismo>
+- **Servicios que requieren auth interna:** <lista o "ninguno">
+
+### Autenticación hacia el exterior
+- **Mecanismo externo:** <JWT / API key / OAuth2 / ninguno>
+- **Header utilizado:** `<Authorization: Bearer ... / X-API-Key: ...>`
+- **Quién valida:** <nombre del servicio o gateway>
+
+### Reglas de autorización
+- <regla — ej: "solo el servicio de pagos puede escribir en la tabla transactions">
+- <regla — ej: "los servicios internos no requieren token — están en la misma red privada">

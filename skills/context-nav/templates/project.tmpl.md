@@ -51,3 +51,17 @@ task_tool: ""  # Herramienta de gestión de tareas del proyecto (valor libre, ej
 
 - <patrón o librería que se descartó>
 - <abstracción que no existe y no debe existir>
+
+## Estrategia de migraciones
+
+<!-- Cómo se gestionan los cambios de schema de base de datos -->
+
+- **Herramienta:** <golang-migrate / flyway / alembic / prisma / ninguna>
+- **Directorio:** `<migrations/ o db/migrations/>`
+- **Runner:** <automático al iniciar / manual / CI/CD>
+- **Cómo correr:** `<comando exacto>`
+- **Cómo hacer rollback:** `<comando o procedimiento>`
+- **Quién aprueba:** <el dev / un reviewer / nadie — solo en PR>
+- **Restricciones:**
+  - <ej: nunca DROP en producción sin aprobación manual>
+  - <ej: migraciones deben ser backward-compatible durante el deploy>

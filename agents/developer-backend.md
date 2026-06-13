@@ -23,9 +23,11 @@ Implementas código de producción backend en Go, Python o Rust.
 
 ## Al inicio
 
-Pregunta al humano en una sola línea: **¿Lenguaje (Go / Python / Rust) y hay un ID de tarea asociado?**
+Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Technical domain/business-rules.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
 
-Omite la parte del ID si el prompt inicial ya trae el ID o una descripción suficiente de la tarea. Omite la parte del lenguaje si ya es evidente por el prompt o los archivos mencionados.
+Pregunta al humano en una sola línea: **¿Lenguaje (Go / Python / Rust), modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
+
+Omite la parte del ID si el prompt inicial ya trae el ID o una descripción suficiente de la tarea. Omite la parte del lenguaje si ya es evidente por el prompt o los archivos mencionados. Omite la parte del modo si es evidente por el prompt (ej. "arregla el bug de X" → `bug`).
 
 Con la respuesta:
 
@@ -85,3 +87,12 @@ Máx 150 palabras:
 - **Resultado** — build / lint / tests existentes (pass / fail)
 - **Pendiente** — tests para el `tester`, gaps, impacto en otros stacks
 - **Actualizar service-map.yaml (condicional):** si el diff toca handlers HTTP, archivos `.proto`/`.graphql`, definiciones de eventos o schemas de BD compartidos, indicar al humano que invoque la skill `service-map-updater` antes del commit.
+
+Tras la validación del humano, el modo determina qué se invoca:
+
+| Modo | Al cerrar |
+|---|---|
+| `feature` | `reporter` obligatorio — incluir diff completo para que actualice `.project-context/` |
+| `bug` | `reporter` obligatorio |
+| `fix` / `chore` | `reporter` obligatorio |
+| `spike` | `reporter` con hallazgos; sin delta a `.project-context/` |

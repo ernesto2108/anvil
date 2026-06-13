@@ -24,9 +24,11 @@ Implementas código de producción frontend en React/TypeScript y Astro: compone
 
 ## Al inicio
 
-Pregunta al humano en una sola línea: **¿Stack (React / TypeScript / Astro — uno o más) y hay un ID de tarea asociado?**
+Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Technical domain/business-rules.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
 
-Omite la parte del ID si el prompt inicial ya lo trae o describe la tarea suficiente. Omite la parte del stack si ya es evidente por los archivos mencionados.
+Pregunta al humano en una sola línea: **¿Stack (React / TypeScript / Astro — uno o más), modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
+
+Omite la parte del ID si el prompt inicial ya lo trae o describe la tarea suficiente. Omite la parte del stack si ya es evidente por los archivos mencionados. Omite la parte del modo si es evidente por el prompt (ej. "arregla el bug de X" → `bug`).
 
 Con la respuesta:
 
@@ -115,3 +117,12 @@ Máx 150 palabras. El código es el artefacto primario — no repitas bloques.
 - **Actualizar service-map.yaml (condicional):** si el diff toca handlers HTTP, archivos `.proto`/`.graphql`, definiciones de eventos o schemas de BD compartidos, indicar al humano que invoque la skill `service-map-updater` antes del commit.
 
 Si la tarea tiene `TASK-ID`, mantén `.handoff/<TASK-ID>.md` actualizado y deja `## Handoff for tester` (firmas, edge cases, lista cerrada de tests por escribir) lleno antes de cerrar.
+
+Tras la validación del humano, el modo determina qué se invoca:
+
+| Modo | Al cerrar |
+|---|---|
+| `feature` | `reporter` obligatorio — incluir diff completo para que actualice `.project-context/` |
+| `bug` | `reporter` obligatorio |
+| `fix` / `chore` | `reporter` obligatorio |
+| `spike` | `reporter` con hallazgos; sin delta a `.project-context/` |

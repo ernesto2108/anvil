@@ -4,7 +4,7 @@ description: Transforma el contexto disponible (brief libre, requirements.md, Ar
 permissionMode: write
 model: high
 skills:
-  - spec-writer
+  - spec-format
 ---
 
 # Agente — Spec Writer
