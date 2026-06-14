@@ -80,21 +80,21 @@ No te detengas en silencio.
    - `mkdir -p <context_path>/decisions` (vacía)
    - `mkdir -p <context_path>/runs` (vacía)
 
-   3.2. Crear archivos base con encabezado mínimo (luego se pueblan en este mismo run):
-   - `NAVIGATOR.md` (raíz — INTOCABLE, no renombrar) — índice de `Core/` y `Technical domain/`, más enlaces a `decisions/` y `runs/`
-   - `Core/navigation.md` → índice de la carpeta Core
-   - `Core/workflows.md` → `# Workflows`
-   - `Core/task-management.md` → `# Gestión de Tareas`
-   - `Core/coding-standards.md` → `# Coding Standards`
-   - `Core/patterns.md` → `# Patrones de Diseño`
-   - `Technical domain/navigation.md` → índice de la carpeta Technical domain
-   - `Technical domain/project.md` → `# Proyecto`
-   - `Technical domain/domain.md` → `# Dominio`
-   - `Technical domain/glossary.md` → `# Glosario`
-   - `Technical domain/contracts.md` → `# Contratos`
-   - `Technical domain/business-rules.md` → `# Business Rules`
-   - `Technical domain/dependencies.md` → `# Dependencias`
-   - `Technical domain/risks.md` → `# Riesgos`
+   3.2. Crear archivos vacíos (luego se pueblan en este mismo run a partir de los templates en el Paso 6):
+   - `NAVIGATOR.md` (raíz — INTOCABLE, no renombrar)
+   - `Core/navigation.md`
+   - `Core/workflows.md`
+   - `Core/task-management.md`
+   - `Core/coding-standards.md`
+   - `Core/patterns.md`
+   - `Technical domain/navigation.md`
+   - `Technical domain/project.md`
+   - `Technical domain/domain.md`
+   - `Technical domain/glossary.md`
+   - `Technical domain/contracts.md`
+   - `Technical domain/business-rules.md`
+   - `Technical domain/dependencies.md`
+   - `Technical domain/risks.md`
 
    3.3. **Preguntar al humano por la herramienta de gestión** (una vez, solo en `init`): "**¿Usas alguna herramienta de gestión de tareas o documentación? (ej. Linear, Jira, Notion, GitHub Issues, Obsidian). Si usas varias, menciónalas todas. Si no usas ninguna, escribe 'ninguna'.**" Guardar la respuesta literal en la sección "Herramienta de gestión" de `Core/task-management.md` (no en `project.md`; formato libre — no enum; vacío o `ninguna` significa que no hay herramienta externa). Si el humano no responde, dejar la sección en blanco y continuar.
 
@@ -125,7 +125,11 @@ No te detengas en silencio.
 
    Esperar la respuesta del humano y aplicar las correcciones antes de escribir cualquier archivo. Si responde "todo correcto", continuar directamente al Paso 6.
 
-6. **Escribir hallazgos** en `<context_path>` usando los templates de `skills/context-nav/templates/`. Mapeo template → archivo de destino:
+6. **Escribir hallazgos** en `<context_path>` usando los templates de `skills/context-nav/templates/`.
+
+   Al escribir cada archivo, partir del template correspondiente como base literal. Sustituir los placeholders `<...>` con los hallazgos del escaneo. Preservar **todo** el texto estático del template — secciones, encabezados y notas — aunque no haya datos del escaneo para una sección. Solo omitir una sección si el template la marca explícitamente como `<!-- Solo cuando hay evidencia explícita -->`.
+
+   Mapeo template → archivo de destino:
 
    | Template | Archivo de destino |
    |---|---|

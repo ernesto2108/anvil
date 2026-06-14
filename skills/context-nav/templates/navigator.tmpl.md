@@ -10,12 +10,14 @@ coverage: bootstrap
 - [Workflows](Core/workflows.md) — ramas, ambientes, deploy, comandos operativos
 - [Task Management](Core/task-management.md) — gestión de tareas, tickets, definition of done
 - [Coding Standards](Core/coding-standards.md) — naming, linting, patrones de diseño detectados
+- [Patterns](Core/patterns.md)
 
 ### Technical domain
 - [Proyecto](Technical%20domain/project.md) — stack, arquitectura, restricciones, SOLID
 - [Dominio](Technical%20domain/domain.md) — entidades principales y bounded contexts
 - [Glosario](Technical%20domain/glossary.md) — lenguaje del negocio ↔ lenguaje técnico
 - [Contratos](Technical%20domain/contracts.md) — APIs, queues, eventos, reglas de negocio
+- [Business Rules](Technical%20domain/business-rules.md)
 - [Dependencias](Technical%20domain/dependencies.md) — grafo de dependencias entre dominios
 - [Riesgos](Technical%20domain/risks.md) — deuda técnica, gotchas, restricciones
 - [Service Map](service-map.yaml) — mapa de relaciones entre servicios del ecosistema

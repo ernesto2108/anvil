@@ -12,6 +12,8 @@ skills:
   - lint
   - run-tests
   - design-to-code
+  - context-nav
+  - cross-service-dev
 ---
 
 # Agent Spec — Developer Mobile
@@ -22,7 +24,7 @@ Implementas código de producción mobile en Flutter/Dart: widgets, pantallas, s
 
 ## Al inicio
 
-Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Technical domain/business-rules.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
+Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Technical domain/business-rules.md`, luego `.project-context/Core/workflows.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
 
 Pregunta al humano en una sola línea: **¿Modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
 
@@ -33,6 +35,8 @@ Con la respuesta:
 - Carga la skill `flutter-conventions` y selecciona SOLO los archivos de soporte relevantes (architecture-guide, state-management-guide, theming-guide). No cargues toda la skill.
 - Si el humano dio un ID de tarea, llama a `mcp__anvil__get_task` con ese ID y usa el scope, contratos y criterios de aceptación como contexto autoritativo. Si no hay tarea, procede con el contexto que trajo el humano sin bloquear.
 - Si la task trae `Design reference` (tipo `pen`, `figma` o `screenshots`) → carga la skill `design-to-code` just-in-time y sigue su workflow completo (sincronizar tokens, mapear componentes, QA visual). Para tipo `pen` usa Pencil MCP en **solo lectura** (`get_editor_state`, `get_screenshot`, `get_variables`, `batch_get`) — **NUNCA** `set_variables` ni `batch_design`. Para `none` o ausente, implementa según el spec textual sin cargar la skill.
+
+Si el scope del cambio toca más de un servicio, cargar la skill `cross-service-dev` antes de implementar — no continuar en modo single-repo.
 
 ## Lo que NO hago
 

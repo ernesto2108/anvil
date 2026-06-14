@@ -1,6 +1,6 @@
 ---
 name: context-nav
-disable-model-invocation: true
+user-invocable: false
 description: Sistema de contexto vivo para proyectos. Lee `.project-context/` al iniciar sesión, escribe deltas después de cada implementación. Aplica en modo directo y en pipeline, con o sin agentes. Úsalo cuando se necesite navegar o actualizar el contexto del proyecto en .project-context/, o cuando context-init lo cargue durante el bootstrap de sesión.
 ---
 
@@ -52,7 +52,7 @@ Sistema de conocimiento acumulativo que vive en `.project-context/` al lado de `
 
 ## Reglas de lectura
 
-- El orquestador lee `Technical domain/project.md` + `Core/patterns.md` + `Technical domain/contracts.md` siempre
+- Los agentes que implementan (orquestador y developers de stack) leen `Technical domain/project.md` + `Core/patterns.md` + `Technical domain/contracts.md` + `Core/workflows.md` siempre
 - Lee solo los dominios que la tarea va a tocar (inferir desde archivos afectados)
 - En modo directo, inyectar resumen de NAVIGATOR.md en la primera respuesta de sesión
 

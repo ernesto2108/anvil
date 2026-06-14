@@ -1,3 +1,6 @@
+<!-- SECCIONES FIJAS (preservar literalmente): Modos de trabajo, Reglas por modo, Para agentes
+     SECCIONES A RELLENAR (sustituir placeholders <...>): Estrategia de ramas, Proceso de PR, Ambientes, Comandos operativos, Variables de entorno -->
+
 # Workflows del Equipo — <ProjectName>
 
 <!-- Cómo trabaja el equipo: ramas, PRs, ambientes y proceso de deploy.
