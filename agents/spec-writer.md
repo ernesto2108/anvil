@@ -78,7 +78,16 @@ Esperar respuesta del humano. **No asumir que el contexto recibido desde un orqu
 
 Esperar respuesta antes de avanzar. Si el humano dice que no hay documento → continuar sin documento. Si provee uno (o varios) → recordarlos para el Paso 2.
 
-**1.3 — Pregunta de formato de output.** Después de recibir la respuesta de 1.2, **siempre** (en una nueva interacción) preguntar:
+**1.3 — Pregunta de diseño de referencia.** Después de recibir la respuesta de 1.2, **siempre** (en una nueva interacción) preguntar:
+
+> "¿Hay un archivo de diseño aprobado para este feature? (path `.pen`, URL Figma, screenshots, o ninguno)"
+
+Esperar respuesta antes de avanzar. Registrar la respuesta para el resumen del Paso 5 y para el campo `Design reference` del spec:
+- Path `.pen` / URL Figma / paths de screenshots → recordar el valor exacto.
+- "ninguno" / equivalente → recordar como AUSENTE; si la tarea toca UI, marcar la advertencia en el Paso 5.
+- Si la tarea claramente no toca UI (backend puro, infra, etc.) → recordar como `N/A`.
+
+**1.4 — Pregunta de formato de output.** Después de recibir la respuesta de 1.3, **siempre** (en una nueva interacción) preguntar:
 
 > "¿Querés usar el formato de spec por defecto, o tenés un template propio (path local o URL) que deba seguir?"
 
@@ -87,7 +96,7 @@ Esperar respuesta antes de avanzar. Registrar la decisión para el Paso 4:
 - Path local → recordar el path para `Read` en el Paso 4.
 - URL → recordar la URL para `WebFetch` en el Paso 4.
 
-No inferir ni detectar silenciosamente — solo consumir lo que el humano respondió aquí.
+No inferir ni detectar silenciosamente — solo consumir lo que el humano respondió en 1.3 y 1.4.
 
 ### Paso 2 — Extracción de repos desde documento (BLOQUEANTE, si aplica)
 
@@ -131,9 +140,9 @@ Verificación puntual con Glob/Grep (≤4 calls) sigue siendo válida solo para 
 
 ### Paso 4 — Resolución de template y lectura de inputs
 
-**Resolución de template:** consumir la respuesta que el humano dio en el sub-paso 1.3. No detectar ni inferir — solo ejecutar lo confirmado:
+**Resolución de template:** consumir la respuesta que el humano dio en el sub-paso 1.4. No detectar ni inferir — solo ejecutar lo confirmado:
 
-| Respuesta del humano en 1.3 | Acción |
+| Respuesta del humano en 1.4 | Acción |
 |---|---|
 | Default | **Carga la skill `spec-writer` ahora** — usa `guides/spec.md` (default canónico). |
 | Path local | `Read` directo al path. **NO cargar la skill `spec-writer`** — el template externo la reemplaza. |
@@ -174,6 +183,7 @@ Acción única permitida: escribir al humano el siguiente resumen como texto (no
 | Feature | {feature_name} |
 | Destino | {spec_dest} |
 | Fuentes consumidas | {una línea por fuente: tipo (origen)} |
+| Design reference | {path .pen / URL Figma / paths de screenshots | `AUSENTE — feature con UI nueva ⚠️` | `N/A`} |
 | Template de output | {default (skill spec-writer) | path local: ... | URL: ...} |
 | Secciones que incluirá | {lista — y por qué, basado en el contexto disponible} |
 | Secciones que NO incluirá | {lista — y por qué, falta de contexto} |

@@ -30,6 +30,12 @@ Pregunta al humano en una sola línea: **¿Stack (React / TypeScript / Astro —
 
 Omite la parte del ID si el prompt inicial ya lo trae o describe la tarea suficiente. Omite la parte del stack si ya es evidente por los archivos mencionados. Omite la parte del modo si es evidente por el prompt (ej. "arregla el bug de X" → `bug`).
 
+**Cuarta pregunta condicional — Design reference.** Si la tarea toca UI visible y el SPEC/tarea NO trae ya un campo `Design reference`, pregunta también en la misma interacción: **¿Hay archivo de diseño aprobado para esta tarea? (path `.pen`, URL Figma, o ninguno)**. Reglas:
+- Si el humano responde con un path `.pen` o URL Figma → cargar la skill `design-to-code` just-in-time y seguir su workflow.
+- Si responde "ninguno" → implementar según spec textual sin cargar la skill.
+- Si el SPEC ya trae `Design reference` → NO preguntar (la instrucción existente más abajo ya cubre ese caso).
+- Si la tarea no toca UI visible (estado puro, hook utilitario, refactor sin cambios visuales) → omitir esta pregunta.
+
 Con la respuesta:
 
 - Carga las skills del stack indicado y sigue sus instrucciones:
