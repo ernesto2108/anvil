@@ -113,22 +113,27 @@ Reglas para el developer del stack:
 - **Reutiliza componentes existentes** — verifica qué ya existe en el codebase antes de crear nuevos
 - **Carga la skill de convenciones apropiada** para el stack objetivo (ej., `astro-conventions`, `react-conventions`, `flutter-conventions`)
 
-## Paso 5: QA Visual (OBLIGATORIO)
+## Paso 5: QA Visual de Fidelidad (OBLIGATORIO para tareas UI)
 
-Después de implementar:
+Después de implementar y antes de presentar al usuario:
 
-1. **Verificación de build**: Ejecuta `build` para verificar que no hay errores
-2. **Verificación en browser**: Visualiza en el viewport objetivo
-3. **Comparar con diseño**: Abre el diseño lado a lado con el browser. Verifica:
-   - El espaciado coincide (padding, gap, margins)
-   - Los colores coinciden (especialmente entre temas/modos)
-   - La tipografía coincide (familia, tamaño, peso, line-height)
-   - El layout coincide (alineación, dirección, wrapping)
-4. **Verifica todos los estados**: Si el componente tiene estados interactivos, verifica cada uno
-5. **Verifica ambos modos**: Si existen modos claro/oscuro, verifica ambos
-6. **Verifica responsive**: Si hay mobile + desktop, verifica ambos viewports
+1. **Verificación de build**: Ejecuta `build` para verificar que no hay errores.
+2. **QA de fidelidad visual**: Invoca la skill `visual-fidelity-qa` con:
+   - `frame_id` — Frame ID del diseño (viene de los inputs de la task)
+   - `pen_file` — path al archivo `.pen` (viene de `Design reference`)
+   - `impl_url_or_component` — la URL o componente implementado
 
-**Solo presenta al usuario después de que TODAS las verificaciones pasen.**
+   La skill produce un JSON con `score` e `issues` clasificados por severidad.
+
+3. **Regla de entrega:**
+   - Si `visual-fidelity-qa` reporta **BLOQUEADO** (issues críticos) → NO entregar al humano. Resolver primero los críticos (invocar `qa-fixer` si es necesario) y re-ejecutar esta skill.
+   - Si reporta **APROBADO** o solo issues menores/cosméticos → incluir el reporte en el handoff.
+
+4. **Estados, modos y viewports**: si el componente tiene estados interactivos, modos claro/oscuro, o variantes responsive, repite el paso 2 por cada uno (un frame de diseño contra su implementación correspondiente).
+
+**Si la task NO trae `frame_id` ni `pen_file` y aun así toca UI visible:** preguntar al humano: *"Esta tarea toca UI visible pero no tiene Design reference ni Frame ID. ¿Puedes proveerlos para ejecutar QA de fidelidad visual, o confirmar que no aplica?"*. Solo proceder sin QA visual si el humano confirma explícitamente que no aplica.
+
+**Solo presenta al usuario después de que el build pase y `visual-fidelity-qa` apruebe.**
 
 ## Checklist de Completitud Design-to-Code (OBLIGATORIO)
 

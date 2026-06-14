@@ -12,6 +12,7 @@ skills:
   - lint
   - run-tests
   - design-to-code
+  - visual-fidelity-qa
   - context-nav
   - cross-service-dev
 ---
@@ -29,6 +30,13 @@ Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si 
 Pregunta al humano en una sola línea: **¿Modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
 
 Omite la parte del ID si el prompt inicial ya trae el ID o una descripción suficiente de la tarea. Omite la parte del modo si es evidente por el prompt (ej. "arregla el bug de X" → `bug`).
+
+**Pregunta condicional — Design reference (OBLIGATORIA si la tarea toca UI visible).** Si la tarea toca UI visible (pantalla, widget visual, cambio de layout/tema) y el SPEC/tarea NO trae ya un campo `Design reference` con path `.pen` + `Frame ID`, DETENTE antes de implementar y pregunta en la misma interacción: **¿Cuál es el `Design reference` aprobado para esta tarea? (path `.pen` + `Frame ID`, URL Figma, o confirmar explícitamente que no aplica)**. Reglas:
+- Si el humano responde con un path `.pen` + `Frame ID` o URL Figma → cargar la skill `design-to-code` just-in-time y seguir su workflow (incluido el QA de fidelidad visual del Paso 5, validado contra el emulador/simulador).
+- Si el humano confirma explícitamente "no aplica" → implementar según spec textual sin cargar la skill y registrar esa confirmación en el handoff.
+- Si el humano no confirma ni provee referencia → NO implementar. Re-preguntar o escalar.
+- Si el SPEC ya trae `Design reference` completo (path + Frame ID) → NO preguntar (la instrucción existente más abajo ya cubre ese caso).
+- Si la tarea no toca UI visible (state puro, repository, refactor sin cambios visuales) → omitir esta pregunta.
 
 Con la respuesta:
 
