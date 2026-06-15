@@ -92,7 +92,7 @@ Esperar respuesta antes de avanzar. Registrar la respuesta para el resumen del P
 > "¿Querés usar el formato de spec por defecto, o tenés un template propio (path local o URL) que deba seguir?"
 
 Esperar respuesta antes de avanzar. Registrar la decisión para el Paso 4:
-- Respuesta "default" / "el default" / equivalente → recordar: usar skill `spec-writer`.
+- Respuesta "default" / "el default" / equivalente → recordar: usar skill `spec-format`.
 - Path local → recordar el path para `Read` en el Paso 4.
 - URL → recordar la URL para `WebFetch` en el Paso 4.
 
@@ -144,9 +144,9 @@ Verificación puntual con Glob/Grep (≤4 calls) sigue siendo válida solo para 
 
 | Respuesta del humano en 1.4 | Acción |
 |---|---|
-| Default | **Carga la skill `spec-writer` ahora** — usa `guides/spec.md` (default canónico). |
-| Path local | `Read` directo al path. **NO cargar la skill `spec-writer`** — el template externo la reemplaza. |
-| URL | `WebFetch` de la URL. **NO cargar la skill `spec-writer`** — el template externo la reemplaza. |
+| Default | **Carga la skill `spec-format` ahora** — usa `guides/spec.md` (default canónico). |
+| Path local | `Read` directo al path. **NO cargar la skill `spec-format`** — el template externo la reemplaza. |
+| URL | `WebFetch` de la URL. **NO cargar la skill `spec-format`** — el template externo la reemplaza. |
 
 Luego leer todos los inputs confirmados en los pasos previos (documentos + resumen del `explorer` si aplica). Sin gates rígidos de formato:
 
@@ -184,7 +184,7 @@ Acción única permitida: escribir al humano el siguiente resumen como texto (no
 | Destino | {spec_dest} |
 | Fuentes consumidas | {una línea por fuente: tipo (origen)} |
 | Design reference | {path .pen / URL Figma / paths de screenshots | `AUSENTE — feature con UI nueva ⚠️` | `N/A`} |
-| Template de output | {default (skill spec-writer) | path local: ... | URL: ...} |
+| Template de output | {default (skill spec-format) | path local: ... | URL: ...} |
 | Secciones que incluirá | {lista — y por qué, basado en el contexto disponible} |
 | Secciones que NO incluirá | {lista — y por qué, falta de contexto} |
 | Decisiones que el agente tomará | {lista breve de inferencias o adaptaciones} |
@@ -221,13 +221,13 @@ Por cada comportamiento (FR de `requirements.md` o ítem del brief inline):
 
 ### Paso 7 — Validar y emitir
 
-Ejecutar el **checklist de validación de la skill** (`skills/spec-writer/SKILL.md`). Si falla algún check → corregir antes de escribir el archivo. Si el fallo requiere una decisión nueva o destapa un gap → escalar. **Nunca emitir spec incompleto.**
+Ejecutar el **checklist de validación de la skill** (`skills/spec-format/SKILL.md`). Si falla algún check → corregir antes de escribir el archivo. Si el fallo requiere una decisión nueva o destapa un gap → escalar. **Nunca emitir spec incompleto.**
 
 Checks adicionales obligatorios:
 - [ ] Cada AC tiene su línea `→ Ejemplo:` con dato concreto verificable
 - [ ] "Señales de alerta" presente y no vacía en features Medium+
 
-El template completo, las condiciones de inclusión por sección y las reglas de formato viven en `skills/spec-writer/guides/spec.md`.
+El template completo, las condiciones de inclusión por sección y las reglas de formato viven en `skills/spec-format/guides/spec.md`.
 
 ## Protocolo de escalación
 
