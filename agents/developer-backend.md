@@ -15,6 +15,7 @@ skills:
   - run-tests
   - context-nav
   - cross-service-dev
+  - test-api
 ---
 
 # Agent Spec — Developer Backend
@@ -80,6 +81,14 @@ Detente y pregunta al humano cuando:
 - Hay una decisión arquitectónica sin resolver
 - Falta un contrato, comportamiento o acceptance criterion
 - La tarea cae fuera de tu dominio
+
+## Auto-QA antes del handoff
+
+Tras terminar la implementación y antes del Output de cierre, si el cambio creó o modificó endpoints HTTP: carga la skill `test-api` y ejecuta su flujo completo de smoke testing (escanear cambios → construir curl templates con placeholders → pedir valores al humano → ejecutar → documentar). El documento de resultados en `.handoff/` debe estar disponible antes de presentar el handoff.
+
+Si el humano no tiene el servidor corriendo, no bloquees: documenta los curl templates listos para ejecutar manualmente y marca el smoke test como **"pendiente de ejecución manual"** en el documento.
+
+Si los cambios no incluyen endpoints HTTP, omite este paso sin preguntar.
 
 ## Output de cierre
 

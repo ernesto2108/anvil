@@ -1,266 +1,166 @@
 ---
 name: test-api
-description: Convenciones para escribir tests de API con Hurl. Contract testing, chaining de requests, assertions de respuesta, y validación de esquemas. Usar cuando el tester necesite escribir tests de endpoints HTTP.
+description: Smoke testing de endpoints HTTP con dos modos: (1) escanea cambios recientes del developer, o (2) el humano indica qué endpoints probar. Genera `tests/api-collection.json` en formato Postman Collection v2.1 — importable en Postman, Insomnia, Thunder Client, Hoppscotch y ejecutable con Newman CLI. Úsalo cuando termines de implementar endpoints, quieras probar APIs existentes, o necesites una colección portable de pruebas manuales sin ligarte a ninguna herramienta. No es para tests unitarios ni archivos .hurl permanentes.
 ---
 
-# API Test Conventions (Hurl)
+# Smoke Test de API (curl)
 
-Guía de convenciones para tests de API con Hurl. El tester carga este skill en PASO 0 cuando el handoff incluye tests de API.
+Verificación rápida de endpoints HTTP recién implementados o modificados, ejecutada por el developer antes del handoff. No reemplaza la suite de tests del `tester` — confirma que lo que se acaba de escribir responde como se espera contra un servidor real.
 
-## Qué es Hurl
+## Filosofía
 
-CLI HTTP test runner (Rust/libcurl). Tests en archivos `.hurl` planos — legibles, diffeables, versionables. Sin runtime JS, sin GUI. Exit code 0 = todo pasa.
+1. **El humano aporta valores, no estructura** — el developer leyó el código y conoce rutas, bodies, headers y reglas. El humano solo conoce su entorno (tokens reales, IDs que existen en su DB, base URL). Pedirle únicamente eso.
+2. **Cobertura por escenario, no por endpoint** — un endpoint con happy path verde pero sin probar auth faltante o validación no está verificado. Cada endpoint cruza la matriz de escenarios obligatorios.
+3. **Evidencia reproducible** — cada curl ejecutado queda documentado con su comando exacto y su respuesta real, para que el humano pueda re-correrlo o adjuntarlo al handoff.
 
----
+## Flujo de Trabajo
 
-## Estructura de proyecto
+0. **Elegir modo de entrada** — preguntar al humano cómo arrancar:
+   ```
+   ¿Cómo quieres ejecutar el smoke test?
+     [1] Escanear cambios recientes (git diff / archivos modificados en esta sesión)
+     [2] Indicarme qué endpoints o flujo probar
+   ```
+   - **Si elige [1]** → continuar desde el Paso 1.
+   - **Si elige [2]** → el humano indica qué probar, por ejemplo:
+     - "el endpoint POST /api/orders"
+     - "el flujo de login → crear proyecto → eliminar proyecto"
+     - "todos los endpoints del archivo `handlers/users.go`"
 
-```
-tests/
-  api/
-    auth/
-      login.hurl
-      signup.hurl
-    users/
-      create-user.hurl
-      get-user.hurl
-    projects/
-      crud-flow.hurl
-    health.hurl
-  vars/
-    local.env
-    staging.env
-```
+     Con esa indicación, buscar en el repo los handlers/routes correspondientes y leer su código para extraer la MISMA información que el Paso 1 obtiene del diff (ruta y método, struct/schema de request y response, validaciones, reglas de negocio, requisitos de auth). Si la indicación involucra un flujo de varios pasos, resolver el endpoint de cada paso. Si no se encuentra ningún endpoint que coincida → DETENER y reportar: "No encontré endpoints que coincidan con tu indicación; reformula con una ruta, un handler o un flujo concreto." Una vez extraída la información, continuar desde el Paso 2 exactamente igual.
 
-- Nombrar por escenario: `create-user.hurl`, no `post-users.hurl`
-- Un flujo lógico por archivo (puede tener múltiples requests encadenados)
-- Agrupar por dominio/recurso, no por método HTTP
-- Máximo ~10 entries por archivo — dividir por escenario si crece
+1. **Escanear los cambios** — leer el diff o los archivos modificados en esta sesión. Detectar por cada endpoint nuevo/modificado:
+   - Ruta y método HTTP
+   - Struct/schema de request (campos, tipos, obligatoriedad)
+   - Struct/schema de response
+   - Validaciones (campos requeridos, formatos, rangos)
+   - Reglas de negocio del dominio (unicidad, límites, estados válidos)
+   - Requisitos de auth (header esperado, scope/rol)
+   - Si no se detecta ningún endpoint HTTP en los cambios → DETENER y reportar al humano: "No detecté endpoints HTTP en los cambios; no hay nada que smoke-testear."
 
----
+2. **Construir los curl templates** — por cada endpoint, generar un curl por cada escenario de la matriz obligatoria (abajo). El body y los headers van completos y estructurados; los valores que dependen del entorno van como placeholders en mayúsculas entre `<>`: `<BASE_URL>`, `<TOKEN>`, `<USER_ID>`, `<EXISTING_ID>`, `<NONEXISTENT_ID>`, etc.
 
-## Requests
+3. **Pedir solo los valores al humano** — mostrar una lista concisa de los placeholders únicos detectados y para qué sirve cada uno. No mostrar todos los curl aún. Ejemplo:
+   ```
+   Necesito estos valores de tu entorno para ejecutar el smoke test:
+   - <BASE_URL>: URL local del servidor (ej. http://localhost:8080)
+   - <TOKEN>: token Bearer válido de un usuario real
+   - <USER_ID>: ID de un usuario que exista en tu DB
+   - <NONEXISTENT_ID>: un ID que NO exista (para el caso not-found)
+   ```
+   - Si el humano indica que el servidor NO está corriendo → no ejecutar. Saltar al paso 5 documentando los templates como "pendiente de ejecución manual".
 
-```hurl
-# GET con headers
-GET {{base_url}}/api/users/{{user_id}}
-Authorization: Bearer {{token}}
-Accept: application/json
+4. **Generar la Collection** — construir el JSON de `tests/api-collection.json` (formato Postman Collection v2.1) con todos los escenarios de todos los endpoints. NO sustituir los valores reales del humano: cada valor de entorno va como variable Postman (`{{BASE_URL}}`, `{{TOKEN}}`, `{{USER_ID}}`, `{{NONEXISTENT_ID}}`). Si el humano quiere ejecutar inmediatamente puede correr `newman run tests/api-collection.json --env-var BASE_URL=<valor> --env-var TOKEN=<valor>` — pero la ejecución es opcional; el archivo generado es el output principal.
 
-# POST con JSON
-POST {{base_url}}/api/users
-Content-Type: application/json
-{
-  "name": "Alice",
-  "email": "alice@example.com"
-}
+5. **Confirmar** — informar al humano que `tests/api-collection.json` fue creado/actualizado, indicar cuántos endpoints y escenarios se agregaron, y mostrar el comando Newman por si quiere ejecutar en terminal.
 
-# POST con form data
-POST {{base_url}}/api/login
-[FormParams]
-username: admin
-password: {{password}}
+## Matriz de escenarios obligatorios (por endpoint)
 
-# PUT
-PUT {{base_url}}/api/users/{{user_id}}
-Content-Type: application/json
-{
-  "name": "Alice Updated"
-}
+| Escenario | Qué prueba | Status esperado típico |
+|---|---|---|
+| Happy path | Request válido + auth válida | 2xx |
+| Validación fallida | Campo requerido faltante o formato inválido | 400 / 422 |
+| Auth inválida | Token expirado o malformado | 401 |
+| Auth faltante | Sin header `Authorization` | 401 |
+| Recurso no encontrado | ID que no existe | 404 |
+| Edge case de dominio | Lo que el developer detecte al leer el código (límite de caracteres, unicidad, estado inválido, etc.) | depende |
 
-# DELETE
-DELETE {{base_url}}/api/users/{{user_id}}
-Authorization: Bearer {{token}}
-```
+Omitir un escenario solo si no aplica al endpoint (ej. un endpoint público sin auth omite los dos de auth). Documentar la omisión con su razón.
 
----
-
-## Assertions
-
-```hurl
-HTTP 200
-[Asserts]
-status == 200
-header "Content-Type" contains "application/json"
-jsonpath "$.id" exists
-jsonpath "$.name" == "Alice"
-jsonpath "$.items" count == 3
-jsonpath "$.email" matches /^[a-z]+@[a-z]+\.[a-z]+$/
-jsonpath "$.age" >= 18
-body contains "success"
-duration < 1000
-```
-
-**Siempre** assertar el status code en cada response. `duration < N` para endpoints críticos en rendimiento.
-
----
-
-## Chaining (captures)
-
-```hurl
-# Paso 1: Login, capturar token
-POST {{base_url}}/api/auth/login
-Content-Type: application/json
-{
-  "email": "{{admin_email}}",
-  "password": "{{admin_password}}"
-}
-
-HTTP 200
-[Captures]
-token: jsonpath "$.access_token"
-[Asserts]
-jsonpath "$.access_token" isString
-
-# Paso 2: Usar token capturado
-GET {{base_url}}/api/profile
-Authorization: Bearer {{token}}
-
-HTTP 200
-[Asserts]
-jsonpath "$.email" == "{{admin_email}}"
-```
-
-Captures y asserts coexisten en el mismo bloque de response. Las variables persisten en todo el archivo.
-
----
-
-## Contract testing
-
-Assertar la forma del response explícitamente:
-
-```hurl
-[Asserts]
-jsonpath "$.id" isInteger
-jsonpath "$.name" isString
-jsonpath "$.created_at" matches /^\d{4}-\d{2}-\d{2}T/
-jsonpath "$.tags" isCollection
-jsonpath "$.metadata" exists
-```
-
-Para validación completa contra OpenAPI, usar `--json` output + validador externo (Schemathesis para fuzzing automático desde specs OpenAPI).
-
----
-
-## Variables y ambientes
+## Ejemplo de curl templates (endpoint con auth)
 
 ```bash
-# Variables por CLI
-hurl --variable base_url=http://localhost:8080 --variable token=abc123 tests/
+# Happy path
+curl -s -w '\n%{http_code}' -X POST '<BASE_URL>/api/projects' \
+  -H 'Authorization: Bearer <TOKEN>' \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Smoke Test","description":"valid"}'
 
-# Archivo de variables (key=value por línea)
-hurl --variables-file vars/local.env --test tests/
+# Validación fallida (name faltante)
+curl -s -w '\n%{http_code}' -X POST '<BASE_URL>/api/projects' \
+  -H 'Authorization: Bearer <TOKEN>' \
+  -H 'Content-Type: application/json' \
+  -d '{"description":"missing name"}'
 
-# Secrets (redactados en logs/reports)
-hurl --secret password=supersecret --test tests/
+# Auth inválida
+curl -s -w '\n%{http_code}' -X POST '<BASE_URL>/api/projects' \
+  -H 'Authorization: Bearer malformed.token' \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"x"}'
+
+# Auth faltante
+curl -s -w '\n%{http_code}' -X POST '<BASE_URL>/api/projects' \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"x"}'
+
+# Recurso no encontrado
+curl -s -w '\n%{http_code}' -X GET '<BASE_URL>/api/projects/<NONEXISTENT_ID>' \
+  -H 'Authorization: Bearer <TOKEN>'
 ```
 
-Overrides por entry con `[Options]`:
+## Formato de Salida
 
-```hurl
-GET {{base_url}}/api/slow-endpoint
-[Options]
-retry: 3
-retry-interval: 2000
-```
+El output es `tests/api-collection.json` en la raíz del proyecto, en formato **Postman Collection v2.1**:
 
----
+- Crear el archivo si no existe; si ya existe, actualizarlo agregando los items nuevos sin borrar los existentes.
+- El formato es importable en Postman, Insomnia, Thunder Client y Hoppscotch, y corrible con Newman CLI (`newman run tests/api-collection.json`).
+- Los valores de entorno van como variables Postman (`{{BASE_URL}}`, `{{TOKEN}}`, `{{USER_ID}}`, `{{NONEXISTENT_ID}}`) — nunca sustituir los valores reales del humano en el JSON, siempre variables.
+- Cada escenario es un `item` dentro de una carpeta nombrada por endpoint (ej. `POST /api/projects`).
 
-## CI
+Estructura mínima:
 
-```bash
-# Ejecutar todos los tests
-hurl --test tests/api/
-
-# JUnit para dashboards CI
-hurl --test --report-junit results.xml tests/api/
-
-# JSON report
-hurl --test --report-json report/ tests/api/
-
-# Ejecución paralela (Hurl 5.x)
-hurl --test --jobs 4 tests/api/
-```
-
-Exit code 0 = pass, non-zero = failure.
-
----
-
-## Ejemplo completo: CRUD flow
-
-```hurl
-# tests/api/projects/crud-flow.hurl
-# Flow: login -> crear -> verificar -> actualizar -> eliminar
-
-# --- Login ---
-POST {{base_url}}/api/auth/login
-Content-Type: application/json
+```json
 {
-  "email": "{{admin_email}}",
-  "password": "{{admin_password}}"
+  "info": {
+    "name": "<nombre del proyecto>",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "POST /api/projects",
+      "item": [
+        {
+          "name": "happy path",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Smoke Test\",\"description\":\"valid\"}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{BASE_URL}}/api/projects", "host": ["{{BASE_URL}}"], "path": ["api","projects"] }
+          }
+        }
+      ]
+    }
+  ]
 }
-
-HTTP 200
-[Captures]
-token: jsonpath "$.access_token"
-
-# --- Crear ---
-POST {{base_url}}/api/projects
-Authorization: Bearer {{token}}
-Content-Type: application/json
-{
-  "name": "Test Project",
-  "description": "Created by Hurl"
-}
-
-HTTP 201
-[Captures]
-project_id: jsonpath "$.id"
-[Asserts]
-jsonpath "$.name" == "Test Project"
-jsonpath "$.id" isInteger
-
-# --- Verificar ---
-GET {{base_url}}/api/projects/{{project_id}}
-Authorization: Bearer {{token}}
-
-HTTP 200
-[Asserts]
-jsonpath "$.id" == {{project_id}}
-jsonpath "$.name" == "Test Project"
-duration < 500
-
-# --- Actualizar ---
-PUT {{base_url}}/api/projects/{{project_id}}
-Authorization: Bearer {{token}}
-Content-Type: application/json
-{
-  "name": "Updated Project"
-}
-
-HTTP 200
-[Asserts]
-jsonpath "$.name" == "Updated Project"
-
-# --- Eliminar ---
-DELETE {{base_url}}/api/projects/{{project_id}}
-Authorization: Bearer {{token}}
-
-HTTP 204
 ```
 
-Ejecutar: `hurl --test --variable base_url=http://localhost:8080 --variables-file vars/local.env tests/api/projects/crud-flow.hurl`
+El humano puede configurar las variables en Postman/Insomnia como Environment, o pasarlas a Newman con `--env-var BASE_URL=http://localhost:8080`.
 
----
+## Reglas
 
-## Anti-patrones
+- Solo escanear los archivos modificados en la sesión actual; no auditar el repo completo.
+- Nunca hardcodear tokens, IDs o URLs reales en los templates — siempre placeholders hasta sustituir en ejecución.
+- Nunca persistir los valores reales del humano fuera del documento de resultados, y ahí redactados.
+- Un curl por escenario, no encadenar flujos (eso es del `tester` con Hurl).
+- No abortar la ejecución por un curl fallido; registrar y continuar.
 
-| Prohibido | Correcto |
-|---|---|
-| URLs/tokens hardcodeados | `{{variables}}` siempre |
-| Un request por archivo cuando forman un flujo | Encadenar requests relacionados (crear + verificar + eliminar) |
-| Sin assertar status code | `HTTP <code>` en cada response |
-| Archivos monolíticos (20+ entries) | Dividir por escenario, < 10 entries |
-| Secrets en archivos `.hurl` | `--secret` o `--variables-file` (gitignored) |
-| Assertar valores inestables (timestamps, UUIDs) | `exists`, `matches`, `isString` |
-| Sin checks de `duration` en endpoints críticos | `duration < N` para performance |
+## Lo que esta skill NO cubre
+
+- Archivos `.hurl` permanentes y suite de contract testing versionada → trabajo del `tester`.
+- Tests unitarios / de integración del código → skill `run-tests`.
+- Endpoints de frontend o mobile → fuera de alcance; solo APIs backend.
+
+## Checklist antes de documentar
+
+- [ ] Se escanearon los cambios de la sesión y se listaron todos los endpoints afectados
+- [ ] Cada endpoint tiene los 6 escenarios (o se documentó la omisión con razón)
+- [ ] Todos los placeholders se presentaron al humano antes de ejecutar
+- [ ] Las variables de entorno usan `{{PLACEHOLDER}}` — ningún valor real hardcodeado en el JSON
+- [ ] `tests/api-collection.json` creado o actualizado en el repo

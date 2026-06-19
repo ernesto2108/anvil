@@ -11,6 +11,8 @@ model: medium
 skills:
   - scan-project
   - context-nav
+  - infra-probe
+  - mcp-setup
 ---
 
 # Agente — Context Init
@@ -125,6 +127,53 @@ No te detengas en silencio.
 
    Esperar la respuesta del humano y aplicar las correcciones antes de escribir cualquier archivo. Si responde "todo correcto", continuar directamente al Paso 6.
 
+5.7. **Paso X — Scan de infraestructura y disponibilidad de MCPs** — después de detectar el stack (Paso 5, donde ya se identificaron lenguajes y frameworks) y antes de la escritura final, generar/actualizar `.project-context/infra-services.md`.
+
+   **Cuándo corre este paso, por modo:**
+   - `init`: **siempre** — es parte del bootstrap inicial.
+   - `deep`: **siempre** — el rescan completo incluye infra.
+   - `regular`: **solo si** `docker-compose.yml` o `.env.example` cambió desde el último scan, **O** si el humano lo pide explícitamente. Si ninguno cambió, omitir y preservar el `infra-services.md` existente (idempotencia).
+
+   **Qué hace:**
+
+   5.7.1. Detectar servicios de infra declarados: `docker-compose.yml` / `docker-compose.dev.yml` / `docker-compose.override.yml`, `.env.example` / `.env.local` / `.env`, y archivos de dependencias (`go.mod`, `package.json`, `requirements.txt`, `Cargo.toml`).
+
+   5.7.2. Para cada servicio detectado, verificar si hay un MCP disponible en la sesión vía la skill `infra-probe` (`{ service: "auto", env: "dev", purpose: "health-check" }`). `infra-probe` resuelve `mcp_available` por servicio vía ToolSearch y degrada a file-inspection cuando no hay MCP. **Read-only siempre** — este paso nunca escribe en ninguna infraestructura.
+
+   5.7.3. Escribir/actualizar `.project-context/infra-services.md` con el resultado, usando este formato:
+
+   ```markdown
+   # Infra Services
+
+   Generado por: context-init
+   Última actualización: <fecha>
+
+   ## Servicios detectados
+
+   ### postgres
+   - **Detectado via:** docker-compose.yml
+   - **MCP disponible:** true
+   - **MCP tool prefix:** mcp__postgres
+   - **Ambiente:** dev
+   - **Notas:** Puerto 5432, DB: myapp_dev
+
+   ### redis
+   - **Detectado via:** go.mod (redis/rueidis v0.x)
+   - **MCP disponible:** false
+   - **Fallback:** .env.local (REDIS_URL)
+   - **Notas:** MCP no configurado en settings.json — instalar @modelcontextprotocol/server-redis para activarlo
+
+   ### kafka
+   - **Detectado via:** docker-compose.yml
+   - **MCP disponible:** false
+   - **Fallback:** no disponible
+   - **Notas:** Requiere configuración manual para inspección
+   ```
+
+   Si no se detecta ningún servicio de infra, escribir `infra-services.md` con una nota explícita ("No se detectaron servicios de infraestructura declarados") en lugar de omitir el archivo.
+
+   5.7.4. **Si algún servicio quedó con `mcp_available: false`**, sugerir al humano en el output de cierre que cargue la skill `mcp-setup` para generar `.mcp.json.example` / `.mcp.json` y activar los MCP servers faltantes. No invocar `mcp-setup` automáticamente — solo sugerirlo.
+
 6. **Escribir hallazgos** en `<context_path>` usando los templates de `skills/context-nav/templates/`.
 
    Al escribir cada archivo, partir del template correspondiente como base literal. Sustituir los placeholders `<...>` con los hallazgos del escaneo. Preservar **todo** el texto estático del template — secciones, encabezados y notas — aunque no haya datos del escaneo para una sección. Solo omitir una sección si el template la marca explícitamente como `<!-- Solo cuando hay evidencia explícita -->`.
@@ -174,7 +223,7 @@ No te detengas en silencio.
 
 - **Modo ejecutado** — `init` / `deep` / `regular` (y si fue detectado o forzado).
 - **Qué se escaneó** — stack(s) detectado(s).
-- **Archivos de `.project-context/` creados/actualizados** — lista (NAVIGATOR, Core/*, Technical domain/*).
+- **Archivos de `.project-context/` creados/actualizados** — lista (NAVIGATOR, Core/*, Technical domain/*, `infra-services.md`).
 - **Conteo de hallazgos clave** — patrones detectados (N), contratos (N), bounded contexts (N).
 - **Gaps detectados** (si los hay) — secciones incompletas por falta de información.
 - **Próximo paso recomendado** (si aplica) — ej. invocar al humano para clarificar el objetivo del proyecto.

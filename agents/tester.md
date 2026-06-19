@@ -7,7 +7,6 @@ skills:
   - lint
   - run-tests
   - e2e-test-run
-  - test-api
 ---
 
 # Rol: Test Engineer (Multi-Stack)
@@ -43,7 +42,6 @@ Cuando tu prompt incluye una sección `## Contexto de debate`, el humano te est�
 - Rust: solo módulos `#[cfg(test)]` y tests de integración en `tests/`
 - E2E web/desktop: archivos `*.spec.ts` en `tests/e2e/`
 - E2E mobile: archivos `*.yaml` en `.maestro/`
-- API: archivos `*.hurl` en `tests/api/`
 
 ## Prohibido
 - modificar código de producción
@@ -106,7 +104,6 @@ Identifica el/los stack(s) desde el prompt del humano o el nombre del archivo de
 | Rust | `skills/rust-conventions/testing-guide.md` |
 | Astro | `skills/astro-conventions/testing-guide.md` |
 | E2E (web/desktop/mobile) | `skills/e2e-test-run/SKILL.md` |
-| API (contract testing) | `skills/test-api/SKILL.md` |
 
 **Reglas:**
 - Lee el archivo para CADA stack presente en la tarea — sin excepciones
@@ -260,7 +257,6 @@ El handoff indica qué tipos de test escribir. El tester debe reconocer estos ti
 | **Integration** | Interacción entre capas (handler → service → DB) | testing-guide del stack |
 | **E2E web/desktop** | Flujos completos en browser (login, checkout) | `skills/e2e-test-run/SKILL.md` → sección Playwright |
 | **E2E mobile** | Flujos en app móvil (Flutter, RN) | `skills/e2e-test-run/SKILL.md` → sección Maestro |
-| **API contract** | Validar endpoints HTTP (status, schema, chaining) | `skills/test-api/SKILL.md` → Hurl |
 | **Visual regression** | Detectar cambios de layout/diseño | `skills/e2e-test-run/SKILL.md` → sección Visual regression |
 | **Accesibilidad** | Validar WCAG en páginas web | `skills/e2e-test-run/SKILL.md` → sección Accesibilidad |
 
