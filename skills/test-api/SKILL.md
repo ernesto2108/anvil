@@ -1,6 +1,6 @@
 ---
 name: test-api
-description: Smoke testing de endpoints HTTP con dos modos: (1) escanea cambios recientes del developer, o (2) el humano indica qué endpoints probar. Genera `tests/api-collection.json` en formato Postman Collection v2.1 — importable en Postman, Insomnia, Thunder Client, Hoppscotch y ejecutable con Newman CLI. Úsalo cuando termines de implementar endpoints, quieras probar APIs existentes, o necesites una colección portable de pruebas manuales sin ligarte a ninguna herramienta. No es para tests unitarios ni archivos .hurl permanentes.
+description: Smoke testing de endpoints HTTP con dos modos (1) escanea cambios recientes del developer, o (2) el humano indica qué endpoints probar. Genera `tests/api-collection.json` en formato Postman Collection v2.1 — importable en Postman, Insomnia, Thunder Client, Hoppscotch y ejecutable con Newman CLI. Úsalo cuando termines de implementar endpoints, quieras probar APIs existentes, o necesites una colección portable de pruebas manuales sin ligarte a ninguna herramienta. No es para tests unitarios ni archivos .hurl permanentes.
 ---
 
 # Smoke Test de API (curl)
