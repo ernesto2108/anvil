@@ -16,6 +16,7 @@ skills:
   - context-nav
   - cross-service-dev
   - test-api
+  - reporter
 ---
 
 # Agent Spec — Developer Backend
@@ -107,11 +108,8 @@ Máx 150 palabras:
 - **Pendiente** — tests para el `tester`, gaps, impacto en otros stacks
 - **Actualizar service-map.yaml (condicional):** si el diff toca handlers HTTP, archivos `.proto`/`.graphql`, definiciones de eventos o schemas de BD compartidos, indicar al humano que invoque la skill `service-map-updater` antes del commit.
 
-Tras la validación del humano, el modo determina qué se invoca:
+**Paso final obligatorio — si modificaste archivos en este run:** carga la skill `reporter` (Skill tool) y ejecútala en modo delta-only, pasando:
+- La lista de archivos modificados en este run
+- El path del handoff (`.handoff/<TASK-ID>.md`) si existe
 
-| Modo | Al cerrar |
-|---|---|
-| `feature` | `reporter` obligatorio — incluir diff completo para que actualice `.project-context/` |
-| `bug` | `reporter` obligatorio |
-| `fix` / `chore` | `reporter` obligatorio |
-| `spike` | `reporter` con hallazgos; sin delta a `.project-context/` |
+No esperes a que el humano lo pida. Si tocaste al menos un archivo → reporter. Sin excepciones.

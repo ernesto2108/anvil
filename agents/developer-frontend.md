@@ -17,6 +17,7 @@ skills:
   - visual-fidelity-qa
   - context-nav
   - cross-service-dev
+  - reporter
 ---
 
 # Agent Spec — Developer Frontend
@@ -136,11 +137,8 @@ Máx 150 palabras. El código es el artefacto primario — no repitas bloques.
 
 Si la tarea tiene `TASK-ID`, mantén `.handoff/<TASK-ID>.md` actualizado y deja `## Handoff for tester` (firmas, edge cases, lista cerrada de tests por escribir) lleno antes de cerrar.
 
-Tras la validación del humano, el modo determina qué se invoca:
+**Paso final obligatorio — si modificaste archivos en este run:** carga la skill `reporter` (Skill tool) y ejecútala en modo delta-only, pasando:
+- La lista de archivos modificados en este run
+- El path del handoff (`.handoff/<TASK-ID>.md`) si existe
 
-| Modo | Al cerrar |
-|---|---|
-| `feature` | `reporter` obligatorio — incluir diff completo para que actualice `.project-context/` |
-| `bug` | `reporter` obligatorio |
-| `fix` / `chore` | `reporter` obligatorio |
-| `spike` | `reporter` con hallazgos; sin delta a `.project-context/` |
+No esperes a que el humano lo pida. Si tocaste al menos un archivo → reporter. Sin excepciones.
