@@ -38,7 +38,7 @@ Solo dos campos son realmente obligatorios. El resto es contexto opcional que se
 | Campo | Obligatorio | Descripción |
 |---|---|---|
 | `feature_name` | siempre | Nombre del feature o iniciativa, para el título del spec. |
-| `spec_dest` | siempre | Destino del `spec.md`. Ruta local absoluta o URL (Linear, GitHub, Jira, Notion). |
+| `spec_dest` | siempre | Destino del `spec.md`. Ruta local absoluta o URL (Linear, GitHub, Jira, Notion). En modo multi-capa (specs separados por capa), `spec_dest` se trata como directorio base; los archivos se escriben como `{spec_dest_dir}/spec-backend.md`, `{spec_dest_dir}/spec-frontend.md`, etc. |
 | `milestone` | opcional | Etiqueta de trazabilidad — se propaga al encabezado si existe. |
 
 Cualquier otra fuente (brief libre, `requirements.md`, Architecture Views, ADRs, código del repo, Design Spec, screenshots) es **contexto opcional**, no hay lista canónica predefinida. Se descubre preguntando.
@@ -182,6 +182,8 @@ Acción única permitida: escribir al humano el siguiente resumen como texto (no
 |---|---|
 | Feature | {feature_name} |
 | Destino | {spec_dest} |
+| Tamaño estimado | {small — 1 capa, 1 dev | medium — 1-2 capas | large — 3+ capas o múltiples devs | XL — feature completo multi-equipo} |
+| Estrategia de output | {único spec.md | specs separados por capa: spec-backend.md + spec-frontend.md + [spec-db.md] + ...} |
 | Fuentes consumidas | {una línea por fuente: tipo (origen)} |
 | Design reference | {path .pen / URL Figma / paths de screenshots | `AUSENTE — feature con UI nueva ⚠️` | `N/A`} |
 | Template de output | {default (skill spec-format) | path local: ... | URL: ...} |
@@ -192,6 +194,11 @@ Acción única permitida: escribir al humano el siguiente resumen como texto (no
 
 ¿Continúo con la generación?
 ```
+
+**Si `Tamaño estimado` es `large` o `XL`:**
+> "Esta tarea toca [N] capas independientes ([backend / frontend / db / mobile / infra]). Recomiendo generar specs separados por capa en lugar de un único `spec.md`. ¿Procedemos con specs separados o preferís uno solo?"
+
+Esperar respuesta explícita del humano antes de continuar. Si confirma separación → ajustar la estrategia de output a múltiples archivos, uno por capa relevante.
 
 Después de mostrar ese bloque, **terminar el turno**. Esperar la respuesta del humano en un turno nuevo.
 
@@ -204,6 +211,23 @@ Reglas de continuación:
 **No generar el `spec.md` hasta confirmación explícita posterior al resumen.**
 
 ### Paso 6 — Mapear comportamientos a criterios de aceptación
+
+### Criterio de partición por capa
+
+Separar en specs por capa cuando se cumpla al menos una condición:
+- La tarea toca 3 o más de: backend, frontend, mobile, db/migraciones, infra/devops
+- Hay contratos explícitos entre capas (endpoints nuevos, eventos, esquemas de DB)
+- Diferentes developers (backend vs. frontend vs. mobile) van a consumir el spec en paralelo
+- El spec proyectado supera 150 líneas con detalle real (no duplicación de Architecture Views)
+
+Nombres canónicos de archivos al separar:
+- `spec-backend.md` — lógica de servidor, handlers, servicios, repositorios
+- `spec-frontend.md` — componentes, páginas, estado, integración de API
+- `spec-mobile.md` — pantallas, navegación, integración de API móvil
+- `spec-db.md` — migraciones, esquema, índices, seeds
+- `spec-infra.md` — infra, variables de entorno, configuración de deploy
+
+Cada archivo individual apunta a 100–150 líneas. El límite aplica por archivo, no al conjunto total.
 
 Por cada comportamiento (FR de `requirements.md` o ítem del brief inline):
 
@@ -240,7 +264,7 @@ Escalar (no continuar) solo cuando se cumpla alguna de estas condiciones — el 
 | Contradicción fuerte entre fuentes | hay 2+ fuentes que se cruzan | `Fuentes contradictorias: [A] dice [X] vs [B] dice [Y]. ¿Cuál prevalece?` |
 | Ciclo de dependencias en el mapa de implementación | siempre | `Ciclo detectado: [A → B → C → A]. Aclarar dependencias antes de continuar.` |
 | Discrepancia Design Spec ↔ diseño visual referenciado | hay Design Spec y diseño | `Discrepancias entre Design Spec y diseño: [lista]. ¿Cuál es la fuente de verdad?` |
-| Presupuesto excedido | siempre | `Presupuesto excedido. ¿Ampliar o el spec necesita partirse en múltiples features?` |
+| Presupuesto excedido | siempre | `Presupuesto excedido. Opciones: (a) ampliar presupuesto, (b) partir en múltiples features (un ticket distinto por feature), (c) partir en specs por capa (mismo feature, archivos separados: spec-backend.md + spec-frontend.md + etc.). ¿Cuál preferís?` |
 
 **Formato:** una línea con el problema, una línea con la pregunta concreta. NO continuar con asunciones.
 

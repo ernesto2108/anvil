@@ -179,7 +179,8 @@ Una fila por fuente consumida. Si solo hubo brief inline, una sola fila con `bri
 - La sección `## Variables de entorno nuevas` se incluye **solo si el cambio introduce env vars nuevas**. Si no hay env vars nuevas, omitir la sección. Usar nombres estándar de la tabla en `backend.md` (ej. `REDIS_URL`, no `CACHE_ADDR`)
 - "Tests por criterio de aceptación" es la lista cerrada que el tester sigue — el architect define el scope, no el tester. Una fila por AC, sin excepción.
 - Para tareas Medium+: E2E aplica a flujos de usuario nuevos, API contract a endpoints nuevos, a11y a páginas públicas, visual regression a cambios de UI. Justificar "N/A" cuando no aplica.
-- Mantener spec.md bajo 150 líneas — si es más largo, se están duplicando contratos de archivos de arquitectura
+- Para features de una sola capa: target 100–150 líneas. Si supera 150, revisar si se están duplicando contratos de Architecture Views existentes.
+- Para features multi-capa con specs separados: cada archivo individual apunta a 100–150 líneas. El límite aplica por archivo, no al conjunto total de specs del feature.
 - **Cada AC debe tener una línea "→ Ejemplo:"** con input concreto y output observable por el humano. Sin ejemplo → AC incompleto.
 - **"Señales de alerta" es obligatoria en features Medium+.** Lista lo que NO debe ocurrir — más fácil de detectar en code review que lo que sí debe ocurrir.
 - El spec no incluye paths de archivos, nombres de métodos ni comandos de implementación — eso es responsabilidad del developer-agent y el task-writer.
