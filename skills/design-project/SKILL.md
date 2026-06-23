@@ -49,22 +49,21 @@ Si el usuario elige un repo existente sin archivo de diseño:
 2. Preguntar: "Donde quieres guardar el archivo? (ej. `design/`, `src/design/`, raiz del repo?)"
 3. Preguntar: "Que tipo de producto es? Web, mobile, ambos?"
 4. Crear el archivo:
-   - **Pencil**: `open_document("new")`
+   - **Pencil**: El MCP de Pencil no puede crear archivos — requiere acción manual del usuario. Indicar al usuario: "Crea un archivo `.pen` vacío desde el editor Pencil (File → New), ábrelo, y pásame el path para continuar."
    - **Figma**: guiar al usuario a crear un archivo de Figma y compartir la URL
 
 ## Paso 4: Abrir y cargar contexto
 
 ### Si es Pencil (archivo .pen):
 
-1. `open_document(filePath)`
-2. `get_editor_state()` — canvas actual, selección, página activa
+1. `get_editor_state({ include_schema: true })` — canvas actual, schema del .pen, página activa
+2. `snapshot_layout({ maxDepth: 0 })` — frames de nivel superior (pantallas) sin bajar al árbol
 3. `get_variables()` — design tokens
-4. `batch_get({ patterns: [{ reusable: true }] })` — componentes reutilizables
-5. `batch_get({ patterns: [{ type: "frame", depth: 0 }] })` — frames de nivel superior (pantallas)
+4. `batch_get({ patterns: [{ reusable: true }], searchDepth: 2, readDepth: 1 })` — componentes reutilizables
 
 ### Si es Figma:
 
-1. Cargar el skill `/figma-use` (obligatorio antes de cualquier llamada a herramientas de Figma)
+1. Cargar `reference/figma-workflow.md` desde el skill `/design-system` para instrucciones de trabajo con Figma.
 2. Leer la estructura del archivo Figma
 3. Listar páginas, frames y componentes
 
