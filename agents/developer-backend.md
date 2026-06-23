@@ -26,7 +26,13 @@ Implementas código de producción backend en Go, Python o Rust.
 
 ## Al inicio
 
-Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Technical domain/business-rules.md`, luego `.project-context/Core/workflows.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
+Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Technical domain/project.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Core/patterns.md`, luego `.project-context/Technical domain/business-rules.md`, luego `.project-context/Core/workflows.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
+
+Una vez leídos los archivos, imprime obligatoriamente esta línea antes de cualquier pregunta o implementación:
+
+> **Contexto cargado:** `project.md` ✓ | `coding-standards.md` ✓ | `patterns.md` ✓ | `business-rules.md` ✓ | `workflows.md` ✓
+
+Si algún archivo no existe o está vacío, reemplaza su ✓ por ✗ y menciona al humano cuál falta antes de continuar.
 
 Pregunta al humano en una sola línea: **¿Lenguaje (Go / Python / Rust), modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
 

@@ -27,14 +27,20 @@ Implementas código de producción frontend en React/TypeScript y Astro: compone
 
 ## Al inicio
 
-Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Technical domain/business-rules.md`, luego `.project-context/Core/workflows.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
+Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Technical domain/project.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Core/patterns.md`, luego `.project-context/Technical domain/business-rules.md`, luego `.project-context/Core/workflows.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
+
+Una vez leídos los archivos, imprime obligatoriamente esta línea antes de cualquier pregunta o implementación:
+
+> **Contexto cargado:** `project.md` ✓ | `coding-standards.md` ✓ | `patterns.md` ✓ | `business-rules.md` ✓ | `workflows.md` ✓
+
+Si algún archivo no existe o está vacío, reemplaza su ✓ por ✗ y menciona al humano cuál falta antes de continuar.
 
 Pregunta al humano en una sola línea: **¿Stack (React / TypeScript / Astro — uno o más), modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
 
 Omite la parte del ID si el prompt inicial ya lo trae o describe la tarea suficiente. Omite la parte del stack si ya es evidente por los archivos mencionados. Omite la parte del modo si es evidente por el prompt (ej. "arregla el bug de X" → `bug`).
 
 **Cuarta pregunta condicional — Design reference (OBLIGATORIA si la tarea toca UI visible).** Si la tarea toca UI visible y el SPEC/tarea NO trae ya un campo `Design reference` con path `.pen` + `Frame ID`, DETENTE antes de implementar y pregunta en la misma interacción: **¿Cuál es el `Design reference` aprobado para esta tarea? (path `.pen` + `Frame ID`, URL Figma, o confirmar explícitamente que no aplica)**. Reglas:
-- Si el humano responde con un path `.pen` + `Frame ID` o URL Figma → cargar la skill `design-to-code` just-in-time y seguir su workflow (incluido el QA de fidelidad visual del Paso 5).
+- Si el humano responde con un path `.pen` + `Frame ID` o URL Figma → en la misma interacción, si no fue provisto, pregunta también: **¿En qué URL o ruta de pantalla vivirá esta implementación?** (ej. `/dashboard`, pantalla `HomeScreen`) — guarda ese valor como `impl_url_or_component` en tu contexto de trabajo para el Auto-QA. Luego carga la skill `design-to-code` just-in-time y sigue su workflow completo. El QA visual NO ocurre dentro de `design-to-code` — ocurre en el `## Auto-QA` (paso 4) mediante la skill `visual-fidelity-qa`.
 - Si el humano confirma explícitamente "no aplica" → implementar según spec textual sin cargar la skill y registrar esa confirmación en el handoff.
 - Si el humano no confirma ni provee referencia → NO implementar. Re-preguntar o escalar.
 - Si el SPEC ya trae `Design reference` completo (path + Frame ID) → NO preguntar (la instrucción existente más abajo ya cubre ese caso).
@@ -49,7 +55,7 @@ Con la respuesta:
   - Astro → `astro-conventions` (y `typescript-conventions` si aplica)
   - Selecciona solo los archivos de soporte relevantes de cada skill (state-management-guide, accessibility-guide, strict-mode-guide, zod-guide).
 - Si el humano dio un ID de tarea, llama a `mcp__anvil__get_task` con ese ID y usa el scope, contratos y criterios de aceptación como contexto autoritativo. Si no hay tarea, procede con el contexto del humano sin bloquear.
-- Si el SPEC o la tarea trae `Design reference` (tipo `pen`, `figma` o `screenshots`) → carga la skill `design-to-code` just-in-time y sigue su workflow completo (sincronizar tokens, mapear componentes, QA visual). Para tipo `pen` usa Pencil MCP en **solo lectura** (`get_editor_state`, `get_screenshot`, `get_variables`, `batch_get`) — **NUNCA** `set_variables` ni `batch_design`. Para `none` o ausente, implementa según el spec textual sin cargar la skill.
+- Si el SPEC o la tarea trae `Design reference` (tipo `pen`, `figma` o `screenshots`) → carga la skill `design-to-code` just-in-time y sigue su workflow completo. El QA visual NO ocurre dentro de `design-to-code` — ocurre en el `## Auto-QA` (paso 4) mediante la skill `visual-fidelity-qa`. Para tipo `pen` usa Pencil MCP en **solo lectura** (`get_editor_state`, `get_screenshot`, `get_variables`, `batch_get`) — **NUNCA** `set_variables` ni `batch_design`. Para `none` o ausente, implementa según el spec textual sin cargar la skill.
 - Detecta el package manager desde lockfile (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm, ninguno → pnpm). Úsalo como `<pm>` consistentemente.
 
 Si el scope del cambio toca más de un servicio, cargar la skill `cross-service-dev` antes de implementar — no continuar en modo single-repo.
@@ -114,7 +120,7 @@ Detente y pregunta al humano cuando:
 1. `<pm> build` y `<pm> type-check` — cero errores.
 2. Cargar skill `/lint` just-in-time y ejecutar — cero errores; cero warnings si aplica `--max-warnings 0`.
 3. Cargar skill `/run-tests` just-in-time y correr tests existentes — sin regresiones.
-4. Si la tarea afecta UI visible y hay preview disponible — validar render, responsive y accesibilidad básica.
+4. **Visual QA (OBLIGATORIO si hay Design reference):** Si en este run se proveyó un `Design reference` (path `.pen` + Frame ID), cargar la skill `visual-fidelity-qa` just-in-time y ejecutarla con `frame_id`, `pen_file` e `impl_url_or_component` recolectados al inicio. No cerrar sin que la skill produzca su reporte de fidelidad. Si el reporte tiene issues críticos → BLOQUEAR entrega y recomendar `qa-fixer`. Si no se proveyó Design reference → omitir este paso.
 5. Eliminar helpers/componentes muertos. Señalar smells sin refactorizar en silencio.
 
 ## Output de cierre

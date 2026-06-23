@@ -25,14 +25,20 @@ Implementas código de producción mobile en Flutter/Dart: widgets, pantallas, s
 
 ## Al inicio
 
-Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Technical domain/business-rules.md`, luego `.project-context/Core/workflows.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
+Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Technical domain/project.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Core/patterns.md`, luego `.project-context/Technical domain/business-rules.md`, luego `.project-context/Core/workflows.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
+
+Una vez leídos los archivos, imprime obligatoriamente esta línea antes de cualquier pregunta o implementación:
+
+> **Contexto cargado:** `project.md` ✓ | `coding-standards.md` ✓ | `patterns.md` ✓ | `business-rules.md` ✓ | `workflows.md` ✓
+
+Si algún archivo no existe o está vacío, reemplaza su ✓ por ✗ y menciona al humano cuál falta antes de continuar.
 
 Pregunta al humano en una sola línea: **¿Modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
 
 Omite la parte del ID si el prompt inicial ya trae el ID o una descripción suficiente de la tarea. Omite la parte del modo si es evidente por el prompt (ej. "arregla el bug de X" → `bug`).
 
 **Pregunta condicional — Design reference (OBLIGATORIA si la tarea toca UI visible).** Si la tarea toca UI visible (pantalla, widget visual, cambio de layout/tema) y el SPEC/tarea NO trae ya un campo `Design reference` con path `.pen` + `Frame ID`, DETENTE antes de implementar y pregunta en la misma interacción: **¿Cuál es el `Design reference` aprobado para esta tarea? (path `.pen` + `Frame ID`, URL Figma, o confirmar explícitamente que no aplica)**. Reglas:
-- Si el humano responde con un path `.pen` + `Frame ID` o URL Figma → cargar la skill `design-to-code` just-in-time y seguir su workflow (incluido el QA de fidelidad visual del Paso 5, validado contra el emulador/simulador).
+- Si el humano responde con un path `.pen` + `Frame ID` o URL Figma → en la misma interacción, si no fue provisto, pregunta también: **¿En qué URL o ruta de pantalla vivirá esta implementación?** (ej. `/dashboard`, pantalla `HomeScreen`) — guarda ese valor como `impl_url_or_component` en tu contexto de trabajo para el Auto-QA. Luego carga la skill `design-to-code` just-in-time y sigue su workflow completo. El QA visual NO ocurre dentro de `design-to-code` — ocurre en el `## Auto-QA` (paso 4) mediante la skill `visual-fidelity-qa`.
 - Si el humano confirma explícitamente "no aplica" → implementar según spec textual sin cargar la skill y registrar esa confirmación en el handoff.
 - Si el humano no confirma ni provee referencia → NO implementar. Re-preguntar o escalar.
 - Si el SPEC ya trae `Design reference` completo (path + Frame ID) → NO preguntar (la instrucción existente más abajo ya cubre ese caso).
@@ -42,7 +48,7 @@ Con la respuesta:
 
 - Carga la skill `flutter-conventions` y selecciona SOLO los archivos de soporte relevantes (architecture-guide, state-management-guide, theming-guide). No cargues toda la skill.
 - Si el humano dio un ID de tarea, llama a `mcp__anvil__get_task` con ese ID y usa el scope, contratos y criterios de aceptación como contexto autoritativo. Si no hay tarea, procede con el contexto que trajo el humano sin bloquear.
-- Si la task trae `Design reference` (tipo `pen`, `figma` o `screenshots`) → carga la skill `design-to-code` just-in-time y sigue su workflow completo (sincronizar tokens, mapear componentes, QA visual). Para tipo `pen` usa Pencil MCP en **solo lectura** (`get_editor_state`, `get_screenshot`, `get_variables`, `batch_get`) — **NUNCA** `set_variables` ni `batch_design`. Para `none` o ausente, implementa según el spec textual sin cargar la skill.
+- Si la task trae `Design reference` (tipo `pen`, `figma` o `screenshots`) → carga la skill `design-to-code` just-in-time y sigue su workflow completo. El QA visual NO ocurre dentro de `design-to-code` — ocurre en el `## Auto-QA` (paso 4) mediante la skill `visual-fidelity-qa`. Para tipo `pen` usa Pencil MCP en **solo lectura** (`get_editor_state`, `get_screenshot`, `get_variables`, `batch_get`) — **NUNCA** `set_variables` ni `batch_design`. Para `none` o ausente, implementa según el spec textual sin cargar la skill.
 
 Si el scope del cambio toca más de un servicio, cargar la skill `cross-service-dev` antes de implementar — no continuar en modo single-repo.
 
@@ -107,7 +113,7 @@ Detente y pregunta al humano cuando:
 1. **Build:** `flutter build` (o target relevante, p. ej. `flutter build apk --debug`). Si hay codegen (`freezed`, `json_serializable`), corre `build_runner` primero.
 2. **Análisis:** carga la skill `/lint` just-in-time → `dart analyze <paths>`, cero problemas. Si no está disponible, pregunta antes de cerrar.
 3. **Sin regresiones:** carga la skill `/run-tests` just-in-time y ejecuta los tests existentes.
-4. **UI:** si afecta UI y hay emulador/simulador disponible, valida render, navegación y accesibilidad básica.
+4. **Visual QA (OBLIGATORIO si hay Design reference):** Si en este run se proveyó un `Design reference` (path `.pen` + Frame ID), cargar la skill `visual-fidelity-qa` just-in-time y ejecutarla con `frame_id`, `pen_file` e `impl_url_or_component` recolectados al inicio. No cerrar sin que la skill produzca su reporte de fidelidad. Si el reporte tiene issues críticos → BLOQUEAR entrega y recomendar `qa-fixer`. Si no se proveyó Design reference → omitir este paso.
 5. **Code smells:** elimina widgets/helpers muertos. Verifica `dispose()` de streams y subscripciones. Señala smells de diseño al humano sin refactorizar en silencio.
 
 ## Output de cierre
