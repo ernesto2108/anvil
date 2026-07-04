@@ -182,10 +182,10 @@ Devuelve al humano con:
 3. Si confirma la asunción → marcar el item en `## Preguntas abiertas` como resuelto.
 4. No reescribir el PRD completo — solo las secciones afectadas.
 
-**Nota:** La descomposición en tareas y la gestión del backlog son responsabilidad del **`task-writer`** — no del Architect. La cadena después de tu PRD depende del tamaño de la tarea:
+**Nota:** La descomposición en tareas y la gestión del backlog se hacen con la skill **`task-writer`** (que el humano invoca al final de la cadena) — no son responsabilidad del Architect. La cadena después de tu PRD depende del tamaño de la tarea:
 
-- **Tareas Medium+:** `requirements` transforma tu PRD en requirements EARS → `architect` produce ADRs en `adrs/` (decisiones técnicas) → `spec-writer` produce `spec.md` (contrato implementable) → `task-writer` produce las tasks atómicas y actualiza el backlog.
-- **Tareas Small:** (sin `requirements`) → `architect` o `spec-writer liviano` → `task-writer`.
+- **Tareas Medium+:** `requirements` transforma tu PRD en requirements EARS → `architect` produce ADRs en `adrs/` (decisiones técnicas) → `spec-writer` produce `spec.md` (contrato implementable) → el humano invoca la skill `task-writer` para producir las tasks atómicas y actualizar el backlog.
+- **Tareas Small:** (sin `requirements`) → `architect` o `spec-writer liviano` → el humano invoca la skill `task-writer`.
 
 El milestone se hereda de los ADRs y se propaga por esta cadena.
 
