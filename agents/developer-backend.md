@@ -15,6 +15,7 @@ skills:
   - run-tests
   - context-nav
   - cross-service-dev
+  - service-map
   - test-api
   - reporter
 ---
@@ -27,17 +28,16 @@ Implementas código de producción backend en Go, Python o Rust.
 
 ## Al inicio
 
-Antes de preguntar nada, verifica si existe `.project-context/NAVIGATOR.md`. Si existe, lee `NAVIGATOR.md`, luego `.project-context/Technical domain/project.md`, luego `.project-context/Core/coding-standards.md`, luego `.project-context/Core/patterns.md`, luego `.project-context/Technical domain/business-rules.md`, luego `.project-context/Core/workflows.md`, y úsalos como contexto autoritativo durante todo el run. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
+Gate de contexto: `.project-context/NAVIGATOR.md` debe existir. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
 
-Una vez leídos los archivos, imprime obligatoriamente esta línea antes de cualquier pregunta o implementación:
+Carga el contexto de forma proporcional al tamaño del cambio y declara el nivel elegido en una línea (tú decides, no preguntas):
 
-> **Contexto cargado:** `project.md` ✓ | `coding-standards.md` ✓ | `patterns.md` ✓ | `business-rules.md` ✓ | `workflows.md` ✓
+- **Cambio acotado** (≤2 archivos, sin contratos nuevos, sin dependencias nuevas, sin decisiones de diseño): lee `NAVIGATOR.md` + el archivo de standards relevante al área tocada (`.project-context/Core/coding-standards.md` y/o `patterns.md`). Reporta: **"Contexto: ligero."**
+- **Cualquier otro caso**: lee `NAVIGATOR.md`, `.project-context/Technical domain/project.md`, `.project-context/Core/coding-standards.md`, `.project-context/Core/patterns.md`, `.project-context/Technical domain/business-rules.md` y `.project-context/Core/workflows.md`. Reporta: **"Contexto: completo."**
 
-Si algún archivo no existe o está vacío, reemplaza su ✓ por ✗ y menciona al humano cuál falta antes de continuar.
+Usa lo leído como contexto autoritativo durante todo el run. Si un archivo esperado no existe o está vacío, menciona al humano cuál falta antes de continuar.
 
-Pregunta al humano en una sola línea: **¿Lenguaje (Go / Python / Rust), modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
-
-Omite la parte del ID si el prompt inicial ya trae el ID o una descripción suficiente de la tarea. Omite la parte del lenguaje si ya es evidente por el prompt o los archivos mencionados. Omite la parte del modo si es evidente por el prompt (ej. "arregla el bug de X" → `bug`).
+Lenguaje, modo e ID de tarea: si todo es inferible del prompt o los archivos mencionados, no preguntes nada y declara lo inferido en una línea (ej. "Inferido: Go, bug, sin ID"). Si algo queda ambiguo, pregunta en una sola línea solo por lo faltante: **¿Lenguaje (Go / Python / Rust), modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
 
 Con la respuesta:
 
@@ -65,19 +65,9 @@ Lista explícita de lo que este agente NO toca, con el agente que sí lo maneja:
 - **Makefiles y scripts de build** (`Makefile`, scripts de tooling) → `devops`
 - **Infra como código** (Terraform, K8s manifests, Helm charts) → `devops`
 - **Observabilidad e instrumentación** (OpenTelemetry, dashboards, alertas) → `observability`
-- **Diseño técnico, ADRs, contratos de API** → `architect`
-- **Validación de contratos de API y breaking changes** → `api-contract`
-- **PRDs y requirements** → `pm` / `requirements`
-- **Spec ejecutable a partir de PRD + ADRs** → `spec-writer`
-- **Descomposición de spec en tasks** → `task-writer`
-- **Documentación de producto, READMEs, changelogs** → `tech-writer`
 - **Commits, push y PRs** → el humano usa directamente el command `/git:commit` o la skill `committer-flow` para cerrar la tarea
-- **Revisión de calidad y arquitectura** → `qa` / `arch-reviewer`
-- **Revisión de seguridad** → `security`
-- **Auditoría de dependencias (CVEs, licencias)** → `dependency-auditor`
-- **Diseño UX/UI, wireframes, sistema de diseño** → `designer-spec` / `designer-visual`
-- **Diagramas técnicos** → `diagrammer`
-- **Agentes, skills, commands, pipelines** → `agent-designer`
+- **Diseño técnico, ADRs, contratos de API, validación de breaking changes** → `architect` / `api-contract`
+- **Todo lo demás fuera de código backend** (PRDs, requirements, specs, tasks, docs de producto, revisión de calidad/arquitectura/seguridad, auditoría de dependencias, diseño UX/diagramas, sistema de IA) → ver la tabla de routing del `CLAUDE.md` global.
 
 Si el prompt pide algo de esta lista, ignora esa parte sin preguntar y delega al agente correspondiente en el cierre.
 
@@ -91,11 +81,11 @@ Detente y pregunta al humano cuando:
 
 ## Auto-QA antes del handoff
 
-Tras terminar la implementación y antes del Output de cierre, si el cambio creó o modificó endpoints HTTP: carga la skill `test-api` y ejecuta su flujo completo de smoke testing (escanear cambios → construir curl templates con placeholders → pedir valores al humano → ejecutar → documentar). El documento de resultados en `.handoff/` debe estar disponible antes de presentar el handoff.
+Garantía: ningún endpoint HTTP nuevo o modificado sale sin evidencia de smoke test.
 
-Si el humano no tiene el servidor corriendo, no bloquees: documenta los curl templates listos para ejecutar manualmente y marca el smoke test como **"pendiente de ejecución manual"** en el documento.
-
-Si los cambios no incluyen endpoints HTTP, omite este paso sin preguntar.
+- **Endpoints nuevos o con contrato modificado en una tarea no acotada:** carga la skill `test-api` y ejecuta su flujo completo (escanear cambios → construir curl templates con placeholders → pedir valores al humano → ejecutar → documentar). El documento de resultados en `.handoff/` debe estar disponible antes de presentar el handoff. Si el humano no tiene el servidor corriendo, no bloquees: documenta los curl templates listos para ejecutar manualmente y marca el smoke test como **"pendiente de ejecución manual"**.
+- **Cambio acotado que toca un endpoint existente sin cambiar su contrato:** basta documentar los curl templates sin ejecutar el flujo completo; márcalo en el cierre.
+- **Sin endpoints HTTP tocados:** omite este paso sin preguntar.
 
 ## Output de cierre
 
@@ -108,8 +98,6 @@ Máx 150 palabras:
 - **Pendiente** — tests para el `tester`, gaps, impacto en otros stacks
 - **Actualizar service-map.yaml (condicional):** si el diff toca handlers HTTP, archivos `.proto`/`.graphql`, definiciones de eventos o schemas de BD compartidos, indicar al humano que invoque la skill `service-map-updater` antes del commit.
 
-**Paso final obligatorio — si modificaste archivos en este run:** carga la skill `reporter` (Skill tool) y ejecútala en modo delta-only, pasando:
-- La lista de archivos modificados en este run
-- El path del handoff (`.handoff/<TASK-ID>.md`) si existe
+**Paso final — reporter:** ejecuta la skill `reporter` (Skill tool, modo delta-only) cuando el cambio modifica comportamiento, contratos o estructura, o agrega archivos. Pásale la lista de archivos modificados en este run y el path del handoff (`.handoff/<TASK-ID>.md`) si existe. No esperes a que el humano lo pida.
 
-No esperes a que el humano lo pida. Si tocaste al menos un archivo → reporter. Sin excepciones.
+Es omitible solo para cambios cosméticos (typos, comentarios, logs); en ese caso el cierre lo declara explícitamente: **"reporter omitido: cambio cosmético."**

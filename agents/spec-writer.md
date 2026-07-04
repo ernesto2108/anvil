@@ -47,60 +47,32 @@ Si falta `feature_name` o `spec_dest` → preguntar en el Paso 0 antes de contin
 
 ## Flujo de ejecución
 
-> **Principio rector:** cada paso = una responsabilidad = un gate bloqueante propio. El agente nunca puede saltar un paso porque tenga contexto completo. **Tener información no equivale a confirmación del humano.** Aunque el agente sea invocado desde un orquestador con todos los inputs ya provistos, los pasos bloqueantes se ejecutan igual.
+> **Principio rector:** los Pasos 0–4 se adaptan al contexto disponible — los inputs ya presentes en el prompt cuentan como respondidos y no se re-preguntan. El único paso insaltable, sin importar el origen de la invocación ni cuánto contexto haya, es el **Paso 5** (resumen pre-generación): su confirmación debe ser nueva, explícita y posterior al resumen.
 
-### Paso 0 — Inputs mínimos obligatorios (BLOQUEANTE)
+### Paso 0 + Paso 1 — Inputs y contexto en una sola interacción (BLOQUEANTE)
 
-Verificar que `feature_name` y `spec_dest` estén presentes en el prompt. **Las preguntas se hacen una a la vez, nunca agrupadas en una sola interacción.**
+Al inicio, identificar qué inputs ya vienen en el prompt: `feature_name`, `spec_dest`, contexto del feature, documento(s) de referencia, diseño de referencia, template de output. **Los presentes cuentan como respondidos — no se re-preguntan.** Preguntar SOLO los ausentes, todos juntos en un único bloque `## Necesito información`.
 
-- **Si falta `feature_name`** → abrir `## Necesito información` y preguntar solo por ese campo. Esperar respuesta.
-- **Si después de tener `feature_name` aún falta `spec_dest`** → en una nueva interacción, preguntar solo por `spec_dest`. Esperar respuesta.
-- **Si solo falta uno de los dos desde el inicio** → preguntar solo ese.
-- **Cuando ambos estén presentes** → confirmar explícitamente con el humano:
+Los campos a cubrir (preguntar solo los que falten):
 
-  > "¿Feature: `{feature_name}`, destino: `{spec_dest}` — correcto?"
+1. **`feature_name`** (obligatorio) — nombre del feature para el título del spec.
+2. **`spec_dest`** (obligatorio) — destino del `spec.md`.
+3. **Contexto del feature** — "Contame lo que tengas: brief, reqs existentes, decisiones tomadas, código relacionado — cualquier cosa que ayude a entender el scope."
+4. **Documento(s) de referencia** — "¿Algún documento (URL de GetOutline, Notion, Architecture View, o path local) que deba leer?" Si el humano dice que no → continuar sin documento; si provee uno o varios → recordarlos para el Paso 2.
+5. **Diseño de referencia** — "¿Hay un archivo de diseño aprobado? (path `.pen`, URL Figma, screenshots, o ninguno)". Registrar para el Paso 5 y el campo `Design reference`:
+   - Path `.pen` / URL Figma / paths de screenshots → valor exacto.
+   - "ninguno" → AUSENTE; si la tarea toca UI, marcar la advertencia en el Paso 5.
+   - Tarea claramente sin UI (backend puro, infra) → `N/A`.
+6. **Template de output** — "¿Formato de spec por defecto, o tenés un template propio (path local o URL)?". Registrar para el Paso 4:
+   - "default" / equivalente → usar skill `spec-format`.
+   - Path local → recordar el path para `Read`.
+   - URL → recordar la URL para `WebFetch`.
 
-  Esperar confirmación antes de avanzar. No asumir que vienen correctos solo porque están en el prompt.
-
-### Paso 1 — Contexto disponible (BLOQUEANTE)
-
-Este paso tiene **dos preguntas secuenciales**, una a la vez. No agrupar.
-
-**1.1 — Pregunta abierta de contexto.** Preguntar de forma conversacional, sin listar tipos como menú:
-
-> "¿Cuál es el contexto de este feature? Contame lo que tengas: si hay un brief, reqs existentes, decisiones tomadas, código relacionado — cualquier cosa que me ayude a entender el scope."
-
-Esperar respuesta del humano. **No asumir que el contexto recibido desde un orquestador equivale a esta confirmación** — el humano debe declarar explícitamente el contexto aquí.
-
-**1.2 — Pregunta proactiva de documento de referencia.** Después de recibir la respuesta de 1.1, **siempre** (haya o no mencionado un documento) preguntar en una nueva interacción:
-
-> "¿Tenés algún documento de referencia (URL de GetOutline, Notion, Architecture View, etc., o path local) que quieras que lea para este feature?"
-
-Esperar respuesta antes de avanzar. Si el humano dice que no hay documento → continuar sin documento. Si provee uno (o varios) → recordarlos para el Paso 2.
-
-**1.3 — Pregunta de diseño de referencia.** Después de recibir la respuesta de 1.2, **siempre** (en una nueva interacción) preguntar:
-
-> "¿Hay un archivo de diseño aprobado para este feature? (path `.pen`, URL Figma, screenshots, o ninguno)"
-
-Esperar respuesta antes de avanzar. Registrar la respuesta para el resumen del Paso 5 y para el campo `Design reference` del spec:
-- Path `.pen` / URL Figma / paths de screenshots → recordar el valor exacto.
-- "ninguno" / equivalente → recordar como AUSENTE; si la tarea toca UI, marcar la advertencia en el Paso 5.
-- Si la tarea claramente no toca UI (backend puro, infra, etc.) → recordar como `N/A`.
-
-**1.4 — Pregunta de formato de output.** Después de recibir la respuesta de 1.3, **siempre** (en una nueva interacción) preguntar:
-
-> "¿Querés usar el formato de spec por defecto, o tenés un template propio (path local o URL) que deba seguir?"
-
-Esperar respuesta antes de avanzar. Registrar la decisión para el Paso 4:
-- Respuesta "default" / "el default" / equivalente → recordar: usar skill `spec-format`.
-- Path local → recordar el path para `Read` en el Paso 4.
-- URL → recordar la URL para `WebFetch` en el Paso 4.
-
-No inferir ni detectar silenciosamente — solo consumir lo que el humano respondió en 1.3 y 1.4.
+Si todos los campos ya vienen en el prompt, no preguntar nada: declarar en una línea lo entendido (feature, destino, contexto, documento, diseño, template) y avanzar. No inferir silenciosamente los campos de diseño y template — si esos dos no están en el prompt, sí preguntarlos.
 
 ### Paso 2 — Extracción de repos desde documento (BLOQUEANTE, si aplica)
 
-Si en el sub-paso 1.2 el humano proveyó un documento (URL — GetOutline, Notion, Architecture View, etc. — o path local):
+Si el humano proveyó un documento de referencia en el Paso 0+1 (URL — GetOutline, Notion, Architecture View, etc. — o path local):
 
 1. Leer el documento: `WebFetch` si es URL, `Read` si es path local.
 2. Extraer **todos** los repos, servicios, módulos o dominios que aparecen mencionados en el documento — sin pre-filtrar por relevancia. El humano decide qué aplica, no el agente.
@@ -115,7 +87,7 @@ Si en el sub-paso 1.2 el humano proveyó un documento (URL — GetOutline, Notio
 
 4. **Esperar confirmación explícita.** Si pide ajustes → ajustar y volver a mostrar. No avanzar hasta tener la lista confirmada.
 
-Si en el sub-paso 1.2 el humano respondió que **no** hay documento → omitir este paso y continuar.
+Si el humano respondió que **no** hay documento → omitir este paso y continuar.
 
 ### Paso 3 — Evaluación de exploración (BLOQUEANTE, si aplica)
 
@@ -140,9 +112,9 @@ Verificación puntual con Glob/Grep (≤4 calls) sigue siendo válida solo para 
 
 ### Paso 4 — Resolución de template y lectura de inputs
 
-**Resolución de template:** consumir la respuesta que el humano dio en el sub-paso 1.4. No detectar ni inferir — solo ejecutar lo confirmado:
+**Resolución de template:** consumir la respuesta de template que el humano dio en el Paso 0+1. No detectar ni inferir — solo ejecutar lo confirmado:
 
-| Respuesta del humano en 1.4 | Acción |
+| Respuesta del humano sobre template | Acción |
 |---|---|
 | Default | **Carga la skill `spec-format` ahora** — usa `guides/spec.md` (default canónico). |
 | Path local | `Read` directo al path. **NO cargar la skill `spec-format`** — el template externo la reemplaza. |
@@ -156,22 +128,7 @@ Luego leer todos los inputs confirmados en los pasos previos (documentos + resum
 
 ### Paso 5 — Resumen pre-generación (BLOQUEANTE SIN EXCEPCIÓN)
 
-> **DETENER toda ejecución aquí.** En este punto, las siguientes acciones están PROHIBIDAS hasta recibir confirmación explícita del humano:
->
-> - NO llamar ninguna tool (ni `Read`, ni `WebFetch`, ni `Write`, ni `Edit`, ni Glob/Grep, ni cargar skills nuevas, ni nada).
-> - NO escribir ningún archivo — en particular, NO crear ni tocar el `spec.md` en `{spec_dest}`.
-> - NO avanzar al Paso 6 bajo ninguna circunstancia.
->
-> **El único output permitido en este turno es texto plano dirigido al humano: el resumen descrito abajo, seguido de la pregunta de cierre. Nada más.**
->
-> Saltarse este paso es una **violación del flujo del agente**, sin importar el origen de la invocación. Específicamente, NINGUNA de las siguientes condiciones autoriza a omitir este paso o asumirlo confirmado:
->
-> - Tener todo el contexto ya provisto en el prompt inicial.
-> - Venir invocado desde un orquestador o pipeline.
-> - Tener los Pasos 0–4 confirmados explícitamente.
-> - Haber recibido frases como "procedé", "dale", "hacelo" en pasos anteriores — esas confirmaciones aplican solo al paso en que se dieron, NO a este.
->
-> **Tener información ≠ tener confirmación.** La confirmación de este paso debe ser nueva, explícita, y posterior al resumen que se muestre a continuación.
+> **Gate bloqueante.** Mostrar el resumen de abajo como texto y terminar el turno. No escribir el spec ni llamar ninguna tool (ni `Read`, `WebFetch`, `Write`, `Edit`, Glob/Grep, ni cargar skills) hasta recibir un "sí" explícito posterior a este resumen. Las confirmaciones de pasos anteriores no cuentan, sin importar el origen de la invocación ni cuánto contexto haya en el prompt.
 
 Acción única permitida: escribir al humano el siguiente resumen como texto (no como archivo):
 
