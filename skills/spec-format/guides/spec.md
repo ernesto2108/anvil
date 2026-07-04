@@ -31,6 +31,7 @@
 | Requerimientos de observabilidad | Si hay NFRs de observabilidad o el cambio lo amerita |
 | Variables de entorno nuevas | Si el cambio introduce env vars |
 | Coordinación externa | Si hay dependencias de equipos externos |
+| Impacto cross-service | Si el feature toca contratos consumidos por otros servicios y existe `service-map.yaml` |
 | Design references | Si la tarea toca UI |
 
 ---
@@ -102,6 +103,15 @@ Una fila por fuente consumida. Si solo hubo brief inline, una sola fila con `bri
 <!-- Para async: documentar también el canal/topic que los conecta -->
 | Productor | Topic / Queue | Contrato (evento) | Consumidor |
 |---|---|---|---|
+
+## Impacto cross-service
+
+<!-- Incluir SOLO cuando el feature toca contratos consumidos por otros servicios y existe .project-context/service-map.yaml. -->
+<!-- Derivada del service-map con las reglas de seguridad de la skill service-map. Si no hay mapa, omitir la sección. -->
+
+| Servicio afectado | Qué consume | Clasificación del cambio | Acción requerida |
+|---|---|---|---|
+| `<servicio>` | `<endpoint / evento / schema / tipo>` | siempre seguro \| potencialmente disruptivo \| siempre disruptivo | <versionado / expand-and-contract / deploy coordinado / ninguna> |
 
 ## Criterios de aceptación
 
@@ -175,6 +185,7 @@ Una fila por fuente consumida. Si solo hubo brief inline, una sola fila con `bri
 - La sección `## Pre-condiciones` se incluye **solo si el cambio tiene dependencias de estado previo**. Si se incluye y no hay nada concreto que listar, escribir "Ninguna" explícitamente.
 - La sección `## Coordinación externa` se incluye **solo si hay dependencias de equipos externos** que bloquean el feature. Si no hay dependencias externas, omitir la sección.
 - La sección `## Mapa de contratos (cross-stack)` se incluye **solo si hay contratos entre componentes** (cross-stack o explícitos en ADRs). Para features de un solo stack sin contratos explícitos, omitir la sección.
+- La sección `## Impacto cross-service` se incluye **solo si el feature toca contratos consumidos por otros servicios y existe `.project-context/service-map.yaml`**. La clasificación del cambio usa las reglas de seguridad de la skill `service-map`. La estrategia (versionado / expand-and-contract) se declara solo si viene resuelta de ADRs o Architecture Views. Si no hay mapa, omitir la sección.
 - La sección `## Requerimientos de observabilidad` se incluye **cuando hay NFRs de observabilidad o el cambio lo amerita**. No es obligatoria por tamaño de tarea — se incluye si el feature introduce logs, métricas o traces nuevos.
 - La sección `## Variables de entorno nuevas` se incluye **solo si el cambio introduce env vars nuevas**. Si no hay env vars nuevas, omitir la sección. Usar nombres estándar de la tabla en `backend.md` (ej. `REDIS_URL`, no `CACHE_ADDR`)
 - "Tests por criterio de aceptación" es la lista cerrada que el tester sigue — el architect define el scope, no el tester. Una fila por AC, sin excepción.

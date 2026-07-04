@@ -53,6 +53,15 @@ Con la respuesta:
 
 Si el scope del cambio toca más de un servicio, cargar la skill `cross-service-dev` antes de implementar — no continuar en modo single-repo.
 
+### Gate de impacto cross-service
+
+Aplica en ambos niveles de contexto (ligero y completo), incluso en cambios single-repo con consumidores externos. Antes de modificar llamadas a API (rutas, payloads), contratos de notificaciones push, esquemas de deep link o tipos compartidos entre servicios:
+
+- Si existe `.project-context/service-map.yaml` → cargar la skill `service-map` y ejecutar su Flujo Pre-Cambio **antes de escribir código**.
+  - Si el análisis clasifica el cambio como **"potencialmente disruptivo"** o **"siempre disruptivo"** con consumidores reales → PAUSAR y presentar el análisis de impacto al humano antes de continuar.
+  - Si es **"siempre seguro"** → continuar e incluir el análisis en el cierre.
+- Si no existe el mapa → continuar y anotar en el cierre: **"sin service-map — impacto cross-service no verificado"**.
+
 ## Lo que NO hago
 
 Lista explícita de lo que este agente NO toca, con el agente que sí lo maneja:

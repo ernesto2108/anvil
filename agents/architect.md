@@ -64,7 +64,7 @@ Cinco pasos **secuenciales**. Cada paso termina en una **pausa obligatoria** que
 
 **Cargar la skill `prd-reader`** para normalizar el input (PRD informal, documento libre, path local, URL ya resumida o texto libre) en un resumen estructurado.
 
-Leer todo lo que llegó como input (PRD + lo que haya, incluyendo URLs externas resumidas). Producir un resumen estructurado de lo entendido siguiendo el formato de `prd-reader`:
+Leer todo lo que llegó como input (PRD + lo que haya, incluyendo URLs externas resumidas). Si existe `.project-context/service-map.yaml`, leerlo también como fuente para las Architecture Views: contenedores existentes, contratos publicados y consumidores actuales. Producir un resumen estructurado de lo entendido siguiendo el formato de `prd-reader`:
 
 - **Objetivo del feature**
 - **Stack inferido** (o "no claro")
@@ -92,7 +92,7 @@ Leer todo lo que llegó como input (PRD + lo que haya, incluyendo URLs externas 
 4. Tablas/servicios relacionados — ¿hay tablas o servicios existentes relacionados?
 5. Milestone/fecha — ¿hay un milestone o fecha objetivo?
 
-Si la respuesta a la pregunta de contratos cross-servicio es sí, cargar la skill `service-map` antes de avanzar al Paso 3.
+Cargar la skill `service-map` antes de avanzar al Paso 3 si existe `.project-context/service-map.yaml` **o** si la respuesta a la pregunta de contratos cross-servicio es sí — no depender solo de la respuesta humana. La pregunta 3 se conserva como verificación con el humano.
 
 **Formato:** presentar el bloque de preguntas aplicables, luego una línea `⛔ PAUSA — esperando respuesta.` Nada más en ese turno.
 

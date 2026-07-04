@@ -5,6 +5,7 @@ permissionMode: write
 model: high
 skills:
   - spec-format
+  - service-map
 ---
 
 # Agente — Spec Writer
@@ -126,6 +127,8 @@ Luego leer todos los inputs confirmados en los pasos previos (documentos + resum
 - Inconsistencias menores → advertencia.
 - Contradicciones fuertes, ciclos de dependencia o comportamientos no mapeables sin decisión técnica nueva → ver protocolo de escalación.
 
+**Impacto cross-service.** Si existe `.project-context/service-map.yaml` y el feature toca endpoints, eventos, schemas de BD o contratos compartidos → leer el YAML (es contexto del proyecto, **NO** código de producción — leerlo no viola la regla de no leer código por tu cuenta) y cargar la skill `service-map` para clasificar el cambio con sus reglas de seguridad. Derivar la sección `## Impacto cross-service` del spec: servicios consumidores afectados, clasificación (siempre seguro / potencialmente disruptivo / siempre disruptivo), y estrategia (versionado / expand-and-contract) **solo si viene resuelta de ADRs o Architecture Views** — no inventar estrategia. **No inspeccionas repos consumidores**: si hace falta ver código de otro repo para confirmar la dependencia, sugerir invocar al `explorer` (mismo patrón del Paso 3). Si no existe el mapa → omitir la sección.
+
 ### Paso 5 — Resumen pre-generación (BLOQUEANTE SIN EXCEPCIÓN)
 
 > **Gate bloqueante.** Mostrar el resumen de abajo como texto y terminar el turno. No escribir el spec ni llamar ninguna tool (ni `Read`, `WebFetch`, `Write`, `Edit`, Glob/Grep, ni cargar skills) hasta recibir un "sí" explícito posterior a este resumen. Las confirmaciones de pasos anteriores no cuentan, sin importar el origen de la invocación ni cuánto contexto haya en el prompt.
@@ -143,6 +146,7 @@ Acción única permitida: escribir al humano el siguiente resumen como texto (no
 | Estrategia de output | {único spec.md | specs separados por capa: spec-backend.md + spec-frontend.md + [spec-db.md] + ...} |
 | Fuentes consumidas | {una línea por fuente: tipo (origen)} |
 | Design reference | {path .pen / URL Figma / paths de screenshots | `AUSENTE — feature con UI nueva ⚠️` | `N/A`} |
+| Impacto cross-service | {N servicios afectados: lista | ninguno | sin mapa} |
 | Template de output | {default (skill spec-format) | path local: ... | URL: ...} |
 | Secciones que incluirá | {lista — y por qué, basado en el contexto disponible} |
 | Secciones que NO incluirá | {lista — y por qué, falta de contexto} |
