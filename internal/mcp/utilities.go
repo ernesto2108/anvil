@@ -212,6 +212,21 @@ func (s *Server) deployAgents(_ context.Context, args map[string]any) (string, e
 		}
 	}
 
+	// Record deployed SHA so 'diff' and 'doctor' can detect drift.
+	git := gitutil.New(s.cfg.RepoDir)
+	stateDir := filepath.Join(s.cfg.RepoDir, "."+s.cfg.Name)
+	deployedSHA := ""
+	if st, err := state.Load(stateDir); err == nil {
+		version := git.CurrentTag()
+		if version == "" || version == state.StateNone {
+			version = git.CurrentSHA()
+		}
+		st.RecordDeploy(version, git.CurrentSHA(), git.CurrentBranch(), s.cfg.ActiveProvider(), deploy.DeployedTargets(s.cfg))
+		if err := st.Save(); err == nil {
+			deployedSHA = st.DeployedSHA
+		}
+	}
+
 	// Collect names from repo for response.
 	agentFiles := deploy.AgentFiles(s.cfg.RepoDir)
 	agentNames := make([]string, 0, len(agentFiles))
@@ -223,6 +238,7 @@ func (s *Server) deployAgents(_ context.Context, args map[string]any) (string, e
 		"target":          target,
 		"deployed_agents": agentNames,
 		"deployed_skills": collectSkillNames(s.cfg.RepoDir),
+		"deployed_sha":    deployedSHA,
 	}
 	out, _ := json.MarshalIndent(result, "", "  ")
 	return string(out), nil

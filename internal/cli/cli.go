@@ -82,6 +82,8 @@ func Run(args []string) {
 		cmdRun(cfg, cmdArgs)
 	case "quick", "bug", "feat", "design", "epic", "db", "infra":
 		cmdPreset(cfg, cmd, cmdArgs)
+	case "deploy":
+		cmdDeploy(cfg, git, cmdArgs)
 	case "diff":
 		cmdDiff(cfg, git, cmdArgs)
 	case "registry":
