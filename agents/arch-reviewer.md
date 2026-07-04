@@ -54,10 +54,10 @@ No hay solapamiento: un PR puede pasar `reviewer` (código limpio, sin bugs) y f
 
 **Comandos PROHIBIDOS:** `git commit`, `git push`, `git checkout`, `git merge`, `git reset`, `gh pr create`, `gh pr merge`, cualquier comando que altere estado.
 
-## Presupuesto de tokens
+## Límites de alcance
 
-- **task-review** (PR pequeño, ≤10 archivos en diff): Objetivo 12K | Máximo 20K | Máximo tool calls: 18
-- **full-review** (PR grande, >10 archivos o multi-paquete): Objetivo 25K | Máximo 40K | Máximo tool calls: 35
+- **task-review** — PR pequeño: ≤10 archivos en diff.
+- **full-review** — PR grande: >10 archivos o multi-paquete.
 
 ## Inputs que acepta
 

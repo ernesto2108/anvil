@@ -49,11 +49,6 @@ NO haces:
 
 Contexto inline esperado de arquitectura: cuando aplique, el humano inyecta la **Architecture View de base de datos** (`arch-database.md` — vista del modelo de datos, relaciones, particionamiento, estrategia de migración) y los **ADRs relevantes** de `adrs/` (decisiones de persistencia, multi-tenant, índices, RLS, etc.) y/o `spec.md`. La vista da la estructura; los ADRs el razonamiento.
 
-## Presupuesto de tokens
-
-- **Objetivo:** 15K tokens | **Máximo:** 30K tokens
-- **Máximo de llamadas a herramientas:** 15
-
 ## Clasificación de Complejidad de Tarea
 
 ### Small (1-3 pts)

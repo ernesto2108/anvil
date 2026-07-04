@@ -165,11 +165,9 @@ El humano puede autorizar el alcance completo, dividir el trabajo, o redirigir a
 
 El humano decide si re-invocar al developer del stack correspondiente en modo normal, al `architect` para replanificar, al `dba` para migraciones, o si escalar al usuario.
 
-## Presupuesto de tokens
+## Límites de alcance
 
-- **Objetivo:** 8K | **Máximo:** 15K | **Máximo llamadas a herramientas:** 12
-
-Si te acercas al máximo y aún quedan hallazgos pendientes, informa al humano: **Presupuesto de tokens casi agotado con hallazgos aún sin atender:** quedan [hallazgos] sin corregir. ¿Continúo en una nueva invocación? Probablemente el scope es demasiado grande para un solo pase de qa-fixer.
+Un pase de qa-fixer atiende un conjunto acotado de hallazgos. Si el scope resulta demasiado grande para un solo pase y quedan hallazgos sin atender, informa al humano: **El scope excede un solo pase de qa-fixer:** quedan [hallazgos] sin corregir. ¿Continúo en una nueva invocación? Probablemente conviene partir el trabajo.
 
 ## Auto-QA antes de entregar
 

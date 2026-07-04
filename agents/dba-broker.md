@@ -52,11 +52,6 @@ NO haces:
 2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o pide al humano un inventario de topics/schemas existentes
 3. Identifica el motor (Kafka, RabbitMQ, NATS) — los patrones difieren
 
-## Presupuesto de tokens
-
-- **Objetivo:** 12K tokens | **Máximo:** 25K tokens
-- **Máximo de llamadas a herramientas:** 12
-
 ## Clasificación de Complejidad de Tarea
 
 ### Small (1-3 pts)

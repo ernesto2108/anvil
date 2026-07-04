@@ -194,11 +194,10 @@ Devolver este bloque y detenerse — NO escribir ningún archivo `.drawio`:
 **Acción sugerida a quien orquesta:** <spawn explorer para X / pedir aclaración al usuario sobre Y>
 ```
 
-## Presupuesto
+## Límites de alcance
 
-- Llamadas a tools: máx 18 (Read + Write + Edit + Bash combinados). El loop de auto-validación visual (paso 10.5) añade ~3 calls por iteración (export Bash + Read PNG + Edit XML); con 2 iteraciones permitidas el ceiling sube respecto al diseño original.
-- Tokens de output: máx 15K (objetivo 8K).
-- Si necesitas más, escalar al humano: "**Presupuesto de tools insuficiente para terminar el diagrama:** me falta cubrir [X]. ¿Continúo o paro aquí?"
+- El loop de auto-validación visual (paso 10.5) permite **máximo 2 iteraciones**.
+- Si el alcance no alcanza para terminar el diagrama, escalar al humano: "**No logro cerrar el diagrama en este pase:** me falta cubrir [X]. ¿Continúo o paro aquí?"
 
 ## Reglas
 

@@ -47,11 +47,6 @@ NO haces:
 2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o ejecuta `/db-schema-scan` para inventariar colecciones e índices existentes
 3. Detecta el motor antes de actuar — un cambio en MongoDB no se diseña como en DynamoDB
 
-## Presupuesto de tokens
-
-- **Objetivo:** 15K tokens | **Máximo:** 30K tokens
-- **Máximo de llamadas a herramientas:** 15
-
 ## Clasificación de Complejidad de Tarea
 
 ### Small (1-3 pts)

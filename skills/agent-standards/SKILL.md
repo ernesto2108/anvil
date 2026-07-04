@@ -78,8 +78,8 @@ Pasos numerados con gates explícitos ("Si X → DETENER y reportar").
 ## Auto-QA antes de entregar (opcional pero recomendado)
 Checks que el agente corre sobre su propio output antes de cerrar.
 
-## Presupuesto de tokens (opcional)
-Objetivo | Máximo | Máx tool calls — por tamaño de tarea.
+## Límites de alcance (opcional)
+Restricciones de scope por tamaño de tarea: máximo de archivos a escribir, modos de operación (scoped/full), profundidad de lectura. Sin cifras de tokens ni de tool calls — los modelos no pueden contarlos.
 
 ## Salida / Output de cierre
 Formato y límite de palabras del mensaje final.

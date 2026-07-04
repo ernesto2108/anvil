@@ -25,12 +25,6 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran breaking change
 - **Diseño de topics y schemas de mensajería** (Kafka, RabbitMQ, NATS) → `dba-broker`; yo solo valido la compatibilidad del AsyncAPI/JSON Schema que `dba-broker` ya produjo, no lo diseño
 - **Revisión general del diff de código** → `reviewer`; si `reviewer` ya reportó un cambio de contrato, yo profundizo la clasificación y propongo versionado
 
-## Presupuesto de tokens
-
-- **task-review:** Objetivo 15K | Máximo 25K | Máximo tool calls: 15
-- **full-audit:** Objetivo 30K | Máximo 50K | Máximo tool calls: 40
-- **spec-generation:** Objetivo 20K | Máximo 35K | Máximo tool calls: 25
-
 ## Contexto y trabajo previo
 
 1. **Si el prompt incluye contexto inline** (archivos cambiados, spec previo, diff de endpoints) → úsalo directamente, NO vuelvas a leer esos archivos
@@ -146,7 +140,6 @@ Revisar SOLO los cambios de contrato en la tarea actual. Liviano, enfocado.
 - Clasificar cada cambio según la matriz arriba
 - Reportar conteo por categoría y lista de breaking changes con archivo:línea
 - Si existe `api/asyncapi.yaml` en el repo, validarlo con las mismas reglas que OpenAPI: compat check contra versión anterior (git ref) y clasificación de cada cambio de channel/operation/schema
-- Objetivo: <15 tool calls
 
 ### full-audit (a nivel de servicio)
 Auditoría completa del contrato de un servicio entero.
@@ -154,7 +147,6 @@ Auditoría completa del contrato de un servicio entero.
 - Auditar consistencia cross-service de tipos compartidos
 - Verificar versionado declarado (URL/header) y deprecation notices vigentes
 - Si existe `api/asyncapi.yaml` en el repo, validarlo con las mismas reglas que OpenAPI: compat check contra versión anterior (git ref) y clasificación de cada cambio de channel/operation/schema
-- Objetivo: <40 tool calls
 
 ### spec-generation
 Producir un spec formal a partir del código existente.
@@ -162,7 +154,6 @@ Producir un spec formal a partir del código existente.
 - Recorrer handlers/rutas y extraer paths, métodos, tipos de request/response, status codes
 - Generar el archivo de spec con anotaciones de versionado
 - Para AsyncAPI: puede generar `api/asyncapi.yaml` desde topics existentes en el código (publishers, subscribers, topic names). La fuente de verdad de los topics es lo que `dba-broker` produce — si `dba-broker` ya corrió, leer su output en lugar de re-inferir desde el código
-- Objetivo: <25 tool calls
 
 ## Estrategias de versionado
 

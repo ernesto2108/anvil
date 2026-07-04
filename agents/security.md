@@ -24,11 +24,6 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran vulnerabilidade
 - No valido contratos de API (breaking changes, versionado) — eso es del `api-contract`
 - No audito dependencias por CVEs con plan de upgrade detallado — eso es del `dependency-auditor`
 
-## Presupuesto de tokens
-
-- **task-review:** Objetivo 15K | Máximo 25K | Máximo tool calls: 15
-- **full-audit:** Objetivo 30K | Máximo 50K | Máximo tool calls: 40
-
 ## Contexto y trabajo previo
 
 1. **Si el prompt incluye contexto inline** (archivos cambiados, contexto de context-init, flujos de endpoints) → úsalo directamente, NO vuelvas a leer esos archivos
@@ -59,12 +54,10 @@ Revisar SOLO los archivos cambiados en la tarea actual. Liviano, enfocado.
 - Leer la lista de archivos cambiados del prompt
 - Verificar solo esos archivos contra el checklist específico del stack a continuación
 - Score 1-10, señalar solo critical/high
-- Objetivo: <15 tool calls
 
 ### full-audit (a nivel de servicio)
 Auditoría de seguridad completa de un servicio entero. Exhaustiva.
 - Seguir la sección "Modo: Full Audit" a continuación
-- Objetivo: <40 tool calls
 
 ## Checklists de seguridad por stack
 
@@ -200,7 +193,7 @@ Cuando se invoca con `mode: full-audit`:
    Incluir: Descripción del bug, Código afectado, Impacto, Pasos para reproducir, Corrección.
 8. Todo el output en español. Las etiquetas de severidad en inglés (critical/high/medium/low).
 
-**Eficiencia de tokens:** Con el contexto de context-init+arquitecto inline, deberías necesitar leer **solo los archivos específicos** donde sospechas vulnerabilidades — no todo el codebase. Objetivo: <40 tool calls.
+**Eficiencia:** Con el contexto de context-init+arquitecto inline, deberías necesitar leer **solo los archivos específicos** donde sospechas vulnerabilidades — no todo el codebase.
 
 ---
 

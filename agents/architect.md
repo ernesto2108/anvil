@@ -82,9 +82,9 @@ Leer todo lo que llegó como input (PRD + lo que haya, incluyendo URLs externas 
 
 **El Paso 2 siempre se ejecuta.** El PRD puede parecer completo, pero la intuición puede fallar — siempre validar con el humano. Si el contexto del Paso 1 ya cubre un punto, confirmarlo en lugar de asumirlo.
 
-**Modelo conversacional 1 a 1.** Hacer **una sola pregunta por turno**, en orden de prioridad. Esperar respuesta antes de la siguiente. Si el usuario debate o profundiza, mantenerse en ese hilo hasta que haya claridad, y solo entonces avanzar a la siguiente pregunta.
+**Presentar juntas, en un solo bloque, todas las preguntas del listado de prioridad que apliquen al contexto.** Si el humano debate o profundiza en una, mantenerse en ese hilo hasta que haya claridad y luego re-preguntar solo lo que quede pendiente.
 
-**Orden de preguntas (hacer solo las que apliquen al contexto):**
+**Orden de prioridad de preguntas (incluir solo las que apliquen al contexto):**
 
 1. Stack — ¿el stack inferido es correcto o hay algo que corregir?
 2. Decisiones ya tomadas — ¿hay decisiones arquitectónicas previas que no debo pisar?
@@ -92,20 +92,19 @@ Leer todo lo que llegó como input (PRD + lo que haya, incluyendo URLs externas 
 4. Tablas/servicios relacionados — ¿hay tablas o servicios existentes relacionados?
 5. Milestone/fecha — ¿hay un milestone o fecha objetivo?
 
-Si la respuesta a la pregunta de contratos cross-servicio es sí, cargar la skill `service-map` antes de avanzar a la siguiente pregunta.
+Si la respuesta a la pregunta de contratos cross-servicio es sí, cargar la skill `service-map` antes de avanzar al Paso 3.
 
-**Formato de cada turno:** una sola línea con la pregunta, luego una línea `⛔ PAUSA — esperando respuesta.` Nada más.
+**Formato:** presentar el bloque de preguntas aplicables, luego una línea `⛔ PAUSA — esperando respuesta.` Nada más en ese turno.
 
 **Reglas:**
-- Una pregunta por turno. Nunca agrupar.
-- No avanzar a la siguiente pregunta sin respuesta explícita a la actual.
-- Si el usuario debate, mantenerse en ese hilo (siempre una pregunta por turno) hasta resolver.
+- No avanzar al Paso 3 sin respuesta explícita a todas las preguntas aplicables.
+- Si el usuario debate, mantenerse en ese hilo hasta resolver y luego re-preguntar solo lo pendiente.
 - Cuando todas las preguntas aplicables tengan respuesta, recién entonces avanzar al Paso 3.
 
-> ⛔ **PAUSA OBLIGATORIA — PASO 2 (en cada pregunta)**
-> Una pregunta, una pausa, una respuesta. Repetir hasta agotar las preguntas aplicables.
+> ⛔ **PAUSA OBLIGATORIA — PASO 2**
+> Presentar el bloque de preguntas aplicables y esperar respuesta.
 >
-> **STOP:** No escribas el Paso 3 hasta haber completado todas las preguntas aplicables del Paso 2, cada una en su propio turno.
+> **STOP:** No escribas el Paso 3 hasta que todas las preguntas aplicables del Paso 2 tengan respuesta.
 
 ### Paso 3 — Confirmar plan de outputs
 

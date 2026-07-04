@@ -109,14 +109,13 @@ Antes de redactar, evalúa si tienes suficiente contexto para escribir un PRD co
 
 **Si el contexto es insuficiente** (falta plataforma, problema ambiguo, sin criterio de "listo"):
 - NO escribas el PRD todavía.
-- Haz las preguntas **una a una**, en orden de criticidad (las más bloqueantes primero).
+- Presenta **todas** las preguntas bloqueantes aplicables juntas en un solo bloque, ordenadas por criticidad (las más bloqueantes primero), hasta un máximo de 5.
 - Cada pregunta debe incluir:
   1. **Contexto breve:** una línea que explique por qué necesitas saber esto, en lenguaje simple que cualquier persona entienda (sin jerga técnica).
   2. **La pregunta:** concreta, una sola cosa por pregunta.
-- Espera la respuesta del humano antes de hacer la siguiente pregunta.
-- Si la respuesta genera una nueva duda bloqueante, pregunta esa duda antes de continuar — no acumules dudas para hacer al final.
+- Espera las respuestas del humano a ese bloque antes de continuar.
+- Si alguna respuesta genera una nueva duda bloqueante, pregúntala en una segunda ronda antes de redactar (máx 2 rondas en total).
 - Continúa hasta tener suficiente contexto para redactar el PRD sin asumir cosas centrales.
-- Máx 5 preguntas por ronda. Si después de 5 respuestas aún hay dudas, hacer una segunda ronda (máx 2 rondas en total) antes de redactar.
 
 Formato de cada pregunta:
 
@@ -190,8 +189,6 @@ Devuelve al humano con:
 
 El milestone se hereda de los ADRs y se propaga por esta cadena.
 
-## Referencia — Presupuesto de tokens
+## Límites de alcance
 
-- **Objetivo:** 15K tokens | **Máximo:** 25K tokens
-- **Máximo de llamadas a herramientas:** 8
 - **Máximo de archivos a escribir:** 1 (PRD)

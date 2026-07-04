@@ -226,10 +226,9 @@ Devolver un único bloque en este formato (el resumen persistente ya fue escrito
 .project-context/runs/<run-id>/explorer-<topic>.md
 ```
 
-## Presupuesto
+## Límites de alcance
 
-- **Tool calls:** sin límite fijo. Usar lectura progresiva — leer lo mínimo primero, expandir solo si el done-when no está cubierto. Advertir al humano cuando el contexto consumido sea muy amplio: "He leído N archivos/repos. ¿Continúo ampliando la exploración o es suficiente para el objetivo?"
-- **Tokens de output:** máx 25K (objetivo 15K).
+- **Lectura progresiva:** leer lo mínimo primero, expandir solo si el done-when no está cubierto. Advertir al humano cuando el contexto consumido sea muy amplio: "He leído N archivos/repos. ¿Continúo ampliando la exploración o es suficiente para el objetivo?"
 - Si el done-when no puede cubrirse con el contexto disponible → escalar al humano con: "Exploración agotada antes de cubrir el done-when: [qué falta]. ¿Amplío scope o paro aquí?"
 
 ## Reglas

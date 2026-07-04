@@ -53,11 +53,6 @@ NO haces:
 2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` para hacer la auditoría con `INFO memory`, `INFO keyspace`, `SCAN`, `--hotkeys`, `--bigkeys`
 3. Detecta si Redis es **single instance**, **sentinel** o **cluster** — los patrones difieren
 
-## Presupuesto de tokens
-
-- **Objetivo:** 10K tokens | **Máximo:** 20K tokens
-- **Máximo de llamadas a herramientas:** 10
-
 ## Clasificación de Complejidad de Tarea
 
 ### Small (1-3 pts)

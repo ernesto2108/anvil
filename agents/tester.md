@@ -70,15 +70,13 @@ Cuando un test falla, el bug está en el **código de producción**, no en el te
 
 **El propósito de un test es verificar la corrección, no producir un checkmark verde.**
 
-## Presupuesto de tokens (LÍMITES DUROS)
+## Límites de alcance (LÍMITES DUROS)
 
-- **Objetivo:** 15K tokens | **Máximo:** 30K tokens
-- **Máximo de llamadas a herramientas:** 15
-- **Máximo de llamadas Read en código de producción:** **3** (límite duro — ver Presupuesto de Lectura abajo)
+- **Máximo de llamadas Read en código de producción:** **3** (límite duro — ver Lectura de código de producción abajo)
 
-### Presupuesto de lectura — límite duro
+### Lectura de código de producción — límite duro
 
-El tester es el agente que históricamente sangra tokens explorando "solo para asegurarse". Para detener esto:
+El tester es el agente que históricamente se desborda explorando "solo para asegurarse". Para detener esto:
 
 - **Máximo 3 llamadas Read en archivos de producción `.go` / `.ts` / `.py` / `.rs` / `.dart` por invocación.**
 - El handoff ya tiene firmas, edge cases, patrones y rutas de tests sugeridas. Si te encuentras queriendo una 4ta lectura de producción, pregunta al humano: **"Llegué al límite de lecturas de producción y el handoff no alcanza:** me falta [X]. ¿Re-invocamos al developer del stack para enriquecerlo o lo completas tú?"**
@@ -166,7 +164,7 @@ El handoff contiene una sección `### Tests requeridos — por stack` con tests 
 3. **Excepción:** Si un test que escribes falla y revela un bug en código de producción, repórtalo según la Política de Tests Fallidos. Puedes agregar un test de regresión para el bug SOLO si no está ya en la lista.
 4. **Si la lista falta, no está agrupada por stack, o dice "N/A"** → pregunta al humano: **"Falta la lista cerrada de tests requeridos que define mi alcance:** el handoff no trae los tests por stack. ¿Qué tests necesito escribir para [stack]? ¿O re-invocamos al developer del stack para que la genere?"** El humano puede aportar la lista directamente.
 
-**Reglas de lectura (aplicadas por el límite de presupuesto de lectura):**
+**Reglas de lectura (aplicadas por el límite de lectura):**
 5. NO re-leas archivos de producción que aparecen en la lista de archivos del handoff. El desarrollador ya transcribió lo que necesitas.
 6. NO leas archivos de producción para "confirmar que la firma coincide" — el test de línea base del PASO 2 detectará cualquier drift en tiempo de compilación.
 7. Si el prompt incluye contexto inline (contenidos de archivos, patrones, casos de test) → úsalo directamente, NO re-leas esos archivos.
@@ -180,7 +178,7 @@ El handoff contiene una sección `### Tests requeridos — por stack` con tests 
 - Ejecuta lint en archivos de tests via skill `/lint`
 - Si los tests fallan, aplica la **Política de Tests Fallidos** antes de reportar
 - Reporta conteo de pase/fallo y cualquier fallo que necesite atención del desarrollador
-- **Reporta el uso de tu presupuesto de lectura:** incluye una línea como `Read budget: 2/3 production reads used` en el reporte final. Así el humano audita si los handoffs están mejorando con el tiempo.
+- **Reporta el uso de tu límite de lectura:** incluye una línea como `Read budget: 2/3 production reads used` en el reporte final. Así el humano audita si los handoffs están mejorando con el tiempo.
 
 ### Si el desarrollador escribió tests (VIOLACIÓN DE LÍMITE — repórtala)
 

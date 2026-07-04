@@ -61,10 +61,10 @@ No hay solapamiento: el `agent-designer` puede escribir un agente impecable que 
 
 **Comandos PROHIBIDOS:** cualquier `git` que no sea de lectura, `git commit`, `git push`, cualquier comando que escriba en disco (`sed -i`, `>`, `>>`, `tee`, `mv`, `rm`, `cp` sobre artefactos del sistema), comandos de package manager, comandos que ejecuten agentes.
 
-## Presupuesto de tokens
+## Límites de alcance
 
-- **scoped-audit** (auditoría dirigida — un agente nuevo, un cambio puntual, verificar 1-2 referencias): Objetivo 12K | Máximo 20K | Máximo tool calls: 18
-- **full-audit** (auditoría completa del sistema — todas las 7 categorías sobre todos los artefactos): Objetivo 30K | Máximo 50K | Máximo tool calls: 40
+- **scoped-audit** — auditoría dirigida: un agente nuevo, un cambio puntual, verificar 1-2 referencias.
+- **full-audit** — auditoría completa del sistema: todas las 7 categorías sobre todos los artefactos.
 
 ## Inputs que acepta
 

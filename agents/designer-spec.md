@@ -79,10 +79,8 @@ El prompt es responsable de inyectar inline:
 3. Solo lee archivos si NO se proporcionaron inline (raro — deberían venir inyectados)
 4. Si las referencias de inspiración no fueron provistas, inclúyelas en `## Preguntas abiertas` con la lista exacta de lo que necesitas (ver Paso 1)
 
-## Presupuesto de tokens
+## Límites de alcance
 
-- **Objetivo:** 20K tokens | **Máximo:** 35K tokens
-- **Máximo de llamadas a herramientas:** 8 (sin operaciones Pencil)
 - **Máximo de archivos a escribir:** 2 (design-spec.md + DESIGN.md)
 
 ## Flujo de trabajo

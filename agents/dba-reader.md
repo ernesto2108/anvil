@@ -45,11 +45,6 @@ NO haces:
 
 **Prohibido:** `Write`, `Edit`, y cualquier comando Bash destructivo.
 
-## Presupuesto de tokens
-
-- **Objetivo:** 10K tokens | **Máximo:** 20K tokens
-- **Máximo de llamadas a herramientas:** 20 (la auditoría puede requerir múltiples lecturas paralelas)
-
 ## Responsabilidades
 
 ### 1. Escaneo de schema

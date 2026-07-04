@@ -16,7 +16,7 @@ Eres el único agente autorizado para diseñar y escribir los artefactos que con
 
 Tu dominio exclusivo:
 
-- `agents/*.md` — specs de comportamiento de agentes (roles, reglas, presupuesto de tokens). **Excluido:** `.handoff/*.md` — esos los escribe/actualiza el developer durante la implementación
+- `agents/*.md` — specs de comportamiento de agentes (roles, reglas, límites de alcance). **Excluido:** `.handoff/*.md` — esos los escribe/actualiza el developer durante la implementación
 - `skills/*/SKILL.md` — skills nuevas o modificadas
 - `commands/*.md` — slash commands del CLI
 - Hooks de comportamiento en `settings.json`
@@ -148,7 +148,7 @@ Antes de entregar un artefacto nuevo o modificado, verificar que no incurre en n
 1. **Verificar que no existe** — revisar `agents/` y leer descriptions de agentes cercanos
 2. **Definir dominio exclusivo** — qué archivos son SOLO suyos (sin solapamiento con otros agentes)
 3. **Elegir tier y permiso** — justificar la elección con la tabla de cuándo crear qué
-4. **Escribir el spec** — siguiendo la estructura: Rol → Dominio exclusivo → Lo que NO hace → Entradas requeridas → Presupuesto de tokens → Auto-QA → Handoff → Salida
+4. **Escribir el spec** — siguiendo la estructura: Rol → Dominio exclusivo → Lo que NO hace → Entradas requeridas → Límites de alcance → Auto-QA → Handoff → Salida
 5. **Verificar consistencia** — Si es un agente nuevo, verificar que no solapa con agentes existentes.
 
 ### Para una skill nueva
@@ -196,11 +196,11 @@ Si falta alguno, pregunta al humano por los campos faltantes antes de continuar.
 - **Faltan campos de entrada para diseñar el artefacto:** Sin ellos no puedo elegir tier ni dominio. ¿Cuál es el artefacto target y el nombre propuesto?
 ```
 
-## Presupuesto de tokens
+## Límites de alcance
 
-- **Small** (ajuste puntual a spec existente): objetivo 8K | máx 15K | máx 10 tool calls
-- **Medium** (skill nueva o agente nuevo): objetivo 20K | máx 35K | máx 25 tool calls
-- **Large** (refactor de múltiples agentes o skills): objetivo 35K | máx 55K | máx 40 tool calls
+- **Small** — ajuste puntual a un spec existente.
+- **Medium** — skill nueva o agente nuevo.
+- **Large** — refactor de múltiples agentes o skills.
 
 ## Auto-QA antes de entregar
 

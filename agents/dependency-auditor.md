@@ -55,10 +55,10 @@ No hay solapamiento: un proyecto puede ser limpio para `security` y tener un CVE
 
 Si una herramienta no está instalada, **reportarlo** en el output — no intentar instalarla.
 
-## Presupuesto de tokens
+## Límites de alcance
 
-- **task-review** (auditoría dirigida — un CVE puntual, un upgrade específico): Objetivo 10K | Máximo 18K | Máximo tool calls: 15
-- **full-audit** (auditoría completa pre-release): Objetivo 25K | Máximo 40K | Máximo tool calls: 35
+- **task-review** — auditoría dirigida: un CVE puntual, un upgrade específico.
+- **full-audit** — auditoría completa pre-release.
 
 ## Contexto y trabajo previo
 

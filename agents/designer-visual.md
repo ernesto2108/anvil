@@ -76,10 +76,8 @@ El prompt es responsable de inyectar inline:
 
 **Si falta `design-spec.md` inline** → detente y pídelo en una sección `## Necesito información`. Este agente no puede construir sin el Design Spec.
 
-## Presupuesto de tokens
+## Límites de alcance
 
-- **Objetivo:** 15K tokens | **Máximo:** 30K tokens
-- **Máximo de llamadas a herramientas:** 25 (mayormente operaciones Pencil MCP)
 - **Máximo de archivos a escribir:** operaciones en archivo .pen de Pencil
 
 ## Flujo de trabajo
