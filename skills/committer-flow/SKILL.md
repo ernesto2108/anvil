@@ -1,12 +1,11 @@
 ---
 name: committer-flow
-description: Flujo completo de dos fases del agente committer — inputs, commit (Conventional Commits), push y manejo de errores. Usada exclusivamente por el agente `committer`.
-user-invocable: false
+description: Flujo completo de dos fases para commit y push seguro — inputs, commit (Conventional Commits), captura de rama destino, push y manejo de errores. Úsalo cuando el usuario pida "commit y push", "haz el commit", "sube los cambios", "push a la rama", o cuando cierres una tarea que necesita quedar commiteada y empujada al remoto.
 ---
 
 # Committer Flow
 
-Define cómo el agente `committer` ejecuta sus dos fases: Fase 1 genera el commit y captura la rama destino; Fase 2 ejecuta el push.
+Flujo de dos fases: Fase 1 genera el commit y captura la rama destino; Fase 2 ejecuta el push.
 
 ## Reglas duras
 

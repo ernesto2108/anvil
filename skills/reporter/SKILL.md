@@ -1,7 +1,6 @@
 ---
 name: reporter
 description: Aplica el delta a `.project-context/` al cierre de un run que modificó archivos, y opcionalmente produce un reporte de ejecución (`last-run.md`) bajo triggers especiales. Tiene escritura exclusiva sobre los archivos Core/* y Technical domain/* de `.project-context/`. Úsalo cuando el humano diga "cerrar run", "actualizar contexto", "aplicar delta", "last-run", "reporte de ejecución", o al finalizar cualquier tarea/bug fix con archivos modificados después de que los tests pasen.
-user-invocable: true
 ---
 
 > **Nota:** La creación inicial de todos los archivos base en modo `init`/`deep` es responsabilidad de `context-init`; el reporter solo los actualiza incrementalmente en runs posteriores.

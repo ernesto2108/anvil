@@ -1,7 +1,6 @@
 ---
 name: design-review
 description: Revisar diseños existentes para evaluar calidad, jerarquía visual y patrones anti-IA. Funciona con Pencil (archivos .pen) y Figma. Usar cuando el usuario diga "revisa este diseño", "¿esto se ve bien?", "mejora el diseño", "feedback de diseño", "QA de diseño", o después de completar la ejecución del diseño visual.
-user-invocable: true
 ---
 
 # Design Review

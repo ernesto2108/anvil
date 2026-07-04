@@ -1,7 +1,6 @@
 ---
 name: design-project
 description: Punto de entrada rápido para retomar o iniciar proyectos de diseño. Auto-detecta la herramienta de diseño (.pen → Pencil, URL de Figma → Figma), abre el archivo, carga el contexto (variables, componentes, pantallas) y prepara el workspace. Usar cuando el usuario diga "open design", "resume design", "design project", "pencil project", "figma project", o quiera comenzar a diseñar.
-user-invocable: true
 ---
 
 # Design Project — Quick Start

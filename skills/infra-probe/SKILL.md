@@ -1,7 +1,6 @@
 ---
 name: infra-probe
 description: Sondeo read-only del estado real de servicios de infraestructura (PostgreSQL, MySQL, Redis, Kafka, Elasticsearch, MongoDB, SQLite) via MCP, sin operar a ciegas. Detecta qué infra declara el proyecto, qué MCPs están disponibles en la sesión, y consulta health/schema/persistencia. Úsalo cuando el usuario o un agente diga "is the database up", "check redis", "inspect the live schema", "verify persistence", "health check de infra", "qué servicios están corriendo", o antes de escribir tests de integración o lógica de datos. Solo lectura — nunca writes ni DDL.
-user-invocable: true
 ---
 
 # Infra Probe — Sondeo read-only de servicios de infraestructura
