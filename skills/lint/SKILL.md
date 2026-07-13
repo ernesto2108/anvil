@@ -1,6 +1,6 @@
 ---
 name: lint
-description: Ejecutar linters y formateadores. Auto-detecta el stack (Go, React, Flutter, Python, Rust). Usar cuando el usuario diga "lint", "revisar estilo de código", "formatear código", "ejecutar eslint", "ejecutar prettier", "golangci-lint", "dart analyze", "ruff", "cargo clippy", o después de escribir código que debe validarse. OBLIGATORIO después de cualquier modificación de código — invocar antes de considerar cualquier tarea de código como terminada.
+description: Ejecutar linters y formateadores. Auto-detecta el stack (Go, React, Flutter, Swift, Python, Rust). Usar cuando el usuario diga "lint", "revisar estilo de código", "formatear código", "ejecutar eslint", "ejecutar prettier", "golangci-lint", "dart analyze", "swiftlint", "swiftformat", "ruff", "cargo clippy", o después de escribir código que debe validarse. OBLIGATORIO después de cualquier modificación de código — invocar antes de considerar cualquier tarea de código como terminada.
 ---
 
 # Lint
@@ -56,6 +56,7 @@ Solo si los pasos 1 y 2 no aplicaron, usar el comando directo según el stack:
 | `go.mod` | Go | `golangci-lint run ./...` | `gofmt` (built-in) |
 | `package.json` | React/Node | `<pm> exec eslint .` | `<pm> exec prettier --check .` |
 | `pubspec.yaml` | Flutter | `dart analyze` | `dart format --set-exit-if-changed .` |
+| `Package.swift` / `*.xcodeproj` / `*.xcworkspace` | Swift | `swiftlint lint` | `swiftformat --lint .` |
 | `pyproject.toml` o `*.py` | Python | `ruff check .` | `ruff format --check .` |
 | `Cargo.toml` o `*.rs` | Rust | `cargo clippy -- -D warnings` | `cargo fmt --check` |
 
@@ -116,6 +117,29 @@ Configuración: `analysis_options.yaml`. Recomendado: `flutter_lints` o `very_go
 
 Problemas comunes auto-corregibles: imports no utilizados, constructores `const` faltantes, preferir `final` para variables inmutables.
 
+### Swift
+
+SwiftLint vigila seguridad y lógica; SwiftFormat formatea estilo. Usar ambos (sin reglas de whitespace solapadas — deshabilitarlas en SwiftLint).
+
+```bash
+# Verificar
+swiftlint lint
+swiftformat --lint .
+
+# Auto-fix
+swiftlint lint --fix
+swiftformat .
+
+# Modo estricto para CI (cualquier warning falla)
+swiftlint lint --strict
+```
+
+Configuración: `.swiftlint.yml` (recomendado opt-in `force_unwrapping`, `implicitly_unwrapped_optional`, `empty_count`, `first_where`; `excluded: [.build, Derived, Pods]`) y `.swiftformat` (`--swiftversion 6.0`, `--indent 4`, `--self remove`, `--commas always`).
+
+Versiones fijadas por proyecto (Mint o SPM build tool plugins) — no depender del binario global de Homebrew. En proyectos legacy, generar baseline (`swiftlint lint --baseline`) para bloquear solo violaciones nuevas.
+
+Fallback: si `swiftlint`/`swiftformat` no están instalados, **reportar y sugerir instalación** (`brew install swiftlint swiftformat` o vía Mint/SPM plugin). No hay equivalente built-in del toolchain con la misma cobertura; no continuar en silencio.
+
 ### Python
 
 ```bash
@@ -144,7 +168,7 @@ Configuración: `rustfmt.toml` para formato, `clippy.toml` o `[lints]` en `Cargo
 
 ## Flujo de trabajo
 
-1. **Detectar stack** — verificar archivos marcadores (`go.mod`, `package.json`, `pubspec.yaml`, `pyproject.toml`, `Cargo.toml`)
+1. **Detectar stack** — verificar archivos marcadores (`go.mod`, `package.json`, `pubspec.yaml`, `Package.swift`/`*.xcodeproj`/`*.xcworkspace`, `pyproject.toml`, `Cargo.toml`)
 2. **Resolver comando según precedencia** — aplicar la sección "Resolución de Comandos" (Makefile → `package.json` script → fallback directo). No saltar al fallback si hay Makefile o script `lint`.
 3. **Auto-fix primero** — ejecutar el comando de corrección antes de reportar
 4. **Luego verificar** — ejecutar el comando de verificación para encontrar problemas restantes

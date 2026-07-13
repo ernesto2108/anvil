@@ -111,7 +111,7 @@ Reglas para el developer del stack:
 - **Si un token de diseño no tiene equivalente CSS**, agrégalo primero al archivo CSS
 - **Mobile-first**: si existen diseños web y móvil, codifica el layout móvil primero, agrega overrides de desktop con media queries `min-width`
 - **Reutiliza componentes existentes** — verifica qué ya existe en el codebase antes de crear nuevos
-- **Carga la skill de convenciones apropiada** para el stack objetivo (ej., `astro-conventions`, `react-conventions`, `flutter-conventions`)
+- **Carga la skill de convenciones apropiada** para el stack objetivo (ej., `astro-conventions`, `react-conventions`, `flutter-conventions`, `swift-conventions`)
 
 ## Paso 5: QA Visual de Fidelidad (OBLIGATORIO para tareas UI)
 

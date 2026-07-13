@@ -1,6 +1,6 @@
 ---
 name: run-tests
-description: Ejecutar tests del proyecto con detector de race conditions y cobertura. Auto-detecta el stack (Go, React, Flutter, Python, Rust). Usar cuando el usuario diga "run tests", "test this", "check coverage", "run vitest", "go test", "flutter test", "pytest", "cargo test", o después de implementar código que necesita verificación.
+description: Ejecutar tests del proyecto con detector de race conditions y cobertura. Auto-detecta el stack (Go, React, Flutter, Swift, Python, Rust). Usar cuando el usuario diga "run tests", "test this", "check coverage", "run vitest", "go test", "flutter test", "swift test", "xcodebuild test", "pytest", "cargo test", o después de implementar código que necesita verificación.
 ---
 
 # Run Tests
@@ -43,6 +43,8 @@ Solo si los pasos 1 y 2 no aplicaron, usar el comando directo según el stack:
 | `go.mod` | Go | `go test ./... -race -cover -count=1` |
 | `package.json` | Node/React | `<pm> exec vitest run --coverage` o `<pm> exec jest --coverage` |
 | `pubspec.yaml` | Flutter | `flutter test --coverage` |
+| `Package.swift` | Swift (SPM) | `swift test` |
+| `*.xcodeproj` / `*.xcworkspace` | Swift (Xcode) | `xcodebuild test -scheme <Scheme> -destination 'platform=iOS Simulator,name=iPhone 16'` |
 | `pyproject.toml` | Python | `pytest --tb=short -q` |
 | `Cargo.toml` | Rust | `cargo test` |
 
@@ -113,6 +115,26 @@ flutter test --reporter expanded
 ```
 
 Solución de problemas: fallos de golden — `flutter test --update-goldens`. Tests inestables — verificar `pumpAndSettle()` faltante o futures sin resolver. Ver cobertura: `genhtml coverage/lcov.info -o coverage/html`.
+
+### Swift
+
+Paquetes SPM:
+```bash
+swift test
+swift test --filter CartTests            # filtrar un test/suite
+swift test --enable-code-coverage        # cobertura
+```
+
+Apps Xcode:
+```bash
+# Listar schemes disponibles primero
+xcodebuild -list
+
+xcodebuild test -scheme <Scheme> -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild test -scheme <Scheme> -destination 'platform=iOS Simulator,name=iPhone 16' -enableCodeCoverage YES
+```
+
+Swift Testing (`@Test`/`#expect`) y XCTest coexisten en el mismo target; ambos runners corren juntos con estos comandos. XCUITest y performance tests requieren `xcodebuild test` (no `swift test`). No mezclar asserts de ambos frameworks en un mismo test.
 
 ### Python
 
@@ -205,7 +227,7 @@ Resumir resultados en una tabla:
 
 ## Flujo de Trabajo
 
-1. **Detectar stack** — verificar archivos marcadores
+1. **Detectar stack** — verificar archivos marcadores (`go.mod`, `package.json`, `pubspec.yaml`, `Package.swift`/`*.xcodeproj`/`*.xcworkspace`, `pyproject.toml`, `Cargo.toml`)
 2. **Resolver comando según precedencia** — aplicar la sección "Resolución de Comandos" (Makefile → `package.json` script → fallback directo). No saltar al fallback si hay Makefile o script `test`.
 3. **Ejecutar tests** — ejecutar el comando resuelto
 4. **Categorizar fallos** — usar la tabla de fallos de arriba

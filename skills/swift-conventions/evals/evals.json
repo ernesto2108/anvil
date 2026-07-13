@@ -1,0 +1,59 @@
+{
+  "skill_name": "swift-conventions",
+  "evals": [
+    {
+      "id": 1,
+      "type": "trigger",
+      "prompt": "Implementa una pantalla de perfil en SwiftUI con un modelo @Observable",
+      "should_trigger": true
+    },
+    {
+      "id": 2,
+      "type": "trigger",
+      "prompt": "Revisa este código Swift y dime si sigue las buenas prácticas de concurrencia de Swift 6",
+      "should_trigger": true
+    },
+    {
+      "id": 3,
+      "type": "trigger",
+      "prompt": "Agrega un widget de Flutter con un BLoC para el carrito",
+      "should_trigger": false
+    },
+    {
+      "id": 4,
+      "type": "trigger",
+      "prompt": "Escribe un handler HTTP en Go para el endpoint de checkout",
+      "should_trigger": false
+    },
+    {
+      "id": 5,
+      "type": "quality",
+      "prompt": "Crea el modelo de estado de una pantalla de login en Swift",
+      "assertions": [
+        "Usa @Observable, no ObservableObject ni @Published",
+        "Modela el estado con un enum de associated values, no booleanos paralelos",
+        "No usa force unwrap ni try! en código de producción"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "quality",
+      "prompt": "Configura la navegación de la app en SwiftUI",
+      "assertions": [
+        "Usa NavigationStack con rutas tipadas (enum Route: Hashable)",
+        "Inyecta un Router @Observable por environment",
+        "No empuja views ni strings directamente"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "quality",
+      "prompt": "Estructura la capa de datos con un repository para pedidos",
+      "assertions": [
+        "El protocolo del repository vive en Domain y la implementación en Data",
+        "Separa DTOs Codable de las entidades de dominio con un mapper toDomain()",
+        "Usa URLSession con async/await, sin Alamofire"
+      ]
+    }
+  ]
+}

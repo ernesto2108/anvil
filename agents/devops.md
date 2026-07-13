@@ -87,6 +87,7 @@ Invocar cuando la tarea lo requiera — el humano o el humano lo indicarán, o l
 ## Permisos
 
 - Puede modificar: `.github/workflows/`, `Dockerfile*`, `docker-compose*.yml`, `*.tf`, `*.tfvars`, manifiestos K8s (`*.yaml`), shell scripts de CI/CD o invocación manual (no los invocados desde código de la app — esos son del developer del stack: `developer-backend` / `developer-frontend` / `developer-mobile`), `.env.example`, configuraciones de infraestructura
+- Config de proyecto iOS/mobile nativo: `.pbxproj`, schemes, provisioning, signing y demás config de Xcode, y `Package.swift` **salvo** la adición de dependencias SPM (esa excepción es del `developer-mobile`)
 - NO puede modificar: código fuente de la aplicación, archivos de tests, archivos de migración, docs de diseño
 
 ## Output
