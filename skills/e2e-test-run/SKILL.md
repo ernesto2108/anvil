@@ -1,6 +1,6 @@
 ---
 name: e2e-test-run
-description: Convenciones para escribir y ejecutar pruebas E2E. Cubre Playwright (web + desktop) y Maestro (mobile). Usar cuando el tester necesite escribir tests de flujo completo, visual regression, o accesibilidad automatizada.
+description: Convenciones para escribir y ejecutar pruebas E2E. Cubre Playwright (web + desktop), Maestro (mobile cross-platform: Flutter, React Native e iOS nativo) y XCUITest (iOS nativo). Usar cuando el tester necesite escribir tests de flujo completo, visual regression, o accesibilidad automatizada.
 ---
 
 # E2E Test Conventions
@@ -17,6 +17,7 @@ Guía de convenciones para tests end-to-end. El tester carga este skill en PASO 
 | Desktop (Electron, Tauri, Wails) | **Playwright** | Conecta al webview |
 | Mobile (Flutter) | **Maestro** | YAML flows, usa Semantics |
 | Mobile (React Native) | **Maestro** | YAML flows, usa testID |
+| Mobile (iOS nativo) | **Maestro** o **XCUITest** | Maestro para flujos declarativos cross-platform; XCUITest para integración profunda con Xcode/CI de Apple y APIs del sistema (ver abajo) |
 
 ---
 
@@ -161,6 +162,8 @@ export default defineConfig({
 
 ## Maestro (Mobile)
 
+Maestro es **cross-platform**: soporta Flutter, React Native e **iOS nativo** (Swift/SwiftUI) con los mismos flows YAML. Para iOS nativo, los selectores por `id` mapean al `accessibilityIdentifier` de las views. Elegir Maestro cuando se quieren flujos declarativos legibles y reutilizables entre plataformas; elegir XCUITest (abajo) cuando se necesita integración profunda con el ecosistema de Apple.
+
 ### Estructura de proyecto
 
 ```
@@ -242,6 +245,20 @@ Usar `testID` prop:
 
 En Android, agregar `accessibilityLabel` como fallback.
 
+### iOS nativo (SwiftUI)
+
+Exponer un identificador estable con `.accessibilityIdentifier(...)`:
+
+```swift
+Button("Checkout") { ... }
+    .accessibilityIdentifier("btn_checkout")
+```
+```yaml
+- tapOn: { id: "btn_checkout" }
+```
+
+Preferir `accessibilityIdentifier` a apoyarse en el texto visible (que cambia con i18n). No confundir con `.accessibilityLabel`, que es para VoiceOver — usar `identifier` para automatización.
+
 ### Variables y condiciones
 
 ```yaml
@@ -282,3 +299,86 @@ Maestro Cloud para CI sin emuladores: `maestro cloud --app-file app.apk .maestro
 | Sin `appId` en header | Siempre declarar `appId` |
 | Datos hardcodeados | Variables `env` para emails, passwords, URLs |
 | Sin `clearState` | Limpiar estado antes de flows que necesitan slate limpio |
+
+---
+
+## XCUITest (iOS nativo)
+
+Framework de UI testing de Apple, parte de XCTest. Elegirlo sobre Maestro cuando se necesita integración profunda con Xcode/CI de Apple, acceso a APIs del sistema (permisos, notificaciones, `springboard`) o auditoría de accesibilidad nativa. Vive en el target de UI tests, en subclases de `XCTestCase`.
+
+### Estructura y launch
+
+```swift
+final class CheckoutUITests: XCTestCase {
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+    }
+
+    @MainActor
+    func testCheckoutFlow() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-resetState"]   // estado de test
+        app.launchEnvironment = ["API_BASE": "http://localhost:8080"]
+        app.launch()
+
+        app.buttons["btn_checkout"].tap()
+        let confirmation = app.staticTexts["order_confirmation"]
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+    }
+}
+```
+
+Usar los `launchArguments`/`launchEnvironment` para poner la app en un estado determinista (resetear datos, apuntar a un backend local, desactivar animaciones). La app lee esos flags en su entry point.
+
+### Queries y expectations
+
+- Localizar por tipo + `accessibilityIdentifier`: `app.buttons["btn_checkout"]`, `app.textFields["email_input"]`, `app.staticTexts["title"]`.
+- **Preferir `accessibilityIdentifier`** sobre texto visible (estable ante i18n).
+- Esperar con `waitForExistence(timeout:)` — nunca `sleep`. Para condiciones compuestas, usar `XCTNSPredicateExpectation` + `wait(for:timeout:)`.
+- Acciones: `.tap()`, `.typeText(...)`, `.swipeUp()`, `.press(forDuration:)`.
+
+### Auditoría de accesibilidad automatizada
+
+```swift
+@MainActor
+func testHomeAccessibility() throws {
+    let app = XCUIApplication()
+    app.launch()
+    try app.performAccessibilityAudit()   // falla ante issues de a11y detectables
+}
+```
+
+`performAccessibilityAudit()` (Xcode 15+) es el equivalente nativo de axe-core para web: detecta contraste insuficiente, elementos sin label, hit targets pequeños, texto que no soporta Dynamic Type. Filtrar tipos con el parámetro `for:` cuando haga falta acotar.
+
+### Ejecución
+
+```bash
+# Listar schemes disponibles primero
+xcodebuild -list
+
+# Correr el scheme de UI tests en un simulador
+xcodebuild test \
+  -scheme <UITestsScheme> \
+  -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+En CI, fijar el `-destination` (device + OS) para determinismo; subir el `.xcresult` como artifact.
+
+### Cuándo XCUITest vs Maestro
+
+| Elegir **XCUITest** | Elegir **Maestro** |
+|---|---|
+| Integración profunda con Xcode y CI de Apple | Flujos declarativos legibles en YAML |
+| Acceso a APIs del sistema (permisos, notificaciones, springboard) | Cross-platform (mismo flow para iOS, Android, Flutter, RN) |
+| Auditoría de accesibilidad nativa (`performAccessibilityAudit`) | Iteración rápida sin recompilar el target de tests |
+| El equipo ya vive en el ecosistema XCTest | Menor curva y menos código |
+
+### Anti-patrones
+
+| Prohibido | Correcto |
+|---|---|
+| `sleep(2)` / `Thread.sleep` | `waitForExistence(timeout:)` o predicate expectations |
+| Localizar por texto visible en apps i18n | `accessibilityIdentifier` estable |
+| Estado compartido entre tests | Reset vía `launchArguments` en cada test |
+| `#expect` de Swift Testing dentro de `XCUITestCase` | `XCTAssert*` — XCUITest es XCTest, no Swift Testing |
+| Tests que dependen del backend real de prod | Backend local vía `launchEnvironment` |

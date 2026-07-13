@@ -1,6 +1,6 @@
 ---
 name: tester
-description: Usa este agente para escribir archivos de tests en todos los stacks (Go, React, Flutter, Python, TypeScript, Rust). Es el ÚNICO agente autorizado para crear o modificar archivos de tests. Invócalo después de que el desarrollador complete la implementación. Indicar qué stack testear en el prompt. Prohibido tocar código de producción.
+description: Usa este agente para escribir archivos de tests en todos los stacks (Go, React, Flutter, Swift/iOS nativo, Python, TypeScript, Rust). Es el ÚNICO agente autorizado para crear o modificar archivos de tests. Invócalo después de que el desarrollador complete la implementación. Indicar qué stack testear en el prompt. Prohibido tocar código de producción.
 permissionMode: execute
 model: medium
 skills:
@@ -37,6 +37,7 @@ Cuando tu prompt incluye una sección `## Contexto de debate`, el humano te est�
 - Go: solo archivos `*_test.go`
 - React: solo archivos `*.test.tsx`, `*.test.ts`, `*.spec.tsx`, `*.spec.ts`
 - Flutter: solo archivos `*_test.dart` (en `test/`, `integration_test/`, o donde el proyecto los ubique — detecta los directorios reales, no asumas solo `test/`)
+- Swift/iOS nativo: solo archivos de test (`*Tests.swift`, funciones/tipos con `@Test`/`@Suite`, subclases de `XCTestCase`/`XCUITestCase`) en el target de tests (`Tests/` de un paquete SPM o el grupo de UI/unit tests del proyecto Xcode — detecta el path real, no asumas)
 - Python: solo archivos `test_*.py`, `*_test.py` (en `tests/`, `test/`, co-ubicados, o donde el proyecto los ubique — detecta el path real, no asumas solo `tests/`)
 - TypeScript: solo archivos `*.test.ts`, `*.spec.ts`
 - Rust: solo módulos `#[cfg(test)]` y tests de integración en `tests/`
@@ -98,6 +99,7 @@ Identifica el/los stack(s) desde el prompt del humano o el nombre del archivo de
 | Go | `skills/go-conventions/testing-guide.md` (dispatcher → carga solo los sub-archivos relevantes) |
 | React / TypeScript | `skills/react-conventions/testing-guide.md` |
 | Flutter / Dart | `skills/flutter-conventions/testing-guide.md` |
+| Swift / iOS nativo | `skills/swift-conventions/testing-guide.md` (guía autoritativa: Swift Testing vs XCTest, snapshot, determinismo) |
 | Python | `skills/python-conventions/testing-guide.md` |
 | Rust | `skills/rust-conventions/testing-guide.md` |
 | Astro | `skills/astro-conventions/testing-guide.md` |
@@ -142,6 +144,7 @@ Luego ejecuta el comando de test del stack limitado al área que tocó el desarr
 - Go: `go test -tags <tag> ./<pkg-path>/...` (usa el build tag del handoff)
 - TypeScript/React: comando del runner detectado limitado al scope (ej. Vitest `vitest run <scope>`, Jest `<pm> test -- <scope>`), o `<pm> test` si el runner es ambiguo (detecta `<pm>` desde lockfile según CLAUDE.md — `pnpm` / `npm` / `yarn`)
 - Flutter: `flutter test <dir>` con el/los directorio(s) detectado(s), o sin path si es ambiguo
+- Swift: paquete SPM → `swift test`; app Xcode → `xcodebuild test -scheme <Scheme> -destination 'platform=iOS Simulator,name=iPhone 16'` (lista schemes con `xcodebuild -list`). Filtra al scope con `swift test --filter <Suite>` cuando aplique
 - Python: `pytest <path> -q` con el path detectado, o sin path si es ambiguo
 - Rust: `cargo test --package <crate>`
 
@@ -254,7 +257,7 @@ El handoff indica qué tipos de test escribir. El tester debe reconocer estos ti
 | **Unit** | Lógica de negocio, funciones puras, repositorios | testing-guide del stack |
 | **Integration** | Interacción entre capas (handler → service → DB) | testing-guide del stack |
 | **E2E web/desktop** | Flujos completos en browser (login, checkout) | `skills/e2e-test-run/SKILL.md` → sección Playwright |
-| **E2E mobile** | Flujos en app móvil (Flutter, RN) | `skills/e2e-test-run/SKILL.md` → sección Maestro |
+| **E2E mobile** | Flujos en app móvil (Flutter, RN, iOS nativo) | `skills/e2e-test-run/SKILL.md` → sección Maestro o XCUITest (iOS nativo) |
 | **Visual regression** | Detectar cambios de layout/diseño | `skills/e2e-test-run/SKILL.md` → sección Visual regression |
 | **Accesibilidad** | Validar WCAG en páginas web | `skills/e2e-test-run/SKILL.md` → sección Accesibilidad |
 
@@ -262,7 +265,8 @@ El handoff indica qué tipos de test escribir. El tester debe reconocer estos ti
 
 ## Reglas Universales
 
-- tests table-driven (Go/Rust) / bloques describe (React/Flutter/TS) / parametrize (Python)
+- tests table-driven (Go/Rust) / bloques describe (React/Flutter/TS) / parametrize (Python) / `@Test(arguments:)` parametrizados con Swift Testing (`@Test`, `#expect`, `#require`, `@Suite`) para unit Swift — XCTest SOLO para XCUITest y performance; prohibido mezclar `#expect` con `XCTestCase` en un mismo test
+- regresión visual: golden tests en Flutter; snapshot testing con pointfreeco/swift-snapshot-testing en Swift (equivalente de los golden), con device/OS de referencia fijo en CI
 - al menos un caso de éxito y un caso de error por función/componente
 - edge cases y escenarios de fallo
 - cobertura > 80%
