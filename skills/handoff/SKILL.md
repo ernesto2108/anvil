@@ -1,7 +1,6 @@
 ---
 name: handoff
-disable-model-invocation: true
-description: Continuidad de sesión para tareas Medium+. Crea, actualiza, lee y archiva notas de handoff para que los desarrolladores puedan retomar el trabajo entre sesiones sin tener que releer todo. Invocado por el desarrollador o el humano orquestador — no directamente por el usuario. El gate de calidad es verify-handoff.sh (invocado por el humano orquestador), no aprobación manual del usuario.
+description: Continuidad de sesión para tareas Medium+. Crea, actualiza, lee y archiva notas de handoff para que los desarrolladores puedan retomar el trabajo entre sesiones sin tener que releer todo. Úsalo cuando un developer clasifique una tarea como Medium (5-8 pts) o Large (8-13 pts), al crear `.handoff/<TASK-ID>.md` o `.handoff/<slug>.md`, al actualizar el live document tras cada paso, o al archivar la tarea. Invocado por el desarrollador o el humano orquestador — no directamente por el usuario. El gate de calidad es verify-handoff.sh (invocado por el humano orquestador), no aprobación manual del usuario.
 ---
 
 # Notas de Handoff
@@ -103,6 +102,15 @@ El orquestador DEBE verificar el orden de deploy antes de cerrar la tarea.
 ### Input recibido (al inicio de la tarea)
 
 El desarrollador completa `## Input recibido` al crear el handoff. Es un acuse de recibo de lo que el orquestador proporcionó — si la siguiente sesión encuentra una brecha, sabe qué faltaba vs. qué se perdió.
+
+### Completitud de `### Tests requeridos — por stack` (obligatorio para el developer)
+
+La lista de tests que el developer entrega es la **lista cerrada** que define el alcance del tester. Una lista pobre produce cobertura incompleta, porque el tester no agrega tests en silencio. Por eso la lista DEBE incluir como mínimo:
+
+- **(a)** un caso de éxito y un caso de error por cada interfaz pública listada en `### Public interfaces / contracts`
+- **(b)** un test por cada entrada de `### Edge cases descubiertos`
+
+Si un edge case declarado se deja **intencionalmente** sin test, anotarlo en la lista con el motivo (ej. `— sin test: cubierto por validación de tipos en compilación`). Nunca dejar un edge case declarado sin test y sin explicación: el tester lo reportará como gap al humano.
 
 ### Output entregado (antes de terminar)
 

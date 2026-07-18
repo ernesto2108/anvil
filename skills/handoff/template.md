@@ -163,7 +163,14 @@ Firmas exactas de lo que se agregó o modificó. Copiar-pegar del código.
 
 <!-- CROSS-STACK: agrupar por stack. SINGLE-STACK: usar un solo grupo.
      Cada grupo incluye: path del archivo, comando de ejecución, y lista numerada.
-     El tester implementa SOLO estos — sin extras. -->
+     El tester implementa SOLO estos — sin extras.
+
+     COMPLETITUD OBLIGATORIA (esta lista es la lista cerrada; el tester no agrega tests en silencio):
+       (a) un caso de éxito y un caso de error por cada interfaz pública de `### Public interfaces / contracts`
+       (b) un test por cada entrada de `### Edge cases descubiertos`
+     Si un edge case declarado se deja intencionalmente sin test, anotarlo con el motivo
+     (ej. "— sin test: cubierto por validación de tipos en compilación"). Un edge case
+     declarado sin test y sin explicación será reportado por el tester como gap de cobertura. -->
 
 #### Tests Go
 - **Archivo:** `<path_test.go>`

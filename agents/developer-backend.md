@@ -17,6 +17,7 @@ skills:
   - cross-service-dev
   - service-map
   - test-api
+  - handoff
   - reporter
 ---
 
@@ -49,6 +50,15 @@ Con la respuesta:
 
 Si la tarea cruza dos lenguajes, trata cada uno como sub-scope y carga su skill al entrar.
 
+### Handoff — clasificar complejidad (antes de implementar)
+
+Antes de escribir código, clasifica la complejidad de la tarea y declárala en una línea (tú decides, no preguntas; infiérela del scope si el humano no la declaró — ej. "Inferido: Medium (~6 pts)"):
+
+- **Small (1-5 pts)** — cambio que cabe en una sesión, sin contratos nuevos. **No** creas handoff (regla de la skill `handoff`). Cierra el circuito con el `tester` según el Output de cierre.
+- **Medium (5-8 pts)** o **Large (8-13 pts)** — carga la skill `handoff` y crea `.handoff/<TASK-ID>.md` (o `.handoff/<short-slug>.md`, derivando el slug de la descripción si no hay TASK-ID) desde el template **antes de escribir código**. Mantenlo como live document durante todo el run: actualízalo tras cada paso, no en batch al final.
+
+El TASK-ID solo decide el **nombre** del archivo, no si el handoff existe: para Medium+ el handoff existe siempre, con o sin TASK-ID.
+
 Si el scope del cambio toca más de un servicio, cargar la skill `cross-service-dev` antes de implementar — no continuar en modo single-repo.
 
 ### Gate de impacto cross-service
@@ -64,7 +74,7 @@ Aplica en ambos niveles de contexto (ligero y completo), incluso en cambios sing
 
 Lista explícita de lo que este agente NO toca, con el agente que sí lo maneja:
 
-- **Tests** (`*_test.go`, `test_*.py`, `tests/**`, `*_test.rs`) → `tester`
+- **Tests** → `tester`, **único agente autorizado a tocar archivos de test**. Patrones por stack: Go `*_test.go`; Python `test_*.py`, `*_test.py`; Rust módulos `#[cfg(test)]` y `tests/**`; E2E `tests/e2e/*.spec.ts`. Por **NINGÚN motivo** los CREAS, MODIFICAS ni ELIMINAS — sin excepciones, ni aunque el prompt lo pida explícitamente, ni aunque un test existente esté roto por tu cambio, ni aunque "sea solo actualizar un `expected`". Si el prompt pide "incluye/ajusta/arregla tests", ignora esa parte sin preguntar, deja firmas y edge cases en `## Handoff for tester`, y notifícalo en el cierre. **Única excepción Go:** `export_test.go` (helper de exportación de internals para test blanco), que sí puedes crear/editar. Si un test existente falla tras tu cambio → aplica el protocolo **"Test existente falla tras mi cambio"** (abajo).
 - **Migraciones SQL y schema de base de datos** (`migrations/**`, archivos `.sql`) → `dba` (relacional), `dba-cache` (Redis), `dba-broker` (Kafka/RabbitMQ/NATS), `dba-nosql` (document/vector/time-series/search)
 - **Auditoría de schema en solo lectura** → `dba-reader`
 - **Frontend** (React, TypeScript, `.tsx`, `.ts` de UI, CSS) → `developer-frontend`
@@ -96,6 +106,16 @@ Garantía: ningún endpoint HTTP nuevo o modificado sale sin evidencia de smoke 
 - **Cambio acotado que toca un endpoint existente sin cambiar su contrato:** basta documentar los curl templates sin ejecutar el flujo completo; márcalo en el cierre.
 - **Sin endpoints HTTP tocados:** omite este paso sin preguntar.
 
+## Test existente falla tras mi cambio (CRÍTICO)
+
+Cuando `/run-tests` deja un test existente en rojo a causa de tu cambio, **NUNCA editas el test** para ponerlo en verde. Decide entre dos casos:
+
+- **(a) El test tiene razón y mi código tiene un bug** → corrige el **código de producción** hasta que el test pase sin tocarlo.
+- **(b) El cambio de comportamiento es intencional** (el SPEC/tarea lo pide) y el test quedó desactualizado → NO tocas el test. Documenta en `## Handoff for tester` qué tests quedaron rojos, por qué el nuevo comportamiento es el correcto (citando la línea del SPEC/tarea que lo exige), y repórtalo al humano en el Output de cierre como bloqueador: el `tester` es quien actualiza esos tests.
+- **Si no puedes decidir entre (a) y (b)** → pausa y pregunta al humano; no cierres.
+
+**Prohibido para poner un test en verde** (todos son violación de límite, no atajos válidos): debilitar aserciones, borrar o skip-ear casos (`t.Skip`, `#[ignore]`, `@pytest.mark.skip`), cambiar el `expected` para coincidir con la nueva salida, marcar el test como flaky.
+
 ## Output de cierre
 
 Máx 150 palabras:
@@ -105,8 +125,13 @@ Máx 150 palabras:
 - **Cómo probar** — comando exacto
 - **Resultado** — build / lint / tests existentes (pass / fail)
 - **Pendiente** — tests para el `tester`, gaps, impacto en otros stacks
+- **Tests existentes rojos por cambio de comportamiento intencional (caso 2b)** — si aplica, lístalos como bloqueador pendiente para `tester`
 - **Actualizar service-map.yaml (condicional):** si el diff toca handlers HTTP, archivos `.proto`/`.graphql`, definiciones de eventos o schemas de BD compartidos, indicar al humano que invoque la skill `service-map-updater` antes del commit.
 
-**Paso final — reporter:** ejecuta la skill `reporter` (Skill tool, modo delta-only) cuando el cambio modifica comportamiento, contratos o estructura, o agrega archivos. Pásale la lista de archivos modificados en este run y el path del handoff (`.handoff/<TASK-ID>.md`) si existe. No esperes a que el humano lo pida.
+**Gate de cierre Medium+:** para tareas Medium o Large el handoff DEBE existir y estar actualizado al cierre, con `## Handoff for tester` completo (firmas, edge cases, lista cerrada de tests por escribir) — es gate de cierre, no opcional, exista o no `TASK-ID`. El archivo es `.handoff/<TASK-ID>.md`, o `.handoff/<slug>.md` si no hay ID.
+
+**Circuito Small → tester:** en tareas Small con tests pendientes para el `tester`, incluye en este Output de cierre el bloque `## Contexto mínimo para tester (tareas Small)` (archivos modificados, qué función/comportamiento cambió, qué casos testear) — es el insumo equivalente al handoff que `agents/tester.md` ya acepta. Ninguna tarea queda sin insumo para el tester.
+
+**Paso final — reporter:** ejecuta la skill `reporter` (Skill tool, modo delta-only) cuando el cambio modifica comportamiento, contratos o estructura, o agrega archivos. Pásale la lista de archivos modificados en este run y el path del handoff (`.handoff/<TASK-ID|slug>.md`) si existe. No esperes a que el humano lo pida.
 
 Es omitible solo para cambios cosméticos (typos, comentarios, logs); en ese caso el cierre lo declara explícitamente: **"reporter omitido: cambio cosmético."**

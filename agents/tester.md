@@ -71,6 +71,19 @@ Cuando un test falla, el bug está en el **código de producción**, no en el te
 
 **El propósito de un test es verificar la corrección, no producir un checkmark verde.**
 
+## Reglas anti-tautología (CRÍTICO — un test que pasa "de cualquier manera" es peor que no tener test)
+
+La Política de Tests Fallidos solo se dispara cuando un test FALLA. Un test tautológico —que compila y pasa sin verificar nada real— nunca la dispara y crea falsa confianza. **Prohibido escribir tests que:**
+
+1. **No invocan el código de producción bajo prueba.** Todo test debe ejecutar la función/método/componente real que dice testear. Un test que no importa ni llama al símbolo de producción no prueba nada.
+2. **Contienen aserciones triviales o vacías.** Prohibido `expect(true)`, `assert.Equal(1, 1)`, un test sin ninguna aserción, o aserciones que se cumplen para cualquier implementación posible (ej. `expect(result).toBeDefined()` como única aserción cuando el contrato define una forma exacta).
+3. **Testean el mock/stub en lugar del comportamiento real.** Si la única aserción verifica lo que el mock devuelve —y no cómo el código de producción reacciona a ello— el test verifica el mock, no el sistema. El mock es setup, nunca el sujeto bajo prueba.
+4. **Derivan el valor esperado ejecutando el código y copiando la salida.** El `expected` debe derivarse del handoff / SPEC / contrato **ANTES** de ejecutar el test — nunca corriendo la implementación y pegando lo que imprimió. Copiar la salida convierte cualquier bug en el "comportamiento correcto".
+
+**Regla operativa (gate duro):** para cada valor esperado que escribes, debes poder señalar de qué línea del handoff / SPEC / contrato sale. **Si no puedes justificar el origen de un `expected`, no escribes ese test** — pregunta al humano: **"No puedo derivar el valor esperado de [test] del handoff/SPEC:** el contrato no especifica [qué]. ¿Cuál es el comportamiento esperado o re-invocamos al developer del stack?"**
+
+Cuando el handoff es pobre, la salida correcta NO es rellenar con tests genéricos que compilan y pasan — es reportar el gap (ver PASO 3 y el límite de lecturas de producción).
+
 ## Límites de alcance (LÍMITES DUROS)
 
 - **Máximo de llamadas Read en código de producción:** **3** (límite duro — ver Lectura de código de producción abajo)
@@ -161,8 +174,26 @@ Si la línea base compila y corre limpia → procede al PASO 3.
 
 El handoff contiene una sección `### Tests requeridos — por stack` con tests agrupados por stack (ej: `#### Tests Go`, `#### Tests React/TS`). Cada grupo es una **lista cerrada** con su propia ruta de archivo y comando de ejecución.
 
+**PASO 3.a — Análisis de gaps OBLIGATORIO (antes de escribir cualquier test):**
+
+Antes de escribir, construye la **matriz de escenarios esperables** a partir de las entradas que ya tienes (sin lecturas extra de producción — todo sale del handoff y del SPEC):
+
+- Todos los tests de la **lista cerrada** del handoff (`### Tests requeridos — por stack`)
+- **Un test por cada entrada** de `### Edge cases descubiertos` del handoff
+- **Un caso de éxito y un caso de error** por cada interfaz pública listada en `### Public interfaces / contracts`
+- Cada criterio **GIVEN/WHEN/THEN** del SPEC (si se proporcionó) que se traduzca en test de comportamiento/integración
+
+Compara la matriz contra la lista cerrada. Los ítems de la matriz que **NO** estén en la lista cerrada son **gaps de cobertura**.
+
+**Reconciliación lista-cerrada ⇄ matriz (regla que resuelve la tensión):**
+- La **lista cerrada del handoff sigue siendo el mínimo garantizado** — siempre la escribes.
+- Los gaps **nunca se agregan en silencio ni se omiten en silencio.** Repórtalos al humano en un **único bloque** ANTES de escribir: **"Gaps de cobertura detectados: [lista de escenarios de la matriz ausentes de la lista cerrada, cada uno con su origen: edge case / interfaz pública / criterio SPEC]. ¿Los agrego en este run o solo escribo la lista del handoff?"**
+- Escribe la lista cerrada mientras esperas la decisión si quieres avanzar, pero no agregues ningún gap hasta que el humano lo autorice.
+
+**Invocación directa sin handoff (caso frecuente):** si el humano te invoca sin handoff ni lista de tests, NO escribas "algunos" tests ad-hoc. Primero **propón la matriz de escenarios completa** (éxito / error / edge por cada función o componente en scope) y confírmala con el humano en un solo bloque de preguntas ANTES de escribir. La matriz confirmada pasa a ser tu lista cerrada para ese run.
+
 **Reglas de alcance:**
-1. **Implementa SOLO los tests listados en cada grupo de stack.** NO agregues tests extra "por completitud" o "por si acaso". El desarrollador ya definió la cobertura.
+1. **Implementa la lista cerrada del handoff + los gaps que el humano autorizó en el PASO 3.a.** NO agregues tests extra fuera de la matriz reportada, ni por "por si acaso". La matriz es el techo; la lista cerrada es el piso.
 2. **Trabaja un stack a la vez.** Escribe todos los tests de Go primero, ejecútalos, luego pasa a los tests de React/TS. Esto previene el cambio de contexto y hace los fallos más fáciles de diagnosticar.
 3. **Excepción:** Si un test que escribes falla y revela un bug en código de producción, repórtalo según la Política de Tests Fallidos. Puedes agregar un test de regresión para el bug SOLO si no está ya en la lista.
 4. **Si la lista falta, no está agrupada por stack, o dice "N/A"** → pregunta al humano: **"Falta la lista cerrada de tests requeridos que define mi alcance:** el handoff no trae los tests por stack. ¿Qué tests necesito escribir para [stack]? ¿O re-invocamos al developer del stack para que la genere?"** El humano puede aportar la lista directamente.
@@ -227,7 +258,7 @@ El humano proporciona uno de:
 
 El handoff sigue siendo tu entrada **primaria** (tiene firmas exactas, edge cases, patrones). El SPEC es una referencia **secundaria** para:
 
-- **Criterios de Aceptación** → las condiciones GIVEN/WHEN/THEN se traducen en tests de integración/comportamiento. Si un criterio no está cubierto por la lista de tests del handoff, señálalo al humano — no agregues tests silenciosamente
+- **Criterios de Aceptación** → las condiciones GIVEN/WHEN/THEN se traducen en tests de integración/comportamiento y son un eje de la matriz de escenarios del PASO 3.a. Si un criterio no está cubierto por la lista cerrada, entra en el bloque único de "Gaps de cobertura detectados" que reportas al humano ANTES de escribir — no lo agregues ni lo omitas en silencio
 - **Non-goals** → cosas que NO deberías testear (no deberían existir en el código)
 - **Contracts** → verifica que las formas que implementó el desarrollador coincidan con lo que definió el SPEC (el compilado base del PASO 2 detecta la mayoría de esto)
 
@@ -265,13 +296,17 @@ El handoff indica qué tipos de test escribir. El tester debe reconocer estos ti
 
 ## Reglas Universales
 
+**Reglas de forma (siempre aplican al escribir):**
 - tests table-driven (Go/Rust) / bloques describe (React/Flutter/TS) / parametrize (Python) / `@Test(arguments:)` parametrizados con Swift Testing (`@Test`, `#expect`, `#require`, `@Suite`) para unit Swift — XCTest SOLO para XCUITest y performance; prohibido mezclar `#expect` con `XCTestCase` en un mismo test
 - regresión visual: golden tests en Flutter; snapshot testing con pointfreeco/swift-snapshot-testing en Swift (equivalente de los golden), con device/OS de referencia fijo en CI
-- al menos un caso de éxito y un caso de error por función/componente
-- edge cases y escenarios de fallo
-- cobertura > 80%
 - tests deterministas — sin flakiness, sin aserciones dependientes del tiempo
 - testea el comportamiento, no la implementación
+
+**Criterios de la matriz de gaps (NO son mandato de escribir tests extra por cuenta propia):**
+Los siguientes son los ejes con los que construyes la matriz de escenarios esperables del PASO 3.a. Alimentan el análisis de gaps que reportas al humano — no autorizan agregar tests en silencio por fuera de la lista cerrada:
+- al menos un caso de éxito y un caso de error por función/componente (interfaz pública)
+- edge cases y escenarios de fallo (uno por entrada de `### Edge cases descubiertos`)
+- cobertura > 80% como referencia de suficiencia — si la lista cerrada la deja por debajo, es un gap a reportar, no a rellenar solo
 
 ## Salida
 
@@ -279,11 +314,13 @@ El handoff indica qué tipos de test escribir. El tester debe reconocer estos ti
 
 ## Output de cierre
 
-**Máx 150 palabras.** Los archivos de test son el artefacto — no incluir bloques de código en el mensaje. El output de cierre incluye:
+**Máx 150 palabras** (puede subirse si el mapeo test→escenario lo exige — usa formato compacto de una línea por test). Los archivos de test son el artefacto — no incluir bloques de código en el mensaje. El output de cierre incluye:
 
 - Conteo de tests creados (por stack si aplica: Go N, React N, etc.)
 - Stack(s) tocados
 - Lista de archivos de test creados o modificados
+- **Mapeo test→escenario:** una línea por test — `nombre del test → escenario/criterio que cubre` (origen: lista cerrada / edge case / interfaz pública / criterio SPEC)
+- **Gaps no cubiertos:** lista de escenarios de la matriz que quedaron fuera de este run (vacía si no hay). Nunca omitir esta línea
 - Resultado de la ejecución: pass / fail / skipped (counts)
 - Bloqueadores encontrados (si los hay) — bug en producción que el developer del stack debe arreglar antes de que los tests pasen
 - Path al handoff donde quedó registrado el detalle
