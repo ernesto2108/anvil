@@ -38,7 +38,7 @@ Verificación rápida de endpoints HTTP recién implementados o modificados, eje
    - Requisitos de auth (header esperado, scope/rol)
    - Si no se detecta ningún endpoint HTTP en los cambios → DETENER y reportar al humano: "No detecté endpoints HTTP en los cambios; no hay nada que smoke-testear."
 
-2. **Derivar la matriz de casos y construir los curl templates** — por cada endpoint, derivar la matriz de casos a partir de la información extraída en el Paso 1 (campos, tipos, validaciones, rangos, enums, reglas de negocio), siguiendo la sección "Matriz derivada de casos" (abajo): los 6 escenarios base + un caso por cada eje aplicable, respetando la regla anti-explosión y el presupuesto del endpoint. Generar un curl por cada caso de la matriz derivada. El body y los headers van completos y estructurados; los valores que dependen del entorno van como placeholders en mayúsculas entre `<>`: `<BASE_URL>`, `<TOKEN>`, `<USER_ID>`, `<EXISTING_ID>`, `<NONEXISTENT_ID>`, etc.
+2. **Derivar la matriz de casos y construir los curl templates** — por cada endpoint, derivar la matriz de casos a partir de la información extraída en el Paso 1 (campos, tipos, validaciones, rangos, enums, reglas de negocio), siguiendo la sección "Matriz derivada de casos" (abajo): la base obligatoria de 4 escenarios + un caso por cada eje aplicable, respetando la regla anti-explosión y el presupuesto del endpoint. Generar un curl por cada caso de la matriz derivada. El body y los headers van completos y estructurados; los valores que dependen del entorno van como placeholders en mayúsculas entre `<>`: `<BASE_URL>`, `<TOKEN>`, `<USER_ID>`, `<EXISTING_ID>`, `<NONEXISTENT_ID>`, etc.
 
 3. **Pedir solo los valores al humano** — mostrar una lista concisa de los placeholders únicos detectados y para qué sirve cada uno. No mostrar todos los curl aún. Ejemplo:
    ```
@@ -56,7 +56,7 @@ Verificación rápida de endpoints HTTP recién implementados o modificados, eje
 
 ## Matriz derivada de casos (por endpoint)
 
-La matriz NO es una lista fija de 6 filas: se **deriva** de lo que el Paso 1 detectó en el schema del endpoint. La información sobre campos, tipos, validaciones, rangos, enums y reglas de negocio se traduce en casos concretos, uno por eje aplicable — no se colapsa en dos escenarios genéricos.
+La matriz NO es una lista fija de filas: se **deriva** de lo que el Paso 1 detectó en el schema del endpoint. La información sobre campos, tipos, validaciones, rangos, enums y reglas de negocio se traduce en casos concretos, uno por eje aplicable — no se colapsa en dos escenarios genéricos.
 
 ### Base obligatoria (siempre, si aplican)
 

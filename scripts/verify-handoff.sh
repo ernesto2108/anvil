@@ -3,10 +3,16 @@
 # antes de que el orquestador avance al siguiente agente.
 #
 # Uso:
-#   verify-handoff.sh <PROJECT_ROOT> <TASK_ID>
+#   verify-handoff.sh <PROJECT_ROOT> <TASK_ID|slug>
 #
-# Ejemplo:
+# El segundo argumento es el nombre del archivo de handoff sin extensión:
+# el TASK-ID si la tarea tiene uno, o el short-slug derivado de la
+# descripción si no (ej. add-auth-middleware). Ver skills/handoff/SKILL.md
+# § Nomenclatura de archivos.
+#
+# Ejemplos:
 #   verify-handoff.sh /Users/ernesto/projects/blt-bookings BLT-123
+#   verify-handoff.sh /Users/ernesto/projects/blt-bookings add-auth-middleware
 #
 # Exit codes:
 #   0  — handoff válido, el orquestador puede avanzar
