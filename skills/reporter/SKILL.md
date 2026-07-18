@@ -1,6 +1,6 @@
 ---
 name: reporter
-description: Aplica el delta a `.project-context/` al cierre de un run que modificó archivos, y opcionalmente produce un reporte de ejecución (`last-run.md`) bajo triggers especiales. Tiene escritura exclusiva sobre los archivos Core/* y Technical domain/* de `.project-context/`. Úsalo cuando el humano diga "cerrar run", "actualizar contexto", "aplicar delta", "last-run", "reporte de ejecución", o al finalizar cualquier tarea/bug fix con archivos modificados después de que los tests pasen.
+description: Aplica el delta a `.project-context/` al cierre de un run que modificó archivos, y opcionalmente produce un reporte de ejecución (`last-run.md`) bajo triggers especiales. Los archivos Core/* y Technical domain/* de `.project-context/` solo se modifican siguiendo el flujo de esta skill (la tabla de mapeo de `context-nav/update.md`); el agente o la sesión que carga la skill y sigue su flujo actúa como reporter y los escribe. Úsalo cuando el humano diga "cerrar run", "actualizar contexto", "aplicar delta", "last-run", "reporte de ejecución", o al finalizar cualquier tarea/bug fix con archivos modificados después de que los tests pasen.
 ---
 
 > **Nota:** La creación inicial de todos los archivos base en modo `init`/`deep` es responsabilidad de `context-init`; el reporter solo los actualiza incrementalmente en runs posteriores.
@@ -13,12 +13,12 @@ El reporter tiene **dos responsabilidades distintas** que se activan con trigger
 
 ### Responsabilidad #1 — Delta a `.project-context/` (OBLIGATORIO si el run modificó archivos)
 
-**Ejecutar SIEMPRE que el run haya modificado cualquier archivo del proyecto** (código, configs, docs del repo, specs de agentes, etc.). En particular, **al cierre de cualquier tarea o bug fix, después de que los tests pasen**, invocar al reporter es parte obligatoria del flujo de cierre — al mismo nivel que correr los tests, no una opción. Actualizar `.project-context/` es parte del "done" de la tarea. El reporter no se auto-invoca (lo invoca el humano que orquesta), pero el sistema espera que se invoque siempre que se cierre una tarea con archivos modificados. No es opcional.
+**Ejecutar SIEMPRE que el run haya modificado cualquier archivo del proyecto** (código, configs, docs del repo, specs de agentes, etc.). En particular, **al cierre de cualquier tarea o bug fix, después de que los tests pasen**, invocar al reporter es parte obligatoria del flujo de cierre — al mismo nivel que correr los tests, no una opción. Actualizar `.project-context/` es parte del "done" de la tarea. Esta skill la ejecuta el agente que cierra el run como parte de su Paso final (los developers de stack la ejecutan vía Skill tool sin esperar instrucción del humano), o Claude en modo directo al cierre de una implementación. El sistema espera que se invoque siempre que se cierre una tarea con archivos modificados. No es opcional.
 
 En este modo el reporter:
-- Aplica el delta a `.project-context/` siguiendo el mapeo de `skills/context-nav/update.md` (fuente de verdad única del mapeo)
+- Aplica el delta a `.project-context/` siguiendo el mapeo de `context-nav/update.md` — resuelto desde la instalación de la skill, no desde el proyecto activo (ver Gate 0 para el orden de búsqueda). Es la fuente de verdad única del mapeo
 - NO escribe `last-run.md` salvo que también aplique algún trigger especial (ver abajo)
-- Se invoca al cierre de un run. **Siempre** actualiza `last_updated` en `NAVIGATOR.md` al final de cualquier run en que haya escrito o editado al menos un archivo de `.project-context/` — no requiere instrucción explícita.
+- Se invoca al cierre de un run. **Siempre** actualiza `last_updated` en `NAVIGATOR.md` al final de cualquier run en que haya escrito o editado al menos un archivo de `.project-context/` — no requiere instrucción explícita. `last_updated` es SOLO una fecha `YYYY-MM-DD`: reemplazar el valor anterior por la fecha actual, nunca concatenar, preservar el valor previo ni escribir texto narrativo del run.
 
 **Saltar el delta solo si:** el run NO modificó archivos del proyecto (ej. fast-path Explorador puro, pregunta resuelta sin tocar el repo). En ese caso el reporter ni siquiera se invoca.
 
@@ -81,15 +81,18 @@ El humano provee las rutas exactas (`task_path`, `reports_path`). Si no se prove
 
 ### Gate 0 — Verificar dependencia `context-nav` (OBLIGATORIO antes de cualquier modo)
 
-Antes de ejecutar cualquier modo, verificar que `skills/context-nav/update.md` existe en el proyecto activo. Esa skill es la fuente de verdad única del mapeo archivos → secciones de `.project-context/` y el reporter no puede aplicar el delta sin ella.
+Antes de ejecutar cualquier modo, localizar `context-nav/update.md`. Esa skill es la fuente de verdad única del mapeo archivos → secciones de `.project-context/` y el reporter no puede aplicar el delta sin ella. **`update.md` se resuelve desde la instalación de la skill, NO desde el proyecto activo** — en los proyectos consumidores no existe una carpeta `skills/`, las skills viven desplegadas en `~/.claude/skills/`. Orden de búsqueda:
 
-- Si `skills/context-nav/update.md` **no existe** → DETENER y reportar al humano: "Dependencia requerida ausente: `skills/context-nav/update.md` no está presente en el proyecto. El reporter no puede aplicar el delta a `.project-context/` sin esta skill. Instalar `context-nav` antes de reintentar."
-- Si existe → continuar con el modo correspondiente.
+1. `~/.claude/skills/context-nav/update.md` (ubicación desplegada estándar)
+2. `skills/context-nav/update.md` relativo al repo activo — solo como fallback, para el caso en que se trabaje dentro del propio repo anvil
+
+- Si `update.md` **no se encuentra en ninguna de las dos ubicaciones** → DETENER, reportar al humano y **terminar sin escribir nada**: "Dependencia requerida ausente: `context-nav/update.md` no se encontró ni en `~/.claude/skills/context-nav/update.md` ni en `skills/context-nav/update.md`. El reporter no puede aplicar el delta a `.project-context/` sin la tabla de mapeo. Instalar/desplegar `context-nav` antes de reintentar." En este caso, **NUNCA** aplicar el delta manualmente sin la tabla de mapeo; **NUNCA** escribir narrativa del run en `last_updated` ni en ningún otro campo del `NAVIGATOR.md`; no improvisar ningún fallback: reportar y terminar.
+- Si se encuentra en alguna de las dos ubicaciones → continuar con el modo correspondiente, leyendo `update.md` desde la ruta hallada.
 
 ### Modo delta-only
 
 1. Recibir: lista de archivos modificados (inline en el prompt)
-2. Leer `skills/context-nav/update.md` para obtener la tabla de mapeo (fuente de verdad del mapeo archivos → secciones de `.project-context/`) y aplicar delta a `.project-context/` (ver sección "Responsabilidad: delta a Context Navigator")
+2. Leer `context-nav/update.md` desde la ruta resuelta en el Gate 0 para obtener la tabla de mapeo (fuente de verdad del mapeo archivos → secciones de `.project-context/`) y aplicar delta a `.project-context/` (ver sección "Responsabilidad: delta a Context Navigator")
 3. **Persistir handoff en memoria (cierre del ciclo, OBLIGATORIO si hay handoff)** — ver sección "Cierre del ciclo" abajo
 4. Devolver al humano: lista de archivos de `.project-context/` actualizados
 
@@ -119,14 +122,14 @@ Si el humano no pasó el path (ej. run sin handoff porque no hubo implementació
 
 ## Responsabilidad: delta a Context Navigator (PRINCIPAL)
 
-Esta es la responsabilidad **principal** del reporter desde la auditoría de permisos. El humano ya no tiene permisos de escritura sobre `.project-context/Core/workflows.md`, `.project-context/Core/coding-standards.md`, `.project-context/Technical domain/project.md`, `.project-context/Technical domain/domain.md`, `.project-context/Technical domain/glossary.md`, `.project-context/Technical domain/contracts.md`, `.project-context/Technical domain/dependencies.md`, `.project-context/Technical domain/risks.md`: solo el reporter puede tocarlos.
+Esta es la responsabilidad **principal** del reporter desde la auditoría de permisos. Los archivos `.project-context/Core/workflows.md`, `.project-context/Core/coding-standards.md`, `.project-context/Technical domain/project.md`, `.project-context/Technical domain/domain.md`, `.project-context/Technical domain/glossary.md`, `.project-context/Technical domain/contracts.md`, `.project-context/Technical domain/dependencies.md`, `.project-context/Technical domain/risks.md` solo se modifican mediante el flujo de esta skill — nunca con ediciones ad-hoc fuera de ella. Quien tiene la skill cargada y sigue su tabla de mapeo ES el reporter a estos efectos y SÍ debe escribirlos: el developer que ejecuta la skill en su Paso final, o Claude en modo directo siguiendo el flujo, tienen permiso pleno de escritura sobre estos archivos. La restricción es contra ediciones manuales desordenadas fuera del flujo, no contra el agente que ejecuta la skill.
 
 Al final de cada run con archivos modificados, si `.project-context/NAVIGATOR.md` existe en el proyecto, aplicar un delta:
 
-1. Leer el archivo `skills/context-nav/update.md` — define qué sección actualizar según archivos cambiados
+1. Leer el archivo `context-nav/update.md` desde la ruta resuelta en el Gate 0 (`~/.claude/skills/context-nav/update.md` o, como fallback, `skills/context-nav/update.md` relativo al repo activo) — define qué sección actualizar según archivos cambiados
 2. Mapear los archivos modificados a secciones de `.project-context/` usando la tabla de `update.md` (fuente de verdad única del mapeo)
 3. Aplicar edits puntuales — **nunca sobreescribir archivos completos**
-4. Actualizar `last_updated` en `.project-context/NAVIGATOR.md` **siempre** que el reporter haya escrito o editado al menos un archivo de `.project-context/` en este run. No requiere instrucción explícita del humano. El reporter tiene permiso de `Edit[.project-context/NAVIGATOR.md]` precisamente para esto y es su responsabilidad por defecto. Si el run no tocó ningún archivo de `.project-context/`, no hay nada que actualizar
+4. Actualizar `last_updated` en `.project-context/NAVIGATOR.md` **siempre** que el reporter haya escrito o editado al menos un archivo de `.project-context/` en este run. `last_updated` es SOLO una fecha `YYYY-MM-DD`: reemplazar el valor anterior por la fecha actual — nunca concatenar, nunca preservar el valor previo como "delta previo", nunca volcar narrativa del run en ese campo (el delta narrativo va a los archivos de dominio según la tabla de mapeo; el historial de runs va a `runs/`). No requiere instrucción explícita del humano. El reporter tiene permiso de `Edit[.project-context/NAVIGATOR.md]` precisamente para esto y es su responsabilidad por defecto. Si el run no tocó ningún archivo de `.project-context/`, no hay nada que actualizar
 
 El humano debe incluir en el brief:
 ```

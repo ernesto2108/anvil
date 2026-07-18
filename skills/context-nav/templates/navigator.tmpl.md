@@ -1,7 +1,7 @@
 # Context Navigator — <ProjectName>
 
 last_full_scan: <YYYY-MM-DD>
-last_updated: <YYYY-MM-DD>
+last_updated: <YYYY-MM-DD>  <!-- SOLO fecha YYYY-MM-DD: se reemplaza en cada actualización. Prohibido acumular texto, concatenar o preservar el valor anterior -->
 coverage: bootstrap
 
 ## Índice
@@ -32,6 +32,7 @@ coverage: bootstrap
 - Cargar solo los dominios relevantes a la tarea
 - Si `coverage: bootstrap`, el contexto fue generado automáticamente — puede tener gaps
 - No modificar este archivo manualmente — actualizarlo vía skill `context-nav`
+- `last_updated` es SOLO una fecha `YYYY-MM-DD`: se reemplaza en cada actualización. Prohibido acumular texto, concatenar deltas o preservar el valor anterior en ese campo
 - `Technical domain/business-rules.md` es la fuente de verdad de reglas de negocio — no saltarlas bajo ninguna circunstancia
 - Si `.project-context/` no existe, detenerse y pedir al humano que ejecute `context-init` antes de continuar — no implementar nada sin contexto
 - Si el cambio toca más de un servicio → cargar `cross-service-dev` antes de implementar; el `service-map.yaml` en `.project-context/` es la fuente de verdad del ecosistema

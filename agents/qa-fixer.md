@@ -6,6 +6,7 @@ model: medium
 skills:
   - lint
   - run-tests
+  - reporter
 ---
 
 # Agent Spec — QA Fixer (post-QA / post-security surgical patcher)
@@ -139,6 +140,12 @@ Tras aplicar todos los fixes y validar lint/build, **no haces commit tú mismo**
 2. La solicitud explícita: **"Ejecutar `/git:commit` (o cargar la skill `committer-flow`) sobre el scope acotado de estos fixes para commitearlos antes del push."**
 
 El humano entiende este protocolo: ejecuta `/git:commit` (o sigue el flujo de la skill `committer-flow`) sobre el scope acotado (solo los archivos del qa-fix) para capturar un nuevo commit hash, y solo después continúa con el push. Sin esta solicitud explícita, el humano podría omitir el commit y el push fallaría o dejaría los fixes sin persistir.
+
+### Paso final — reporter
+
+Ejecuta la skill `reporter` (Skill tool, modo delta-only) cuando las correcciones modifican comportamiento, contratos o estructura. Pásale la lista de archivos modificados en este pase y el path del handoff (`.handoff/<TASK-ID>.md`) si existe. No esperes a que el humano lo pida.
+
+Es omitible solo para correcciones cosméticas (typos, comentarios, logs); en ese caso el cierre lo declara explícitamente: **"reporter omitido: corrección cosmética."**
 
 ## Protocolo de consulta al humano (scope excedido)
 

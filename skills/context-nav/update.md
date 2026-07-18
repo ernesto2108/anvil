@@ -33,7 +33,7 @@ A partir del diff de la implementación, mapear archivos cambiados a secciones d
 | Cambios en linter, naming, organización de imports | `Core/coding-standards.md` — sección Naming o Patrones prohibidos |
 | TODOs nuevos, workarounds, comentarios de gotcha | `Technical domain/risks.md` — sección Gotchas operativos |
 | Cambios en `service-map.yaml` o contratos cross-servicio | `.project-context/service-map.yaml` — entrada del servicio afectado |
-| Cualquier cambio | `NAVIGATOR.md` — actualizar `last_updated` |
+| Cualquier cambio | `NAVIGATOR.md` — actualizar `last_updated` (SOLO fecha `YYYY-MM-DD`: reemplazar el valor anterior, nunca concatenar ni preservar el previo, nunca texto narrativo) |
 
 ## Formato de actualización
 
@@ -89,7 +89,7 @@ Cuando Claude implementa directamente (sin agentes), al finalizar la implementac
 1. Revisar qué archivos se modificaron en la sesión
 2. Aplicar la tabla de mapeo de arriba
 3. Escribir deltas — máximo 3-5 ediciones a `.project-context/`
-4. Actualizar `last_updated` en NAVIGATOR.md
+4. Actualizar `last_updated` en NAVIGATOR.md — es SOLO una fecha `YYYY-MM-DD`: reemplazar el valor anterior por la fecha actual, nunca concatenar, preservar el valor previo ni escribir texto narrativo. El delta narrativo va a los archivos de dominio según la tabla de mapeo; el historial de runs va a `runs/` (responsabilidad del reporter)
 
 No pedir confirmación al usuario para los deltas — es una operación de mantenimiento transparente.
 

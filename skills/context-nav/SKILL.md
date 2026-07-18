@@ -45,7 +45,7 @@ Sistema de conocimiento acumulativo que vive en `.project-context/` al lado de `
 ## Reglas de escritura
 
 - **Delta, nunca sobrescritura total** — usar Edit para modificar secciones específicas
-- **Actualizar `last_updated` en NAVIGATOR.md** siempre que se toque cualquier archivo
+- **Actualizar `last_updated` en NAVIGATOR.md** siempre que se toque cualquier archivo — es SOLO una fecha `YYYY-MM-DD`: reemplazar el valor anterior, nunca concatenar, preservar el previo ni escribir texto narrativo del run
 - **No inventar** — solo registrar lo que existe en el código o fue decidido explícitamente
 - **Referencias a archivos obligatorias** — todo patrón o contrato debe citar `path:line` o al menos `path`
 - **Un dominio por bounded context** — no crear dominios para paquetes utilitarios genéricos
