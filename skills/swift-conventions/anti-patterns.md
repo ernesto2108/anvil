@@ -23,6 +23,10 @@ Formato de reporte: `[file:line] [severity] [category] anti-pattern-name`
 | default-isolation-domain | `defaultIsolation(MainActor.self)` en target de dominio/datos | warning | concurrency | Dominio/datos `nonisolated`; `MainActor` solo en app/features UI |
 | dto-domain-mixed | DTO `Codable` usado como entidad de dominio en app mediana+ | warning | architecture | Separar DTO de entidad con mapper `toDomain()` |
 | feature-cross-import | Una feature importa otra feature directamente | warning | architecture | Navegación cross-feature vía router/protocolos en Core |
+| zstack-decoration | `ZStack` para decorar UN elemento (badge, fondo) | warning | ui-state | `.overlay(alignment:)`/`.background()` — el view base define el tamaño; `ZStack` solo para capas co-iguales. Ver swiftui-guide |
+| redundant-stack-nesting | `VStack`/`HStack` con un solo hijo, o anidado sin cambiar eje/alignment/spacing | warning | ui-state | Aplanar o usar modifiers |
+| conditional-identity | `if/else` que devuelve la misma vista con distinto valor | warning | ui-state | Ternario dentro del modifier (`.tint(x ? .red : .gray)`); el if/else crea dos identidades y destruye estado/transiciones |
+| viewbuilder-overflow | Contenedor llegando al límite de 10 hijos de ViewBuilder | suggestion | ui-state | Descomponer en subvistas con nombre (no `Group`; `Group` solo agrupa sin imponer layout) |
 | missing-preview | View nueva sin `#Preview` | suggestion | ui-state | Agregar `#Preview`; usar `@Previewable @State` si es interactivo |
 | redundant-labels | Argument labels redundantes / palabras redundantes en nombres | suggestion | naming | API Design Guidelines: claridad en el call site, omitir redundancia |
 | missing-accessibility | View interactiva sin `accessibilityLabel`/Dynamic Type | suggestion | accessibility | Agregar labels semánticos y soporte Dynamic Type |

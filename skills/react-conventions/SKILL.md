@@ -133,6 +133,7 @@ function handlePhoneChange(value: string) {
 - [ ] El estado está categorizado correctamente (server vs client vs URL vs form)
 - [ ] Sin lógica de negocio en el cuerpo del componente
 - [ ] Accesible: HTML semántico, etiquetas ARIA, manejadores de teclado
+- [ ] Estructura de markup: wrappers justificados, ≤4 niveles por componente, landmarks/headings correctos, overlays con `<dialog>`/Popover/grid stacking, z-index solo por tokens (ver `markup-structure-guide.md`)
 - [ ] Los tipos TypeScript son explícitos (sin `any`)
 - [ ] La decisión Server vs Client Component es intencional
 
@@ -158,4 +159,5 @@ Red flags que siempre deben detener el trabajo:
 - `testing-guide.md` — Estrategia de testing (Vitest + RTL, MSW, Playwright, axe-core)
 - `performance-guide.md` — Rendimiento (React Compiler, code splitting, reglas de memoización, patrones Netflix/Spotify)
 - `accessibility-guide.md` — Accesibilidad (WCAG 2.2 AA, HTML semántico, ARIA, teclado, gestión de foco, testing)
+- `markup-structure-guide.md` — Estructura de markup anti-div-soup (HTML semántico/landmarks, presupuestos DOM Lighthouse, wrappers justificados, superposición con dialog/Popover/grid stacking, escala de z-index)
 - `anti-patterns.md` — Tabla de detección de anti-patrones con niveles de severidad y mapeo de correcciones

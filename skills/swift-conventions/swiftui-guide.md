@@ -68,6 +68,15 @@ El Router `@Observable` se inyecta por environment. Este patrón habilita deep l
 
 Views pequeñas y baratas — los structs de View son gratis, extraer subviews agresivamente. Usar computed properties `some View` para fragmentos y `ViewModifier` para estilos reutilizables. **Evitar `AnyView`** (rompe el diffing de identidad). No meter lógica de negocio en `body`.
 
+**Superposición — `.overlay()`/`.background()` vs `ZStack`** (Apple, WWDC21 "Demystify SwiftUI"):
+
+| Necesidad | Solución |
+|---|---|
+| Decorar UN elemento (badge, fondo, borde) | `.overlay(alignment:)` / `.background()` — el view base define el tamaño, la decoración no participa en el layout |
+| Capas co-iguales cuyo tamaño debe acomodarlas todas | `ZStack` |
+
+No anidar stacks redundantes (`VStack`/`HStack` de un solo hijo → aplanar o modifier). **struct `View`** (crea límite de invalidación de diffing propio) para lo reusable, costoso o con estado; **computed property** `some View` para fragmentos triviales privados — NO crea límite de invalidación. `Self._printChanges()` en `body` para depurar re-evaluaciones inesperadas.
+
 ## UIKit interop
 
 SwiftUI-first. UIKit todavía necesario, vía `UIViewRepresentable`/`UIViewControllerRepresentable`, para: webviews complejos, cámaras (`AVCaptureVideoPreviewLayer`), text editing avanzado, collection views con performance extrema, y APIs sin equivalente SwiftUI. Siempre con justificación — la dirección es SwiftUI-first.

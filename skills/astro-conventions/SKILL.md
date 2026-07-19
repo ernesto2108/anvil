@@ -88,6 +88,17 @@ Al introducir un patrón que aún no existe en el proyecto (sistema de iconos, o
 
 Esto NO significa buscar en la web para cada cambio. Solo para **nuevos patrones arquitectónicos** que se usarán en todo el proyecto.
 
+## Estructura de markup
+
+Astro emite HTML directo (sin runtime de framework), así que las reglas anti-div-soup pesan doble:
+
+- **Semántica y landmarks:** elemento nativo del propósito (`<button>`, `<a href>`, `<ul>`); un solo `<main>`, `<nav>` etiquetados con `aria-label` único si se repiten, `<section>` solo con heading; un `<h1>`, headings sin saltos.
+- **Wrappers justificados:** cada div aporta semántica, layout/estilo o boundary funcional — si lo borras y nada cambia, sobra. Máx ~4 niveles por componente; layout con Grid/Flex + `gap` en el padre, no divs espaciadores.
+- **Superposición:** modales con `<dialog>`+`showModal()`, tooltips/menús con Popover API (ambos van al top layer), capas del mismo tamaño con grid stacking. `z-index` solo por escala de tokens.
+- **Presupuesto Lighthouse DOM:** < 800 nodos, profundidad ≤ 20.
+
+Fuente completa: `react-conventions/markup-structure-guide.md` (las reglas de HTML semántico, presupuestos DOM y superposición son agnósticas de framework).
+
 ## Detección de anti-patrones
 
 | Anti-Patrón | Severidad | Corrección |

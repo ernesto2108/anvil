@@ -139,7 +139,8 @@ Detente y pregunta al humano cuando:
      4. Registra en el Output de cierre: score inicial → score final y número de iteraciones.
    - **Cambio acotado que toca UI existente — mini-QA obligatorio (una sola pasada, sin bucle):** captura un screenshot de la implementación y compáralo con Claude Vision contra la referencia disponible (frame `.pen`, screenshot previo o el spec textual). Si aparece un crítico, corrígelo antes de cerrar. Repórtalo en el cierre.
    - **Sin `Design reference` (humano confirmó "no aplica") — auto-revisión visual obligatoria:** captura un screenshot de la implementación y revísalo contra el spec textual (jerarquía, estados, tema claro/oscuro si existe) antes de cerrar. Hallazgos en el cierre. Regla dura: ninguna UI visible se entrega sin al menos un screenshot revisado.
-5. Eliminar helpers/componentes muertos. Señalar smells sin refactorizar en silencio.
+5. **Gate estructural de markup (pre-entrega):** revisa el diff de UI contra `react-conventions/markup-structure-guide.md` — wrappers justificados (test: si lo borras y nada cambia, sobra), ≤4 niveles de markup propio por componente, elementos semánticos y landmarks (cero `<div onClick>`, un `<main>`, headings sin saltos), overlays con `<dialog>`/Popover/grid stacking (no divs + z-index arbitrario), z-index solo por tokens. Los hallazgos se corrigen en este mismo run. **El QA visual (paso 4) NO detecta esto** — un div soup puede verse pixel-perfect.
+6. Eliminar helpers/componentes muertos. Señalar smells sin refactorizar en silencio.
 
 ## Test existente falla tras mi cambio (CRÍTICO)
 

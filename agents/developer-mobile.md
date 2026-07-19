@@ -140,7 +140,8 @@ Detente y pregunta al humano cuando:
      4. Registra en el Output de cierre: score inicial → score final y número de iteraciones.
    - **Cambio acotado que toca UI existente — mini-QA obligatorio (una sola pasada, sin bucle):** captura un screenshot de la implementación (emulador/simulador) y compáralo con Claude Vision contra la referencia disponible (frame `.pen`, screenshot previo o el spec textual). Si aparece un crítico, corrígelo antes de cerrar. Repórtalo en el cierre.
    - **Sin `Design reference` (humano confirmó "no aplica") — auto-revisión visual obligatoria:** captura un screenshot de la implementación y revísalo contra el spec textual (jerarquía, estados, tema claro/oscuro si existe) antes de cerrar. Hallazgos en el cierre. Regla dura: ninguna UI visible se entrega sin al menos un screenshot revisado.
-5. **Code smells:** elimina widgets/helpers muertos. Verifica `dispose()` de streams y subscripciones. Señala smells de diseño al humano sin refactorizar en silencio.
+5. **Gate estructural de markup (pre-entrega):** revisa el diff de UI contra el `anti-patterns.md` de la skill del stack — colapsa wrappers single-child (Container dentro de Container, `VStack`/`HStack` de un solo hijo), usa `Stack`/`ZStack` solo con solapamiento real (si no, layout del padre o modifiers), extrae widgets/structs con nombre en vez de helpers o anidamiento >4 niveles. Swift: `.overlay`/`.background` en vez de `ZStack` decorativo. Flutter: propiedades de un solo `Container` en vez de anidarlos. Los hallazgos se corrigen en este mismo run. **El QA visual (paso 4) NO detecta esto** — un árbol sobre-anidado puede verse pixel-perfect.
+6. **Code smells:** elimina widgets/helpers muertos. Verifica `dispose()` de streams y subscripciones. Señala smells de diseño al humano sin refactorizar en silencio.
 
 ## Test existente falla tras mi cambio (CRÍTICO)
 
