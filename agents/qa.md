@@ -60,7 +60,7 @@ Carga el skill `/code-review-rubric`. Define los criterios de evaluación, la es
 
 Detecta si el código bajo revisión es **IA/MCP por propósito** (mismos marcadores que la inferencia de `task-writer`, no por extensión):
 - **Servidor MCP** — path bajo `mcp-server/` o `servers/*/`, o keywords `@modelcontextprotocol/sdk`, `FastMCP`, `mcp.server`, SDK Go `modelcontextprotocol/go-sdk`, `registerTool`/`mcp.tool`/`AddTool`.
-- **Integración LLM** — keywords `anthropic`, `claude-agent-sdk`, `messages.create`, `output_config`, structured outputs, prompts como artefactos, evals/RAG/embeddings.
+- **Integración LLM** (CUALQUIER proveedor: Claude, OpenAI-compatible, Ollama/local) — keywords `anthropic`, `claude-agent-sdk`, `openai`, `ollama`, `llama.cpp`, `vllm`, `openai-compatible`, `messages.create`, `/api/chat`, `output_config`, structured outputs, prompts como artefactos, evals/RAG/embeddings, o llamadas a cualquier endpoint LLM local o remoto.
 - **Excepción:** `.mcp.json` / `.mcp.json.example` es **consumo** de MCPs de infra, NO construcción → no dispara esta rúbrica.
 
 Si detectas alguno, carga la skill correspondiente como rúbrica adicional y usa su tabla de anti-patrones como checklist de revisión (no dupliques su contenido — es la fuente):

@@ -98,6 +98,24 @@ Cargar el checklist que corresponda al stack. Verificar CADA ítem contra los ar
 | 4 | Claves hardcodeadas | critical | API keys, secretos como constantes string |
 | 5 | Modo debug en release | high | Verificaciones de `kDebugMode` que filtran información en producción |
 
+### Servidor MCP / Integración LLM (por propósito — carga condicional)
+
+Detecta código IA/MCP por PROPÓSITO (mismos marcadores que `task-writer`, no por extensión): **servidor MCP** (`mcp-server/`, `servers/*/`, `@modelcontextprotocol/sdk`, `FastMCP`, SDK Go `modelcontextprotocol/go-sdk`, `registerTool`/`mcp.tool`/`AddTool`) o **integración LLM** con cualquier proveedor (`anthropic`, `claude-agent-sdk`, `openai`, `ollama`, `llama.cpp`, `vllm`, `openai-compatible`, `messages.create`, `/api/chat`, prompts/evals/RAG, o llamadas a cualquier endpoint LLM local o remoto). Excepción: `.mcp.json`/`.mcp.json.example` es consumo de infra, NO dispara este checklist.
+
+Si detectas alguno, carga como rúbrica adicional SOLO la parte de seguridad (no dupliques su contenido — es la fuente):
+- Servidor MCP → skill `mcp-dev`, archivo `security-and-auth.md` (OAuth 2.1, RFC 9728/8707/PKCE, confused deputy, SSRF en discovery) y las filas de categoría `security` de su `anti-patterns.md`.
+- Integración LLM → skill `ai-engineering`, filas de categoría `security` de su `anti-patterns.md` (contenido/output de tools no confiable, prompt injection).
+
+| # | Patrón a buscar | Riesgo | Qué buscar |
+|---|----------------|------|-----------------|
+| 1 | Token passthrough | critical | Server MCP que acepta o reenvía tokens no emitidos para él; validar audiencia en cada request |
+| 2 | Server HTTP local sin `Origin`/bind loopback | high | DNS rebinding: falta validación de `Origin` (403) o bind ≠ `127.0.0.1` |
+| 3 | Session ID como autenticación | high | Uso de `Mcp-Session-Id` para autenticar en vez de verificar autorización por request |
+| 4 | PKCE / Resource Indicators ausentes | high | Flujo OAuth sin PKCE S256 o sin `resource=` (RFC 8707) |
+| 5 | `redirect_uri` con wildcard | high | Confused deputy en servers proxy hacia AS de terceros |
+| 6 | Output de tool / contenido externo sin sanitizar | high | Resultados de tools o RAG que entran al prompt sin acotar → prompt injection |
+| 7 | Secretos por argv / en prompt cacheado | high | Credenciales en args de línea de comandos o en el system prompt |
+
 ## Patrones de detección de secretos
 
 Escanear estos patrones regex en TODOS los archivos (no solo los cambiados si es full-audit):
@@ -170,7 +188,7 @@ Agregar tareas de seguridad a `{backlog_path}` con etiqueta `[security]`.
 
 Cuando se invoca con `mode: full-audit`:
 1. Usar el contexto provisto **inline en el prompt** — contiene contexto de context-init + flujos de endpoints del arquitecto
-2. **Detectar stack** desde el contexto (Go/React/Flutter) y ejecutar el checklist específico del stack correspondiente
+2. **Detectar stack** desde el contexto (Go/React/Flutter, y por propósito IA/MCP) y ejecutar el checklist específico del stack correspondiente
 3. **Ejecutar patrones de detección de secretos** en todo el codebase
 4. **Ejecutar checklist de seguridad de API** para todos los endpoints expuestos
 5. **Priorizar la lectura** solo de los archivos marcados como riesgosos por el contexto (handlers con input del usuario, goroutines asíncronas, queries DB, llamadas externas)

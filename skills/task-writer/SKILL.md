@@ -146,7 +146,7 @@ Si el spec declara prioridad explícita para un feature → heredar. Si no → a
 
 1. **Por PROPÓSITO (evaluar ANTES que la extensión, porque el dominio de `developer-ai` es por-propósito, no por-lenguaje):**
    - Servidor MCP — path bajo `mcp-server/`, `servers/*/`, o keywords `MCP server`, `Model Context Protocol`, `@modelcontextprotocol/sdk`, `FastMCP`, `registerTool`, `mcp.tool`, `AddTool`, `MCP Inspector`, `.mcpb`, `server.json` → `developer-ai`
-   - Integración LLM en producto — keywords `anthropic`, `claude-agent-sdk`, `Claude Agent SDK`, `messages.create`, `output_config`, `structured outputs`, `prompt` como artefacto, `eval`/`evals` de prompts, `RAG`, `embeddings`, `LLM-as-judge` → `developer-ai`
+   - Integración LLM en producto (CUALQUIER proveedor: Claude, OpenAI-compatible, Ollama/local) — keywords `anthropic`, `claude-agent-sdk`, `openai`, `ollama`, `llama.cpp`, `vllm`, `openai-compatible`, `messages.create`, `/api/chat`, `output_config`, `structured outputs`, `prompt` como artefacto, `eval`/`evals` de prompts, `RAG`, `embeddings`, `LLM-as-judge`, o llamadas a cualquier endpoint LLM local o remoto → `developer-ai`
    - Excepción: configurar/consumir MCPs de infra (`.mcp.json`, `.mcp.json.example`) NO es `developer-ai` — es setup de proyecto (skill `mcp-setup`); clasificar por el resto de la task.
 2. **Por extensión/path del archivo principal o keywords de la task:**
    - `.dart` o path bajo `lib/` → `developer-mobile`

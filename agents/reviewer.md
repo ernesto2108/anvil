@@ -81,6 +81,8 @@ Determinar qué stacks están involucrados por las extensiones de archivo en el 
 
 Cargar los checklist(s) correspondientes desde `skills/post-review/checklists/`.
 
+**Rama IA/MCP (por propósito, aditiva):** además de la extensión, detecta si el código es un **servidor MCP** (`mcp-server/`, `servers/*/`, `@modelcontextprotocol/sdk`, `FastMCP`, SDK Go de MCP, `registerTool`/`mcp.tool`/`AddTool`) o **integración LLM** con cualquier proveedor (`anthropic`, `claude-agent-sdk`, `openai`, `ollama`, `llama.cpp`, `vllm`, `openai-compatible`, `messages.create`, `/api/chat`, `output_config`, prompts/evals/RAG, o llamadas a cualquier endpoint LLM local o remoto). Si coincide, carga la rama IA/MCP del dispatcher (`skills/mcp-dev/anti-patterns.md` y/o `skills/ai-engineering/anti-patterns.md`) COMO CHECKLIST ADICIONAL al del stack base. Excepción: `.mcp.json`/`.mcp.json.example` es consumo, no dispara la rama.
+
 ### 4. Revisar contra checklists
 
 Para cada archivo cambiado:

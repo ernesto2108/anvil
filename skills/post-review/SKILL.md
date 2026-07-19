@@ -18,6 +18,19 @@ Proporcionar checklists de revisión específicos por stack para el agente Revie
 | React Native | `skills/post-review/checklists/react-native.md` |
 | Terraform | `skills/post-review/checklists/terraform.md` |
 | PostgreSQL | `skills/post-review/checklists/postgres.md` |
+| Servidor MCP (por propósito) | `skills/mcp-dev/anti-patterns.md` (checklist fuente; para HTTP/auth también `skills/mcp-dev/security-and-auth.md`) |
+| Integración LLM (por propósito) | `skills/ai-engineering/anti-patterns.md` (checklist fuente) |
+
+Las dos últimas ramas **referencian** las tablas de anti-patrones que ya viven en las skills `mcp-dev` y `ai-engineering` — son la fuente única del checklist, no se copian aquí. Cargar el archivo indicado y aplicar su tabla (`error`/`warning` siempre; `suggestion` solo en modo improve/refactor).
+
+### Detección de la rama IA/MCP (por PROPÓSITO, no por extensión)
+
+Los stacks IA/MCP se detectan por propósito, con los MISMOS marcadores que la inferencia de `task-writer`:
+- **Servidor MCP** — path bajo `mcp-server/` o `servers/*/`, o keywords `@modelcontextprotocol/sdk`, `FastMCP`, `mcp.server`, SDK Go `modelcontextprotocol/go-sdk`, `registerTool`/`mcp.tool`/`AddTool`.
+- **Integración LLM** (CUALQUIER proveedor: Claude, OpenAI-compatible, Ollama/local) — keywords `anthropic`, `claude-agent-sdk`, `openai`, `ollama`, `llama.cpp`, `vllm`, `openai-compatible`, `messages.create`, `/api/chat`, `output_config`, structured outputs, prompts como artefactos, evals/RAG/embeddings, o llamadas a cualquier endpoint LLM local o remoto.
+- **Excepción:** `.mcp.json` / `.mcp.json.example` es consumo de MCPs de infra, NO construcción → no dispara esta rama.
+
+Estas ramas son **aditivas**: un mismo archivo `.py`/`.ts`/`.go` recibe su checklist de stack base (Go/React) Y el checklist IA/MCP cuando el propósito coincide.
 
 ## Revisiones Multi-Stack
 

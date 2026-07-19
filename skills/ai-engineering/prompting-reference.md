@@ -1,30 +1,34 @@
 # Prompting y Context Engineering — Referencia
 
-Verificado 2026-07-18 contra guías oficiales de Anthropic. Ítems marcados ⚠️ no re-verificados literalmente.
+Verificado 2026-07-18. Las técnicas de esta sección son **universales** (features del prompt, portan a cualquier proveedor). Las secciones marcadas como específicas de un proveedor viven en `providers-*.md`. Ítems ⚠️ no re-verificados literalmente.
 
-## Técnicas de prompting vigentes
+## Técnicas de prompting universales (portan a cualquier proveedor)
 
 | Técnica | Recomendación actual |
 |---|---|
-| **Claridad y directness** | La #1. "Golden rule": si un colega sin contexto se confundiría, Claude también. Tratar a Claude como "empleado brillante pero nuevo". |
-| **Contexto/motivación** | Explicar el *por qué* mejora resultados ("tu respuesta será leída por TTS, no uses elipsis" > "NUNCA uses elipsis"). Claude generaliza desde la explicación. |
-| **Few-shot / multishot** | Vigente y confiable para formato/tono. **3-5 ejemplos** relevantes y diversos, envueltos en `<example>`/`<examples>`. |
-| **XML tags** | Vigente. Tags consistentes y descriptivos (`<instructions>`, `<context>`, `<input>`), anidados cuando hay jerarquía. Reduce malinterpretación. |
-| **Roles / system prompt** | Vigente; incluso una frase de rol en `system` enfoca comportamiento y tono. |
-| **Long context** | Documentos largos (20k+ tokens) **arriba** del prompt, query/instrucciones al final (hasta +30% de calidad). Envolver en XML con metadata. Pedir extracción de quotes en `<quotes>` antes de la tarea ("grounding in quotes"). |
-| **Formato de salida** | Decir qué hacer, no qué no hacer; el estilo del prompt contagia el estilo de la respuesta (quitar markdown del prompt reduce markdown en la salida). |
-| **Prompt chaining** | Degradado en importancia (el modelo maneja multistep internamente). Útil para inspeccionar salidas intermedias o forzar pipeline. Patrón más común: **self-correction** (draft → review contra criterios → refine), cada paso una llamada API separada. |
+| **Claridad y directness** | La #1. "Golden rule": si un colega sin contexto se confundiría, el modelo también. Tratarlo como "empleado brillante pero nuevo". |
+| **Contexto/motivación** | Explicar el *por qué* mejora resultados ("tu respuesta será leída por TTS, no uses elipsis" > "NUNCA uses elipsis"). El modelo generaliza desde la explicación. |
+| **Few-shot / multishot** | Confiable para formato/tono, envuelto en delimitadores (`<example>`). Frontier: **3-5 ejemplos**; modelos pequeños: **1-3 de alta calidad** (más shots pueden empeorarlos). |
+| **Delimitadores / XML tags** | Tags consistentes y descriptivos (`<instructions>`, `<context>`, `<input>`), anidados cuando hay jerarquía. Reduce malinterpretación. |
+| **Roles / system prompt** | Una frase de rol enfoca comportamiento y tono. Regla portable: **un único system prompt al inicio** (muchos templates locales solo renderizan bien uno). |
+| **Long context** | Documentos largos (20k+ tokens) **arriba** del prompt, query/instrucciones al final. Envolver en XML con metadata. Pedir extracción de quotes en `<quotes>` antes de la tarea ("grounding in quotes"). |
+| **Formato de salida** | Decir qué hacer, no qué no hacer; el estilo del prompt contagia la respuesta (quitar markdown del prompt reduce markdown en la salida). |
+| **CoT explícito** | "piensa paso a paso" escrito en el prompt porta a todos. El reasoning *nativo* NO porta (ver `providers-*.md`). |
+| **Prompt chaining / self-correction** | draft → review contra criterios → refine, cada paso una llamada separada para loggear/evaluar/bifurcar. |
 
-## Reglas específicas de modelos con razonamiento
+## Reglas generales de robustez
 
-- **Prefer general instructions over prescriptive steps**: "think thoroughly" suele producir mejor razonamiento que un plan paso a paso escrito a mano.
-- Los ejemplos multishot con `<thinking>` **sí** funcionan con thinking nativo: Claude generaliza el patrón de razonamiento.
+- **Prefer general instructions over prescriptive steps**: "think thoroughly" suele producir mejor razonamiento que un plan paso a paso a mano (en modelos con razonamiento capaz).
 - **Self-check** ("Before you finish, verify your answer against [criteria]") atrapa errores confiablemente, especialmente en código y matemática.
-- **Tool use explícito**: "Can you suggest changes" produce sugerencias, no acciones; para actuar, instrucciones imperativas. Paralelización steerable por prompt.
-- **Zero-shot cada vez más viable**: empezar mínimo; para Fable 5, prompts sobre-prescriptivos de modelos anteriores **reducen** calidad.
-- Snippets oficiales nuevos: anti-overengineering, anti-hardcodeo de tests, anti-alucinación (`<investigate_before_answering>`), estética frontend anti-"AI slop", confirmar acciones destructivas.
+- **Tool use explícito**: "Can you suggest changes" produce sugerencias, no acciones; para actuar, instrucciones imperativas.
+- **Zero-shot cada vez más viable en frontier**: empezar mínimo; prompts sobre-prescriptivos de modelos anteriores pueden **reducir** calidad.
+- **Modelos pequeños/locales son frágiles**: chat template correcto, instrucciones cortas, una tarea por llamada, schema estricto > prosa; evaluar por modelo. Detalle en `providers-ollama-local.md`.
+
+> Las palancas específicas de reasoning nativo (adaptive thinking, `effort`, snippets oficiales anti-overengineering / anti-alucinación / `<investigate_before_answering>`) son de Anthropic → ver `providers-anthropic.md`.
 
 ## Context engineering
+
+Los conceptos de esta sección son universales; los **flags de API concretos** citados (`compact-2026-01-12`, `memory_20250818`, etc.) son de Anthropic — otros proveedores ofrecen equivalentes distintos o ninguno (verificar por proveedor).
 
 Definición: prompt engineering = escribir instrucciones óptimas (tarea discreta); **context engineering = curar el conjunto óptimo de tokens en cada inferencia** (iterativo, cada turno).
 

@@ -20,3 +20,13 @@ Detección pasiva: reportar `error` y `warning` siempre. Detección activa (`sug
 | Feature LLM no trivial sin golden set ni grader | no-evals | suggestion | testing | Definir 20-50 casos de fallos reales + grader |
 | RAG para un corpus que cabe en contexto (<200K) | premature-rag | suggestion | architecture | Meter todo en contexto con prompt caching; RAG solo para corpus grandes |
 | Prompt hardcodeado inline sin versionar | unversioned-prompt | suggestion | maintainability | Tratar prompts como artefactos versionados |
+| Confiar en el `num_ctx` default de Ollama | ollama-default-ctx | error | api-compat | Fijar `num_ctx` explícito (`options.num_ctx`); el default trunca el system prompt en silencio |
+| Usar `/v1` de Ollama para tool calling con streaming | ollama-v1-toolcalls | error | api-compat | Usar la API nativa `/api/chat` (los tool calls se pierden en silencio por `/v1`) |
+| Asumir que "OpenAI-compatible" garantiza enforcement de schema/`strict` | openai-compat-strict-assumption | error | api-compat | Verificar por proveedor; muchos ignoran `strict` en silencio. Validar client-side siempre |
+| Prefill del último turno assistant asumido portable | prefill-unsupported | error | api-compat | Verificar soporte por proveedor (Ollama no documentado; OpenAI no en Chat Completions) |
+| Pedir JSON por prosa a un modelo pequeño sin constrained decoding | prose-json-small-model | warning | reliability | Usar `format`/GBNF (schema estricto); la fragilidad de formato en local es alta |
+| Judge LLM local demasiado pequeño para scoring abierto | undersized-judge | warning | evals | Judge ≥70B o frontier para scoring abierto; 7-9B solo para binarios domain-specific |
+| Judge de la misma familia que genera la salida | self-preference-judge | warning | evals | Usar un modelo/familia distinto como judge |
+| Prompt de frontier reciclado sin adaptar a modelo pequeño | unadapted-frontier-prompt | warning | prompting | Simplificar instrucciones, 1-3 shots, schema estricto; evaluar por modelo |
+| Cuantización por debajo de Q4 para tareas con tool calling | sub-q4-quant | warning | reliability | Q4_K_M o superior; bajo Q4 se rompen instruction following y tool calling |
+| Asumir que embeddings/structured outputs de un proveedor portan a otro | cross-provider-assumption | warning | api-compat | Correr el checklist de capacidades por proveedor antes de diseñar |
