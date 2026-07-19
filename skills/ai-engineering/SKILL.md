@@ -126,5 +126,5 @@ Señales que siempre deben detener el trabajo:
 - `providers-anthropic.md` — API de Claude: Structured Outputs, tool use, streaming, Batch, prompt caching explícito, Claude Agent SDK, modelos y palancas (effort/thinking)
 - `providers-openai-compatible.md` — Chat Completions como mínimo común, qué garantiza el shape y qué NO porta (strict, response_format, extensiones vLLM), Responses API, capas de abstracción (LiteLLM, OpenRouter)
 - `providers-ollama-local.md` — API nativa `/api/chat` vs `/v1`, trampa de `num_ctx` y truncación silenciosa, structured outputs con `format`, tool calling, `keep_alive`, embeddings locales, selección de modelo por tamaño, cuantización
-- `evals-and-rag.md` — graders, golden sets, promptfoo multi-proveedor, LLM-as-judge local, patrones de agentes, RAG y embeddings/rerankers locales, vector stores, regla local-vs-API
+- `evals-and-rag.md` — graders, golden sets, promptfoo multi-proveedor, LLM-as-judge local, patrones de agentes, fundamentos conceptuales de embeddings (métrica, mismo-modelo, MRL, asimetría query/document, caching), RAG y embeddings/rerankers locales, vector stores, regla local-vs-API
 - `anti-patterns.md` — tabla de detección con severidades y correcciones

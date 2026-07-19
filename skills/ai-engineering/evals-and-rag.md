@@ -34,6 +34,19 @@ Principios: **simplicidad** (muchas apps agénticas son una llamada con retrieva
 
 ## RAG y embeddings
 
+### Fundamentos de embeddings (conceptual — leer antes de lo operativo)
+
+- **Qué es**: un embedding es un vector denso de dimensión fija que codifica el *significado* de un texto; textos semánticamente similares caen cerca en ese espacio. El retrieval es una búsqueda de vecinos cercanos en ese espacio, no un match de palabras.
+- **Métrica de similitud**: cosine (ángulo), dot product (magnitud + ángulo) y distancia euclidiana miden proximidad distinto. Con vectores **normalizados** (norma 1) cosine ≡ dot product. Regla: usar la métrica con la que el modelo fue entrenado y configurar **esa misma métrica en el índice** del vector store — mezclarlas degrada el ranking silenciosamente.
+- **Mismo modelo para indexar y consultar (crítico)**: vectores de modelos distintos —o de versiones/dimensiones distintas del mismo modelo— **no son comparables**; viven en espacios diferentes. Cambiar de modelo de embedding ⇒ **re-embeddear todo el corpus**. Registrar `modelo + versión + dimensión + métrica` junto al índice como metadato; una query nunca debe embeddearse con un modelo distinto al del corpus.
+- **Dimensionalidad**: más dimensiones → más calidad pero más storage y latencia de búsqueda. **Matryoshka Representation Learning (MRL)** permite truncar el vector a un prefijo (ej. text-embedding-3, qwen3-embedding) conservando la mayor parte de la señal — **solo** si el modelo fue entrenado para MRL, y **re-normalizando** tras truncar. Truncar un modelo no-MRL rompe el espacio.
+- **Asimetría query/document**: `input_type="query"` vs `"document"` no es cosmético — estos modelos se entrenan con prefijos/instrucciones distintos por rol, así que consultar sin marcar el rol correcto empeora el retrieval. Indexar como `document`, buscar como `query`.
+- **Context window del embedder**: el modelo de embedding tiene su propio límite (típ. 512–8k tokens); varios SDKs **truncan en silencio** lo que lo excede, perdiendo el final del texto. El chunking existe también por esto, no solo para precisión de retrieval — verificar que el chunk cabe en la ventana del embedder.
+- **Semántica ≠ léxico exacto**: los embeddings capturan sentido pero fallan en términos raros y exactos (IDs, SKUs, códigos, nombres propios, versiones). Por eso el **híbrido con BM25** de abajo — el léxico cubre lo que la semántica difumina.
+- **Costo y caching**: embeddear es **determinista** por `(modelo, versión, input)` → cachear vectores por **hash del chunk** y no re-embeddear contenido sin cambios. En re-indexaciones incrementales, solo los chunks cuyo hash cambió necesitan una nueva llamada.
+
+### Operativo
+
 - **Regla de decisión**: si el corpus cabe en el context window real, **no uses RAG** — mételo en contexto con caching. RAG para corpus mayores.
 - **Chunking contextual**: generar 50-100 tokens de contexto por chunk y prependearlo antes de embeddear e indexar en BM25 (contextual embeddings + BM25 + reranking reduce fallos de retrieval drásticamente). Recuperar top-20; siempre correr evals sobre tu caso.
 - **Embeddings**:
