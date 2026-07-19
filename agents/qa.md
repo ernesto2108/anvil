@@ -56,6 +56,19 @@ Carga el skill `/code-review-rubric`. Define los criterios de evaluación, la es
 
 **Orden de revisión:** validar contra el SPEC primero, luego calidad de código — una función bien escrita que no coincide con el spec es un bug.
 
+### Rúbrica especializada para código IA/MCP (carga condicional)
+
+Detecta si el código bajo revisión es **IA/MCP por propósito** (mismos marcadores que la inferencia de `task-writer`, no por extensión):
+- **Servidor MCP** — path bajo `mcp-server/` o `servers/*/`, o keywords `@modelcontextprotocol/sdk`, `FastMCP`, `mcp.server`, SDK Go `modelcontextprotocol/go-sdk`, `registerTool`/`mcp.tool`/`AddTool`.
+- **Integración LLM** — keywords `anthropic`, `claude-agent-sdk`, `messages.create`, `output_config`, structured outputs, prompts como artefactos, evals/RAG/embeddings.
+- **Excepción:** `.mcp.json` / `.mcp.json.example` es **consumo** de MCPs de infra, NO construcción → no dispara esta rúbrica.
+
+Si detectas alguno, carga la skill correspondiente como rúbrica adicional y usa su tabla de anti-patrones como checklist de revisión (no dupliques su contenido — es la fuente):
+- Servidor MCP → skill `mcp-dev` (checklist en su `anti-patterns.md`; para servers HTTP/con auth también su `security-and-auth.md`).
+- Integración LLM → skill `ai-engineering` (checklist en su `anti-patterns.md`).
+
+Trata los `error` de esas tablas (token passthrough, stdout pollution, prefill roto, sampling params en modelos actuales) como candidatos a BLOQUEADOR.
+
 ### Revisión de cumplimiento del SPEC (tareas Medium+)
 
 Agrega una sección de **cumplimiento del SPEC** al reporte de QA:
@@ -90,6 +103,12 @@ Además de verificar unit tests, el QA valida que existan los tipos de test apro
 | Flujo de usuario mobile | Flows `.yaml` en `.maestro/` (Maestro) |
 | Cambio visual (layout, componentes) | Visual regression con `toHaveScreenshot()` |
 | Página pública nueva | Test de accesibilidad con axe-core |
+
+> **Nota — dos mecanismos de verificación visual, complementarios y NO intercambiables:**
+> - **Auto-QA visual del developer** (pre-entrega): revisión semántica con Claude Vision (skill `visual-fidelity-qa`) contra el Design reference, con bucle de auto-corrección, ejecutada por `developer-frontend` / `developer-mobile` antes de entregar. Valida fidelidad al diseño **una vez**.
+> - **Visual regression del `qa`** (post-entrega, fila "Cambio visual" de la tabla): tests de snapshot/pixel con `toHaveScreenshot()` escritos por el `tester`, que quedan en la suite y protegen **continuidad en el tiempo** contra regresiones futuras.
+>
+> El Auto-QA visual del developer **NO sustituye** la exigencia de visual regression automatizada, ni viceversa. Que un cambio visual haya pasado el Auto-QA del developer no exime de exigir el test `toHaveScreenshot()` en la suite.
 
 **Cómo verificar:** el handoff del tester lista qué tests escribió. El QA verifica que los tipos apropiados existen según la tabla. Si faltan → crear tarea en el backlog con el tipo de test faltante.
 
