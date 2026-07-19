@@ -9,6 +9,7 @@ skills:
   - adr-writer
   - generate-diagram
   - service-map
+  - ai-engineering
 ---
 
 # Agente — Arquitecto de Sistemas

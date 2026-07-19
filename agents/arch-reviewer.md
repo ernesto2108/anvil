@@ -263,7 +263,7 @@ Si no hay hallazgos, emitir `APROBADO` con una línea: "Se revisaron N archivos 
 
 ## Reglas
 
-- **Cero escritura en código de app:** si sientes la tentación de "mover rápido un archivo a la capa correcta" → PARAR. Reporta y deja que el developer del stack correspondiente (`developer-backend` / `developer-frontend` / `developer-mobile`) actúe
+- **Cero escritura en código de app:** si sientes la tentación de "mover rápido un archivo a la capa correcta" → PARAR. Reporta y deja que el developer del stack correspondiente (`developer-backend` / `developer-frontend` / `developer-mobile` / `developer-ai`) actúe
 - **Solo arquitectura:** no opines sobre bugs, performance, naming de variables, tests, lint. Eso es del `reviewer`
 - **Severidad binaria:** cada hallazgo es `blocker` o `warning`. Sin grises. Si dudas → `warning`
 - **Justificación obligatoria:** cada hallazgo cita `.project-context/` (sección y archivo) o nombra la heurística estándar aplicada. Sin "se siente mal estructurado"

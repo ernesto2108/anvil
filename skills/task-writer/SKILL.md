@@ -30,7 +30,7 @@ Cada task es un archivo `.md` independiente con este formato exacto:
 name: "<FEATURE_ID>-<NN>-<slug-corto>"
 type: "setup" | "implementation" | "integration" | "validation"
 priority: "HIGH" | "MEDIUM" | "LOW"
-agent: "developer-backend" | "developer-frontend" | "developer-mobile" | "tester" | "dba" | "dba-cache" | "dba-broker" | "dba-nosql" | "devops" | "tech-writer" | "security" | "observability" | "diagrammer"
+agent: "developer-backend" | "developer-frontend" | "developer-mobile" | "developer-ai" | "tester" | "dba" | "dba-cache" | "dba-broker" | "dba-nosql" | "devops" | "tech-writer" | "security" | "observability" | "diagrammer"
 points: 1 | 2 | 3 | 5 | 8
 milestone: "<milestone>" (opcional)
 feature_id: "<FEATURE_ID>"
@@ -142,9 +142,13 @@ Si el spec declara prioridad explícita para un feature → heredar. Si no → a
 
 ## Inferencia del agente ejecutor
 
-`agent` es obligatorio en todas las tasks. Valores exactos permitidos: `developer-backend`, `developer-frontend`, `developer-mobile`, `tester`, `dba`, `dba-cache`, `dba-broker`, `dba-nosql`, `devops`, `tech-writer`, `security`, `observability`, `diagrammer`. Inferir en este orden:
+`agent` es obligatorio en todas las tasks. Valores exactos permitidos: `developer-backend`, `developer-frontend`, `developer-mobile`, `developer-ai`, `tester`, `dba`, `dba-cache`, `dba-broker`, `dba-nosql`, `devops`, `tech-writer`, `security`, `observability`, `diagrammer`. Inferir en este orden:
 
-1. **Por extensión/path del archivo principal o keywords de la task:**
+1. **Por PROPÓSITO (evaluar ANTES que la extensión, porque el dominio de `developer-ai` es por-propósito, no por-lenguaje):**
+   - Servidor MCP — path bajo `mcp-server/`, `servers/*/`, o keywords `MCP server`, `Model Context Protocol`, `@modelcontextprotocol/sdk`, `FastMCP`, `registerTool`, `mcp.tool`, `AddTool`, `MCP Inspector`, `.mcpb`, `server.json` → `developer-ai`
+   - Integración LLM en producto — keywords `anthropic`, `claude-agent-sdk`, `Claude Agent SDK`, `messages.create`, `output_config`, `structured outputs`, `prompt` como artefacto, `eval`/`evals` de prompts, `RAG`, `embeddings`, `LLM-as-judge` → `developer-ai`
+   - Excepción: configurar/consumir MCPs de infra (`.mcp.json`, `.mcp.json.example`) NO es `developer-ai` — es setup de proyecto (skill `mcp-setup`); clasificar por el resto de la task.
+2. **Por extensión/path del archivo principal o keywords de la task:**
    - `.dart` o path bajo `lib/` → `developer-mobile`
    - `.tsx`, `.jsx`, `.astro`, `.ts` en contexto frontend, o path bajo `src/components/`, `src/pages/`, `src/hooks/` → `developer-frontend`
    - `.go`, `.py`, `.rs`, o path bajo `internal/`, `cmd/`, `pkg/`, `api/` → `developer-backend`
@@ -158,8 +162,8 @@ Si el spec declara prioridad explícita para un feature → heredar. Si no → a
    - Keywords de seguridad: `auth`, `JWT`, `CVE`, `RBAC`, `CORS`, `pentest`, `vulnerability` → `security`
    - Keywords de observabilidad: `OpenTelemetry`, `metrics`, `traces`, `dashboard`, `alerting`, `Grafana`, `Prometheus` → `observability`
    - Task que produce `.drawio` o tiene keywords `diagrama`, `diagram` → `diagrammer`
-2. **Si el path es ambiguo** → desempatar con el campo `Dominio` del spec (`mobile`, `frontend`, `backend`, `fullstack`).
-3. **Si aún no se infiere** → marcar `developer-[?]` o `[agente-?]` según corresponda, y listar en el output de cierre.
+3. **Si el path es ambiguo** → desempatar con el campo `Dominio` del spec (`mobile`, `frontend`, `backend`, `fullstack`).
+4. **Si aún no se infiere** → marcar `developer-[?]` o `[agente-?]` según corresponda, y listar en el output de cierre.
 
 ## Design reference
 
