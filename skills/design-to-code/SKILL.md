@@ -1,169 +1,177 @@
 ---
 name: design-to-code
-description: Traducir diseños aprobados a código de producción. Funciona con cualquier herramienta de diseño (Pencil, Figma). Sincroniza tokens de diseño con CSS, mapea componentes a código y valida la fidelidad visual. Usar cuando el usuario diga "implementa este diseño", "codifica esto", "traduce a código", "design to code", o después de que un diseño sea aprobado.
+description: Traducir diseños aprobados a código de producción con fidelidad visual. Funciona con cualquier herramienta de diseño (Pencil, Figma) y stack (web CSS/React/Astro, Flutter, SwiftUI). Produce un inventario de diseño verificable antes de codificar, sincroniza tokens y mapea componentes a código. La carga el propio developer del stack. Usar cuando el usuario diga "implementa este diseño", "codifica esto", "traduce a código", "design to code", o después de que un diseño sea aprobado.
 ---
 
 # Design to Code
 
-> Traduce diseños aprobados a código de producción con fidelidad visual. Independiente de la herramienta.
+> Traduce diseños aprobados a código de producción con fidelidad visual. Independiente de la herramienta y del stack. La carga el developer del stack (web/Flutter/SwiftUI) que la ejecuta directamente — no delega a nadie.
+
+## Filosofía
+
+1. **Entender antes de codificar** — los gaps visuales nacen de leer el frame "a ojo". El inventario de diseño (Paso 2) es el mecanismo central anti-gaps: convierte el diseño en una checklist verificable antes de escribir una línea.
+2. **El diseño es la fuente de verdad** — si el código luce distinto al diseño, el código está mal hasta que el humano diga lo contrario.
+3. **Tokens antes que componentes** — sincroniza siempre las variables/tokens antes de mapear componentes; codificar valores sueltos es deuda.
 
 ## Prerrequisitos
 
-- El diseño debe estar aprobado (nunca codificar antes de la aprobación del diseño)
-- El archivo de diseño debe estar abierto — usa `/design-project` primero si es necesario
+- El diseño debe estar aprobado (nunca codificar antes de la aprobación del diseño).
+- El archivo/referencia de diseño debe estar accesible (`.pen` abierto, URL de Figma, o spec/mockup).
 
 ## Paso 0: Detectar la herramienta de diseño
 
-Determina en qué herramienta está el diseño:
-
 | Señal | Herramienta | Cómo leer |
 |---|---|---|
-| Archivo `.pen` abierto | Pencil | Usa las herramientas MCP de Pencil (`get_variables`, `batch_get`, `get_screenshot`) |
-| URL de Figma proporcionada | Figma | Usa las herramientas MCP de Figma (carga `/figma-use` primero) |
-| Especificación de diseño / mockup estático | Manual | Lee dimensiones y tokens desde el documento de especificación |
+| Archivo `.pen` abierto | Pencil | Herramientas MCP de Pencil (`get_variables`, `batch_get`, `get_screenshot`) — **solo lectura** |
+| URL de Figma proporcionada | Figma | Herramientas MCP de Figma (carga `/figma-use` primero) |
+| Especificación / mockup estático | Manual | Leer dimensiones y tokens desde el documento |
 
-Todos los pasos siguientes usan la API de la herramienta correspondiente pero el **output es el mismo**: CSS, HTML, componentes.
+## Paso 1: Comparar diseño vs. código existente (OBLIGATORIO si ya existe código)
 
-## Paso 0.5: Comparar diseño vs. código (OBLIGATORIO si ya existe código)
-
-Antes de escribir cualquier código, crea una comparación sección por sección:
+Antes de escribir código, crea una comparación sección por sección:
 
 | Sección | Diseño | Código | Diferencia | Acción |
 |---|---|---|---|---|
-| Hero | Flujo lineal, sin tarjetas | Bento grid con tarjetas | Estructura difiere | Alinear al diseño |
+| Hero | Flujo lineal | Bento grid | Estructura difiere | Alinear al diseño |
 | Nav | Hamburguesa + X | Solo hamburguesa | Estado faltante | Agregar animación X |
 
-Presenta esta tabla al usuario. Si el diseño y el código divergen, **analiza qué versión es mejor para UX** — no solo liste diferencias. Toma lo mejor de cada uno, explica por qué, obtén aprobación antes de codificar.
+Presenta la tabla. Si divergen, analiza qué versión es mejor para UX (no solo listes diferencias), explica por qué y obtén aprobación antes de codificar.
 
-## Paso 1: Sincronizar tokens de diseño
+## Paso 2: Inventario de diseño (OBLIGATORIO — antes de escribir código)
 
-### Leer tokens del diseño:
+Extrae del diseño una lista verificable. Este inventario se **declara** (en el handoff si existe, o en el run) y se usa como **checklist de cierre**: cada ítem termina "implementado" o "no aplica + razón". No adivines — léelo del frame.
 
-- **Pencil**: `get_variables()` — devuelve todas las variables con tipos y valores temáticos
-- **Figma**: leer variables/estilos desde el archivo de Figma via MCP
+Categorías a inventariar:
 
-### Leer tokens del código:
+- **Secciones / elementos** del frame (cada bloque visual).
+- **Estados interactivos:** hover, focus, empty, loading, error, disabled, selected.
+- **Variantes:** dark/light, breakpoints (web) o tamaños de pantalla/orientación (mobile).
+- **Tokens usados:** colores, tipografía, espaciado, radios, sombras.
+- **Interacciones / animaciones:** transiciones, gestos, feedback.
+- **Assets:** iconos, imágenes, ilustraciones.
 
-Lee el archivo de variables CSS del proyecto (ej., `global.css`, `variables.css`, `tailwind.config`)
+> Los gaps de UI casi siempre son ítems de este inventario que nunca se leyeron. Si un ítem no se implementa, debe quedar "no aplica + razón" explícita — nunca simplemente omitido.
 
-### Diff y corrección:
+## Paso 3: Sincronizar tokens de diseño
 
-1. **Faltante en CSS**: tokens que existen en el diseño pero no en el código → agregarlos
-2. **Discrepancia de valor**: mismo nombre pero valor diferente → señalar al usuario
-3. **Faltante en diseño**: tokens en el código que no están en el diseño → puede estar bien (utilidades solo de código)
+**Leer tokens del diseño:**
+- Pencil: `get_variables()` — variables con tipos y valores temáticos.
+- Figma: variables/estilos desde el archivo via MCP.
+
+**Leer tokens del código** según stack (ver Paso 4 para el destino por stack).
+
+**Diff y corrección:**
+1. Faltante en código: token en diseño ausente en código → agregarlo.
+2. Discrepancia de valor: mismo nombre, valor distinto → señalar al usuario.
+3. Faltante en diseño: token solo en código → puede estar bien (utilidades).
 
 Presenta el diff. Corrige las discrepancias antes de continuar.
 
-## Paso 2: Leer la pantalla objetivo
+## Paso 4: Leer pantalla + mapear componentes al stack
 
-### Desde Pencil:
-1. `batch_get` el frame de pantalla a profundidad 2-3
-2. `get_screenshot` de la pantalla
+**Leer la pantalla objetivo:**
+- Pencil: `batch_get` del frame a profundidad 2-3 + `get_screenshot`.
+- Figma: estructura de frame/página + captura o inspección de nodos.
 
-### Desde Figma:
-1. Lee la estructura de frame/página
-2. Obtén una captura de pantalla o inspecciona las propiedades del nodo
+Identifica las secciones y mapea cada una a un componente/widget/view del stack. Usa la tabla del stack objetivo:
 
-### Luego (independiente de la herramienta):
-3. Identifica las secciones y qué componentes se usan
-4. Mapea cada sección a un componente de código (ej., Hero.astro, Navbar.tsx)
-
-## Paso 3: Leer la estructura del componente
-
-Para cada componente que necesita ser creado o actualizado:
-
-### Desde Pencil:
-`batch_get` el componente reutilizable a profundidad 3
-
-### Desde Figma:
-Lee las propiedades del componente, variantes y configuraciones de auto-layout
-
-### Luego mapea a CSS (universal):
+### Web (CSS)
 
 | Propiedad de diseño | CSS |
 |---|---|
-| Layout vertical | `flex-direction: column` |
-| Layout horizontal | `flex-direction: row` |
-| Gap con token | `gap: var(--token-name)` |
-| Fill con token | `background: var(--token-name)` |
-| Corner radius | `border-radius: var(--token-name)` |
-| Border/stroke | `border: 1px solid var(--token-name)` |
-| Array de padding | `padding: var(--top) var(--right) var(--bottom) var(--left)` |
-| Fill container | `width: 100%` o `flex: 1` |
-| Fit content | `width: fit-content` |
-| Space between | `justify-content: space-between` |
-| Alineación centrada | `align-items: center` |
+| Layout vertical / horizontal | `flex-direction: column` / `row` |
+| Gap con token | `gap: var(--token)` |
+| Fill con token | `background: var(--token)` |
+| Corner radius | `border-radius: var(--token)` |
+| Border/stroke | `border: 1px solid var(--token)` |
+| Padding (array) | `padding: var(--t) var(--r) var(--b) var(--l)` |
+| Fill container / fit | `width: 100%` o `flex: 1` / `width: fit-content` |
+| Space between / centrado | `justify-content: space-between` / `align-items: center` |
 
-## Paso 4: Delegar al developer del stack
+### Flutter
 
-Los developers de stack (`developer-frontend` para web React/TypeScript/Astro, `developer-mobile` para Flutter/Dart) son los ÚNICOS autorizados a escribir código de producción. Después de los pasos 1-3, lanza el developer del stack objetivo con:
+| Propiedad de diseño | Flutter |
+|---|---|
+| Tokens (color/tipografía) | `ThemeExtension` / `ColorScheme` / `TextTheme` |
+| Layout vertical / horizontal | `Column` / `Row` |
+| Gap con token | `spacing:` (Flex) o `SizedBox` entre hijos |
+| Fill con token | `Container(color:)` / `BoxDecoration` |
+| Corner radius | `BorderRadius.circular(token)` |
+| Border/stroke | `Border.all(color:, width:)` |
+| Padding | `EdgeInsets.fromLTRB(...)` / `.all(token)` |
+| Fill container / fit | `Expanded` / `double.infinity` / `MainAxisSize.min` |
+| Space between / centrado | `MainAxisAlignment.spaceBetween` / `.center` |
 
-1. **Token diff** — variables CSS nuevas/modificadas para agregar
-2. **Component map** — qué componentes crear/actualizar, mapeados desde las secciones del diseño
-3. **Propiedades de diseño** — layout, espaciado, colores, tipografía extraídos en el paso 3
-4. **Screenshot** — captura de pantalla del diseño como referencia visual
+### SwiftUI
 
-Incluye este contexto INLINE en el prompt del agente (nunca le digas al agente "lee el archivo X").
+| Propiedad de diseño | SwiftUI |
+|---|---|
+| Tokens (color) | Asset Catalog / extensiones de `Color` |
+| Layout vertical / horizontal | `VStack` / `HStack` |
+| Gap con token | `VStack(spacing: token)` / `HStack(spacing:)` |
+| Fill con token | `.background(Color.token)` |
+| Corner radius | `.clipShape(RoundedRectangle(cornerRadius:))` / `.cornerRadius()` |
+| Border/stroke | `.overlay(RoundedRectangle().stroke())` |
+| Padding | `.padding(.init(top:leading:bottom:trailing:))` |
+| Fill container / fit | `.frame(maxWidth: .infinity)` / `.fixedSize()` |
+| Dark mode | `@Environment(\.colorScheme)` |
+| Space between / centrado | `Spacer()` / `.frame(alignment: .center)` |
 
-Reglas para el developer del stack:
-- **Usa CSS custom properties**, nunca valores codificados
-- **Usa los mismos nombres semánticos** que los tokens de diseño
-- **Si un token de diseño no tiene equivalente CSS**, agrégalo primero al archivo CSS
-- **Mobile-first**: si existen diseños web y móvil, codifica el layout móvil primero, agrega overrides de desktop con media queries `min-width`
-- **Reutiliza componentes existentes** — verifica qué ya existe en el codebase antes de crear nuevos
-- **Carga la skill de convenciones apropiada** para el stack objetivo (ej., `astro-conventions`, `react-conventions`, `flutter-conventions`, `swift-conventions`)
+## Paso 5: Implementar (el propio developer del stack escribe el código)
 
-## Paso 5: QA Visual de Fidelidad (OBLIGATORIO para tareas UI)
+Esta skill la carga el developer del stack (`developer-frontend` para web, `developer-mobile` para Flutter/SwiftUI), que es quien escribe el código directamente con el inventario del Paso 2 y el mapeo del Paso 4. Reglas de implementación:
 
-Después de implementar y antes de presentar al usuario:
+- **Usa tokens/variables semánticas**, nunca valores codificados. Si un token no tiene equivalente en el destino, agrégalo primero.
+- **Reutiliza componentes existentes** — grep/verifica qué ya existe antes de crear.
+- **Mobile-first (web):** codifica el layout móvil primero, agrega overrides desktop con `min-width`.
+- **Carga la skill de convenciones del stack** (`astro-conventions`, `react-conventions`, `flutter-conventions`, `swift-conventions`).
+- Recorre el inventario del Paso 2: cada ítem debe quedar "implementado" o "no aplica + razón".
 
-1. **Verificación de build**: Ejecuta `build` para verificar que no hay errores.
-2. **QA de fidelidad visual**: Invoca la skill `visual-fidelity-qa` con:
-   - `frame_id` — Frame ID del diseño (viene de los inputs de la task)
-   - `pen_file` — path al archivo `.pen` (viene de `Design reference`)
-   - `impl_url_or_component` — la URL o componente implementado
+### Insumos que esta skill deja preparados para el Auto-QA
 
-   La skill produce un JSON con `score` e `issues` clasificados por severidad.
+El QA visual **NO ocurre dentro de esta skill** — ocurre en el `## Auto-QA` del agente host. Al terminar, deja listos:
 
-3. **Regla de entrega:**
-   - Si `visual-fidelity-qa` reporta **BLOQUEADO** (issues críticos) → NO entregar al humano. Resolver primero los críticos (invocar `qa-fixer` si es necesario) y re-ejecutar esta skill.
-   - Si reporta **APROBADO** o solo issues menores/cosméticos → incluir el reporte en el handoff.
+- La referencia de diseño (`frame_id` + `pen_file`, URL Figma o screenshots).
+- `impl_url_or_component` — dónde vive la implementación.
+- El inventario del Paso 2 como checklist de cierre.
 
-4. **Estados, modos y viewports**: si el componente tiene estados interactivos, modos claro/oscuro, o variantes responsive, repite el paso 2 por cada uno (un frame de diseño contra su implementación correspondiente).
+## Checklist de Completitud (recorrer antes de cerrar la implementación)
 
-**Si la task NO trae `frame_id` ni `pen_file` y aun así toca UI visible:** preguntar al humano: *"Esta tarea toca UI visible pero no tiene Design reference ni Frame ID. ¿Puedes proveerlos para ejecutar QA de fidelidad visual, o confirmar que no aplica?"*. Solo proceder sin QA visual si el humano confirma explícitamente que no aplica.
+### Web
 
-**Solo presenta al usuario después de que el build pase y `visual-fidelity-qa` apruebe.**
+1. [ ] Cada variable CSS usada tiene valor en `:root` (claro) y en `.dark` (oscuro) si existe modo oscuro.
+2. [ ] Si existe modo oscuro → un mecanismo JS activa/desactiva la clase `dark` en `<html>`.
+3. [ ] Si existe toggle de tema → conectado al mecanismo y persistido en `localStorage`.
+4. [ ] `prefers-color-scheme` se respeta como valor inicial por defecto.
+5. [ ] Cada elemento interactivo (dropdowns, modales, menús) tiene implementación funcional, no solo visual.
+6. [ ] Tipos request/response del frontend coinciden con los DTOs actuales del backend.
+7. [ ] Íconos usan la librería del proyecto (ej. `lucide-react`), no SVGs inline.
+8. [ ] Clases Tailwind usan sintaxis v4 si el proyecto usa v4: `(--var)` no `[var(--var)]`.
 
-## Checklist de Completitud Design-to-Code (OBLIGATORIO)
+### Mobile (Flutter / SwiftUI)
 
-Después de implementar tokens de diseño y componentes, verifica:
-
-1. [ ] Cada variable CSS usada en componentes tiene un valor tanto en `:root` (claro) como en `.dark` (modo oscuro)
-2. [ ] Si existe modo oscuro en el diseño → un mecanismo JS activa/desactiva la clase `dark` en `<html>` (hook o store)
-3. [ ] Si existe toggle de tema en el diseño → está conectado al mecanismo de toggle y persiste en `localStorage`
-4. [ ] Preferencia del sistema: `prefers-color-scheme` se respeta como el valor inicial por defecto
-5. [ ] Cada elemento interactivo en el diseño (dropdowns, modales, menús) tiene una implementación funcional, no solo visual
-6. [ ] Los tipos de solicitud/respuesta del frontend coinciden con los DTOs actuales del backend (verificar después de cualquier cambio en el backend)
-7. [ ] Todos los íconos usan la librería de íconos del proyecto (ej., `lucide-react`), no SVGs inline
-8. [ ] Las clases de Tailwind usan sintaxis v4 si el proyecto usa Tailwind v4: `(--var)` no `[var(--var)]`
+1. [ ] Tokens definidos en el mecanismo de tema del stack (`ThemeExtension`/`ColorScheme` en Flutter; Asset Catalog / extensiones de `Color` en SwiftUI).
+2. [ ] Si existe modo oscuro → theme switching por plataforma (Flutter `ThemeMode`/`MediaQuery.platformBrightness`; SwiftUI `@Environment(\.colorScheme)`).
+3. [ ] Safe areas respetadas (`SafeArea` en Flutter; `.safeAreaInset`/layout guides en SwiftUI).
+4. [ ] Tamaños de pantalla y orientación soportados según el inventario (breakpoints/`LayoutBuilder`, size classes).
+5. [ ] Cada estado interactivo del inventario (loading, empty, error, disabled) tiene implementación real.
+6. [ ] Íconos/assets del catálogo del proyecto, no hardcodeados.
 
 ## Reglas
 
-- **Nunca adivines dimensiones** — léelas desde el archivo de diseño
-- **Nunca codifiques colores** — siempre usa variables CSS
-- **El diseño es la fuente de verdad** — si el código luce diferente al diseño, el código está mal
-- **Cambios quirúrgicos** — si actualizas código existente, cambia solo lo que cambió en el diseño
-- **Sincronizar tokens primero** — siempre sincroniza las variables antes de codificar componentes
-- **Output independiente de la herramienta** — CSS es CSS sin importar si el diseño vino de Pencil o Figma
+- **Nunca adivines dimensiones** — léelas del diseño.
+- **Nunca codifiques colores** — usa tokens/variables del stack.
+- **El diseño es la fuente de verdad** — si el código luce distinto, el código está mal.
+- **Cambios quirúrgicos** — al actualizar código existente, cambia solo lo que cambió en el diseño.
+- **Tokens primero** — sincroniza variables antes de codificar componentes.
+- **Inventario primero** — no escribas código sin el inventario del Paso 2.
 
 ## Anti-Patrones
 
 | Anti-Patrón | Corrección |
 |---|---|
-| Codificar de memoria en lugar de leer el diseño | Siempre leer el archivo de diseño primero |
-| Colores hex codificados en CSS | Usar `var(--color-name)` |
-| Presentar código sin construir | Ejecutar build primero |
-| Presentar sin comparación visual | Comparar captura del diseño con el browser |
-| Implementar mobile sin verificar desktop | Verificar ambos viewports |
-| Asumir la herramienta de diseño | Detectar desde extensión de archivo o URL |
+| Codificar de memoria en vez de leer el diseño | Leer el diseño y producir el inventario del Paso 2 primero |
+| Saltarse el inventario de diseño | Es obligatorio: los gaps nacen de leer el frame a ojo |
+| Colores/dimensiones hardcodeados | Usar tokens del stack |
+| Asumir el stack o la herramienta de diseño | Detectar desde marcadores del repo y extensión/URL |
+| Implementar solo el estado default | Recorrer todos los estados/variantes del inventario |

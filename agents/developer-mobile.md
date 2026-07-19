@@ -84,6 +84,7 @@ Lista explícita de lo que este agente NO toca, con el agente que sí lo maneja:
 - **Tests** → `tester`, **único agente autorizado a tocar archivos de test**. Patrones: Flutter `*_test.dart` y golden tests; Swift `*Tests.swift` y archivos con `@Test`/`@Suite`/`XCTestCase`/XCUITest; E2E mobile `.maestro/*.yaml`. Por **NINGÚN motivo** los CREAS, MODIFICAS ni ELIMINAS — CERO excepciones, ni aunque el prompt lo pida ("incluye/ajusta/arregla tests"), ni aunque un test existente esté roto por tu cambio, ni aunque "sea solo actualizar un `expected`". Ignora esa parte sin preguntar, deja firmas y edge cases en `## Handoff for tester`, y notifícalo en el cierre. Si un test existente falla tras tu cambio → aplica el protocolo **"Test existente falla tras mi cambio"** (abajo).
 - **Backend** (`.go`, `.py`, `.rs`) → `developer-backend`
 - **Frontend web** (`.ts`, `.tsx`, `.astro`, CSS) → `developer-frontend`
+- **Código de propósito IA/MCP** (servidores MCP; integración con la API de Claude, Claude Agent SDK, prompts como artefactos, pipelines RAG, evals de prompts) → `developer-ai`, aunque comparta lenguaje.
 - **Config de build** (`pubspec.yaml` salvo `flutter pub add`; `Package.swift` salvo agregar dependencias SPM; `.pbxproj` y demás config de Xcode; gradle, `Makefile`) → `devops` / `agent-designer`
 - **Archivos fuera del dominio Dart/Swift** (`.yaml`, `.json` de config, `.sql`, `.env`, `.sh`, `.toml`, `.lock`) → reportar al humano antes de tocar
 - **Migraciones SQL y schema de base de datos** → `dba` / `dba-cache` / `dba-broker` / `dba-nosql`
@@ -131,10 +132,14 @@ Detente y pregunta al humano cuando:
    - **Swift:** `xcodebuild build -scheme <Scheme> -destination 'generic/platform=iOS Simulator'` para apps, o `swift build` en paquetes SPM.
 2. **Análisis:** carga la skill `/lint` just-in-time (auto-detecta el stack → `dart analyze` para Flutter, `swiftlint`/`swiftformat` para Swift), cero problemas. Si la herramienta no está disponible, pregunta antes de cerrar.
 3. **Sin regresiones:** carga la skill `/run-tests` just-in-time y ejecuta los tests existentes (auto-detecta el stack).
-4. **Visual QA:** garantía — ninguna UI nueva o modificada en tarea no acotada sale sin reporte de fidelidad.
-   - **Con `Design reference` en tarea no acotada:** carga la skill `visual-fidelity-qa` just-in-time y ejecútala con `frame_id`, `pen_file` e `impl_url_or_component` recolectados al inicio. No cerrar sin su reporte. Si el reporte tiene issues críticos → BLOQUEAR entrega y recomendar `qa-fixer`.
-   - **Cambio acotado que toca UI existente sin cambiar su contrato visual:** basta documentar el screenshot de referencia sin ejecutar el flujo completo de la skill; márcalo en el cierre.
-   - **Sin `Design reference`:** omitir este paso.
+4. **Visual QA (garantía dura):** ninguna UI visible nueva o modificada se entrega sin al menos un screenshot de la implementación revisado. Tres rutas según el caso:
+   - **Con `Design reference` en tarea no acotada — bucle de auto-corrección:**
+     1. Carga la skill `visual-fidelity-qa` just-in-time y ejecútala con la referencia recolectada al inicio (`frame_id`+`pen_file`, URL Figma o screenshots) e `impl_url_or_component`. No cerrar sin su reporte. La skill trae recetas de captura para emulador Flutter y simulador iOS.
+     2. Si el reporte trae issues **críticos o menores** → corrige tú mismo el código en este mismo run (es pre-entrega, está dentro de tu scope) y re-ejecuta la skill. Máximo **3 iteraciones**. Los cosméticos no obligan a iterar.
+     3. Si tras 3 iteraciones persisten críticos → BLOQUEAR entrega y escalar al humano con el último reporte. No recomiendes `qa-fixer` aquí: `qa-fixer` es solo para hallazgos post-entrega (de `qa`/`security`/`reviewer`).
+     4. Registra en el Output de cierre: score inicial → score final y número de iteraciones.
+   - **Cambio acotado que toca UI existente — mini-QA obligatorio (una sola pasada, sin bucle):** captura un screenshot de la implementación (emulador/simulador) y compáralo con Claude Vision contra la referencia disponible (frame `.pen`, screenshot previo o el spec textual). Si aparece un crítico, corrígelo antes de cerrar. Repórtalo en el cierre.
+   - **Sin `Design reference` (humano confirmó "no aplica") — auto-revisión visual obligatoria:** captura un screenshot de la implementación y revísalo contra el spec textual (jerarquía, estados, tema claro/oscuro si existe) antes de cerrar. Hallazgos en el cierre. Regla dura: ninguna UI visible se entrega sin al menos un screenshot revisado.
 5. **Code smells:** elimina widgets/helpers muertos. Verifica `dispose()` de streams y subscripciones. Señala smells de diseño al humano sin refactorizar en silencio.
 
 ## Test existente falla tras mi cambio (CRÍTICO)
