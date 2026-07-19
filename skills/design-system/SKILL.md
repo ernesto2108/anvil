@@ -51,6 +51,8 @@ Lee el campo **Scope → Platform** del PRD. Si no existe, pregunta: "¿Para qu�
    - Si la plataforma es `both`: verificar que la fuente funciona en web Y tiene un buen equivalente móvil (o usar la misma)
 4. **Investigación de paleta de colores** — busca herramientas de paletas (Coolors, ColorHunt, Realtime Colors) para paletas que coincidan con el dominio
 
+**Si NO hay investigación externa disponible** (sin referencias inline ni hallazgos del explorer): carga `reference/domain-styles.md` como banco local de partida — paletas, pairings de fuentes y densidad por dominio. No reemplaza la investigación real cuando existe (esa manda); la complementa como fallback. Declara la dirección como "basada en banco local de dominio, pendiente de validar con referencias reales".
+
 Documenta todos los hallazgos — alimentarán la propuesta visual.
 
 ### 1.5. Presentar Propuesta Visual (OBLIGATORIO)
@@ -89,6 +91,8 @@ Cada familia de tono DEBE tener la escala completa: **50, 100, 200, 300, 400, 50
 - **Status colors** — rojo (danger), ámbar (warning), verde (success), azul (info)
 
 Nunca definas solo "color primario" como un hex único. La rampa completa es necesaria para estados hover, fondos sutiles, bordes, mapeo de modo oscuro y contraste accesible.
+
+**Genera la rampa desde el color de marca siguiendo `reference/color-craft.md`** (curva de lightness + campana de chroma en OKLCH). No inventes los 11 pasos a ojo: preserva el hex de marca exacto en su paso "hogar" y deriva el resto con el algoritmo. Ese archivo también cubre combinación de secundario/acento (armonías), elección de neutral teñido y reglas de dark mode.
 
 #### Selección de Fuente (OBLIGATORIO — fuente específica, no pila del sistema)
 
@@ -257,7 +261,7 @@ Sin esta documentación, los desarrolladores no pueden implementar el sistema de
 ### 5. Definir Modos y Verificar Contraste
 
 Como mínimo planifica claro/oscuro. El modo oscuro NO es inversión — las superficies elevadas se vuelven más claras.
-Verifica WCAG AA (4.5:1 texto, 3:1 texto grande) para TODOS los modos.
+Verifica WCAG AA (4.5:1 texto, 3:1 texto grande) para TODOS los modos **calculando con la fórmula WCAG de `reference/color-craft.md`** (los subagentes no tienen acceso a herramientas web como WebAIM — el contraste se calcula, no se asume). Cita los ratios calculados.
 
 ### 6. Ensamblar Pantallas desde Componentes
 
@@ -323,6 +327,9 @@ Adicionalmente, si este paso define o modifica tokens (colores, tipografía, esp
 | Sin investigación/inspiración de diseño antes de proponer visuales | error | Investigar referencias en Dribbble/Behance/Mobbin antes de proponer |
 | Sin tokens móviles cuando el Platform del PRD es `both` o `mobile` | error | Cargar `reference/platform-guide.md` y definir tokens específicos de plataforma |
 | Componentes móviles sin objetivos táctiles de 44pt+ | error | Todos los elementos interactivos deben cumplir el tamaño mínimo de objetivo táctil |
+| Menú hamburguesa como navegación principal en app nativa | error | Usar tab bar (iOS) / navigation bar (M3) — ver `reference/mobile-patterns.md` |
+| Rampa de color generada a ojo sin seguir las curvas de OKLCH | error | Derivar con el algoritmo de `reference/color-craft.md` (lightness + campana de chroma) |
+| Contraste "verificado" sin cálculo con la fórmula WCAG | error | Calcular con la fórmula de `reference/color-craft.md` y citar el ratio |
 
 ## Limitaciones de Herramienta (Pencil)
 
@@ -341,6 +348,9 @@ Para wrapping de texto, armonía de grilla, limitaciones de i18n y otras restric
 | Mapeo de tokens semánticos | `reference/semantic-tokens.md` |
 | Plantilla de output para design-system.md | `reference/output-template.md` |
 | Guía de plataforma (web vs mobile vs both) | `reference/platform-guide.md` |
+| Diseñando pantallas móviles / plataforma `mobile` o `both` (app nativa) | `reference/mobile-patterns.md` |
+| Generando o combinando colores, verificando contraste | `reference/color-craft.md` |
+| Sin referencias del dominio / anclando dirección visual | `reference/domain-styles.md` |
 | **Pencil** — variables, componentes, instancias | `reference/pencil-workflow.md` |
 | **Figma** — colecciones, modos, variantes, Dev Mode | `reference/figma-workflow.md` |
 | **DESIGN.md** — template, reglas de generación, validación CLI | `reference/design-md.md` |

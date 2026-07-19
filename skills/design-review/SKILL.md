@@ -49,7 +49,7 @@ Revisa cada pantalla contra estos criterios. Puntúa cada uno del 1 al 5:
 
 #### Color y Contraste (peso: 15%)
 - [ ] Usa variables de tokens de diseño, no valores hex codificados
-- [ ] Contraste suficiente para la legibilidad del texto (WCAG AA: 4.5:1 texto, 3:1 texto grande)
+- [ ] Contraste suficiente para la legibilidad del texto (WCAG AA: 4.5:1 texto, 3:1 texto grande) — **calculado con la fórmula WCAG de `reference/color-craft.md` (`/design-system`)**, no asumido ni delegado a una herramienta web
 - [ ] Color de acento reservado para acciones — no diluido en elementos decorativos
 - [ ] Colores semánticos usados correctamente (error para errores, success para éxito)
 
@@ -66,6 +66,7 @@ Revisa cada pantalla contra estos criterios. Puntúa cada uno del 1 al 5:
 - [ ] Existe versión móvil (si es responsive/ambas plataformas)
 - [ ] Existe modo oscuro (si es requerido)
 - [ ] Cada CTA tiene una pantalla de destino
+- [ ] Si es app nativa: usa patrones móviles nativos (tab bar, sheets, thumb zone) y NO una spec web encogida — ver `reference/mobile-patterns.md` (`/design-system`)
 
 ### Paso 3 — Generar Reporte
 

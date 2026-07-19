@@ -37,6 +37,22 @@ Fuentes curadas por categoría para investigar patrones, fuentes y paletas antes
 - [Dribbble](https://dribbble.com/) — inspiración de componentes UI y pantallas
 - [SiteInspire](https://www.siteinspire.com/) — web design curado por estética y tipo
 
+## Guías canónicas de plataforma
+- [Apple Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines) — estándar oficial iOS/iPadOS (navegación, sheets, layout, controles)
+- [Material Design 3](https://m3.material.io) — estándar oficial Android (navigation bar, bottom sheets, tonal palettes, componentes)
+
+> Para composición de pantallas móviles nativas, el banco condensado vive en `reference/mobile-patterns.md`; estas dos son la fuente primaria cuando se necesita más detalle.
+
 ## Uso
 
 El `explorer` usa estas fuentes para investigar patrones del dominio y pasa los hallazgos inline en el prompt del diseñador. Nunca decirle al humano "busca en Dribbble" — el explorer investiga y entrega resultados.
+
+### Formato estándar de entrega de la investigación del explorer
+
+Cuando el explorer investiga para un diseño, entrega inline (no como paths ni "busca tú"):
+
+1. **3-5 productos de referencia del dominio** — cada uno con qué imitar de él (ej. "Linear: densidad compacta y neutrales teñidos"; "Wise: cifras con tabular figures y verde solo para saldos")
+2. **2-3 pairings de Google Fonts** (titular + cuerpo) con justificación de por qué encaja con el tono del dominio
+3. **Paleta con hex concretos** — al menos primario y acento (más neutral/soporte si aplica), lista para generar la rampa con `reference/color-craft.md`
+
+Sin estos tres bloques, la investigación está incompleta. Si el explorer no puede investigar, el fallback es `reference/domain-styles.md` (banco local por dominio).

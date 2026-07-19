@@ -103,7 +103,7 @@ Según la plataforma:
 - `mobile` → diseña solo para mobile (unidades pt/dp, touch targets 44pt+). Carga `reference/platform-guide.md` desde `/design-system`
 - `both` → diseña para web Y mobile. Carga `reference/platform-guide.md`. Genera tokens para ambas plataformas (fuente web + fuente mobile, escala tipográfica web + escala tipográfica mobile)
 
-Si la plataforma es `mobile` o `both` → cargar `reference/platform-guide.md` desde `/design-system`.
+Si la plataforma es `mobile` o `both` → cargar `reference/platform-guide.md` **y** `reference/mobile-patterns.md` desde `/design-system`. `platform-guide.md` da los tokens móviles; `mobile-patterns.md` da la composición nativa (navegación, sheets, thumb zone) — necesaria para no producir una spec web encogida.
 
 #### Etapa 0.2 — Resumen previo a generación (BLOQUEANTE)
 
@@ -143,6 +143,8 @@ Pregunta al humano directamente por lo que necesitas, en una sección `## Necesi
 3. **Necesito anclar la paleta al dominio antes de generar tokens:** ¿Tienes una paleta de colores o referencia de color para el dominio?
 
 El humano puede aportar estas referencias directamente o pedir que el `explorer` las investigue (ver nota abajo).
+
+**Fallback si no llegan referencias ni investigación del explorer:** usa `reference/domain-styles.md` de `/design-system` como banco local para anclar la dirección visual (paleta, pairings de fuentes y densidad por dominio). El diseño por dominio nunca parte de cero. Declara la elección en `## Design References` como "dirección basada en banco local de dominio, pendiente de validar con referencias reales".
 
 > **Nota sobre cómo obtener investigación:** Si no hay referencias inline → devolver al humano con: "Necesito que el explorer investigue: [dominio] UI design, mejores apps para el dominio, Google Fonts apropiadas, paletas de color". Las fuentes recomendadas por categoría están en `reference/design-resources.md` dentro del skill `/design-system` — el explorer las usa como guía. El humano pasa los hallazgos inline en el siguiente prompt.
 
@@ -202,7 +204,9 @@ Antes de especificar CUALQUIER componente en el Design Spec:
 
 1. **Auditoría de navegación:** Cada botón, enlace o CTA en cada pantalla → ¿tiene una pantalla de destino diseñada? Si existe el botón "Crear workflow", la pantalla "Crear workflow" DEBE estar en la spec
 2. **Estados interactivos:** Cada dropdown, modal, menú, acordeón → ¿está diseñado el estado expandido/abierto? (dropdown de avatar, menú hamburguesa, dropdowns de filtro)
-3. **Cobertura de plataforma:** Si Platform es `web` con responsive → cada pantalla necesita un layout mobile (375px). No solo "cards en lugar de tablas" — spec mobile completa
+3. **Cobertura de plataforma:** distingue dos casos:
+   - **Web responsive:** cada pantalla necesita un layout mobile (375px). No solo "cards en lugar de tablas" — spec mobile responsive completa
+   - **App nativa** (`mobile` o `both` con target de app): las pantallas móviles se diseñan con **patrones nativos** de `reference/mobile-patterns.md` — tab bar en lugar de hamburguesa, navigation stack/large title, bottom sheets, thumb zone, safe areas, formularios con teclado gestionado. NO una spec web encogida a 375px
 4. **Cobertura de modo:** Si light+dark → AMBOS modos deben mostrarse para al menos: pantallas de auth, dashboard principal, una pantalla de detalle y dashboard mobile
 5. **Ubicación del toggle de tema:** ¿DÓNDE cambia el usuario de modo? Diseña el elemento UI específico (¿toggle en nav? ¿switch en settings? ¿ítem de menú?)
 6. **Menú de usuario:** ¿DÓNDE ve el usuario perfil/settings/logout? Diseña ambas versiones: desktop (dropdown) y mobile (en menú hamburguesa)
@@ -273,7 +277,7 @@ Micro-interacciones, estados de carga, UX de manejo de errores, estados vacíos,
 
 #### 3.6 — Accesibilidad (OBLIGATORIO)
 
-- Contraste WCAG AA verificado contra tokens para todos los modos
+- Contraste WCAG AA **verificado calculando con la fórmula de `reference/color-craft.md`** (de `/design-system`) contra tokens para todos los modos — este agente no tiene acceso a herramientas web, así que el contraste se calcula, no se asume. Cita los ratios calculados en la spec (ej. "text-primary sobre surface = 8.6:1")
 - Flujo de navegación por teclado
 - Lector de pantalla (roles ARIA, etiquetas)
 - Gestión del foco
