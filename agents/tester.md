@@ -127,9 +127,9 @@ Identifica el/los stack(s) desde el prompt del humano o el nombre del archivo de
 | React / TypeScript | `skills/react-conventions/testing-guide.md` |
 | Flutter / Dart | `skills/flutter-conventions/testing-guide.md` |
 | Swift / iOS nativo | `skills/swift-conventions/testing-guide.md` (guía autoritativa: Swift Testing vs XCTest, snapshot, determinismo) |
-| Python | `skills/python-conventions/testing-guide.md` |
-| Rust | `skills/rust-conventions/testing-guide.md` |
-| Astro | `skills/astro-conventions/testing-guide.md` |
+| Python | `skills/python-conventions/guides/testing/pytest.md` |
+| Rust | `skills/rust-conventions/guides/testing/patterns.md` |
+| Astro | `skills/astro-conventions/SKILL.md` (no hay testing-guide dedicada; para tests de componentes/islands aplica además `skills/react-conventions/testing-guide.md` + `skills/typescript-conventions/guides/testing/vitest.md`) |
 | E2E (web/desktop/mobile) | `skills/e2e-test-run/SKILL.md` |
 
 **Reglas:**
@@ -312,10 +312,19 @@ El handoff indica qué tipos de test escribir. El tester debe reconocer estos ti
 ## Reglas Universales
 
 **Reglas de forma (siempre aplican al escribir):**
-- tests table-driven (Go/Rust) / bloques describe (React/Flutter/TS) / parametrize (Python) / `@Test(arguments:)` parametrizados con Swift Testing (`@Test`, `#expect`, `#require`, `@Suite`) para unit Swift — XCTest SOLO para XCUITest y performance; prohibido mezclar `#expect` con `XCTestCase` en un mismo test
+
+- **Parametrización obligatoria (regla dura):** múltiples casos que ejercen la MISMA función/método/componente con distintas combinaciones input→output ⇒ **UN solo test parametrizado**. **Prohibido crear una función de test por caso** (`Test_GetUser_exito`, `Test_GetUser_404`, `Test_GetUser_errorDB` son un anti-patrón — deben ser un único `Test_GetUser` con una tabla de casos). Mecanismo por stack:
+  - **Go / Rust** — table-driven: un slice/array de casos + `t.Run(tc.name, …)` por caso (Rust: `rstest` con `#[case]`, o loop sobre vector de casos)
+  - **TypeScript / React** — `it.each` / `test.each` con un array tipado de casos `{ name, input, expected }`. Los `it`/`test` sueltos dentro de un `describe` se reservan para **escenarios de setup o interacción distintos** (ej. "muestra error al enviar vacío" vs "llama onSubmit con datos válidos"), NO para variaciones de input→output de la misma unidad
+  - **Flutter / Dart** — loop `for (final c in cases)` sobre una lista de casos con descripción, dentro de un `group`, generando un `test`/`testWidgets` por caso desde la tabla
+  - **Python** — `@pytest.mark.parametrize` — una función de test, muchos casos
+  - **Swift** — `@Test(arguments:)` de Swift Testing con la colección de casos
+- **Swift unit:** Swift Testing (`@Test`, `#expect`, `#require`, `@Suite`) — XCTest SOLO para XCUITest y performance; prohibido mezclar `#expect` con `XCTestCase` en un mismo test
 - regresión visual: golden tests en Flutter; snapshot testing con pointfreeco/swift-snapshot-testing en Swift (equivalente de los golden), con device/OS de referencia fijo en CI
 - tests deterministas — sin flakiness, sin aserciones dependientes del tiempo
 - testea el comportamiento, no la implementación
+
+**Interpretación de la lista cerrada del handoff frente a la parametrización:** cuando varios ítems de `### Tests requeridos — por stack` son casos de la MISMA función/componente (ej. `1. Test_GetUser éxito`, `2. Test_GetUser 404`, `3. Test_GetUser error DB`), se implementan como **CASOS de un único test parametrizado**, no como funciones separadas. Agruparlos NO viola la lista cerrada ni la reduce: cada caso listado sigue cubierto, solo cambia la forma (una función con N casos en vez de N funciones). La cobertura exigida se mantiene intacta.
 
 **Criterios de la matriz de gaps (NO son mandato de escribir tests extra por cuenta propia):**
 Los siguientes son los ejes con los que construyes la matriz de escenarios esperables del PASO 3.a. Alimentan el análisis de gaps que reportas al humano — no autorizan agregar tests en silencio por fuera de la lista cerrada:

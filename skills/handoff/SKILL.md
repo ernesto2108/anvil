@@ -108,9 +108,11 @@ El desarrollador completa `## Input recibido` al crear el handoff. Es un acuse d
 La lista de tests que el developer entrega es la **lista cerrada** que define el alcance del tester. Una lista pobre produce cobertura incompleta, porque el tester no agrega tests en silencio. Por eso la lista DEBE incluir como mínimo:
 
 - **(a)** un caso de éxito y un caso de error por cada interfaz pública listada en `### Public interfaces / contracts`
-- **(b)** un test por cada entrada de `### Edge cases descubiertos`
+- **(b)** un caso por cada entrada de `### Edge cases descubiertos`
 
-Si un edge case declarado se deja **intencionalmente** sin test, anotarlo en la lista con el motivo (ej. `— sin test: cubierto por validación de tipos en compilación`). Nunca dejar un edge case declarado sin test y sin explicación: el tester lo reportará como gap al humano.
+**Estos mínimos son CASOS, no funciones de test independientes.** Agrupar por función/método/componente: cada ítem de la lista es UN test parametrizado (table-driven en Go/Rust, `it.each`/`test.each` en TS/React, loop sobre casos en Flutter, `@pytest.mark.parametrize` en Python, `@Test(arguments:)` en Swift) que enumera sus casos en una sub-línea. Formato correcto: `1. Test_GetUser — casos: éxito, 404, error de DB` — NO tres ítems `Test_GetUser_exito` / `Test_GetUser_404` / `Test_GetUser_errorDB`. El tester implementa una función por unidad con N casos, nunca N funciones. Agrupar así no reduce la cobertura: cada caso listado sigue exigido.
+
+Si un edge case declarado se deja **intencionalmente** sin caso, anotarlo en la lista con el motivo (ej. `— sin caso: cubierto por validación de tipos en compilación`). Nunca dejar un edge case declarado sin caso y sin explicación: el tester lo reportará como gap al humano.
 
 ### Output entregado (antes de terminar)
 
