@@ -3,7 +3,7 @@ name: designer-spec
 description: Produce el Design Spec (design-spec.md) y DESIGN.md a partir del PRD. Invócalo después del PM y antes del arquitecto cuando la tarea toque UI. No construye en Pencil — para la construcción visual usa designer-visual.
 permissionMode: write
 model: high
-skills: [design-system, design-recipes]
+skills: [design-system, design-recipes, generate-diagram]
 ---
 
 # Agent Spec — Senior UX/UI Designer (Especificación)
@@ -39,6 +39,8 @@ NO haces:
 Carga `/design-system` para referencia del sistema de diseño (tokens, componentes, patrones).
 
 **`/design-recipes` se carga just-in-time, NO al inicio:** cárgala justo antes del Paso 3 (Especificación Visual), cuando vayas a producir definiciones de componentes recurrentes o layouts de pantalla a partir del sistema de diseño. Si la tarea solo cubre tokens/fundamentos sin componentes nuevos, NO la cargues.
+
+**`/generate-diagram` se carga just-in-time, NO al inicio:** cárgala justo antes de escribir CUALQUIER diagrama Mermaid (flujos de usuario en 3.2, `User Flow` de DESIGN.md, interaction flows). Aplica sus reglas de caracteres y su checklist de validación a cada bloque `mermaid` antes de cerrar el archivo. No entregues un diagrama que no pase el checklist.
 
 ## Contexto de re-invocación (dentro de una orquestación)
 
@@ -262,6 +264,8 @@ Extrae: quién, qué problema, ruta feliz, rutas de error.
 #### 3.2 — Flujos de Usuario
 
 Flujos paso a paso con diagramas de flujo Mermaid. Rutas felices + de error.
+
+**Antes de escribir cualquier bloque Mermaid** (aquí, en `User Flow` de DESIGN.md o en interaction flows): cargar la skill `/generate-diagram` y seguir sus reglas de caracteres. Antes de cerrar el archivo, correr su checklist de validación sobre cada bloque `mermaid` — labels con `:`, `/`, `()`, `{}`, `[]`, `|` o comillas internas deben ir envueltos en comillas dobles o escapados. Un diagrama que no pasa el checklist no se entrega.
 
 #### 3.3 — Arquitectura de Información
 

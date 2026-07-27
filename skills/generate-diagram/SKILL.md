@@ -66,6 +66,54 @@ Si el label necesita comillas internas: `A["Etiqueta con \"interna\""]` no es v�
 
 ---
 
+## Reglas de caracteres en `sequenceDiagram` (CRÍTICO)
+
+El léxico de `sequenceDiagram` es distinto al de flowchart. Los mensajes (`A->>B: texto`) y las notas (`Note over A,B: texto`) tienen sus propias trampas de parseo. Aplicar estas reglas siempre.
+
+### `;` PROHIBIDO en cualquier texto de mensaje o Note
+
+Mermaid trata `;` como **separador de statements** — corta la línea en ese punto y el resto del texto se interpreta como sintaxis, rompiendo el diagrama.
+
+- Nunca uses `;` dentro del texto de un mensaje (`A->>B: texto`) ni de una `Note`.
+- Alternativas: reformular con `—` (em dash), partir en dos mensajes/Notes separados, o usar `<br/>` como separador visual. **Nunca** pongas `;` antes de un `<br/>` — el `;` rompe igual.
+
+Ejemplos:
+
+```
+%% incorrecto
+Bot->>Bot: upsert telegram_link(userID, chat_id); DEL code
+Note over C,S: Session NO se persiste por turno;<br/>solo en /exit o Ctrl+C
+
+%% correcto
+Bot->>Bot: upsert telegram_link(userID, chat_id) — DEL code
+Note over C,S: Session NO se persiste por turno<br/>solo en /exit o Ctrl+C
+```
+
+### El error `got ','` en una Note casi siempre delata un `;` previo
+
+Una coma dentro del texto de una `Note over A,B: texto` (después del primer `:`) **es válida** y parsea correctamente por sí sola. Cuando veas el error confuso `got ','` en una Note, la causa raíz casi siempre es un `;` anterior en la misma línea: el `;` corta el statement y el fragmento restante (ej. `no SQL puro`) se reparsea como sintaxis nueva, donde la coma se interpreta como separador de participantes y produce el error visible.
+
+- Fija el `;`, no la coma. Al eliminar el `;` (regla anterior), el error desaparece.
+
+```
+%% incorrecto — el ';' corta el statement; la coma del fragmento restante dispara "got ','"
+Note over Dev,DB: DB single-user sin datos criticos; backfill es paso de app (requiere cifrado), no SQL puro
+
+%% correcto — sin ';', la coma en el texto ya es válida
+Note over Dev,DB: DB single-user sin datos criticos — backfill es paso de app (requiere cifrado) — no SQL puro
+```
+
+### `:` adicionales en el mensaje SÍ son válidos
+
+A diferencia de flowchart (donde `:` rompe labels de nodo), en `sequenceDiagram` el primer `:` separa el destino del texto; cualquier `:` **posterior** dentro del texto es válido. No hace falta escaparlo ni reformularlo.
+
+```
+%% válido
+API->>DB: SELECT status: activo
+```
+
+---
+
 ## Reglas de subgraph
 
 ```mermaid
@@ -255,6 +303,10 @@ Antes de cerrar cualquier documento que incluya un bloque Mermaid, verificar cad
 - [ ] Si se representa arquitectura estilo C4, usar `flowchart LR` con subgraphs (nunca `C4Context`/`C4Container` — son experimentales en Mermaid y su sintaxis puede cambiar sin aviso).
 - [ ] Todos los nodos referenciados en edges/flechas están definidos en el diagrama (no hay edges huérfanos a IDs inexistentes).
 - [ ] Ningún label sin comillas contiene `:`, `(`, `)`, `/`, `#`, `&` o `"` interno.
+- [ ] Ningún label de flowchart **inicia con `/`** sin comillas (ej. `B[/register]`) — `[/...]` abre la forma trapecio y rompe. Envolver en comillas: `B["/register"]`.
+- [ ] Ningún label contiene **brackets anidados** sin comillas (`{}` o `[]` dentro de otro label, ej. `B{objects[] presente?}` o `F[PUT .../{id}/...]`) — envolver el texto completo en comillas DENTRO de la misma forma (`{"..."}`, `["..."]`), nunca cambiar la forma del nodo.
+- [ ] **`sequenceDiagram`:** ningún texto de mensaje (`A->>B: texto`) ni de `Note` contiene `;` (es separador de statements en Mermaid).
+- [ ] **`sequenceDiagram`:** si aparece el error `got ','` en una `Note`, buscar y eliminar el `;` previo en la misma línea (es la causa raíz; la coma en el texto de la Note es válida por sí sola).
 - [ ] Todos los subgraphs tienen ID sin espacios ni caracteres especiales y cierran con `end`.
 - [ ] El bloque está encerrado en triple backtick con `mermaid` como language tag: ` ```mermaid ... ``` `.
 - [ ] El diagrama cabe en una pantalla estándar (objetivo ≤15 nodos, ≤20 edges). Si excede, partir en varios diagramas con un foco distinto cada uno.
@@ -275,6 +327,15 @@ Si algún ítem falla → corregir antes de entregar.
 | `A --> B --> ` (edge incompleto) | `A --> B` | Edges colgantes producen errores opacos |
 | Definir `B` solo en un edge `A --> B` y nunca darle forma | `A --> B[Etiqueta de B]` | Sin forma definida, el nodo aparece como ID literal |
 | Mezclar `participant` y nodos de flowchart | Elegir UNO: o `sequenceDiagram` o `flowchart` | Cada keyword tiene su propio léxico |
+| `B[Click "Memories" en sidebar]` | `B["Click &quot;Memories&quot; en sidebar"]` | Comillas internas sin `&quot;` rompen el label |
+| `A[Usuario click en ToolChip 'fs' (off)]` | `A["Usuario click en ToolChip 'fs' (off)"]` | Paréntesis sin envolver el label en comillas |
+| `F[PUT mail-account/{id}/mail-sources - set completo]` | `F["PUT mail-account/{id}/mail-sources - set completo"]` | Llaves `{}` dentro de label `[]` sin comillas |
+| `SEG[U2 GoalTypeSelector: Este mes \| Largo plazo]` | `SEG["U2 GoalTypeSelector: Este mes \| Largo plazo"]` | Pipe `\|` y `:` en label sin comillas |
+| `B[/register]` | `B["/register"]` | Label que inicia con `/` abre la forma trapecio `[/...]` y rompe |
+| `B{objects[] presente y no vacio?}` | `B{"objects[] presente y no vacio?"}` | Corchetes `[]` dentro de label `{}` sin comillas — envolver DENTRO de las llaves para preservar la forma de decisión |
+| `Bot->>Bot: upsert link; DEL code` | `Bot->>Bot: upsert link — DEL code` | `;` es separador de statements en sequenceDiagram — corta la línea |
+| `Note over API,VC: sin bytes; stateless` | `Note over API,VC: sin bytes — stateless` | `;` en el texto de la Note rompe el parseo |
+| `Note over Dev,DB: sin datos criticos; backfill ..., no SQL puro` | `Note over Dev,DB: sin datos criticos — backfill ... — no SQL puro` | El `;` corta el statement; el fragmento restante dispara el error `got ','` (la coma es síntoma, el `;` es la causa raíz) |
 | `C4Context` / `C4Container` | `flowchart LR` con subgraphs | Syntax experimental en Mermaid — puede romperse con cualquier upgrade |
 
 ---
