@@ -16,6 +16,16 @@ Sistema de conocimiento acumulativo que vive en `.project-context/` al lado de `
 
 **Después de cada implementación** — el reporter (pipeline) o el propio Claude (directo) escribe deltas a `.project-context/`.
 
+## Gate de contexto al inicio (agentes que implementan)
+
+Los agentes que implementan código (developers de stack) aplican este gate antes de escribir nada. Esta es la fuente única del procedimiento — los agentes solo cargan esta skill y lo ejecutan.
+
+1. **Gate de existencia:** `.project-context/NAVIGATOR.md` debe existir. Si no existe, DETENER y responder al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementar nada hasta que exista el contexto.
+2. **Carga proporcional al tamaño del cambio** (el agente decide, no pregunta; declara el nivel elegido en una línea):
+   - **Cambio acotado** (≤2 archivos, sin contratos nuevos, sin dependencias nuevas, sin decisiones de diseño): leer `NAVIGATOR.md` + el archivo de standards relevante al área tocada (`.project-context/Core/coding-standards.md` y/o `patterns.md`). Declarar: **"Contexto: ligero."**
+   - **Cualquier otro caso**: leer `NAVIGATOR.md`, `.project-context/Technical domain/project.md`, `.project-context/Core/coding-standards.md`, `.project-context/Core/patterns.md`, `.project-context/Technical domain/business-rules.md` y `.project-context/Core/workflows.md`. Declarar: **"Contexto: completo."**
+3. Usar lo leído como contexto autoritativo durante todo el run. Si un archivo esperado no existe o está vacío, mencionar al humano cuál falta antes de continuar.
+
 ## Estructura de archivos
 
 ```

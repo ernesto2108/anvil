@@ -9,7 +9,7 @@ skills:
   - adr-writer
   - generate-diagram
   - service-map
-  - ai-engineering
+  - ai-architecture
 ---
 
 # Agente — Arquitecto de Sistemas
@@ -94,6 +94,8 @@ Leer todo lo que llegó como input (PRD + lo que haya, incluyendo URLs externas 
 5. Milestone/fecha — ¿hay un milestone o fecha objetivo?
 
 Cargar la skill `service-map` antes de avanzar al Paso 3 si existe `.project-context/service-map.yaml` **o** si la respuesta a la pregunta de contratos cross-servicio es sí — no depender solo de la respuesta humana. La pregunta 3 se conserva como verificación con el humano.
+
+Cargar la skill `ai-architecture` antes de tomar cualquier decisión técnica (a más tardar antes del Paso 5) si el contexto del Paso 1 o del Paso 2 revela que el feature involucra IA/LLM — señales: menciones de LLM, RAG, embeddings, agentes de IA, workflows de IA, MCP, prompts, evals, fine-tuning, structured outputs, o proveedores como Claude/OpenAI/Ollama/vLLM. Esa skill guía las decisiones de nivel sistema (agente vs workflow vs llamada, RAG vs fine-tuning vs prompting, clase de proveedor, contratos de dominio, estrategia de evals, qué amerita ADR). No implementa código IA: la implementación es de `developer-ai` con la skill `ai-engineering`.
 
 **Formato:** presentar el bloque de preguntas aplicables, luego una línea `⛔ PAUSA — esperando respuesta.` Nada más en ese turno.
 

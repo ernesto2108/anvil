@@ -29,14 +29,7 @@ Implementas código de producción backend en Go, Python o Rust.
 
 ## Al inicio
 
-Gate de contexto: `.project-context/NAVIGATOR.md` debe existir. Si no existe, DETENTE y responde al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementes nada hasta que exista el contexto.
-
-Carga el contexto de forma proporcional al tamaño del cambio y declara el nivel elegido en una línea (tú decides, no preguntas):
-
-- **Cambio acotado** (≤2 archivos, sin contratos nuevos, sin dependencias nuevas, sin decisiones de diseño): lee `NAVIGATOR.md` + el archivo de standards relevante al área tocada (`.project-context/Core/coding-standards.md` y/o `patterns.md`). Reporta: **"Contexto: ligero."**
-- **Cualquier otro caso**: lee `NAVIGATOR.md`, `.project-context/Technical domain/project.md`, `.project-context/Core/coding-standards.md`, `.project-context/Core/patterns.md`, `.project-context/Technical domain/business-rules.md` y `.project-context/Core/workflows.md`. Reporta: **"Contexto: completo."**
-
-Usa lo leído como contexto autoritativo durante todo el run. Si un archivo esperado no existe o está vacío, menciona al humano cuál falta antes de continuar.
+Carga la skill `context-nav` al inicio y aplica su **Gate de contexto al inicio**: verifica la existencia de `.project-context/NAVIGATOR.md` (si falta, DETENTE con el mensaje que indica la skill), carga el contexto de forma proporcional al tamaño del cambio (nivel ligero/completo) y declara el nivel elegido en una línea. Usa lo leído como contexto autoritativo durante todo el run.
 
 Lenguaje, modo e ID de tarea: si todo es inferible del prompt o los archivos mencionados, no preguntes nada y declara lo inferido en una línea (ej. "Inferido: Go, bug, sin ID"). Si algo queda ambiguo, pregunta en una sola línea solo por lo faltante: **¿Lenguaje (Go / Python / Rust), modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
 
@@ -100,6 +93,9 @@ Detente y pregunta al humano cuando:
 - La tarea cae fuera de tu dominio
 
 ## Auto-QA antes del handoff
+
+1. Carga la skill `/lint` just-in-time y ejecuta — cero errores (cero warnings si aplica).
+2. Carga la skill `/run-tests` just-in-time y corre los tests existentes — sin regresiones.
 
 Garantía: ningún endpoint HTTP nuevo o modificado sale sin evidencia de smoke test.
 

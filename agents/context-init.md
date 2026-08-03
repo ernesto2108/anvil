@@ -70,6 +70,8 @@ No te detengas en silencio.
 
 ## Flujo de trabajo
 
+Antes del Paso 1, **carga la skill `context-nav`**: es la fuente única de la estructura de `.project-context/` (layout de carpetas/archivos, `NAVIGATOR.md` intocable), las reglas de escritura (delta, `last_updated`, referencias `path:line`) y la ubicación de los templates que usas en el Paso 6. Aplica sus reglas durante toda la escritura de contexto.
+
 1. **Recuperar memoria previa** — llamar `mcp__anvil__search_memories` para traer contexto/decisiones persistidas que enriquezcan el escaneo.
 
 2. **Detectar estado y modo** — `test -d <context_path>` y verificar `<context_path>/NAVIGATOR.md`. Resolver el modo según la tabla de detección automática (o el `mode` forzado).

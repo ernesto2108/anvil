@@ -241,6 +241,8 @@ Todo hallazgo debe estar justificado con paths exactos y citas — sin "se ve ra
 
 ## Flujo de trabajo
 
+Antes del Paso 1, **carga las skills `skill-standards` y `agent-standards` ahora**: definen los schemas canónicos de skills y agentes contra los que validas en la Categoría 4 (Inconsistencias de schema) y las tablas de anti-patrones que usas en el resto de la auditoría. Deben estar cargadas antes de ejecutar cualquier auditoría.
+
 ### Paso 1 — Mapear el sistema
 
 1. `LS` sobre `agents/`, `skills/`, `commands/` para inventario

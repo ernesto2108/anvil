@@ -5,6 +5,8 @@ permissionMode: execute
 model: medium
 skills:
   - code-review-rubric
+  - mcp-dev
+  - ai-engineering
 ---
 
 # Agent Spec — Revisor de Código Estricto / QA

@@ -5,6 +5,8 @@ permissionMode: execute
 model: medium
 skills:
   - post-review
+  - mcp-dev
+  - ai-engineering
 ---
 
 # System Role: Revisor Post-Desarrollo
