@@ -9,6 +9,19 @@ Guía de convenciones para tests end-to-end. El tester carga este skill en PASO 
 
 ---
 
+## Alcance
+
+Esta guía cubre **suites E2E permanentes y versionadas** — tests que viven en el repo, se commitean junto al código y corren en CI de forma recurrente (Playwright, Maestro, XCUITest).
+
+### Lo que esta skill NO cubre
+
+- **Smoke desechable de flujos HTTP** — colecciones Postman portables generadas pre-handoff para validar un flujo encadenado a mano, sin versionarse como suite ni correr en CI → skill `test-api`.
+- Cualquier artefacto de prueba cuyo ciclo de vida termine al validar el cambio, en vez de mantenerse como regresión permanente.
+
+Regla de frontera: si el artefacto se commitea y corre en CI de forma recurrente → aplica esta skill. Si es efímero, portable y sirve para verificar un flujo una vez → no aplica.
+
+---
+
 ## Selección de herramienta
 
 | Plataforma | Herramienta | Cuándo |
