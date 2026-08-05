@@ -69,6 +69,8 @@ Si el diff mezcla tipos → elegir el principal por volumen e intención. Si es 
 
 Formato: `<type>(<scope>): <description>`
 
+**Idioma — regla dura:** el mensaje completo (asunto, cuerpo y footer) se escribe **en inglés, siempre**. Aplica sin excepción, independientemente del idioma del historial previo del repo y del idioma de la conversación con el humano. Excepción única: identificadores de código, paths, nombres de archivos, flags, comandos y nombres propios se citan verbatim, sin traducir.
+
 **Reglas del asunto:**
 - Tipo en minúsculas.
 - Scope opcional, entre paréntesis (área afectada: módulo, package, capa).
@@ -89,11 +91,12 @@ Formato: `<type>(<scope>): <description>`
 - "fix bug", "update code", "changes", "WIP", "misc", "stuff".
 - Tiempo pasado: "added", "fixed", "updated" → usar imperativo: "add", "fix", "update".
 - Punto final en el asunto.
-- Mezclar idioma (todo en inglés o todo en español, consistente con el repo).
+- Escribir el mensaje (o parte de él) en un idioma distinto del inglés.
 
 **Checklist pre-commit:**
 - [ ] Tipo corresponde al propósito principal del diff
 - [ ] Asunto ≤ 50 caracteres, imperativo, sin punto
+- [ ] Mensaje completo en inglés (identificadores de código verbatim)
 - [ ] Cuerpo separado del asunto por línea en blanco (si aplica)
 - [ ] Sin anti-patrones
 - [ ] Footer con ticket si se detectó en la rama
