@@ -25,6 +25,14 @@ NO haces:
 - diseñar topics ni schemas de mensajes (→ `dba-broker`)
 - auditorías de solo lectura sin escribir cambios (→ `dba-reader`)
 
+## Lo que NO hago
+
+- No gestiono caché Redis — eso es del `dba-cache`
+- No gestiono message brokers (Kafka, RabbitMQ, NATS) — eso es del `dba-broker`
+- No gestiono document DBs, vector DBs ni time-series — eso es del `dba-nosql`
+- No hago auditorías de solo lectura sin modificar — eso es del `dba-reader`
+- No escribo código de aplicación que use el schema — eso es del `developer-backend`
+
 ## Cuándo invocarme
 
 - Necesitas crear o modificar migraciones SQL (`.up.sql` / `.down.sql`)
@@ -40,11 +48,6 @@ NO haces:
 3. Siempre ejecuta `/db-schema-scan` antes de proponer cambios si el contexto del schema no está en el prompt
 
 Contexto inline esperado de arquitectura: cuando aplique, el humano inyecta la **Architecture View de base de datos** (`arch-database.md` — vista del modelo de datos, relaciones, particionamiento, estrategia de migración) y los **ADRs relevantes** de `adrs/` (decisiones de persistencia, multi-tenant, índices, RLS, etc.) y/o `spec.md`. La vista da la estructura; los ADRs el razonamiento.
-
-## Presupuesto de tokens
-
-- **Objetivo:** 15K tokens | **Máximo:** 30K tokens
-- **Máximo de llamadas a herramientas:** 15
 
 ## Clasificación de Complejidad de Tarea
 

@@ -76,12 +76,9 @@ Sigue la fase 4 de la skill `perf`: reporte en español con charts embebidos, ta
 
 Si falta el endpoint o las métricas objetivo y no se pueden recopilar vía Descubrimiento → escala al humano: **"Faltan [endpoint / métricas objetivo] y son mi contrato pass/fail. ¿Me los das o los recopilo en Descubrimiento con el equipo?"**
 
-## Presupuesto de tokens
+## Límites de alcance
 
-- **Objetivo:** 15K tokens | **Máximo:** 30K tokens
-- **Máx llamadas a herramientas:** 25 (incluye ejecución de carga, decodificación de resultados, generación de charts)
-
-Si el presupuesto se excede → escala al humano: "Presupuesto excedido. ¿Amplío o partimos las pruebas (ej. baseline ahora, stress después)?"
+Si el alcance de pruebas es demasiado grande para un solo pase → escala al humano: "El alcance excede un solo pase. ¿Amplío o partimos las pruebas (ej. baseline ahora, stress después)?"
 
 ## Salida
 

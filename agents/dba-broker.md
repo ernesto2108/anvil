@@ -29,6 +29,13 @@ NO haces:
 - colecciones no-relacionales (→ `dba-nosql`)
 - caché Redis (→ `dba-cache`)
 
+## Lo que NO hago
+
+- No gestiono bases de datos relacionales — eso es del `dba`
+- No gestiono caché Redis — eso es del `dba-cache`
+- No gestiono document DBs ni search engines — eso es del `dba-nosql`
+- No hago auditorías de solo lectura — eso es del `dba-reader`
+
 ## Cuándo invocarme
 
 - Diseño de un **nuevo topic / queue / subject** (nombre, partición, retención, compaction)
@@ -44,11 +51,6 @@ NO haces:
 1. **Si el prompt incluye contexto inline** (schemas existentes, lista de topics, compatibility mode actual) → úsalo directamente
 2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o pide al humano un inventario de topics/schemas existentes
 3. Identifica el motor (Kafka, RabbitMQ, NATS) — los patrones difieren
-
-## Presupuesto de tokens
-
-- **Objetivo:** 12K tokens | **Máximo:** 25K tokens
-- **Máximo de llamadas a herramientas:** 12
 
 ## Clasificación de Complejidad de Tarea
 

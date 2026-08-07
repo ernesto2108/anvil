@@ -11,6 +11,8 @@ description: Patrones de diseño reutilizables para construir pantallas de forma
 
 Carga esta skill durante el **GATE de Ejecución de Diseño** en el pipeline de orquestación — después de que el diseñador produce `design-spec.md` y antes de ejecutar el diseño visual.
 
+> **Plataforma mobile nativa:** cuando el target sea una app nativa (iOS/Android), carga también `reference/mobile-patterns.md` del skill `/design-system`. Las recetas móviles de abajo son nativas — una app nativa no es una spec web encogida a 375px.
+
 ## Flujo de trabajo
 
 ### Paso 0 — Cargar Lineamientos de Pencil (si hay archivo .pen)
@@ -187,7 +189,77 @@ Card (surface bg, rounded-lg, border, padding 16):
 └── Metadatos (texto disabled, xs)
 ```
 
-### Receta 7: Menú Hamburguesa (Móvil)
+### Recetas Móviles Nativas (iOS / Android)
+
+> Estas recetas asumen **app nativa**. Cargar `reference/mobile-patterns.md` de `/design-system` para valores y reglas de plataforma. Unidades: `pt` iOS, `dp`/`sp` Android.
+
+#### Receta M1: Tab Bar Shell (app shell móvil por defecto)
+
+**Patrón:** El shell por defecto de una app nativa — tab bar inferior de 3-5 destinos top-level. **Reemplaza al menú hamburguesa como default** (ver evidencia NN/g en mobile-patterns.md).
+
+**Estructura:**
+```
+Pantalla (390×844):
+├── Safe area top (Dynamic Island 59pt / notch 47pt)
+├── Nav bar / large title (44pt compacta · ~96pt con large title 34pt bold)
+├── Contenido (single-column, scroll vertical, margen lateral 16)
+└── Tab bar (fondo capa nav):
+    iOS: 49pt + safe area 34pt · 3-5 tabs · icono ~25pt SF Symbol + label 10-11pt
+         · indicador = tint color · (iOS 26: cápsula flotante, inset 21pt)
+    M3:  80dp (Expressive 64dp) · icono 24dp + label 12sp · pill 64×32 secondaryContainer
+```
+
+**Reglas:** cada tab conserva su propio navigation stack; tab bar solo para navegación top-level (nunca para acciones "crear"); touch target ≥44pt iOS / ≥48dp Android. Si >5 destinos → replantear IA, no meter hamburguesa.
+
+#### Receta M2: Bottom Sheet
+
+**Patrón:** Superficie deslizante desde abajo para tareas cortas con contexto visible.
+
+**Estructura:**
+```
+Bottom sheet:
+├── Grabber/handle superior (iOS opcional · M3 drag handle 32×4dp, target 48×48)
+├── Corner radius superior (iOS ~10pt · M3 28dp)
+├── Contenido (detent medium ~50% o large full)
+├── Cierre visible (X / Cancel) además del swipe down
+└── Scrim/dimming del fondo (modal) — non-modal solo si no tapa contenido crítico
+```
+
+**Reglas:** detents medium para filtros/compartir/detalle rápido; nunca sheets anidados ni navegación multi-nivel dentro (→ full-screen modal).
+
+#### Receta M3: Formulario Móvil
+
+**Patrón:** Form single-column con teclado gestionado y CTA visible.
+
+**Estructura:**
+```
+├── Labels ARRIBA del campo, siempre visibles (nunca placeholder como único label)
+├── Campos (row mínima 44pt/48dp), teclado por tipo (email/phone/number/OTP), autofill ON
+├── Validación ON-BLUR: error directamente debajo del campo (icono + color + texto concreto)
+├── Acción del teclado: `next` en intermedios, `done`/`go` en el último
+└── CTA de submit VISIBLE con teclado abierto (anclado sobre el teclado o al final del scroll)
+```
+
+**Reglas:** el campo activo siempre visible sobre el teclado; nunca CTA fijo tapado por el teclado; pickers nativos por defecto.
+
+#### Receta M4: Pantalla de Detalle Móvil
+
+**Patrón:** Nav bar con back + contenido single-column + acciones en thumb zone.
+
+**Estructura:**
+```
+├── Nav bar: back "<" arriba-izq (iOS: + edge swipe borde izq · Android: system back)
+│   + título (iOS centrado · Android izquierda)
+├── Contenido single-column (imagen/hero → meta → cuerpo, margen 16, espaciado múltiplos de 8)
+└── Acciones primarias en el tercio inferior (thumb zone verde);
+    destructivas fuera de la zona verde o tras confirmación
+```
+
+**Reglas:** una tarea primaria por pantalla; profundidad antes que densidad; respetar safe areas (nada crítico bajo el home indicator 34pt).
+
+### Receta 7: Menú Hamburguesa (SOLO web responsive / mobile web)
+
+> **Alcance:** válida SOLO para **web responsive / mobile web**. En **apps nativas** NO uses hamburguesa como navegación primaria — usa la **Receta M1 (Tab Bar Shell)**. Evidencia NN/g (ver mobile-patterns.md): la navegación oculta reduce la discoverability ~2× y baja el uso de navegación 20-50%.
 
 **Patrón:** Overlay de pantalla completa con secciones
 

@@ -261,6 +261,23 @@ grep -E "branches:|on:|push:|pull_request:" .github/workflows/*.yml 2>/dev/null 
 
 Si no se encuentra información suficiente para poblar Estrategia de ramas, Proceso de PR o Ambientes, dejar esas secciones con `<!-- completar con el equipo -->` y mencionarlo en el output de cierre como gap pendiente.
 
+### Estrategia de migraciones
+
+```bash
+# Detectar herramienta de migraciones
+ls migrations/ db/migrations/ database/migrations/ 2>/dev/null
+find . -name "*.sql" -path "*/migrations/*" | head -5 2>/dev/null
+grep -r "golang-migrate\|goose\|flyway\|alembic\|prisma migrate\|sequelize" go.mod package.json requirements.txt pyproject.toml 2>/dev/null | head -5
+grep -rn "migrate.New\|migrate.Up\|goose.Up\|db.AutoMigrate" --include="*.go" | head -5 2>/dev/null
+```
+
+Con los hallazgos, poblar la sección `## Estrategia de migraciones` de `Technical domain/project.md`:
+- Herramienta detectada (o "no detectada — preguntar al humano")
+- Directorio inferido
+- Comando de ejecución si aparece en Makefile o scripts
+
+Si no hay evidencia suficiente, dejar la sección con `<!-- completar con el equipo -->` y mencionarlo como gap en el output de cierre.
+
 ## Paso 4 — Detectar bounded contexts
 
 ```bash
@@ -315,16 +332,20 @@ Si no hay hits o MCP no está disponible → dejar `decisions/` vacío (se llena
 
 Usar los templates en `templates/`. Escribir en este orden:
 1. `Technical domain/project.md`
-2. `Core/workflows.md` — secciones Grupo A (proceso de equipo, del Paso 3.6) + Grupo B (comandos operativos, del Paso 3.5)
+2. `Core/workflows.md` — tres grupos en orden:
+   - **Grupo 0 (fijo):** copiar verbatim la sección `## Modos de trabajo` del template `workflows.tmpl.md` — es contenido fijo del sistema, no se infiere del código
+   - **Grupo A (inferido):** proceso de equipo del Paso 3.6 (Estrategia de ramas, Proceso de PR, Ambientes, Deploy)
+   - **Grupo B (inferido):** comandos operativos del Paso 3.5 (Makefile, docker-compose, scripts, variables de entorno)
 3. `Core/coding-standards.md`
 4. `Core/patterns.md` — patrones de diseño inferidos en el Paso 2
 5. `Core/task-management.md` — poblar con la herramienta de gestión respondida por el humano + convenciones inferibles del repo; si el humano no respondió, dejar sección herramienta en blanco
 6. `Technical domain/contracts.md`
-7. `Technical domain/business-rules.md` — invariantes de negocio detectadas por grep
+7. `Technical domain/business-rules.md` — invariantes de negocio detectadas por grep — la sección `## Modelo de autenticación y autorización` se popula con la respuesta del humano del Paso 5.5 de context-init; si no hubo respuesta, dejar con `<!-- completar con el equipo -->`
 8. `Technical domain/dependencies.md`
 9. `Technical domain/domain.md` — dominios con > 3 archivos significativos
 10. `Technical domain/glossary.md` — pre-populado con entidades detectadas, marcadas como `⚠️ pendiente validación`
 11. `Technical domain/risks.md` — incluir top-5 archivos > 300 líneas como deuda potencial
+11.5. `service-map.yaml` — si el proyecto tiene múltiples servicios detectados (más de un `go.mod`, `package.json` o `pubspec.yaml` en subdirectorios distintos, o si el humano confirmó microservicios en el Paso 5.5 de context-init): generar desde `service-map.tmpl.yaml` con los servicios detectados. Si es un monolito o servicio único, omitir este archivo.
 12. `decisions/NNN-slug.md` — solo los que tienen evidencia del Paso 6
 13. `Core/navigation.md` — índice de Core
 14. `Technical domain/navigation.md` — índice de Technical domain

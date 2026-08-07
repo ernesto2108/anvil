@@ -5,6 +5,8 @@ description: Guía al `architect` a producir Architecture Views ligeras (formato
 
 # Architecture Views — arc42 + C4 ligero
 
+> **Nota de contexto:** Esta skill se carga en el Paso 5 del flujo del architect, solo si el usuario eligió el formato por defecto en el Paso 3. No se carga automáticamente. Las vistas NO se escriben hasta que el agente pasó por el Paso 3 (confirmar plan) y el Paso 4 (confirmar paths).
+
 ## Filosofía
 
 Las **Architecture Views** responden a *¿cómo está estructurado el sistema?*. Los **ADRs** responden a *¿por qué está estructurado así?*. Ambos artefactos coexisten y se complementan:
@@ -18,7 +20,7 @@ Una vista NO es un ADR agregado — es un mapa estructural por dominio. Un ADR N
 
 ## Cuándo producir vistas
 
-El `architect` produce una Architecture View por cada dominio relevante al feature:
+Cuando se usa esta skill, el `architect` produce una Architecture View por cada dominio relevante al feature:
 
 - `arch-backend.md` — servicios, módulos, capas, integraciones backend
 - `arch-frontend.md` — jerarquía de componentes, routing, estado, contratos con backend
@@ -135,7 +137,7 @@ sequenceDiagram
 
 ## Output del architect
 
-El `architect` produce **ambos** artefactos en su run:
+Cuando se usa esta skill (formato por defecto confirmado en el Paso 3), el `architect` produce **ambos** artefactos en su run:
 
 1. **Architecture Views** (`arch-<dominio>.md`) — el mapa estructural del sistema desde las perspectivas relevantes al feature.
 2. **ADRs** (`adrs/ADR-NNN-<slug>.md`) — los registros de decisión Nygard para cada decisión arquitectónica significativa.
@@ -145,10 +147,50 @@ Las vistas primero (estructura), los ADRs emergen mientras se toman las decision
 ## Consumidores aguas abajo
 
 - `spec-writer` — lee **ambos** (vistas + ADRs) para producir `spec.md`.
-- `task-decomposer` — lee `arch-<dominio>.md` para entender capas y componentes, y `adrs/` para entender restricciones de decisiones.
+- `task-writer` — lee `arch-<dominio>.md` para entender capas y componentes, y `adrs/` para entender restricciones de decisiones.
 - `dba` / `dba-nosql` — leen `arch-database.md` + ADRs relevantes.
 - `diagrammer` — recibe `arch-<dominio>.md` como fuente de vistas a expandir en `.drawio`, y ADRs como contexto de decisiones.
 - Cualquier developer / reviewer — la vista es el mapa de orientación; los ADRs explican por qué.
+
+## Diagramas embebidos en ADRs
+
+Cuando un ADR se beneficie de una visualización (flujo, secuencia, estados, schema), incluir al menos un diagrama Mermaid embebido en `## Context` o `## Decision`. Cargar la skill `generate-diagram` para validar la sintaxis.
+
+**Reglas duras:**
+
+1. ADRs que documentan flujo de datos, comunicación entre componentes o ciclo de vida → incluir al menos un diagrama.
+2. ADRs de persistencia / schema → incluir `erDiagram` con las entidades del cambio.
+3. Cada diagrama debe pasar el checklist de validación de `generate-diagram`.
+4. Si el diagrama excede el alcance de Mermaid → escalar al humano: `Pregunta abierta: el diagrama de [X] requiere drawio standalone — ¿quieres que lo produzca el agente diagrammer?`.
+
+## Gate de verificación de paths (antes de cerrar archivos)
+
+Antes de finalizar cualquier vista o ADR que referencie paths o nombres de paquetes, verificar que existen:
+
+- Usar `Glob` para verificar que directorios/archivos referenciados existen.
+- Usar `Grep` para confirmar que tipos/interfaces que referencias realmente existen.
+- Si un path NO existe, marcarlo explícitamente como `NEW`.
+- Verificar afirmaciones de estado — si el documento dice "agregar X", `Grep` literal X primero para confirmar que NO existe.
+
+Este gate cuesta 2-4 llamadas Glob/Grep y previene una re-invocación del developer.
+
+### Reconocimiento obligatorio para archivos NEW (decisión de ubicación)
+
+Para CADA archivo NEW que se introduzca:
+
+1. **Listar el directorio destino** con `LS` (1 call). Si el directorio no existe, listar el directorio padre y justificar la creación.
+2. **Leer 1 archivo vecino** (1 call) para identificar el patrón local (naming, organización por concern).
+3. **Registrar la justificación** inline (en el ADR, dentro de `## Implementation notes`).
+
+**Límite duro:** máximo 2 calls por archivo NEW. Si necesitas más exploración → escalar al humano con `Pregunta abierta: necesito que el explorer evalúe duplicados/utils existentes para [archivo NEW] en [áreas]`.
+
+## Consistencia de contratos cross-ADR
+
+Cuando múltiples ADRs tocan contratos relacionados (ej. backend define el schema, frontend define el tipo TS, mobile define el modelo Dart):
+
+- Definir el contrato canónico UNA VEZ en el ADR primario (típicamente el backend).
+- Los ADRs secundarios (frontend, mobile, infra) referencian el ADR primario por su número.
+- Nunca duplicar la definición de contrato con formas diferentes entre ADRs.
 
 ## Checklist de validación (antes de cerrar un `arch-<dominio>.md`)
 
@@ -160,3 +202,19 @@ Las vistas primero (estructura), los ADRs emergen mientras se toman las decision
 - [ ] Atributos de calidad cuantificados cuando aplican (números, no adjetivos)
 - [ ] Decisiones que justifican la estructura referencian ADRs por número, no las re-explican
 - [ ] Tamaño ≤ 2 páginas
+
+## Gate de handoff al spec-writer (antes de cerrar el run completo)
+
+Verificar antes de reportar al humano:
+
+- [ ] Cada **Architecture View** pasa el checklist de validación de arriba
+- [ ] Hay al menos una Architecture View por dominio relevante al feature (backend, frontend, mobile, database, infra según aplique)
+- [ ] Cada ADR pasa el checklist de la skill `adr-writer`
+- [ ] Las Views referencian ADRs por número cuando dependen de una decisión registrada (no re-explican la decisión)
+- [ ] Cada archivo NEW referenciado tiene justificación de ubicación
+- [ ] NFRs de `requirements.md` relevantes están cubiertos por al menos un ADR (latencia p99, SLO de disponibilidad, etc., con número concreto o `N/A` con justificación)
+- [ ] Contratos cross-ADR consistentes (no duplicar definiciones con formas distintas)
+- [ ] Para tareas Medium+ con componentes desplegables → existe al menos un ADR de infraestructura (topología, env vars, observabilidad, rollback). Excepción: tareas que no introducen ningún componente desplegable.
+- [ ] Sección `## Preguntas abiertas` presente en el mensaje de cierre (con contenido o con "Ninguna")
+
+Si algún ítem falta → completarlo antes de entregar al humano.

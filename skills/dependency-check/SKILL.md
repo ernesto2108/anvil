@@ -1,7 +1,6 @@
 ---
 name: dependency-check
 description: Analiza las dependencias del proyecto en busca de vulnerabilidades, problemas de licencia y versiones desactualizadas. Usar cuando el usuario diga "check dependencies", "audit packages", "outdated deps", "npm audit", "go mod tidy", "security vulnerabilities", o antes de actualizar librerías.
-user-invocable: true
 ---
 
 Analiza las dependencias del proyecto en busca de vulnerabilidades, problemas de licencia y actualizaciones.

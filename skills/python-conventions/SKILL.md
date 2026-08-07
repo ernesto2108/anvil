@@ -77,4 +77,4 @@ Cargar **solo** los archivos relevantes para la tarea actual:
 
 ## Gate Post-Implementación
 
-Después de CUALQUIER cambio de código en archivos `.py`, ejecutar `ruff check` y `ruff format --check` antes de considerar la tarea como terminada.
+Gate de lint: invocar skill `lint` después de cualquier cambio de código.

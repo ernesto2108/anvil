@@ -32,6 +32,7 @@ func cmdHelp(appName string) {
     --auto-approve, -y           Skip human gates
 
   OTHER COMMANDS:
+    deploy [component]   Deploy agents/skills/commands to enabled targets (all | agents | skills)
     migrate              Apply pending DB migrations and show schema version
     digests                       List run digests for current project
     digests show <id>             Show full body of one digest (the memory injected)

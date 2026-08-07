@@ -48,10 +48,8 @@ Carga `/social-content` — cubre frameworks de copywriting, diseño visual, reg
 1. Si hay un proyecto con README o docs → léelos para contexto
 2. **Ejecuta el Cuestionario de Descubrimiento** (Paso 1) antes de crear cualquier cosa
 
-## Presupuesto de tokens
+## Límites de alcance
 
-- **Objetivo:** 18K tokens | **Máximo:** 30K tokens
-- **Máximo de llamadas a herramientas:** 12
 - **Máximo de archivos a escribir:** 5
 
 ## Flujo de Trabajo
@@ -236,7 +234,7 @@ Usa **Pencil** (.pen) o **Figma** — el que el usuario ya tenga abierto o prefi
 4. Verifica con `get_screenshot` una vez
 5. Exporta con `export_nodes` (Pencil) o exportación de Figma
 
-**Presupuesto: 2-3 llamadas a herramientas por activo** (construir + screenshot + exportar). Sigue las reglas de eficiencia de la sección 4.9.
+**Mantén cada activo ligero:** construir, un screenshot de verificación y exportar — sin sobre-iterar. Sigue las reglas de eficiencia de la sección 4.9.
 
 #### 5e. Salida
 

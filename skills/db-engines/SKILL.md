@@ -1,6 +1,6 @@
 ---
 name: db-engines
-description: Conocimiento específico por motor para bases de datos relacionales (PostgreSQL, SQLite, MySQL), Redis, vectoriales, documentales, time-series, messaging y search engines. Mejores prácticas, drivers, migraciones y particularidades por motor. Cargar antes de escribir migraciones u optimizar queries.
+description: Conocimiento específico por motor para bases de datos relacionales (PostgreSQL, SQLite, MySQL), Redis, vectoriales, documentales, time-series, messaging y search engines. Mejores prácticas, drivers, migraciones y particularidades por motor. Cargar antes de escribir migraciones u optimizar queries. Úsalo cuando se tome una decisión sobre qué motor de base de datos usar, o cuando el architect o dba evalúen opciones de persistencia.
 ---
 
 # Referencia de Motores de Base de Datos

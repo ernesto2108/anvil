@@ -1,0 +1,59 @@
+# service-map.yaml — <ProjectName>
+# Generado por context-init. Actualizado por reporter (vía context-nav/update.md) y cross-service-dev.
+# NO editar manualmente las secciones marcadas como [auto].
+
+meta:
+  last_updated: <YYYY-MM-DD>
+  projects_root: <ruta absoluta donde viven los repos, ej: /Users/usuario/projects>
+
+services:
+  - name: <nombre-del-servicio>
+    description: <qué hace — 1 línea>
+    local_path: <path relativo desde projects_root>
+    repo_url: <URL del repo git, opcional>
+    stack: <go / python / node / flutter>
+    port: <puerto local en desarrollo, si aplica>
+
+    exposes:
+      rest:
+        - method: <GET/POST/PUT/DELETE>
+          path: <ruta, ej: /api/v1/users/:id>
+          description: <qué hace>
+          auth: <ninguna / jwt / api-key / internal-only>
+      grpc:
+        - service: <NombreServicio>
+          proto: <path al .proto>
+      events_published:
+        - topic: <nombre del topic/queue>
+          broker: <nats / rabbitmq / kafka / redis-streams>
+          schema: <nombre del tipo o path al schema>
+
+    consumes:
+      services:
+        - name: <nombre del servicio que consume>
+          via: <rest / grpc / event>
+          description: <para qué>
+      events_subscribed:
+        - topic: <nombre del topic>
+          broker: <broker>
+
+    database:
+      engine: <postgresql / sqlite / mysql / mongodb / ninguna>
+      shared_with: []  # otros servicios que leen la misma DB
+
+    auth:
+      inbound: <ninguna / jwt / api-key / internal-only — cómo autentica requests entrantes>
+      outbound: <ninguna / jwt / api-key / internal-only — cómo se autentica al llamar otros servicios>
+
+# Ejemplo comentado (eliminar antes de usar):
+# services:
+#   - name: users-service
+#     description: Gestión de usuarios y autenticación
+#     local_path: users-service
+#     stack: go
+#     port: 8081
+#     exposes:
+#       rest:
+#         - method: GET
+#           path: /api/v1/users/:id
+#           auth: internal-only

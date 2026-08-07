@@ -26,7 +26,14 @@ A partir del diff de la implementación, mapear archivos cambiados a secciones d
 | `skills/*/SKILL.md` | `Technical domain/domain.md` — sección Skills |
 | `pipelines/*.yaml` | `Technical domain/domain.md` — sección Pipelines |
 | `commands/*.md` | `Technical domain/domain.md` — sección Commands |
-| Cualquier cambio | `NAVIGATOR.md` — actualizar `last_updated` |
+| Validaciones nuevas, asserts, guards, invariantes de dominio | `Technical domain/business-rules.md` — sección correspondiente |
+| Nuevos structs/clases de dominio, agregados, repos | `Technical domain/domain.md` — entidades o bounded contexts |
+| Nuevos imports cross-package, nuevas libs externas | `Technical domain/dependencies.md` — grafo o dependencias externas |
+| Repetición de un patrón en 3+ archivos del diff | `Core/patterns.md` — agregar entrada en la categoría correcta |
+| Cambios en linter, naming, organización de imports | `Core/coding-standards.md` — sección Naming o Patrones prohibidos |
+| TODOs nuevos, workarounds, comentarios de gotcha | `Technical domain/risks.md` — sección Gotchas operativos |
+| Cambios en `service-map.yaml` o contratos cross-servicio | `.project-context/service-map.yaml` — entrada del servicio afectado |
+| Cualquier cambio | `NAVIGATOR.md` — actualizar `last_updated` (SOLO fecha `YYYY-MM-DD`: reemplazar el valor anterior, nunca concatenar ni preservar el previo, nunca texto narrativo) |
 
 ## Formato de actualización
 
@@ -73,6 +80,7 @@ Numeración: siguiente número disponible en `decisions/`. Formato: `NNN-slug-co
 - No crear decisiones que no estén respaldadas por evidencia
 - No agregar contratos que ya existan — verificar la sección antes de agregar
 - No actualizar `project.md` a menos que el stack o la arquitectura cambió fundamentalmente
+- No tocar `runs/` ni `Core/task-management.md` — son responsabilidad exclusiva del `reporter` para el reporte del run
 
 ## Flujo en modo directo
 
@@ -81,7 +89,7 @@ Cuando Claude implementa directamente (sin agentes), al finalizar la implementac
 1. Revisar qué archivos se modificaron en la sesión
 2. Aplicar la tabla de mapeo de arriba
 3. Escribir deltas — máximo 3-5 ediciones a `.project-context/`
-4. Actualizar `last_updated` en NAVIGATOR.md
+4. Actualizar `last_updated` en NAVIGATOR.md — es SOLO una fecha `YYYY-MM-DD`: reemplazar el valor anterior por la fecha actual, nunca concatenar, preservar el valor previo ni escribir texto narrativo. El delta narrativo va a los archivos de dominio según la tabla de mapeo; el historial de runs va a `runs/` (responsabilidad del reporter)
 
 No pedir confirmación al usuario para los deltas — es una operación de mantenimiento transparente.
 
@@ -95,3 +103,11 @@ Nuevos patrones detectados: [si aplica]
 Nuevos contratos: [si aplica]
 Decisiones documentadas en SPEC: [si aplica]
 ```
+
+## Presupuesto de edits
+
+- **Small** (1-3 archivos, 1-2 categorías): máx 4 edits
+- **Medium** (4-15 archivos, 3-4 categorías): máx 8 edits
+- **Large** (>15 archivos, 5+ categorías): máx 10 edits (tope duro)
+
+Si quedan categorías sin documentar al llegar al tope, listarlas en el output de cierre del reporter como "Pendientes de actualizar en .project-context/".

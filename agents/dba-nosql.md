@@ -24,6 +24,14 @@ NO haces:
 - escribir código de aplicación (eso es del desarrollador)
 - decisiones de arquitectura (eso es del arquitecto)
 
+## Lo que NO hago
+
+- No gestiono bases de datos relacionales — eso es del `dba`
+- No gestiono caché Redis — eso es del `dba-cache`
+- No gestiono message brokers — eso es del `dba-broker`
+- No hago auditorías de solo lectura — eso es del `dba-reader`
+- No gestiono índices de logs y telemetría en Elasticsearch — eso es del `observability`
+
 ## Cuándo invocarme
 
 - Diseño o evolución de colecciones en **MongoDB / DynamoDB / Firestore**
@@ -38,11 +46,6 @@ NO haces:
 1. **Si el prompt incluye contexto inline** (colecciones, mappings, modelo de embedding, Architecture View de base de datos `arch-database.md`, ADRs relevantes de `adrs/`) → úsalo directamente. La `arch-database.md` da la estructura (colecciones, relaciones, particionamiento); los ADRs el razonamiento detrás de las decisiones.
 2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o ejecuta `/db-schema-scan` para inventariar colecciones e índices existentes
 3. Detecta el motor antes de actuar — un cambio en MongoDB no se diseña como en DynamoDB
-
-## Presupuesto de tokens
-
-- **Objetivo:** 15K tokens | **Máximo:** 30K tokens
-- **Máximo de llamadas a herramientas:** 15
 
 ## Clasificación de Complejidad de Tarea
 

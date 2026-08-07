@@ -25,6 +25,8 @@
 | `[var(--X)]` en className de Tailwind | tailwind-v3-var-syntax | style | Usar sintaxis de paréntesis `(--X)` para Tailwind v4 |
 | `w-[16px]` cuando existe `w-4` | unnecessary-arbitrary-value | style | Usar clase estándar de Tailwind en lugar de valor arbitrario |
 | `type="tel"` sin filtro en onChange | unfiltered-phone-input | validation | Filtrar caracteres no telefónicos en el manejador onChange |
+| `<div onClick>`/`<span onClick>` como control | div-onclick | a11y | Elemento nativo `<button>`/`<a href>`. Ver `markup-structure-guide.md` |
+| Modal/tooltip hecho con divs + `z-index` alto | modal-div-soup | a11y | `<dialog>`+`showModal()`/Popover API (top layer). Ver `markup-structure-guide.md` |
 
 ---
 
@@ -41,6 +43,10 @@
 | Context con más de 3 valores que cambian frecuentemente | context-misuse | state | Separar contexts o usar Zustand |
 | `useState` para valores derivados de otro estado | state-overuse | state | Calcular durante el render |
 | Context default vacío (`createContext({})`) | context-default | bugs | Usar `createContext<T | null>(null)` + verificación de null |
+| Div sin semántica, layout/estilo propio ni boundary funcional | unjustified-wrapper | markup | Eliminar o reemplazar por Fragment. Ver `markup-structure-guide.md` |
+| >4 niveles de anidamiento de markup propio en un componente | deep-markup | markup | Extraer subcomponentes o replantear con Grid. Ver `markup-structure-guide.md` |
+| `z-index` numérico fuera de la escala de tokens | arbitrary-z-index | markup | Token de la escala (`--z-*`) o top layer nativo. Ver `markup-structure-guide.md` |
+| Div vacío espaciador o cadena de margins | spacer-div | markup | `gap` en el flex/grid del padre. Ver `markup-structure-guide.md` |
 
 ---
 
@@ -59,6 +65,8 @@
 | `fetch` directamente en el componente | direct-fetch | architecture | TanStack Query o cliente API centralizado |
 | `console.log` dejado en el código | debug-artifact | quality | Eliminar o usar logging estructurado |
 | Estilos inline en componentes reutilizables | inline-styles | style | CSS modules, Tailwind o styled-components |
+| Div decorativo sin contenido real | decorative-div | markup | Pseudo-elemento `::before`/`::after`. Ver `markup-structure-guide.md` |
+| Salto de nivel de heading (h2→h4) o heading elegido por tamaño | heading-skip | a11y | Jerarquía de heading correcta + tamaño vía CSS. Ver `markup-structure-guide.md` |
 
 ---
 
@@ -91,6 +99,15 @@ showToast.*error.*\n.*isError.*&& → toast + inline for same error
 
 # duplicated-util
 function (formatDate|truncateId|timeAgo|isValidEmail) → check if already exists in shared/utils
+
+# div-onclick
+<(div|span) [^>]*onClick → control interactivo sobre elemento no semántico
+
+# arbitrary-z-index
+zIndex:\s*\d{3,}|z-\[\d+\] → z-index numérico fuera de la escala de tokens
+
+# spacer-div
+<div [^>]*className="[^"]*\bspacer\b → div espaciador en vez de gap del padre
 ```
 
 ---
@@ -112,3 +129,7 @@ function (formatDate|truncateId|timeAgo|isValidEmail) → check if already exist
 | direct-fetch | TanStack Query | `state-management-guide.md` |
 | over-memoization | React Compiler | `performance-guide.md` |
 | inline-styles | CSS modules/Tailwind | preferencia del proyecto |
+| div-onclick / modal-div-soup | Elemento nativo / `<dialog>` / Popover API | `markup-structure-guide.md` |
+| unjustified-wrapper / deep-markup / spacer-div | Fragment, layout en el padre con `gap`, extraer subcomponentes | `markup-structure-guide.md` |
+| arbitrary-z-index | Escala de tokens `--z-*` o top layer nativo | `markup-structure-guide.md` |
+| decorative-div / heading-skip | Pseudo-elementos + jerarquía de landmarks/headings | `markup-structure-guide.md` |

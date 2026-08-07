@@ -52,8 +52,9 @@ func adaptClaude(cfg *config.App, agent AgentData) string {
 	if config.IsPerm(perm) {
 		tools := cfg.ResolvePermission(perm, config.TargetClaude)
 		if tools != "" {
-			content = frontmatter.ReplaceField(content, "permission", perm, tools)
-			content = frontmatter.RenameField(content, "permission", "tools")
+			permKey := agent.PermKey
+			content = frontmatter.ReplaceField(content, permKey, perm, tools)
+			content = frontmatter.RenameField(content, permKey, "tools")
 		}
 	}
 

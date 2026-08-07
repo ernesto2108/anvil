@@ -92,7 +92,6 @@ Carga **solo** los archivos relevantes para la tarea actual:
 |---|---|
 | Revisión de código | `detection/anti-patterns.md` |
 | Antes de escribir código Go | `checklists/pre.md` |
-| Después de escribir código Go | `checklists/post.md` |
 
 ### Ejemplos (patrones buenos y malos por dominio, ~2-3KB cada uno)
 

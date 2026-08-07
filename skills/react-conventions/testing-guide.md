@@ -93,6 +93,42 @@ describe('useCounter', () => {
 })
 ```
 
+### Tests Parametrizados con `it.each` / `test.each`
+
+**Múltiples variaciones input→output de la misma unidad ⇒ un solo `it.each`, no un `it` por caso.** Un array tipado de casos con nombre mantiene la tabla legible y evita la duplicación de N funciones casi idénticas.
+
+```tsx
+describe('formatPrice', () => {
+  const cases: { name: string; input: number; expected: string }[] = [
+    { name: 'entero', input: 10, expected: '$10.00' },
+    { name: 'decimales', input: 9.5, expected: '$9.50' },
+    { name: 'cero', input: 0, expected: '$0.00' },
+    { name: 'negativo', input: -3, expected: '-$3.00' },
+  ]
+
+  it.each(cases)('formatea $name', ({ input, expected }) => {
+    expect(formatPrice(input)).toBe(expected)
+  })
+})
+```
+
+Para componentes, parametrizar variantes de props que producen salidas distintas:
+
+```tsx
+it.each([
+  { status: 'loading', text: /loading/i },
+  { status: 'error', text: /error/i },
+  { status: 'empty', text: /no results/i },
+])('renders $status state', ({ status, text }) => {
+  render(<UserList status={status} />)
+  expect(screen.getByText(text)).toBeInTheDocument()
+})
+```
+
+**Cuándo `.each` vs `it` suelto:**
+- **`it.each`** — misma unidad, misma interacción, solo cambia input→output (variantes de props, valores de formato, tabla de validación)
+- **`it` suelto** — escenarios de setup o interacción **distintos** entre sí (ej. "muestra error al enviar vacío" vs "llama onSubmit con datos válidos"): cada uno tiene su propio arrange/act, no son casos de una tabla
+
 ---
 
 ## Mock de API con MSW
@@ -299,3 +335,4 @@ Para mockear interfaces TypeScript de servicios, hooks, o repositorios, usar `je
 | Testear internos de librerías (caché de TanStack Query) | Testear el componente que lo consume |
 | Tests de snapshot como estrategia principal | Usar solo para regresión visual, no para lógica |
 | Mocks manuales (`{ save: vi.fn() }`) para interfaces | Usar `mock<Interface>()` de jest-mock-extended |
+| Una función `it` por cada variación de input→output de la misma unidad | Consolidar en un `it.each`/`test.each` con array de casos con nombre |

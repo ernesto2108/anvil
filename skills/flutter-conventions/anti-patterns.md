@@ -31,6 +31,9 @@
 | Métodos helper `Widget buildSomething()` | helper-methods | performance | Extraer a clase widget separada para aislamiento de reconstrucción. Ver `performance-guide.md` |
 | Repositorios que se llaman entre sí | repo-coupling | architecture | Combinar en ViewModel o caso de uso del dominio. Ver `architecture-guide.md` |
 | `BlocBuilder` envolviendo toda la pantalla | wide-rebuild | performance | Usar `BlocSelector` para reconstrucciones granulares. Ver `performance-guide.md` |
+| `Container` dentro de `Container`, o `Padding`+`Container` redundante | nested-container | readability | Un solo `Container` combina padding/margin/decoration/alignment; si solo hay padding, usar `Padding` (más barato) |
+| `Stack` sin solapamiento visual real (centrar, fondos, apilar vertical) | stack-as-layout | readability | `Column`/`Row`, `Container.alignment`, `DecoratedBox`. `Stack` solo para superposición real (badge/FAB/overlay) con `Positioned`/`Align` |
+| Cadena de wrappers single-child (Container→Padding→Align→Container) | wrapper-chain | readability | Colapsar en el mínimo de widgets |
 
 ---
 
@@ -48,6 +51,7 @@
 | Colores hardcodeados (`Color(0xFF...)`) | hardcoded-colors | theming | Usar `Theme.of(context).colorScheme`. Ver `theming-guide.md` |
 | Tamaños de fuente hardcodeados (`TextStyle(fontSize: 16)`) | hardcoded-fonts | theming | Usar `Theme.of(context).textTheme`. Ver `theming-guide.md` |
 | Espaciado hardcodeado (`EdgeInsets.all(16)`) | hardcoded-spacing | theming | Usar tokens `ThemeExtension`. Ver `theming-guide.md` |
+| `Opacity` estática o `ClipRRect` innecesario | expensive-wrapper | performance | Color semitransparente directo / `borderRadius` del `BoxDecoration`; `AnimatedOpacity` para animar. Ver `performance-guide.md` |
 
 ---
 
@@ -74,6 +78,12 @@ Color\(0x → color directo en vez de referencia al tema
 
 # hardcoded-spacing
 EdgeInsets\.\w+\(\d → número directo en vez de token
+
+# nested-container
+Container\([^)]*child:\s*Container → Container anidado redundante
+
+# nested-container (Padding+Container)
+Padding\(\s*padding:[^)]*child:\s*Container → colapsar en un solo Container
 ```
 
 ---
@@ -89,6 +99,9 @@ EdgeInsets\.\w+\(\d → número directo en vez de token
 | helper-methods | Clase widget separada | `performance-guide.md` |
 | repo-coupling | Composición en ViewModel | `architecture-guide.md` |
 | wide-rebuild | BlocSelector/Consumer | `performance-guide.md` |
+| nested-container / wrapper-chain | Colapsar en el mínimo de widgets | `performance-guide.md` |
+| stack-as-layout | Column/Row/alignment del padre | — |
+| expensive-wrapper | Color/borderRadius directos, AnimatedOpacity | `performance-guide.md` |
 | hardcoded-colors/fonts/spacing | Tokens de tema | `theming-guide.md` |
 | missing-pump | pumpAndSettle | `testing-guide.md` |
 | getx-in-prod | BLoC o Riverpod | `state-management-guide.md` |

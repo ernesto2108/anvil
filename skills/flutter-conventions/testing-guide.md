@@ -133,6 +133,49 @@ Si `AuthRepository` gana un nuevo método, el `MockAuthRepository` generado es o
 - **Si build_runner falla** — NO recurrir a mocks manuales. Reportar al orquestador
 - Prohibido `mocktail` — no tiene codegen, los mocks pueden divergir
 
+### Tests Parametrizados
+
+**Múltiples casos de la misma función/método con distintos input→output ⇒ un loop sobre una lista de casos dentro de un `group`, NO un `test` por caso.** Cada caso lleva una descripción que se convierte en el nombre del test generado.
+
+```dart
+void main() {
+  group('parseAmount', () {
+    final cases = [
+      (name: 'entero', input: '10', expected: 10.0),
+      (name: 'decimal', input: '9.5', expected: 9.5),
+      (name: 'con símbolo', input: r'$3', expected: 3.0),
+      (name: 'vacío', input: '', expected: 0.0),
+    ];
+
+    for (final c in cases) {
+      test('parses ${c.name}', () {
+        expect(parseAmount(c.input), equals(c.expected));
+      });
+    }
+  });
+}
+```
+
+El mismo patrón aplica a `testWidgets` cuando solo cambian los datos de entrada y la aserción de salida:
+
+```dart
+final states = [
+  (name: 'loading', finder: find.byType(CircularProgressIndicator)),
+  (name: 'error', finder: find.text('Error')),
+  (name: 'empty', finder: find.text('No results')),
+];
+
+for (final s in states) {
+  testWidgets('renders ${s.name} state', (tester) async {
+    await tester.pumpApp(UserList(status: s.name));
+    await tester.pumpAndSettle();
+    expect(s.finder, findsOneWidget);
+  });
+}
+```
+
+Reservar `test`/`testWidgets` sueltos para escenarios de interacción o setup distintos, no para variaciones de input→output de la misma unidad.
+
 ### Reglas generales
 
 - Testear el patrón Result — tanto rutas `Ok` como `Error`
@@ -362,3 +405,4 @@ final testUsers = [testUser, User(id: '2', name: 'Jane', email: 'jane@test.com')
 | Tests de snapshot/golden para lógica | Los golden tests son solo visuales |
 | Integration tests para todo | Unit → Widget → Golden → Integration (pirámide) |
 | Tests inestables por problemas de timing | Usar `pumpAndSettle`, no `pump` con duraciones arbitrarias |
+| Un `test`/`testWidgets` por cada variación de input→output de la misma unidad | Consolidar con un loop `for (final c in cases)` sobre la lista de casos dentro de un `group` |

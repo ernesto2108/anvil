@@ -1,23 +1,56 @@
 ---
 name: run-tests
-description: Ejecutar tests del proyecto con detector de race conditions y cobertura. Auto-detecta el stack (Go, React, Flutter). Usar cuando el usuario diga "run tests", "test this", "check coverage", "run vitest", "go test", "flutter test", o después de implementar código que necesita verificación.
+description: Ejecutar tests del proyecto con detector de race conditions y cobertura. Auto-detecta el stack (Go, React, Flutter, Swift, Python, Rust). Usar cuando el usuario diga "run tests", "test this", "check coverage", "run vitest", "go test", "flutter test", "swift test", "xcodebuild test", "pytest", "cargo test", o después de implementar código que necesita verificación.
 ---
 
 # Run Tests
 
-## Auto-Detección
+## Resolución de Comandos (Precedencia OBLIGATORIA)
 
-Detectar el stack verificando los archivos marcadores en la raíz del proyecto:
+Antes de ejecutar tests, resolver el comando en este orden estricto. **No saltar pasos** — el fallback genérico es el último recurso.
+
+### 1. Makefile presente (mayor prioridad)
+
+Si existe `Makefile` en la raíz:
+
+```bash
+grep -E '^[a-zA-Z0-9_-]+:' Makefile | sed 's/:.*//'
+```
+
+Listar todos los targets y elegir el de test por:
+
+- **Match por nombre**: target cuyo nombre contenga `test`, `spec`, `coverage`, `ci`, `verify`, `check`.
+- **Match por contenido**: si ningún nombre matchea, inspeccionar el cuerpo de los targets (`make -n <target>` o leer Makefile) buscando comandos como `go test`, `vitest`, `jest`, `pytest`, `cargo test`, `flutter test`.
+
+Si hay un candidato razonable → usar `make <target>` **sin preguntar**.
+
+Si existe Makefile pero ningún target matchea por nombre ni por contenido → **preguntar al humano una sola vez**:
+
+> "Encontré un Makefile pero no pude identificar el target de tests. ¿Qué target debo usar? (o `skip` para usar el comando por defecto)"
+
+Cachear la respuesta para el resto de la sesión.
+
+### 2. `package.json` con script `test`
+
+Si existe `package.json` con un script `test` definido → usar `<pm> test` (detectar `<pm>` desde lockfile según CLAUDE.md).
+
+### 3. Fallback — comando directo del tool
+
+Solo si los pasos 1 y 2 no aplicaron, usar el comando directo según el stack:
 
 | Archivo | Stack | Comando |
 |------|-------|---------|
 | `go.mod` | Go | `go test ./... -race -cover -count=1` |
-| `package.json` | Node/React | `<pm> exec vitest run --coverage` o `<pm> test -- --coverage` (detectar `<pm>` según CLAUDE.md — preferir `pnpm`) |
+| `package.json` | Node/React | `<pm> exec vitest run --coverage` o `<pm> exec jest --coverage` |
 | `pubspec.yaml` | Flutter | `flutter test --coverage` |
+| `Package.swift` | Swift (SPM) | `swift test` |
+| `*.xcodeproj` / `*.xcworkspace` | Swift (Xcode) | `xcodebuild test -scheme <Scheme> -destination 'platform=iOS Simulator,name=iPhone 16'` |
+| `pyproject.toml` | Python | `pytest --tb=short -q` |
+| `Cargo.toml` | Rust | `cargo test` |
 
 Si se detectan múltiples stacks, ejecutar los tests de cada stack por separado.
 
-Para Node/React: verificar `package.json` para el test runner — preferir `vitest` si está configurado, caer a `jest`, luego `<pm> test`. Detectar el package manager desde el lockfile según CLAUDE.md (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm) y usarlo de forma consistente.
+Para Node/React (cuando se cae al fallback del paso 3): verificar `package.json` para el test runner — preferir `vitest` si está configurado, caer a `jest`. Detectar el package manager desde el lockfile según CLAUDE.md (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm) y usarlo de forma consistente.
 
 ## Ejecución
 
@@ -83,6 +116,60 @@ flutter test --reporter expanded
 
 Solución de problemas: fallos de golden — `flutter test --update-goldens`. Tests inestables — verificar `pumpAndSettle()` faltante o futures sin resolver. Ver cobertura: `genhtml coverage/lcov.info -o coverage/html`.
 
+### Swift
+
+Paquetes SPM:
+```bash
+swift test
+swift test --filter CartTests            # filtrar un test/suite
+swift test --enable-code-coverage        # cobertura
+```
+
+Apps Xcode:
+```bash
+# Listar schemes disponibles primero
+xcodebuild -list
+
+xcodebuild test -scheme <Scheme> -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild test -scheme <Scheme> -destination 'platform=iOS Simulator,name=iPhone 16' -enableCodeCoverage YES
+```
+
+Swift Testing (`@Test`/`#expect`) y XCTest coexisten en el mismo target; ambos runners corren juntos con estos comandos. XCUITest y performance tests requieren `xcodebuild test` (no `swift test`). No mezclar asserts de ambos frameworks en un mismo test.
+
+### Python
+
+```bash
+pytest --tb=short -q
+
+# Con cobertura
+pytest --tb=short -q --cov=. --cov-report=term-missing
+
+# Archivo específico
+pytest path/to/test_file.py -v
+```
+
+Flags:
+- `--tb=short`: tracebacks concisos
+- `-q`: output limpio (quiet)
+- `--cov=.`: cobertura del directorio actual
+- `--cov-report=term-missing`: muestra líneas no cubiertas
+
+Configuración: `pyproject.toml` (sección `[tool.pytest.ini_options]`) o `pytest.ini`.
+
+### Rust
+
+```bash
+cargo test
+
+# Con output de tests que pasan
+cargo test -- --nocapture
+
+# Test específico
+cargo test nombre_del_test
+```
+
+Por defecto `cargo test` ejecuta tests unitarios + de integración + doc-tests. Usa `--release` para tests con optimizaciones.
+
 ## Analizar Resultados
 
 ### Categorizar fallos
@@ -140,9 +227,9 @@ Resumir resultados en una tabla:
 
 ## Flujo de Trabajo
 
-1. **Detectar stack** — verificar archivos marcadores
-2. **Verificar comandos específicos del proyecto** — leer scripts de `package.json` o `Makefile` para comandos de test personalizados
-3. **Ejecutar tests** — ejecutar el comando apropiado para el stack detectado
+1. **Detectar stack** — verificar archivos marcadores (`go.mod`, `package.json`, `pubspec.yaml`, `Package.swift`/`*.xcodeproj`/`*.xcworkspace`, `pyproject.toml`, `Cargo.toml`)
+2. **Resolver comando según precedencia** — aplicar la sección "Resolución de Comandos" (Makefile → `package.json` script → fallback directo). No saltar al fallback si hay Makefile o script `test`.
+3. **Ejecutar tests** — ejecutar el comando resuelto
 4. **Categorizar fallos** — usar la tabla de fallos de arriba
 5. **Si hay errores de compilación** — detenerse, corregir código primero, luego re-ejecutar
 6. **Si hay fallos de aserción** — reportar con contexto, preguntar al usuario: "Should I fix the code or update the test?"

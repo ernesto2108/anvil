@@ -163,21 +163,36 @@ Firmas exactas de lo que se agregó o modificó. Copiar-pegar del código.
 
 <!-- CROSS-STACK: agrupar por stack. SINGLE-STACK: usar un solo grupo.
      Cada grupo incluye: path del archivo, comando de ejecución, y lista numerada.
-     El tester implementa SOLO estos — sin extras. -->
+     El tester implementa SOLO estos — sin extras.
+
+     FORMATO: agrupar por función/método/componente, NO un ítem por caso. Cada ítem numerado
+     es UN test parametrizado y lista sus casos en una sub-línea "casos:". El tester los
+     implementa como UN solo test table-driven / it.each / parametrize — nunca una función por caso.
+       Correcto:   1. Test_GetUser — casos: éxito, 404 usuario inexistente, error de DB
+       Incorrecto: 1. Test_GetUser_exito  2. Test_GetUser_404  3. Test_GetUser_errorDB
+
+     COMPLETITUD OBLIGATORIA (esta lista es la lista cerrada; el tester no agrega tests en silencio):
+       (a) un caso de éxito y un caso de error por cada interfaz pública de `### Public interfaces / contracts`
+       (b) un caso por cada entrada de `### Edge cases descubiertos`
+     Estos son CASOS dentro del test parametrizado de la función/componente correspondiente,
+     no tests ni funciones independientes. Si un edge case declarado se deja intencionalmente
+     sin caso, anotarlo con el motivo (ej. "— sin caso: cubierto por validación de tipos en
+     compilación"). Un edge case declarado sin caso y sin explicación será reportado por el
+     tester como gap de cobertura. -->
 
 #### Tests Go
 - **Archivo:** `<path_test.go>`
 - **Ejecutar:** `go test -tags <tag> ./<pkg>/...`
-- Tests:
-  1. <nombre del test> — qué valida
-  2. <nombre del test> — qué valida
+- Tests (un test parametrizado por función/método; listar sus casos):
+  1. <Test_Func> — casos: <caso éxito>, <caso error>, <edge case>
+  2. <Test_OtraFunc> — casos: <...>
 
 #### Tests React/TS
 - **Archivo:** `<path.test.tsx>`
 - **Ejecutar:** `npm test -- --run <scope>` o `vitest run <scope>`
-- Tests:
-  1. <nombre del test> — qué valida
-  2. <nombre del test> — qué valida
+- Tests (un test parametrizado por componente/función; `it.each` para variaciones input→output):
+  1. <Componente/función> — casos: <caso éxito>, <caso error>, <edge case>
+  2. <otro escenario de interacción distinto> — qué valida
 
 <!-- Agregar más grupos según necesidad: Flutter, Python, Rust -->
 

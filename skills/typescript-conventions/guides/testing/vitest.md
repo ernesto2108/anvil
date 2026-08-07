@@ -83,6 +83,43 @@ describe("UserService", () => {
 });
 ```
 
+## Tests Parametrizados con `test.each` / `it.each`
+
+**Múltiples casos que ejercen la misma función con distintos input→output ⇒ un solo `test.each`, no una función por caso.** Un array tipado de casos con nombre evita duplicar N funciones casi idénticas y mantiene la tabla de casos legible.
+
+```typescript
+import { describe, it, expect } from "vitest";
+import { slugify } from "./slugify.js";
+
+describe("slugify", () => {
+  const cases: { name: string; input: string; expected: string }[] = [
+    { name: "espacios", input: "Hello World", expected: "hello-world" },
+    { name: "acentos", input: "Canción", expected: "cancion" },
+    { name: "símbolos", input: "a/b?c", expected: "a-b-c" },
+    { name: "vacío", input: "", expected: "" },
+  ];
+
+  it.each(cases)("slugifica $name", ({ input, expected }) => {
+    expect(slugify(input)).toBe(expected);
+  });
+});
+```
+
+Para errores esperados, parametrizar entradas inválidas contra el `kind` esperado:
+
+```typescript
+it.each([
+  { input: "", kind: "empty" },
+  { input: "@@@", kind: "invalid-chars" },
+])("rejects $kind", ({ input, kind }) => {
+  expect(() => parseUsername(input)).toThrow(
+    expect.objectContaining({ kind }),
+  );
+});
+```
+
+**Regla:** usar `.each` cuando solo cambian input→output de la misma unidad. Reservar `it`/`test` sueltos para escenarios de setup o interacción distintos entre sí, no para variaciones tabulables.
+
 ## `expectTypeOf` — Tests a Nivel de Tipos
 
 Usar `expectTypeOf` para afirmar tipos de TypeScript en los tests. Esto se ejecuta a través de `tsc`, no en tiempo de ejecución.

@@ -1,7 +1,6 @@
 ---
 name: handoff
-disable-model-invocation: true
-description: Continuidad de sesión para tareas Medium+. Crea, actualiza, lee y archiva notas de handoff para que los desarrolladores puedan retomar el trabajo entre sesiones sin tener que releer todo. Invocado por el desarrollador o el humano orquestador — no directamente por el usuario. El gate de calidad es verify-handoff.sh (invocado por el humano orquestador), no aprobación manual del usuario.
+description: Continuidad de sesión para tareas Medium+. Crea, actualiza, lee y archiva notas de handoff para que los desarrolladores puedan retomar el trabajo entre sesiones sin tener que releer todo. Úsalo cuando un developer clasifique una tarea como Medium (5-8 pts) o Large (8-13 pts), al crear `.handoff/<TASK-ID>.md` o `.handoff/<slug>.md`, al actualizar el live document tras cada paso, o al archivar la tarea. Invocado por el desarrollador o el humano orquestador — no directamente por el usuario. El gate de calidad es verify-handoff.sh (invocado por el humano orquestador), no aprobación manual del usuario.
 ---
 
 # Notas de Handoff
@@ -103,6 +102,17 @@ El orquestador DEBE verificar el orden de deploy antes de cerrar la tarea.
 ### Input recibido (al inicio de la tarea)
 
 El desarrollador completa `## Input recibido` al crear el handoff. Es un acuse de recibo de lo que el orquestador proporcionó — si la siguiente sesión encuentra una brecha, sabe qué faltaba vs. qué se perdió.
+
+### Completitud de `### Tests requeridos — por stack` (obligatorio para el developer)
+
+La lista de tests que el developer entrega es la **lista cerrada** que define el alcance del tester. Una lista pobre produce cobertura incompleta, porque el tester no agrega tests en silencio. Por eso la lista DEBE incluir como mínimo:
+
+- **(a)** un caso de éxito y un caso de error por cada interfaz pública listada en `### Public interfaces / contracts`
+- **(b)** un caso por cada entrada de `### Edge cases descubiertos`
+
+**Estos mínimos son CASOS, no funciones de test independientes.** Agrupar por función/método/componente: cada ítem de la lista es UN test parametrizado (table-driven en Go/Rust, `it.each`/`test.each` en TS/React, loop sobre casos en Flutter, `@pytest.mark.parametrize` en Python, `@Test(arguments:)` en Swift) que enumera sus casos en una sub-línea. Formato correcto: `1. Test_GetUser — casos: éxito, 404, error de DB` — NO tres ítems `Test_GetUser_exito` / `Test_GetUser_404` / `Test_GetUser_errorDB`. El tester implementa una función por unidad con N casos, nunca N funciones. Agrupar así no reduce la cobertura: cada caso listado sigue exigido.
+
+Si un edge case declarado se deja **intencionalmente** sin caso, anotarlo en la lista con el motivo (ej. `— sin caso: cubierto por validación de tipos en compilación`). Nunca dejar un edge case declarado sin caso y sin explicación: el tester lo reportará como gap al humano.
 
 ### Output entregado (antes de terminar)
 

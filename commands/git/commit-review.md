@@ -37,8 +37,9 @@ Evaluar cada mensaje de commit contra estos criterios. Cada criterio es pass/fai
 | # | Regla | Puntos | Verificación |
 |---|-------|--------|-------------|
 | 10 | El cuerpo explica POR QUÉ, no solo QUÉ | 10 | Si existe cuerpo, provee contexto más allá de repetir el asunto |
-| 11 | Referencia issues cuando aplica | 5 | Bonus si incluye `Closes`, `Fixes`, `Refs`, o referencias `#` |
-| 12 | El scope es significativo | 5 | Si hay scope, es un nombre real de módulo/componente, no genérico como `all` o `misc` |
+| 11 | Referencia issues cuando aplica | bonus | Bonus si incluye `Closes`, `Fixes`, `Refs`, o referencias `#` |
+| 12 | Mensaje redactado en inglés | 5 | El asunto y el cuerpo están íntegramente en inglés. Identificadores de código, paths, flags y nombres propios NO cuentan como violación. Ver nota de retroactividad abajo |
+| 13 | El scope es significativo | 5 | Si hay scope, es un nombre real de módulo/componente, no genérico como `all` o `misc` |
 
 ## Paso 3: Generar el reporte
 
@@ -102,3 +103,5 @@ Nota: Solo reescribir commits que no hayan sido pusheados a una rama compartida.
 - Ser constructivo, no duro — el objetivo es ayudar a los equipos a adoptar mejores hábitos
 - La regla 9 (breaking changes) solo debe fallar si hay evidencia de breaking changes sin notación — no fallar especulativamente
 - La regla 11 (refs a issues) son puntos bonus — no penalizar si no se detectan issues
+- La regla 12 (idioma) aplica **solo a commits nuevos**: el estándar es que todo mensaje se redacte en inglés. El historial previo en español NO se penaliza retroactivamente — si el commit es anterior a la adopción del estándar, marcarlo como `n/a` y otorgar los 5 puntos. Identificadores de código, paths, flags y nombres propios en el mensaje nunca son hallazgo de idioma
+- Un commit nuevo con asunto o cuerpo en español (fuera de identificadores de código) es un hallazgo y debe aparecer en la "Reescritura sugerida" traducido al inglés
