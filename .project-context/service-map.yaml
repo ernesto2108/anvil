@@ -1,0 +1,12 @@
+# service-map.yaml — anvil
+# N/A — anvil es un monolito CLI único (cmd/anvil con subcomandos vía internal/cli).
+# Confirmado explícitamente por el humano: el dashboard Wails (anvil-full) es un modo
+# de build del mismo binario, no un servicio separado. No aplica un ecosistema
+# multi-servicio ni análisis cross-service-dev para este repo.
+
+meta:
+  last_updated: 2026-08-13
+  status: not_applicable
+  reason: "Monolito CLI único — no hay múltiples servicios que mapear."
+
+services: []

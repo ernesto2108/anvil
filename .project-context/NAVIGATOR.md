@@ -1,0 +1,48 @@
+# Context Navigator — anvil
+
+last_full_scan: 2026-08-13
+last_updated: 2026-08-13
+coverage: bootstrap
+
+## Índice
+
+### Core
+- [Workflows](Core/workflows.md) — ramas, ambientes, deploy, comandos operativos
+- [Task Management](Core/task-management.md) — gestión de tareas, tickets, definition of done
+- [Coding Standards](Core/coding-standards.md) — naming, linting, patrones de diseño detectados
+- [Patterns](Core/patterns.md)
+
+### Technical domain
+- [Proyecto](Technical%20domain/project.md) — stack, arquitectura, restricciones, SOLID
+- [Dominio](Technical%20domain/domain.md) — entidades principales y bounded contexts
+- [Glosario](Technical%20domain/glossary.md) — lenguaje del negocio ↔ lenguaje técnico
+- [Contratos](Technical%20domain/contracts.md) — APIs, queues, eventos, reglas de negocio
+- [Business Rules](Technical%20domain/business-rules.md)
+- [Dependencias](Technical%20domain/dependencies.md) — grafo de dependencias entre dominios
+- [Riesgos](Technical%20domain/risks.md) — deuda técnica, gotchas, restricciones
+- [Infra Services](infra-services.md) — servicios de infraestructura detectados y disponibilidad de MCP
+- [Service Map](service-map.yaml) — N/A: anvil es un monolito CLI único (`cmd/anvil`), no un ecosistema de microservicios
+
+### Decisiones arquitectónicas
+<!-- Solo cuando hay evidencia explícita -->
+<!-- - [NNN — titulo](decisions/NNN-slug.md) -->
+
+## Notas para agentes
+
+- Leer `project.md` siempre — es el punto de entrada
+- Cargar solo los dominios relevantes a la tarea
+- Si `coverage: bootstrap`, el contexto fue generado automáticamente — puede tener gaps
+- No modificar este archivo manualmente — actualizarlo vía skill `context-nav`
+- `last_updated` es SOLO una fecha `YYYY-MM-DD`: se reemplaza en cada actualización. Prohibido acumular texto, concatenar deltas o preservar el valor anterior en ese campo
+- `Technical domain/business-rules.md` es la fuente de verdad de reglas de negocio — no saltarlas bajo ninguna circunstancia
+- Si `.project-context/` no existe, detenerse y pedir al humano que ejecute `context-init` antes de continuar — no implementar nada sin contexto
+- anvil es un monolito CLI (`cmd/anvil` con subcomandos vía `internal/cli`) — no aplica `cross-service-dev` ni `service-map.yaml` multi-servicio. El dashboard Wails (`anvil-full`) es un modo de build del mismo binario, no un servicio separado.
+
+### Workflow obligatorio para agentes developer
+
+1. Leer el contexto relevante en `.project-context/` antes de tocar código — empezar por `project.md` y cargar dominios pertinentes a la tarea
+2. Implementar el cambio en el dominio asignado, respetando convenciones de `Core/coding-standards.md` y reglas de `Technical domain/business-rules.md`
+3. Correr la suite de tests del package/módulo afectado y confirmar que pasa
+4. Correr lint/format del stack y resolver toda advertencia antes de continuar
+5. Validar con el humano el resultado (diff, tests verdes, comportamiento esperado) y esperar confirmación
+6. Invocar a `reporter` para registrar el cierre del run en `.project-context/`

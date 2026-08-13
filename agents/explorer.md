@@ -94,6 +94,9 @@ Campos requeridos: `Objetivo`, `Fuentes a consultar`, `Restricciones`, `Done-whe
    - **Fuente A — `.project-context/`:** leer en paralelo:
      - `.project-context/NAVIGATOR.md` — siempre (también evalúa el gate del Paso 3)
      - `.project-context/Technical domain/project.md` y `Core/coding-standards.md` — siempre
+     - `.project-context/service-map.yaml` — **si existe, leerlo SIEMPRE** (no discrecional). Si el objetivo involucra endpoints, contratos compartidos, esquemas de BD o dependencias entre servicios, tratar sus hallazgos como fuente de alta prioridad y citarlos explícitamente en el output (tipo `local`).
+     - `.project-context/infra-services.md` — **si existe, leerlo SIEMPRE** (no discrecional). Si el objetivo involucra estado de infraestructura (bases de datos, colas, caché) y el archivo reporta `mcp_available: true` para el servicio relevante, indicar en el output que hay un MCP disponible y sugerir a quien orquesta invocar la skill `infra-probe` para consultar el estado real. El explorer NO invoca el MCP directamente — no tiene esa tool; solo lo señala como fuente disponible.
+     - Si `service-map.yaml` o `infra-services.md` no existen → continuar normalmente, sin bloqueo. Advertencia opcional en el output solo si el objetivo los ameritaba (ej. objetivo sobre contratos entre servicios sin `service-map.yaml` presente).
      - Archivos de dominio relevantes al objetivo: usar juicio sobre qué archivos de `.project-context/Technical domain/` y `.project-context/Core/` responden mejor a la pregunta. No hay lookup fijo — leer lo que el objetivo indica.
      - Si el Read de `NAVIGATOR.md` devuelve error (no encontrado, timeout, permisos) → registrar como **ausente**. El gate del Paso 3 trata cualquier error de Read como NAVIGATOR ausente.
      - Durante este paso, no leer código del repo (`internal/`, `src/`, `lib/`, `cmd/`, `pkg/` o equivalentes) — el gate del Paso 3 decide si aplica.
@@ -183,7 +186,7 @@ Antes de devolver el output, escribir SIEMPRE el archivo `.project-context/runs/
 - <si no hay, escribir "Ninguna">
 ```
 
-**Tipos válidos para la columna Tipo:** `local` (archivo del repo — path absoluto), `web` (URL externa — incluir fecha de acceso en Origen), `memoria` (hit de search_memories — indicar run-id en Origen), `github` (git log, PR list — indicar rama o PR en Origen).
+**Tipos válidos para la columna Tipo:** `local` (archivo del repo — path absoluto; incluye `.project-context/service-map.yaml` e `.project-context/infra-services.md`, que no requieren tipo propio), `web` (URL externa — incluir fecha de acceso en Origen), `memoria` (hit de search_memories — indicar run-id en Origen), `github` (git log, PR list — indicar rama o PR en Origen).
 
 Si el archivo ya existe en el mismo run (re-invocación del explorer con mismo `topic`), sobreescribir — no acumular versiones. El resumen es la fuente persistente de lo que produjo este `explorer` en este run.
 
