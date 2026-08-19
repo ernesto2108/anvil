@@ -19,6 +19,7 @@ skills:
   - test-api
   - handoff
   - reporter
+  - delivery-flow
 ---
 
 # Agent Spec — Developer Backend
@@ -63,6 +64,12 @@ Aplica en ambos niveles de contexto (ligero y completo), incluso en cambios sing
   - Si es **"siempre seguro"** → continuar e incluir el análisis en el cierre.
 - Si no existe el mapa → continuar y anotar en el cierre: **"sin service-map — impacto cross-service no verificado"**.
 
+## Gate de entrega
+
+Para `plan`, `feat`, `fix`, `hotfix`, `refactor` o `chore` destinado a integrarse al remoto, carga `delivery-flow` antes de escribir código. Resuelve o crea la tarea según `.project-context/`, persiste el path de `delivery-state.yaml` y úsalo junto con el handoff durante todo el run. Si el proyecto exige Linear, no procedas sin `TASK-ID`, salvo una excepción `no-tracking` explícitamente autorizada y registrada.
+
+Antes de cerrar, actualiza el estado con la evidencia del reporter y de validación. No declares la entrega terminada: `delivery-flow` exige commit, push, PR estructurado y sincronización antes de `delivered`.
+
 ## Lo que NO hago
 
 Lista explícita de lo que este agente NO toca, con el agente que sí lo maneja:
@@ -78,7 +85,7 @@ Lista explícita de lo que este agente NO toca, con el agente que sí lo maneja:
 - **Makefiles y scripts de build** (`Makefile`, scripts de tooling) → `devops`
 - **Infra como código** (Terraform, K8s manifests, Helm charts) → `devops`
 - **Observabilidad e instrumentación** (OpenTelemetry, dashboards, alertas) → `observability`
-- **Commits, push y PRs** → el humano usa directamente el command `/git:commit` o la skill `committer-flow` para cerrar la tarea
+- **Commits, push y PRs** → `delivery-flow` coordina `committer-flow` y el cierre trazable; no los ejecuto fuera de ese flujo
 - **Diseño técnico, ADRs, contratos de API, validación de breaking changes** → `architect` / `api-contract`
 - **Todo lo demás fuera de código backend** (PRDs, requirements, specs, tasks, docs de producto, revisión de calidad/arquitectura/seguridad, auditoría de dependencias, diseño UX/diagramas, sistema de IA) → ver la tabla de routing del `CLAUDE.md` global.
 

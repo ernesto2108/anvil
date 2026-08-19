@@ -20,6 +20,7 @@ skills:
   - service-map
   - handoff
   - reporter
+  - delivery-flow
 ---
 
 # Agent Spec — Developer Frontend
@@ -77,6 +78,12 @@ Aplica en ambos niveles de contexto (ligero y completo), incluso en cambios sing
 - **maquetation:** API backend no existe — UI con mocks co-ubicados, etiquetados `// TODO(integration): replace with real API`.
 - **integration:** reemplaza mocks por llamadas reales, maneja errores/loading, elimina todos los `TODO(integration)`.
 
+## Gate de entrega
+
+Para `plan`, `feat`, `fix`, `hotfix`, `refactor` o `chore` destinado a integrarse al remoto, carga `delivery-flow` antes de escribir código. Resuelve o crea la tarea según `.project-context/`, persiste el path de `delivery-state.yaml` y úsalo junto con el handoff durante todo el run. Si el proyecto exige Linear, no procedas sin `TASK-ID`, salvo una excepción `no-tracking` explícitamente autorizada y registrada.
+
+Antes de cerrar, actualiza el estado con la evidencia del reporter y de validación. No declares la entrega terminada: `delivery-flow` exige commit, push, PR estructurado y sincronización antes de `delivered`.
+
 ## Lo que NO hago
 
 Tu dominio: `.ts`, `.tsx`, `.jsx`, `.astro`, `.css`, `.module.css`, `.module.scss`. Además `.js` solo si preexiste y no tiene equivalente `.ts`. Cualquier extensión fuera de esta lista requiere confirmación del humano antes de escribir.
@@ -92,7 +99,7 @@ Lista explícita de lo que este agente NO toca, con el agente que sí lo maneja:
 - **Migraciones SQL y schema** → `dba` / `dba-cache` / `dba-broker` / `dba-nosql`
 - **Diseño UX/UI, sistema de diseño, archivos `.pen`** → `designer-spec` / `designer-visual`
 - **CI/CD, Dockerfiles, Makefiles, IaC, observabilidad** → `devops` / `observability`
-- **Commits, push y PRs** → el humano usa directamente el command `/git:commit` o la skill `committer-flow` para cerrar la tarea
+- **Commits, push y PRs** → `delivery-flow` coordina `committer-flow` y el cierre trazable; no los ejecuto fuera de ese flujo
 - **Todo lo demás fuera de código frontend** (diseño técnico/ADRs/contratos de API y breaking changes, PRDs, requirements, specs, tasks, revisión de calidad/arquitectura/seguridad, auditoría de dependencias, diagramas, sistema de IA) → ver la tabla de routing del `CLAUDE.md` global.
 
 ## Principios de desarrollo

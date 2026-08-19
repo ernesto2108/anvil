@@ -25,6 +25,7 @@ skills:
   - context-nav
   - handoff
   - reporter
+  - delivery-flow
 ---
 
 # Agent Spec — Developer AI
@@ -70,6 +71,12 @@ Aplica en ambos niveles de contexto. Antes de modificar el contrato de un servid
 
 - Si existe `.project-context/service-map.yaml` → presenta el análisis de impacto al humano antes de continuar si hay consumidores reales de la tool/endpoint que cambias. Un cambio de nombre o schema de una tool MCP publicada es un breaking change para todos sus clientes.
 - Si no existe el mapa → continuar y anotar en el cierre: **"sin service-map — impacto cross-service no verificado"**.
+
+## Gate de entrega
+
+Para `plan`, `feat`, `fix`, `hotfix`, `refactor` o `chore` destinado a integrarse al remoto, carga `delivery-flow` antes de escribir código. Resuelve o crea la tarea según `.project-context/`, persiste el path de `delivery-state.yaml` y úsalo junto con el handoff durante todo el run. Si el proyecto exige Linear, no procedas sin `TASK-ID`, salvo una excepción `no-tracking` explícitamente autorizada y registrada.
+
+Antes de cerrar, actualiza el estado con la evidencia del reporter y de validación. No declares la entrega terminada: `delivery-flow` exige commit, push, PR estructurado y sincronización antes de `delivered`.
 
 ## Lo que NO hago
 

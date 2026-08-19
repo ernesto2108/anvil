@@ -1,11 +1,11 @@
 ---
 name: committer-flow
-description: Flujo completo de dos fases para commit y push seguro — inputs, commit (Conventional Commits), captura de rama destino, push y manejo de errores. Úsalo cuando el usuario pida "commit y push", "haz el commit", "sube los cambios", "push a la rama", o cuando cierres una tarea que necesita quedar commiteada y empujada al remoto.
+description: Flujo completo de tres fases para commit, push y PR seguro — inputs, Conventional Commits, captura de rama destino, push, PR estructurado y manejo de errores. Úsalo cuando el usuario pida "commit y push", "haz el commit", "sube los cambios", "push a la rama", o cuando cierres una tarea que necesita quedar commiteada y empujada al remoto.
 ---
 
 # Committer Flow
 
-Flujo de dos fases: Fase 1 genera el commit y captura la rama destino; Fase 2 ejecuta el push.
+Flujo de tres fases: Fase 1 genera el commit y captura la rama destino; Fase 2 ejecuta el push; Fase 3 crea o reutiliza un PR estructurado.
 
 ## Reglas duras
 
@@ -233,6 +233,63 @@ Sin `--force`, `--force-with-lease` ni variantes bajo ninguna circunstancia.
 
 Máx 100 palabras: confirmación de push, rama remota, commit hash post-push, notas (ej. rama nueva creada).
 
+## Flujo — Fase 3: PR
+
+### Inputs requeridos
+
+| Campo | Requerido | Fallback si falta |
+|---|---|---|
+| `Phase` | siempre | `3` (literal) |
+| URL o path de `delivery-state.yaml` | sí para entrega trazada | Si falta, crear PR solo cuando el humano lo solicita explícitamente y anotar ausencia de tracking. |
+| Rama base | no | Usar `pr_target_branch` del estado; si falta, detectar el default remoto. Si es ambiguo, preguntar. |
+| Evidencia de validación | sí | DETENER: no crear un PR sin resultados. |
+
+### Paso 3.1 — Verificar precondiciones
+
+- Confirmar que el push de Fase 2 terminó y que `git status --porcelain` está vacío.
+- Ejecutar `gh auth status`; si falla, DETENER y reportar la autenticación pendiente.
+- Resolver la rama base desde el estado, `origin/HEAD` o confirmación humana; nunca abrir contra una rama inferida de forma ambigua.
+
+### Paso 3.2 — Reutilizar o crear
+
+Buscar primero un PR abierto para la rama actual:
+
+```bash
+gh pr view <branch> --json url,title,body,state
+```
+
+- Si existe, reutilizar su URL. Actualizar título/cuerpo si no cumple el formato estructurado o contiene placeholders.
+- Si no existe, crear con `gh pr create --base <base> --head <branch> --title <title> --body-file <file>`.
+- Nunca crear un segundo PR para la misma rama.
+
+### Paso 3.3 — Redactar el PR
+
+Todo título y cuerpo del PR se escribe en inglés. El título sigue Conventional Commits e incluye el `TASK-ID` cuando exista. El cuerpo DEBE tener contenido específico derivado del diff y de las validaciones:
+
+```markdown
+## Context
+<Why the change is needed.>
+
+## Changes
+- <Concrete observable change>
+
+## Validation
+- `<command>` — <pass/fail result>
+
+## Risk and rollback
+<Risk level and concrete revert/rollback action.>
+
+## Tracking
+- Linear: <issue URL or explicit no-tracking reason>
+- Documentation: <URL or reporter delta-only>
+```
+
+Prohibido: cuerpo de una línea, `TBD`, `N/A` sin motivo, o copiar el mensaje del commit como descripción completa.
+
+### Paso 3.4 — Persistir y reportar
+
+Guardar `pr_url` en el estado de entrega si existe. Reportar URL, rama base, task ID y si el PR se creó o reutilizó.
+
 ## Manejo de errores
 
 Para cualquier fallo: capturar output textual completo → DETENER → reportar al humano con comando ejecutado, código de salida, output y paso donde ocurrió. Sin reintentos automáticos.
@@ -251,9 +308,16 @@ Para cualquier fallo: capturar output textual completo → DETENER → reportar 
 - [ ] `git push` devolvió código 0
 - [ ] Commit hash del handoff es ancestor (o igual) de HEAD post-push
 
+### Fase 3
+- [ ] `gh auth status` devolvió código 0
+- [ ] Existe exactamente un PR abierto o creado para la rama
+- [ ] El PR tiene Context, Changes, Validation, Risk and rollback y Tracking
+- [ ] URL del PR persistida en el estado de entrega cuando aplica
+
 Si algún check falla → reportar al humano antes de cerrar.
 
 ## Presupuesto
 
 - **Fase 1:** Objetivo 4K | Máximo 8K | Máx tool calls: 12
 - **Fase 2:** Objetivo 3K | Máximo 6K | Máx tool calls: 8
+- **Fase 3:** Objetivo 3K | Máximo 6K | Máx tool calls: 8
