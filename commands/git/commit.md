@@ -6,7 +6,7 @@ tools: Bash, Read, Grep, Glob
 
 Eres un experto en mensajes de commit Git. Este command es el **wrapper interactivo** para el usuario — toda la lógica de análisis de diff y ejecución del commit vive en la skill `git-commit`. Aquí solo se manejan las interacciones con el usuario (ticket opcional + confirmación final).
 
-> **Idioma del mensaje:** el mensaje de commit generado va **siempre en inglés** (asunto, cuerpo y footer), sin importar el idioma del historial del repo ni el de esta conversación. Los identificadores de código, paths y flags se citan verbatim. La interacción contigo sigue en español.
+> **Idioma del mensaje:** el mensaje de commit generado va **siempre en español** (asunto, cuerpo y footer), sin importar el idioma del historial del repo ni el de esta conversación. Los tipos de Conventional Commits (`feat`, `fix`, `chore`…), identificadores de código, paths y flags se citan verbatim. La interacción contigo sigue en español.
 
 > **No re-implementes la lógica de análisis aquí.** Si necesitas cambiar el formato del mensaje, los anti-patrones o la tabla de tipos de Conventional Commit, edita `skills/git-commit/SKILL.md`. Este command es deliberadamente delgado.
 

@@ -26,7 +26,7 @@ Seguir estas reglas estrictamente:
 
 ### Idioma (regla dura)
 
-El mensaje generado va **siempre en inglés** — asunto, cuerpo y footer — aunque la descripción del usuario esté en español y aunque el historial del repo esté en otro idioma. Identificadores de código, paths, flags y nombres propios se citan verbatim, sin traducir. La explicación que acompaña al mensaje sigue en español.
+El mensaje generado va **siempre en español** — asunto, cuerpo y footer — aunque el historial del repo esté en otro idioma. Los tipos de Conventional Commits (`feat`, `fix`, `chore`…), identificadores de código, paths, flags y nombres propios se citan verbatim, sin traducir. La explicación que acompaña al mensaje sigue en español.
 
 ### Formato de línea de asunto: `<type>(<scope>): <description>`
 
@@ -77,40 +77,41 @@ NO ejecutar `git commit`. El usuario solo quiere el texto del mensaje.
 
 ## Ejemplos
 
-**Input:** "I added a dark mode toggle to the settings page"
+**Input:** "agregué un toggle de modo oscuro en la página de settings"
 ```
-feat(settings): add dark mode toggle
+feat(settings): agrega toggle de modo oscuro
 
-Add a toggle switch to the settings page that allows users to
-switch between light and dark themes. Preference is persisted
-to local storage.
-```
-
-**Input:** "fixed the crash when users submit an empty form"
-```
-fix(forms): handle empty form submission without crashing
-
-Return a validation error instead of throwing an unhandled
-exception when the user submits a form with no fields filled.
+Agrega un interruptor en la página de settings que permite alternar
+entre tema claro y oscuro. La preferencia se persiste en local
+storage.
 ```
 
-**Input:** "renamed the /api/getUsers endpoint to /api/users, this breaks existing clients"
+**Input:** "arreglé el crash cuando el usuario envía un formulario vacío"
 ```
-refactor(api)!: rename /api/getUsers to /api/users
+fix(forms): maneja el envío de formulario vacío sin crash
 
-Align endpoint naming with REST conventions. The old endpoint
-returned the same data but used a non-standard verb-prefixed path.
-
-BREAKING CHANGE: /api/getUsers has been removed. Clients must
-update to GET /api/users.
+Devuelve un error de validación en lugar de lanzar una excepción no
+controlada cuando el usuario envía un formulario sin campos llenos.
 ```
 
-**Input:** "updated dependencies and ran npm audit fix"
+**Input:** "renombré el endpoint /api/getUsers a /api/users, esto rompe a los clientes existentes"
 ```
-chore(deps): update dependencies and resolve audit warnings
+refactor(api)!: renombra /api/getUsers a /api/users
+
+Alinea el nombrado del endpoint con las convenciones REST. El endpoint
+anterior devolvía los mismos datos pero usaba un path con verbo,
+fuera del estándar.
+
+BREAKING CHANGE: /api/getUsers fue eliminado. Los clientes deben
+migrar a GET /api/users.
 ```
 
-**Input:** "made the database queries faster by adding an index on email"
+**Input:** "actualicé dependencias y corrí npm audit fix"
 ```
-perf(db): add index on users.email for faster lookups
+chore(deps): actualiza dependencias y resuelve avisos de audit
+```
+
+**Input:** "hice más rápidas las queries agregando un índice en email"
+```
+perf(db): agrega índice en users.email para acelerar lookups
 ```

@@ -39,6 +39,8 @@ tracking: required | no-tracking
 exception_reason: ""
 task_id: LIN-123
 task_url: https://...
+milestone: payments-v2
+parent_branch: feature/payments-v2
 branch: feat/LIN-123-short-slug
 reporter_status: pending | complete | skipped
 validations: []
@@ -50,6 +52,8 @@ status: initialized | implementing | ready_for_review | delivered | blocked
 next_step: ""
 ```
 
+`milestone` se omite y `parent_branch` vale `null` cuando el trabajo no pertenece a ningún milestone. Cuando existen, `parent_branch` siempre es `feature/<milestone-slug>` y es la base del PR.
+
 ## Flujo de trabajo
 
 ### 1. Clasificar y resolver tracking
@@ -57,8 +61,14 @@ next_step: ""
 1. Inferir `kind` del prompt: aceptar `plan`, `feat`, `fix`, `hotfix`, `refactor` y `chore`. Si no es seguro, preguntar una vez.
 2. Leer `.project-context/` para obtener `task_tool`, perfil y backend de documentación.
 3. Reutilizar `task_id` aportado por el usuario, detectado en la rama o guardado en el estado. Si Linear es requerido y no existe, redactar título y descripción en español con `Contexto`, `Alcance` y `Criterios de aceptación`; pedir confirmación solo antes de crear el issue.
-4. Crear la tarea, persistir `task_id`/URL, moverla a **In Progress** y nombrar la rama `<kind>/<TASK-ID>-<slug>`.
-5. Para trabajo local o experimental, aceptar `tracking: no-tracking` únicamente cuando el usuario lo pide explícitamente; guardar `exception_reason` y marcar sincronización como `skipped`. Un hotfix puede empezar de inmediato, pero debe crear/enlazar la tarea antes del cierre.
+4. Resolver el milestone antes de crear ramas:
+   - Intentar derivarlo del proyecto/milestone del issue en Linear.
+   - **La validación humana es obligatoria siempre.** Si Linear trae el dato, confirmarlo con el humano; si no lo trae, preguntarle directamente si el trabajo pertenece a un milestone y cuál.
+   - Persistir el resultado en `delivery-state.yaml` (`milestone` y `parent_branch: feature/<milestone-slug>`, o `parent_branch: null` si no hay milestone) para no volver a preguntar dentro del mismo run.
+5. Crear la tarea, persistir `task_id`/URL, moverla a **In Progress** y nombrar la rama `<kind>/<TASK-ID>-<slug>`. El origen de esa rama depende de `parent_branch`:
+   - Con `parent_branch`: hacer `git fetch` primero; si la rama padre no existe (ni local ni remota), crearla desde `develop` actualizado y pushearla al remoto. Luego crear la rama de trabajo **desde la rama padre**, nunca desde `develop`.
+   - Sin `parent_branch`: comportamiento actual — crear la rama de trabajo desde la base habitual del proyecto.
+6. Para trabajo local o experimental, aceptar `tracking: no-tracking` únicamente cuando el usuario lo pide explícitamente; guardar `exception_reason` y marcar sincronización como `skipped`. Un hotfix puede empezar de inmediato, pero debe crear/enlazar la tarea antes del cierre.
 
 **Puerta:** si tracking requerido no tiene `task_id`, detener antes de modificar código.
 
@@ -78,25 +88,25 @@ El estado no reemplaza handoffs: los handoffs conservan detalles técnicos; este
 
 ### 4. Commit, push y PR
 
-Seguir `committer-flow` en sus tres fases. La Fase 3 crea o reutiliza el PR con `gh pr create`/`gh pr view` y usa esta descripción mínima en inglés:
+Seguir `committer-flow` en sus tres fases, pasándole el path del estado. Si el estado tiene `parent_branch`, esa es la rama base del PR — no `develop` ni `pr_target_branch`. La Fase 3 crea o reutiliza el PR con `gh pr create`/`gh pr view` y usa esta descripción mínima en español:
 
 ```markdown
-## Context
-<Why this change is needed.>
+## Contexto
+<Por qué se necesita este cambio.>
 
-## Changes
-- <Observable change 1>
-- <Observable change 2>
+## Cambios
+- <Cambio observable 1>
+- <Cambio observable 2>
 
-## Validation
-- `<command>` — <result>
+## Validación
+- `<comando>` — <resultado>
 
-## Risk and rollback
-<Risk level and concrete rollback action.>
+## Riesgo y rollback
+<Nivel de riesgo y acción concreta de rollback.>
 
-## Tracking
-- Linear: <task URL or no-tracking reason>
-- Documentation: <URL or reporter delta-only>
+## Trazabilidad
+- Linear: <URL de la tarea o motivo de no-tracking>
+- Documentación: <URL o reporter delta-only>
 ```
 
 El título sigue Conventional Commits y contiene el `TASK-ID` cuando exista. No aceptar cuerpos de una línea ni placeholders. Guardar commit, PR URL y rama en el estado.
