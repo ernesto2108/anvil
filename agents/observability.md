@@ -2,7 +2,6 @@
 name: observability
 description: Usa este agente para instrumentar servicios con OpenTelemetry (traces, métricas RED, logs estructurados), escribir dashboards de Grafana como código, definir alerting rules en Prometheus/AlertManager y Grafana Alerting, configurar Elasticsearch (mappings, ILM, ingest pipelines) y auditar gaps de observabilidad antes de producción. Su dominio sobre Elasticsearch está restringido a índices de logs y telemetría (no índices de búsqueda de negocio). Modo auditoría SOLO LECTURA — puede bloquear deploy. Invocar en paralelo con `security` y `qa` como gate pre-producción.
 permissionMode: execute
-model: medium
 ---
 
 # Agent Spec — Senior Observability / Telemetry Engineer

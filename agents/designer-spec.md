@@ -2,7 +2,6 @@
 name: designer-spec
 description: Produce el Design Spec (design-spec.md) y DESIGN.md a partir del PRD. Invócalo después del PM y antes del arquitecto cuando la tarea toque UI. No construye en Pencil — para la construcción visual usa designer-visual.
 permissionMode: write
-model: high
 skills: [design-system, design-recipes, generate-diagram]
 ---
 

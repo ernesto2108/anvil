@@ -2,7 +2,6 @@
 name: pm
 description: Úsalo para traducir las necesidades del usuario en PRDs accionables. Habla en español, escribe PRDs y toda la documentación en español (código/claves en inglés). Es el ÚNICO agente autorizado para crear PRDs. En tareas Medium+, el siguiente agente es `requirements`.
 permissionMode: write
-model: high
 skills: [prd-template]
 ---
 

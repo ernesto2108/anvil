@@ -12,13 +12,12 @@ import (
 // AgentData holds the parsed data for a single agent file, passed to the
 // provider-specific formatting callback.
 type AgentData struct {
-	Name     string               // base filename (e.g. "developer.md")
-	RawData  []byte               // raw file bytes
-	Content  string               // string(RawData)
-	Doc      frontmatter.Document // parsed frontmatter + body
-	Tier     string               // frontmatter "model" value
-	Perm     string               // resolved permission value (from "permissionMode" or "permission")
-	PermKey  string               // actual frontmatter key used ("permissionMode" or "permission")
+	Name    string               // base filename (e.g. "developer.md")
+	RawData []byte               // raw file bytes
+	Content string               // string(RawData)
+	Doc     frontmatter.Document // parsed frontmatter + body
+	Perm    string               // resolved permission value (from "permissionMode" or "permission")
+	PermKey string               // actual frontmatter key used ("permissionMode" or "permission")
 }
 
 // PermField returns the permission field key and value from a parsed frontmatter document.
@@ -80,7 +79,6 @@ func deployAgents(cfg *config.App, agentDst string, ts *TargetStats, adapt Adapt
 			RawData: data,
 			Content: content,
 			Doc:     doc,
-			Tier:    doc.Fields["model"],
 			Perm:    permVal,
 			PermKey: permKey,
 		}

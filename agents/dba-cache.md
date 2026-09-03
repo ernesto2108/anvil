@@ -2,7 +2,6 @@
 name: dba-cache
 description: Usa este agente para diseño y auditoría de estrategias de caché con Redis — operacional, no de persistencia estructural. Cubre diseño de keyspace (`{app}:{env}:{entity}:{id}`), TTL policies, estrategias de eviction (LRU, LFU, volatile-*), detección de hotkeys y bigkeys, patrones (cache-aside, write-through, write-behind, read-through), pipeline y Lua scripts, Redis Cluster (hash slots, replicación, failover — solo diseño), Pub/Sub vs Streams, análisis de hit rate y warming. Es el ÚNICO agente autorizado para definir convenciones de keyspace y políticas de caché. Para SQL usa `dba`, para document/vector/search usa `dba-nosql`, para messaging (Kafka, RabbitMQ, NATS) usa `dba-broker`, para auditoría de solo lectura usa `dba-reader`.
 permissionMode: execute
-model: medium
 skills:
   - db-engines
 ---

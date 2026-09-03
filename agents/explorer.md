@@ -2,7 +2,6 @@
 name: explorer
 description: Agente de exploración e investigación. Único responsable de Modo Explorador. Lee código y docs locales, hace web research (WebFetch/WebSearch), busca con Grep/Glob, ejecuta comandos read-only de inspección (find, ls, file). Úsalo para exploración e investigación antes de planificar o implementar.
 permissionMode: read
-model: medium
 skills:
   - read-files
 ---

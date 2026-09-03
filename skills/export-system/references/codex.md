@@ -31,22 +31,13 @@ Codex NO usa markdown para agentes. El body markdown del agente fuente va dentro
 | `description` | `description` | Copia literal; escapar comillas |
 | body | `developer_instructions` | Body markdown completo dentro de `"""…"""` |
 | `permissionMode` | `sandbox_mode` | `read` → `read-only`; `write` y `execute` → `workspace-write` |
-| `model` | `model` | `low|medium|high` NO son válidos. Omitir y anotar en el reporte; opcionalmente usar `model_reasoning_effort` |
 | `skills` | — | Eliminar; mover al inicio de `developer_instructions` (Paso 5) |
+
+> **Sin campo `model`.** Los agentes fuente no declaran modelo. **No emitir `model` ni `model_reasoning_effort`** en el TOML: Codex usa el modelo y el esfuerzo de razonamiento de su propia configuración. Si un agente fuente conserva una línea `model:` residual, omitirla sin traducir.
 
 Opcional: `mcp_servers` — solo si el usuario lo pide explícitamente.
 
 > **No existe allowlist granular de tools en Codex.** El único control es `sandbox_mode`. Declararlo como pérdida en el reporte.
-
-### Mapeo de `model_reasoning_effort` (opcional)
-
-| `model` fuente | `model_reasoning_effort` |
-|---|---|
-| `low` | `low` |
-| `medium` | `medium` |
-| `high` | `high` |
-
-Emitirlo solo si el usuario lo aprueba; no es equivalente semántico de un tier de modelo.
 
 ### Ejemplo de agente exportado
 
@@ -91,6 +82,5 @@ Los custom prompts de Codex están **deprecados oficialmente**. Los commands se 
 
 - Sin allowlist granular de tools: solo `sandbox_mode` (`read-only` / `workspace-write`).
 - `write` y `execute` colapsan al mismo `sandbox_mode`: un agente de solo escritura obtiene también capacidad de shell.
-- El tier de modelo no se traduce.
 - Riesgo de truncado del `AGENTS.md` por el límite de 32 KiB.
 - Los namespaces de commands se aplanan (`git:commit` → `git-commit`).

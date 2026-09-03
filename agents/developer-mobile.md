@@ -8,7 +8,6 @@ description: >
   código Flutter (.dart) y Swift (.swift) de aplicación. El humano especifica
   qué construir.
 permissionMode: execute
-model: medium
 skills:
   - flutter-conventions
   - swift-conventions

@@ -2,7 +2,6 @@
 name: system-reviewer
 description: "Auditor de solo lectura del sistema de IA — analiza la coherencia, cobertura y calidad del conjunto de agentes (`agents/*.md`), skills (`skills/*/SKILL.md`) y commands (`commands/*.md`). Detecta responsabilidades solapadas, triggers duplicados, gaps de cobertura, frontmatter mal formado, referencias rotas, agentes sin invocador y skills sin consumidor. Además del inventario de hallazgos, produce análisis de riesgo: traza cadenas de flujos que pueden romperse, identifica puntos ciegos que el inventario no detecta, y emite una opinión fundamentada y directa sobre el estado del sistema. SOLO LECTURA — nunca modifica archivos. Complementario al `agent-designer` (que sí escribe). Invocar cuando el usuario diga 'revisar agentes', 'auditar el sistema', 'hay redundancia en mis agentes', '¿está bien el sistema de IA?', 'qué problemas tienen mis agentes', o como gate pre-merge después de cambios en `agents/`, `skills/`, `commands/`."
 permissionMode: execute
-model: medium
 skills:
   - skill-standards
   - agent-standards
@@ -85,7 +84,7 @@ Si el sistema no tiene **ningún** archivo en `agents/`, `skills/`, `commands/` 
 
 Antes de auditar, mapear los artefactos presentes:
 
-1. **`agents/*.md`** — leer todos los frontmatter; mantener la lista de `name`, `description`, `permissionMode`, `model`, `skills`
+1. **`agents/*.md`** — leer todos los frontmatter; mantener la lista de `name`, `description`, `permissionMode`, `skills`
 2. **`skills/*/SKILL.md`** — leer todos los frontmatter; mantener la lista de `name`, `description`, flags (`user-invocable`, `disable-model-invocation`)
 3. **`commands/*.md`** — leer todos los frontmatter; mantener `name`, `description`, `tools`
 4. **`CLAUDE.md` del proyecto** (si existe) — leer para conocer las reglas del proyecto activo
@@ -159,7 +158,7 @@ Frontmatter mal formado, campos requeridos ausentes, valores fuera del enum espe
 | Skill con routing logic ("derivar a X") | skill | CRÍTICO | Mover lógica al agente que la consume |
 | Skill con lenguaje de rol ("Eres el...") | skill | CRÍTICO | Reescribir como instrucción procedimental |
 | Agente sin sección "Lo que NO hago" | agente | ADVERTENCIA | Agregar sección con referencias explícitas |
-| Agente `model:high` para tareas mecánicas | agente | ADVERTENCIA | Downgrade a `medium` o `low` |
+| Agente con campo `model` en el frontmatter (campo obsoleto) | agente | ADVERTENCIA | Eliminar la línea `model:`; el modelo lo decide la herramienta/sesión |
 | Agente `permissionMode:execute` solo lectura | agente | ADVERTENCIA | Downgrade a `write` o `read` |
 | `SKILL.md` > 500 líneas | skill | ADVERTENCIA | Extraer detalle a archivos de referencia en el directorio de la skill |
 | Agente sin skills cargadas con flujos complejos | agente | INFO | Evaluar extracción de procedimientos a skills |
@@ -211,7 +210,7 @@ Un artefacto está implementado como agente cuando debería ser skill, o vice ve
 - No tiene sección "Lo que NO hago"
 - No referencia ningún agente al que derivar
 - Su `description` no menciona un rol, sino un procedimiento
-- No tiene `model` ni `permissionMode` apropiados para toma de decisiones
+- No tiene un `permissionMode` apropiado para toma de decisiones
 - Es consumido como sub-paso de otro agente sin identidad propia
 
 **Señales de que una SKILL debería ser AGENTE:**

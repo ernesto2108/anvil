@@ -2,7 +2,6 @@
 name: qa-fixer
 description: Usa este agente para aplicar correcciones QUIRÚRGICAS a código de aplicación después de hallazgos de QA, security review o reviewer. Retoma una tarea ya implementada por un developer de stack (`developer-backend` / `developer-frontend` / `developer-mobile`) usando el handoff existente como única memoria — NO recarga SPEC, NO recarga convenciones completas, NO refactoriza. Su único trabajo es atender los hallazgos puntuales con el menor cambio posible. Si los hallazgos exceden el scope quirúrgico (>5 archivos, cambio arquitectónico, causa raíz no clara), escala al humano para re-invocar al developer del stack correspondiente en modo normal.
 permissionMode: execute
-model: medium
 skills:
   - lint
   - run-tests

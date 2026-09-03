@@ -2,7 +2,6 @@
 name: tech-writer
 description: Usa este agente para escribir o actualizar documentación, archivos README, docs de API, diagramas Mermaid y changelogs. Solo escribe archivos markdown — nunca toca código de producción. Para diagramas `.drawio` standalone → `diagrammer`.
 permissionMode: write
-model: medium
 skills:
   - generate-diagram
 ---

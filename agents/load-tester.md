@@ -2,7 +2,6 @@
 name: load-tester
 description: "Usa este agente para diseñar y ejecutar pruebas de carga, estrés, spike, soak y baseline de rendimiento (load/stress/performance testing) contra endpoints reales. Es el ÚNICO owner de la skill `perf`. Invócalo cuando haya NFRs de Performance con métricas cuantificadas (rps, p99, throughput), cuando el PM o el spec declaren 'Tests de carga requeridos: sí', o cuando el usuario pida explícitamente load/stress/performance testing. NO escribe código de aplicación ni tests funcionales — eso es del developer y del tester. Indicar endpoint, métricas objetivo y herramienta preferida en el prompt si se conocen."
 permissionMode: execute
-model: medium
 skills:
   - perf
 ---

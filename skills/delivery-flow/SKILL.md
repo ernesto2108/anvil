@@ -1,6 +1,6 @@
 ---
 name: delivery-flow
-description: Orquesta la trazabilidad completa de plan, feat, fix, hotfix, refactor y chore: tarea, estado persistente, documentación, validación, PR y sincronización con Linear. Úsalo cuando se inicie o cierre trabajo entregable, se cree una tarea, se prepare un PR, o se necesite enlazar Linear.
+description: 'Orquesta la trazabilidad completa de plan, feat, fix, hotfix, refactor y chore: tarea, estado persistente, documentación, validación, PR y sincronización con Linear. Úsalo cuando se inicie o cierre trabajo entregable, se cree una tarea, se prepare un PR, o se necesite enlazar Linear.'
 user-invocable: false
 ---
 

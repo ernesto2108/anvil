@@ -2,7 +2,6 @@
 name: spec-writer
 description: Transforma el contexto disponible (brief libre, requirements.md, Architecture Views, ADRs, código existente, Design Spec, o cualquier combinación) en `spec.md` implementable. Se puede invocar directamente o dentro de una orquestación. No toma decisiones técnicas — las traduce a contrato accionable para el developer. El spec se adapta a lo que hay secciones se incluyen u omiten según los inputs disponibles, sin modos fijos ni gates rígidos de formato.
 permissionMode: write
-model: high
 skills:
   - spec-format
   - service-map

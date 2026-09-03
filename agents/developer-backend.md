@@ -6,7 +6,6 @@ description: >
   NO usar para tests (van al `tester`), migraciones o schema SQL,
   frontend, mobile, ni infra (CI, Docker, Make).
 permissionMode: execute
-model: medium
 skills:
   - go-conventions
   - python-conventions

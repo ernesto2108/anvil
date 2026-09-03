@@ -11,7 +11,7 @@ Estos son los estándares obligatorios para cada agente en este proyecto.
 
 1. **Rol sobre procedimiento** — un agente define quién es y qué no es suyo; los pasos detallados van en skills que carga.
 2. **Dominio exclusivo sin solapamiento** — cada agente posee un conjunto de archivos/responsabilidades que ningún otro toca. Sin solapamiento = sin ambigüedad de routing.
-3. **Mínimo permiso y modelo** — usar el nivel más bajo de permissionMode y el tier más bajo de model que la tarea permita. Escalar solo cuando hay evidencia de necesidad.
+3. **Mínimo permiso** — usar el nivel más bajo de `permissionMode` que la tarea permita. Escalar solo cuando hay evidencia de necesidad. Los agentes no declaran modelo: cada herramienta usa el modelo de su sesión activa.
 
 ## Checklist Pre-Creación
 
@@ -20,7 +20,7 @@ Antes de escribir un nuevo agente, verificar:
 - [ ] Ningún agente existente ya cubre este dominio (revisar descriptions de agents/*.md)
 - [ ] El nuevo agente tiene dominio exclusivo claro (archivos/responsabilidades que solo él toca)
 - [ ] Se justifica como agente y no como skill (ver criterios de decisión abajo)
-- [ ] El tier de modelo y permissionMode están justificados
+- [ ] El `permissionMode` está justificado
 
 ## Criterios de Decisión: ¿Agente o Skill?
 
@@ -44,16 +44,12 @@ Antes de escribir un nuevo agente, verificar:
 name: <slug>                  # minúsculas, guiones, igual al filename sin .md
 description: <texto>          # qué hace + cuándo invocarlo (routing del harness)
 permissionMode: read | write | execute
-model: low | medium | high
 skills:                       # opcional — skills que se cargan al invocar este agente
   - skill-name
 ---
 ```
 
-**Tiers de modelo:**
-- `low` → rápido/barato: análisis puntual, formateo, reportes
-- `medium` → balanceado: implementación estándar, tests
-- `high` → capaz: diseño, arquitectura, decisiones complejas
+> **`model` es un campo obsoleto: NO se declara.** El mecanismo de tiers (`low|medium|high`) fue eliminado del sistema. Cada herramienta ejecuta el agente con el modelo de su sesión activa. Si un agente todavía trae una línea `model:`, es un residuo y debe borrarse.
 
 **Niveles de permiso:**
 - `read` → solo lectura (Glob, Grep, LS, Read)
@@ -90,7 +86,7 @@ Formato y límite de palabras del mensaje final.
 | Anti-Patrón | Señal | Severidad | Corrección |
 |---|---|---|---|
 | Agente sin "Lo que NO hago" | No existe la sección en el body | warning | Agregar sección con referencias explícitas a otros agentes |
-| model:high para tarea mecánica | model: high en agente de formateo/reporte/lint | warning | Downgrade a medium o low |
+| Campo `model` en el frontmatter | Existe una línea `model:` en el frontmatter del agente | warning | Eliminar la línea `model:` — el campo es obsoleto |
 | permissionMode:execute sin uso real de Bash | Solo hace lectura pero tiene execute | warning | Downgrade a write o read |
 | Dos agentes con mismo dominio | Descriptions con keywords idénticas sin cláusula diferenciadora | error | Agregar cláusula "a diferencia de X, este agente hace Y" |
 | Agente que contiene procedimientos de otra skill | Repite pasos que ya viven en una skill que carga | warning | Reemplazar por referencia a la skill correspondiente |
@@ -101,7 +97,7 @@ Formato y límite de palabras del mensaje final.
 - [ ] `name` coincide con el filename sin `.md`
 - [ ] `description` permite routing correcto: incluye cuándo invocarlo y qué NO cubre
 - [ ] `permissionMode` es el mínimo necesario para la tarea
-- [ ] `model` es el tier más bajo que produce calidad suficiente
+- [ ] El frontmatter no declara `model` (campo obsoleto)
 - [ ] Sección "Lo que NO hago" presente con referencias a otros agentes
 - [ ] El agente no repite procedimientos que ya viven en sus skills cargadas
 - [ ] El dominio es exclusivo: ningún otro agente cubre las mismas responsabilidades

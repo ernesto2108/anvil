@@ -154,11 +154,10 @@ Usar `AskUserQuestion`:
 - **Header:** "Rama destino"
 - **Options:** (construir dinámicamente)
   1. `<rama actual>` — `git branch --show-current`
-  2. Si `delivery-state.yaml` tiene `parent_branch`, incluirla etiquetada como "rama padre del milestone `<milestone>`" y ofrecerla como primera alternativa a la rama actual
-  3. Hasta 3 ramas locales adicionales — `git branch --format='%(refname:short)' --sort=-committerdate`
-  4. "Otra (la escribo)"
+  2. Hasta 3 ramas locales adicionales — `git branch --format='%(refname:short)' --sort=-committerdate`
+  3. "Otra (la escribo)"
 
-La pregunta nunca se omite: el humano siempre decide, incluso cuando hay `parent_branch`.
+La pregunta nunca se omite: el humano siempre decide. La rama padre del milestone (`parent_branch`) no es destino de push — es la base del PR (Fase 3).
 
 Si elige "Otra" → segunda llamada `AskUserQuestion` para capturar el nombre. Validar: sin espacios ni caracteres `~^:?*[\`.
 

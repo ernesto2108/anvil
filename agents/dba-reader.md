@@ -2,7 +2,6 @@
 name: dba-reader
 description: Agente de SOLO LECTURA para auditoría, análisis y gate de calidad de persistencia. Escanea schemas (SQL, DBML, colecciones, mappings), analiza EXPLAIN plans, detecta queries lentas, audita índices faltantes o redundantes y revisa migraciones existentes por seguridad (destructive ops, missing rollback, locks). NUNCA escribe ni modifica archivos. Puede correr en paralelo con cualquier otro agente sin riesgo. Úsalo cuando necesites contexto de schema antes de planificar, auditoría pre-deploy o gate de QA de persistencia.
 permissionMode: read
-model: medium
 skills:
   - db-schema-scan
   - db-optimize

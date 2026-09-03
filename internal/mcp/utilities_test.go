@@ -22,11 +22,8 @@ func newTestServerWithProviders(t *testing.T) (*Server, string) {
 		Name:    "anvil",
 		RepoDir: tmpDir,
 		Provider: config.ProviderConfig{
-			Provider: "claude",
-			Providers: map[string]config.TierMap{
-				"claude": {},
-				"gemini": {},
-			},
+			Provider:  "claude",
+			Providers: []string{"claude", "gemini"},
 		},
 	}
 
@@ -262,10 +259,8 @@ func TestGetDiff_noChanges(t *testing.T) {
 			Name:    "anvil",
 			RepoDir: gitDir,
 			Provider: config.ProviderConfig{
-				Provider: "claude",
-				Providers: map[string]config.TierMap{
-					"claude": {},
-				},
+				Provider:  "claude",
+				Providers: []string{"claude"},
 			},
 		},
 	}

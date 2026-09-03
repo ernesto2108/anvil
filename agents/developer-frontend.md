@@ -6,7 +6,6 @@ description: >
   autorizado para escribir código frontend de aplicación. El humano
   especifica qué construir.
 permissionMode: execute
-model: medium
 skills:
   - react-conventions
   - typescript-conventions

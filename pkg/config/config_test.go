@@ -40,14 +40,9 @@ ignore:
 	cfg := `provider: claude
 
 providers:
-  claude:
-    high: opus
-    medium: sonnet
-    low: haiku
-  gemini:
-    high: gemini-2.5-pro
-    medium: gemini-2.5-flash
-    low: gemini-2.5-flash-lite
+  - opus
+  - sonnet
+  - haiku
 
 permissions:
   claude:
@@ -107,41 +102,20 @@ func Test_TargetEnabled(t *testing.T) {
 	}
 }
 
-func Test_ResolveTier(t *testing.T) {
+func Test_ListProviders(t *testing.T) {
 	dir := setupTestRepo(t)
 	app, _ := config.Load(dir, "forge")
 
-	tests := []struct {
-		name     string
-		tier     string
-		provider string
-		want     string
-		wantErr  bool
-	}{
-		{"high claude", "high", "claude", "opus", false},
-		{"medium claude", "medium", "claude", "sonnet", false},
-		{"low claude", "low", "claude", "haiku", false},
-		{"high gemini", "high", "gemini", "gemini-2.5-pro", false},
-		{"passthrough", "custom-model", "claude", "custom-model", false},
-		{"unknown provider", "high", "unknown", "", true},
-	}
+	got := app.ListProviders()
+	want := []string{"opus", "sonnet", "haiku"}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := app.ResolveTier(tt.tier, tt.provider)
-			if tt.wantErr {
-				if err == nil {
-					t.Fatal("expected error, got nil")
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if got != tt.want {
-				t.Errorf("got %q, want %q", got, tt.want)
-			}
-		})
+	if len(got) != len(want) {
+		t.Fatalf("ListProviders() len = %d, want %d (got %v)", len(got), len(want), got)
+	}
+	for i, w := range want {
+		if got[i] != w {
+			t.Errorf("ListProviders()[%d] = %q, want %q", i, got[i], w)
+		}
 	}
 }
 

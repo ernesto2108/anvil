@@ -23,7 +23,6 @@ func (s *Server) listAgents(_ context.Context, _ map[string]any) (string, error)
 		Name        string `json:"name"`
 		Description string `json:"description"`
 		Permission  string `json:"permission"`
-		Model       string `json:"model"`
 	}
 
 	agents := make([]agentInfo, 0, len(files))
@@ -37,7 +36,6 @@ func (s *Server) listAgents(_ context.Context, _ map[string]any) (string, error)
 			Name:        doc.Fields["name"],
 			Description: doc.Fields["description"],
 			Permission:  doc.Fields["permission"],
-			Model:       doc.Fields["model"],
 		})
 	}
 

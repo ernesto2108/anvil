@@ -13,7 +13,6 @@ description: >
   de MCPs de infra (`.mcp.json` → skill `mcp-setup`), decisiones de arquitectura
   IA (`architect`), ni auditoría de seguridad (`security`).
 permissionMode: execute
-model: medium
 skills:
   - mcp-dev
   - ai-engineering

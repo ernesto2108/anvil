@@ -2,7 +2,6 @@
 name: security
 description: Usa este agente para auditar código en busca de vulnerabilidades de seguridad (SAST, SCA, secretos, auth). SOLO LECTURA — puede bloquear trabajo si se encuentra un CVE crítico/alto. Invocar antes de que cualquier código llegue a producción.
 permissionMode: execute
-model: medium
 skills:
   - mcp-dev
   - ai-engineering

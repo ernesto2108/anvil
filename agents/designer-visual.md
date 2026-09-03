@@ -2,7 +2,6 @@
 name: designer-visual
 description: Construye el diseño en Pencil MCP (.pen) a partir del design-spec.md producido por designer-spec. Invócalo después de designer-spec. Solo construcción visual — no produce especificación nueva.
 permissionMode: execute
-model: high
 skills: [design-system, design-recipes]
 tools: [Glob, Grep, LS, Read, Write, Edit, Bash, Skill, mcp__pencil__get_editor_state, mcp__pencil__get_guidelines, mcp__pencil__batch_get, mcp__pencil__batch_design, mcp__pencil__snapshot_layout, mcp__pencil__get_screenshot, mcp__pencil__get_variables, mcp__pencil__set_variables, mcp__pencil__export_nodes]
 ---

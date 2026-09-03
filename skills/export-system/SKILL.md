@@ -33,7 +33,7 @@ Si `targets` no se puede inferir del prompt → preguntar en una línea: **¿A q
 3. Listar `commands/**/*.md` (excluir `INDEX.md` y archivos que sean índices sin frontmatter).
 4. Verificar si existe `CLAUDE.md` en la raíz del proyecto.
 
-Leer el frontmatter de cada agente y de cada skill. **No leer el body completo de todos los agentes en este paso** — el body se lee en el Paso 4, agente por agente, al momento de escribir su export.
+Leer el frontmatter de cada agente y de cada skill. Los agentes fuente **no declaran `model`** (campo obsoleto, mecanismo de tiers eliminado): si alguno todavía lo trae, es un residuo — se omite en el export y no se traduce a ningún destino. **No leer el body completo de todos los agentes en este paso** — el body se lee en el Paso 4, agente por agente, al momento de escribir su export.
 
 Si `skills/` es un symlink, resolverlo y trabajar con el contenido real; escribir siempre a través del path del repo, no del destino del symlink.
 
@@ -135,7 +135,7 @@ Esta receta es idempotente por diseño: correrla de nuevo tras cambios en la fue
 
 - **Nunca escribir en `agents/`, `skills/`, `commands/` ni `CLAUDE.md`** durante una exportación. El flujo es estrictamente unidireccional: fuente → export.
 - **Nunca emitir `override: true`** en ningún agente exportado (reemplazaría el system prompt principal de la herramienta destino).
-- **Nunca inventar valores de `model`.** Los tiers `low|medium|high` no son identificadores válidos en ninguna herramienta destino: usar el default documentado en cada referencia y anotar en el reporte que el modelo requiere revisión manual.
+- **Nunca emitir ni inventar un campo `model`** en un agente exportado. La fuente no lo declara y cada herramienta destino usa el modelo de su sesión activa. Si un agente fuente conserva una línea `model:` residual, se omite silenciosamente.
 - **Nunca traducir el body de un agente.** El cuerpo markdown se transporta literal, salvo el bloque de skills del Paso 5 y la marca del Paso 7.
 - **No exportar `.handoff/*.md`** ni ningún archivo de estado de ejecución.
 - Los directorios generados (`.opencode/`, `.kimi-code/`, `.kiro/`, `.codex/`, `.agents/`, `AGENTS.md`) **no son artefactos protegidos del sistema**: son exports derivados y pueden regenerarse en cualquier momento.
@@ -169,7 +169,6 @@ Esta receta es idempotente por diseño: correrla de nuevo tras cambios en la fue
 - `AGENTS.md` — 312 líneas (14 KiB)
 
 ### Pérdidas declaradas
-- `model: medium|high` no se tradujo — revisar manualmente en cada herramienta
 - Codex no soporta allowlist granular de tools — solo `sandbox_mode`
 - Kiro: los commands se convirtieron a steering `inclusion: manual` (se invocan con `#nombre`)
 
@@ -189,7 +188,7 @@ Los exports son derivados. Tras cambiar `agents/`, `skills/` o `CLAUDE.md`, volv
 |---|---|---|---|
 | Edición manual de un export | Archivo con la marca "GENERADO" modificado respecto a lo que produce la receta | error | Trasladar el cambio a la fuente y regenerar |
 | Export como fuente de verdad | Un agente existe en `.opencode/agents/` pero no en `agents/` | error | Crear el agente en la fuente y regenerar |
-| Tier de modelo copiado literal | `model: high` en un archivo exportado | error | Usar el identificador de modelo del formato destino o el default de la referencia |
+| Campo `model` en un export | Cualquier `model` / `model_reasoning_effort` emitido en un archivo exportado | error | Eliminar el campo — el agente hereda el modelo de la sesión de la herramienta destino |
 | Campo `skills:` en un export | Frontmatter destino con `skills:` | error | Mover al body según el Paso 5 |
 | `AGENTS.md` divergente de `CLAUDE.md` | Secciones presentes en uno y ausentes en el otro | warning | Regenerar `AGENTS.md` desde `CLAUDE.md` |
 | Escritura sin confirmación | Archivos creados sin haber mostrado el plan del Paso 3 | error | Detener y mostrar el plan antes de cualquier escritura |

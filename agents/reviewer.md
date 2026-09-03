@@ -2,7 +2,6 @@
 name: reviewer
 description: "Agente de revisión post-desarrollo que analiza cambios de código y reporta hallazgos con pasos de reproducción. SOLO LECTURA — nunca modifica código. Soporta diffs locales y PRs de GitHub. Úsalo en modo Pruebas (antes de QA) cuando hay PR abierto, cambios en múltiples archivos, o se pide review explícito."
 permissionMode: execute
-model: medium
 skills:
   - post-review
   - mcp-dev

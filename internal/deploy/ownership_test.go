@@ -14,10 +14,10 @@ func Test_IsManagedByAnvil(t *testing.T) {
 	tmp := t.TempDir()
 
 	managed := filepath.Join(tmp, "managed.md")
-	os.WriteFile(managed, []byte("---\nmanaged-by: anvil\nmodel: high\n---\n\nBody"), 0o644)
+	os.WriteFile(managed, []byte("---\nmanaged-by: anvil\n---\n\nBody"), 0o644)
 
 	unmanaged := filepath.Join(tmp, "unmanaged.md")
-	os.WriteFile(unmanaged, []byte("---\nmodel: high\n---\n\nBody"), 0o644)
+	os.WriteFile(unmanaged, []byte("---\nname: unmanaged\n---\n\nBody"), 0o644)
 
 	missing := filepath.Join(tmp, "missing.md")
 
@@ -60,7 +60,7 @@ func Test_ResolveCollisions_NoCollisions(t *testing.T) {
 
 	srcDir := filepath.Join(tmp, "src")
 	os.MkdirAll(srcDir, 0o755)
-	os.WriteFile(filepath.Join(srcDir, "developer.md"), []byte("---\nmodel: high\n---\n"), 0o644)
+	os.WriteFile(filepath.Join(srcDir, "developer.md"), []byte("---\nname: developer\n---\n"), 0o644)
 
 	reader := bufio.NewReader(strings.NewReader(""))
 
@@ -86,8 +86,8 @@ func Test_ResolveCollisions_KeepAll(t *testing.T) {
 
 	srcDir := filepath.Join(tmp, "src")
 	os.MkdirAll(srcDir, 0o755)
-	os.WriteFile(filepath.Join(srcDir, "developer.md"), []byte("---\nmodel: high\n---\n\nAnvil"), 0o644)
-	os.WriteFile(filepath.Join(srcDir, "tester.md"), []byte("---\nmodel: med\n---\n\nAnvil"), 0o644)
+	os.WriteFile(filepath.Join(srcDir, "developer.md"), []byte("---\nname: developer\n---\n\nAnvil"), 0o644)
+	os.WriteFile(filepath.Join(srcDir, "tester.md"), []byte("---\nname: tester\n---\n\nAnvil"), 0o644)
 
 	// Simulate: "a" (all at once), "k" (keep)
 	reader := bufio.NewReader(strings.NewReader("a\nk\n"))
@@ -119,7 +119,7 @@ func Test_ResolveCollisions_ReplaceAll(t *testing.T) {
 
 	srcDir := filepath.Join(tmp, "src")
 	os.MkdirAll(srcDir, 0o755)
-	os.WriteFile(filepath.Join(srcDir, "developer.md"), []byte("---\nmodel: high\n---\n\nAnvil"), 0o644)
+	os.WriteFile(filepath.Join(srcDir, "developer.md"), []byte("---\nname: developer\n---\n\nAnvil"), 0o644)
 
 	reader := bufio.NewReader(strings.NewReader("a\nr\n"))
 

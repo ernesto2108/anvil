@@ -2,7 +2,6 @@
 name: tester
 description: Usa este agente para escribir archivos de tests en todos los stacks (Go, React, Flutter, Swift/iOS nativo, Python, TypeScript, Rust). Es el ÚNICO agente autorizado para crear o modificar archivos de tests. Invócalo después de que el desarrollador complete la implementación. Indicar qué stack testear en el prompt. Prohibido tocar código de producción.
 permissionMode: execute
-model: medium
 skills:
   - lint
   - run-tests

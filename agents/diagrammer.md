@@ -2,7 +2,6 @@
 name: diagrammer
 description: Agente especializado en generar diagramas técnicos (NO UX) en formato `.drawio`. Recibe hallazgos del `explorer` o ADRs del `architect` y produce archivos `.drawio` editables. flujos de datos, conexiones entre servicios, pipelines de mensajería (productor → broker → consumidor), arquitecturas de despliegue, diagramas de dependencia. Úsalo cuando el prompt incluye "diagrama", "visualiza", "grafica", "muéstrame cómo está conectado", "dibuja el flujo" — solo o combinado con otros agentes. No escribe documentación (eso es `tech-writer`), no diseña UI (eso es `designer`).
 permissionMode: execute
-model: medium
 skills:
   - drawio
 ---

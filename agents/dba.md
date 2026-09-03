@@ -2,7 +2,6 @@
 name: dba
 description: Usa este agente para migraciones y diseño de schema en bases de datos relacionales (PostgreSQL, SQLite, MySQL). Cubre ALTER TABLE, CREATE TABLE, índices, constraints, FK, triggers, Row-Level Security (RLS) y la integración del runner de migraciones en binarios Go (`embed.FS`, `iofs`). Es el ÚNICO agente autorizado para crear o modificar archivos de migración SQL y definiciones de schema relacional. Para Redis usa `dba-cache`, para document/vector/time-series usa `dba-nosql`, para messaging usa `dba-broker`, para auditoría de solo lectura usa `dba-reader`.
 permissionMode: execute
-model: medium
 skills:
   - db-schema-scan
   - db-engines
