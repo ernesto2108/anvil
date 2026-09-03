@@ -57,6 +57,16 @@ anvil/
 | `go vet` | sin flags custom (`make vet`) | vet estándar de Go |
 | — | no se detectó `.golangci.yml`/`.golangci.yaml` en la raíz | gap — no hay linter configurado más allá de `go vet` |
 
+## Model tiers eliminados (2026-09-03)
+
+- El mecanismo de resolución de model tiers (`high`/`medium`/`low`) fue eliminado por completo del deploy. Los agentes ya no declaran `model` en su frontmatter; cada herramienta usa el modelo default de su sesión.
+- `pkg/config`: se eliminaron `TierMap`, `TierHigh/Medium/Low`, `IsTier()` y `App.ResolveTier()`. `ProviderConfig.Providers` pasó de `map[string]TierMap` a `[]string` — solo enumera nombres de provider válidos para `anvil provider <name>` y el tool MCP `switch_provider`.
+- `anvil.config.yaml`: el bloque `providers:` es ahora una lista simple de nombres (`- claude`, `- opencode`, ...), sin mapeo de modelos. El bloque `permissions:` no cambió.
+- `internal/deploy/claude.go`: `adaptClaude` ya no reescribe el campo `model` — el frontmatter del agente se emite verbatim (si un agente aún declarara `model`, pasa sin resolver).
+- `internal/deploy/opencode.go`: el template de salida ya no emite la línea `model:`.
+- `internal/mcp/inventory.go`: `listAgents` ya no expone el campo `Model` en el inventario.
+- `internal/cli/registry.go` y `internal/cli/doctor.go`: se removieron los tres bloques de resolución de tier y el check de "provider tiers" en doctor.
+
 ## Patrones prohibidos
 
 - **Build sin `-tags fts5`:** el binario requiere el build tag `fts5` para SQLite FTS5 y `sqlite-vec` — un build sin ese tag no expone la funcionalidad de búsqueda/memoria completa. `make build`/`make install` ya lo incluyen; no remover el tag.

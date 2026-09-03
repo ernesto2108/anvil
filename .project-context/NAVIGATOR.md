@@ -1,7 +1,7 @@
 # Context Navigator — anvil
 
 last_full_scan: 2026-08-13
-last_updated: 2026-08-13
+last_updated: 2026-09-03
 coverage: bootstrap
 
 ## Índice

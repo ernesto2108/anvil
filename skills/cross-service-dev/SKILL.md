@@ -53,6 +53,16 @@ disable-model-invocation: true
    - Especifica el tipo de operación
    - Si el proyecto tiene `task_tool` configurado en `.project-context/project.md`, indicar al humano que vincule el PRD en esa herramienta — nunca ejecutar acciones en ella
 
+5. **Coordinar `parent_branch` cross-repo cuando el trabajo pertenece a un milestone.**
+
+   Mismo criterio de resolución que `delivery-flow`: intentar derivar el milestone de Linear; **la validación humana es obligatoria siempre** — confirmar con el humano si Linear trae el dato, preguntarle directamente si no lo trae.
+
+   - Resolver `parent_branch: feature/<milestone-slug>` **una sola vez para todo el run**, no por repo. Persistir el resultado (milestone + parent_branch) para no volver a preguntar dentro del mismo run.
+   - Por cada repo en scope: si `parent_branch` no existe (ni local ni remoto) en ese repo, crearlo desde `develop` actualizado, pushearlo, y aplicar el mecanismo de PR draft de tracking de `delivery-flow` (Paso 1.5.1) en ESE repo — título `[NO MERGEAR] integración <milestone>: <descripción corta>`, cuerpo con advertencia de solo-merge y referencia a la tarea padre, guardando la URL resultante.
+   - Si `parent_branch` ya existe en algunos repos del scope pero no en otros (milestone con trabajo previo en un repo y uno nuevo que se suma ahora), crearlo únicamente donde falte — **nunca fallar el run completo por esto**.
+   - Si el trabajo NO pertenece a ningún milestone, omitir esta sub-sección y continuar con el comportamiento habitual (cada repo usa su base por defecto).
+   - **NUNCA omitir silenciosamente** la resolución de `parent_branch` cuando hay milestone: si no se puede resolver o crear en algún repo, DETENER y reportar al humano antes de avanzar a la Fase 1.5.
+
 ### Fase 1.5 — Exploración de código por repo (OBLIGATORIA)
 
 Esta fase no se puede saltar. Garantiza contexto técnico real de cada servicio antes de decisiones de diseño.
@@ -97,6 +107,8 @@ Reglas de orden:
 - **Paralelismo:** servicios independientes → en paralelo. Si B depende de la salida de A → secuencial.
 - **Migraciones de BD:** se ejecutan antes que el resto de la implementación del servicio afectado.
 - **Operaciones DELETE:** orden inverso — consumidores primero, productor último.
+
+**Milestone:** si la Fase 1 resolvió `parent_branch` para el run, pasarlo a cada delegación de `committer-flow`/`delivery-flow` por servicio, para que el PR de cada tarea hija apunte a ese `parent_branch` y no a `develop`.
 
 ### Fase 4 — Testing
 

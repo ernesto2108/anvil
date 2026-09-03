@@ -46,6 +46,7 @@ reporter_status: pending | complete | skipped
 validations: []
 commit: ""
 pr_url: ""
+parent_branch_pr_url: ""
 documentation_url: ""
 linear_sync: pending | in_progress | in_review | done | skipped
 status: initialized | implementing | ready_for_review | delivered | blocked
@@ -66,8 +67,22 @@ next_step: ""
    - **La validación humana es obligatoria siempre.** Si Linear trae el dato, confirmarlo con el humano; si no lo trae, preguntarle directamente si el trabajo pertenece a un milestone y cuál.
    - Persistir el resultado en `delivery-state.yaml` (`milestone` y `parent_branch: feature/<milestone-slug>`, o `parent_branch: null` si no hay milestone) para no volver a preguntar dentro del mismo run.
 5. Crear la tarea, persistir `task_id`/URL, moverla a **In Progress** y nombrar la rama `<kind>/<TASK-ID>-<slug>`. El origen de esa rama depende de `parent_branch`:
-   - Con `parent_branch`: hacer `git fetch` primero; si la rama padre no existe (ni local ni remota), crearla desde `develop` actualizado y pushearla al remoto. Luego crear la rama de trabajo **desde la rama padre**, nunca desde `develop`.
+   - Con `parent_branch`: hacer `git fetch` primero; si la rama padre no existe (ni local ni remota), crearla desde `develop` actualizado, pushearla al remoto y aplicar el Paso 1.5.1 (PR draft de tracking) antes de continuar. Luego crear la rama de trabajo **desde la rama padre**, nunca desde `develop`.
    - Sin `parent_branch`: comportamiento actual — crear la rama de trabajo desde la base habitual del proyecto.
+
+#### 1.5.1 — PR draft de tracking del `parent_branch` (solo al crearlo por primera vez)
+
+Cuando este paso crea un `parent_branch` que no existía, abrir además un PR **draft** de tracking `<parent_branch> → develop` (o la base habitual del repo), reutilizando la mecánica de creación de PR de `committer-flow` Fase 3 (`gh pr create`, redacción en español):
+
+- **Título:** `[NO MERGEAR] integración <milestone>: <descripción corta>` (Conventional Commits en el tipo cuando aplique, ej. `feat`).
+- **Cuerpo:** advertencia de que es solo-destino-de-merge (los PRs de las tareas hijas se mergean aquí, nunca commits directos), que nunca se mergea a la base mientras el milestone esté incompleto, referencia a `task_url` de la tarea padre del milestone en Linear si existe, y nota de que se mergea al cerrar el milestone completo.
+- Marcar el PR como `draft` (`gh pr create --draft`).
+- **Nota práctica:** si `parent_branch` es idéntico a `develop` (aún sin commits propios porque no se mergeó ningún PR hijo), `gh pr create` falla con "No commits between X and Y". En ese caso, antes de crear el PR, ejecutar:
+  ```bash
+  git commit --allow-empty -m "chore: branch de integración milestone <slug> [<TASK-ID>]"
+  git push origin <parent_branch>
+  ```
+- Guardar la URL resultante en `delivery-state.yaml` bajo `parent_branch_pr_url`.
 6. Para trabajo local o experimental, aceptar `tracking: no-tracking` únicamente cuando el usuario lo pide explícitamente; guardar `exception_reason` y marcar sincronización como `skipped`. Un hotfix puede empezar de inmediato, pero debe crear/enlazar la tarea antes del cierre.
 
 **Puerta:** si tracking requerido no tiene `task_id`, detener antes de modificar código.
