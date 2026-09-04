@@ -2,7 +2,7 @@
 
 Antes de escribir código Go, verificar:
 
-- [ ] El placement de paquetes sigue la estructura existente del proyecto
+- [ ] El placement de paquetes cumple `.project-context/Core/coding-standards.md §Estructura de carpetas` (la estructura existente del proyecto es complemento, no la única referencia — para paquetes nuevos la regla documentada es la que manda)
 - [ ] Las interfaces están definidas por el consumidor, no por el productor
 - [ ] El wrapping de errores incluye contexto de la operación
 - [ ] El contexto se pasa como primer parámetro
