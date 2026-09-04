@@ -68,7 +68,7 @@ next_step: ""
    - Persistir el resultado en `delivery-state.yaml` (`milestone` y `parent_branch: feature/<milestone-slug>`, o `parent_branch: null` si no hay milestone) para no volver a preguntar dentro del mismo run.
 5. Crear la tarea, persistir `task_id`/URL, moverla a **In Progress** y nombrar la rama `<kind>/<TASK-ID>-<slug>`. El origen de esa rama depende de `parent_branch`:
    - Con `parent_branch`: hacer `git fetch` primero; si la rama padre no existe (ni local ni remota), crearla desde `develop` actualizado, pushearla al remoto y aplicar el Paso 1.5.1 (PR draft de tracking) antes de continuar. Luego crear la rama de trabajo **desde la rama padre**, nunca desde `develop`.
-   - Sin `parent_branch`: comportamiento actual — crear la rama de trabajo desde la base habitual del proyecto.
+   - Sin `parent_branch`: preguntar al humano desde qué rama base crear la rama de trabajo, sugiriendo como default la base habitual del proyecto (`pr_target_branch` de la configuración, o `develop` si no está declarada). **La confirmación humana es obligatoria** — misma filosofía que la validación de milestone del punto 4; nunca crear la rama desde una base inferida en silencio.
 
 #### 1.5.1 — PR draft de tracking del `parent_branch` (solo al crearlo por primera vez)
 
@@ -134,7 +134,13 @@ Con PR URL persistida:
 
 1. Comentar el PR en Linear una sola vez (buscar comentario existente antes de crearlo).
 2. Cambiar Linear a **In Review** cuando el PR queda abierto. Cambiar a **Done** solo después de merge o una confirmación explícita de que la política del proyecto permite cerrar al abrir PR.
-3. Marcar `status: delivered` y `next_step: ""` únicamente si todos los gates pasaron. Si no, `status: blocked` y describir el siguiente paso.
+3. Marcar `status: delivered` únicamente si todos los gates pasaron. Si no, `status: blocked` y describir el siguiente paso en `next_step`.
+4. **Proponer la vuelta a la rama base (paso final del run — siempre con confirmación humana).** Una vez creado o actualizado el PR y persistido el estado, determinar la rama base destino: `parent_branch` si existe en `delivery-state.yaml`; sin milestone (`parent_branch: null`), la rama base confirmada del proyecto (`pr_target_branch` de la configuración, o `develop` si no está declarada). El checkout NUNCA se ejecuta en automático — puede haber cambios en el working tree que git no considere bloqueantes pero que el humano quiera conservar; la decisión de cambiar de rama es suya:
+   1. Ejecutar `git status` para conocer el estado del working tree.
+   2. Proponer el checkout con una pregunta explícita que muestre la rama actual, la rama base destino y si hay cambios sin commitear o archivos sin trackear (ej.: "Run cerrado. Estoy en `feat/LIN-123-slug`; ¿vuelvo a `<rama-base>`? Hay N archivos modificados/sin trackear."). **La confirmación humana es obligatoria — nunca ejecutar el checkout sin respuesta.**
+   3. Si el humano confirma → hacer el checkout y registrar `next_step: "run cerrado — repo en <rama-base>"`.
+   4. Si el humano declina o no responde → no hacer checkout y registrar `next_step: "checkout pendiente a <rama-base> — declinado o en espera"`.
+   5. En ningún caso usar `stash` ni `checkout --force` automáticos para habilitar el cambio de rama.
 
 ## Matriz de gates
 
@@ -161,5 +167,6 @@ Con PR URL persistida:
 - Validation: <passed / pending / failed>
 - PR: <URL | pending>
 - State: <delivered / blocked>
+- Working tree: <rama base si el humano confirmó el checkout | rama actual si lo declinó o está en espera>
 - Next step: <action or none>
 ```

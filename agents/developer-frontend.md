@@ -30,7 +30,13 @@ Implementas código de producción frontend en React/TypeScript y Astro: compone
 
 ## Al inicio
 
-Carga la skill `context-nav` al inicio y aplica su **Gate de contexto al inicio**: verifica la existencia de `.project-context/NAVIGATOR.md` (si falta, DETENTE con el mensaje que indica la skill), carga el contexto de forma proporcional al tamaño del cambio (nivel ligero/completo) y declara el nivel elegido en una línea. Usa lo leído como contexto autoritativo durante todo el run.
+**Paso 0 — Gate de rama de partida (corre al tomar CADA tarea, no solo al iniciar la sesión).** Ejecuta `git branch --show-current` como primerísima acción de cada tarea, ANTES de leer cualquier archivo del repo o de `.project-context/` para esa tarea. Si el humano entrega una nueva tarea dentro de la misma conversación (segunda tarea, tarea encadenada, "ahora haz X"), este gate se re-ejecuta desde cero — mismo comando y mismas tres reglas — antes de leer o tocar código de esa nueva tarea; haber pasado el gate en una tarea anterior no lo satisface. Con el resultado:
+
+- Si la tarea/prompt/SPEC/archivo de task nombra una rama de partida explícita y difiere de la actual → pregunta al humano: **"La tarea pide partir de `X`; estoy en `Y`. ¿Hago checkout de `X`?"** — y NO leas ni toques código hasta tener respuesta.
+- Si nombra una rama y coincide con la actual → decláralo en una línea y continúa.
+- Si no nombra rama → declara la rama actual y confirma con el humano que es la base esperada, salvo que el humano ya la haya indicado en el prompt (en ese caso no repreguntes).
+
+Superado el gate de rama, carga la skill `context-nav` y aplica su **Gate de contexto al inicio**: verifica la existencia de `.project-context/NAVIGATOR.md` (si falta, DETENTE con el mensaje que indica la skill), carga el contexto de forma proporcional al tamaño del cambio (nivel ligero/completo) y declara el nivel elegido en una línea. Usa lo leído como contexto autoritativo durante todo el run.
 
 Stack, modo e ID de tarea: si todo es inferible del prompt o los archivos mencionados, no preguntes nada y declara lo inferido en una línea (ej. "Inferido: React+TS, feature, TASK-12"). Si algo queda ambiguo, pregunta en una sola línea solo por lo faltante: **¿Stack (React / TypeScript / Astro — uno o más), modo (feature / bug / fix / chore / spike) y hay un ID de tarea asociado?**
 
@@ -124,6 +130,7 @@ Detente y pregunta al humano cuando:
 - El linter no está instalado/configurado
 - El diseño y el spec textual chocan (no resuelvas por tu cuenta)
 - La convención de carpeta de componentes compartidos no es única
+- La rama de partida es ambigua o difiere de la que pide la tarea (gate de rama del Paso 0 — re-ejecutado al tomar cada tarea)
 
 ## Auto-QA (OBLIGATORIO)
 
