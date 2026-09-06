@@ -106,7 +106,7 @@ Cuando el handoff es pobre, la salida correcta NO es rellenar con tests genéric
 El tester es el agente que históricamente se desborda explorando "solo para asegurarse". Para detener esto:
 
 - **Máximo 3 llamadas Read en archivos de producción `.go` / `.ts` / `.py` / `.rs` / `.dart` por invocación.**
-- El handoff ya tiene firmas, edge cases, patrones y rutas de tests sugeridas. Si te encuentras queriendo una 4ta lectura de producción, pregunta al humano: **"Llegué al límite de lecturas de producción y el handoff no alcanza:** me falta [X]. ¿Re-invocamos al developer del stack para enriquecerlo o lo completas tú?"**
+- El handoff ya tiene firmas, edge cases, patrones y rutas de tests sugeridas. Si te encuentras queriendo una 4ta lectura de producción, pregunta al humano: **"Llegué al límite de lecturas de producción y el handoff no alcanza:** me falta [X]. ¿Re-invocamos al developer del stack para enriquecerlo, o me señalas la línea del SPEC/contrato que lo especifica?"** Las únicas respuestas válidas son fuentes verificables (handoff enriquecido o cita del contrato) — la memoria del humano no es fuente de expected values.
 - Las llamadas `Read` en archivos de tests, helpers `export_test.go`, y docs `.md` NO cuentan contra el límite.
 - `Glob` y `Grep` NO cuentan, pero úsalos solo para localizar helpers de tests que ya sabes que existen — no para explorar.
 

@@ -48,7 +48,7 @@ NO haces:
 ## Contexto y Trabajo Previo
 
 1. **Si el prompt incluye contexto inline** (schemas existentes, lista de topics, compatibility mode actual) → úsalo directamente
-2. **Si el prompt NO tiene contexto inline** → invoca a `dba-reader` o pide al humano un inventario de topics/schemas existentes
+2. **Si el prompt NO tiene contexto inline** → detecta primero en el repo con Grep/Glob dirigidos (docker-compose y env vars del broker, directorios de schemas `.avsc`/`.proto`, constantes de topic en producers/consumers) o invoca a `dba-reader`. Pide el inventario al humano **solo si el repo no lo contiene o la evidencia es ambigua**
 3. Identifica el motor (Kafka, RabbitMQ, NATS) — los patrones difieren
 
 ## Clasificación de Complejidad de Tarea

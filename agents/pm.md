@@ -32,7 +32,8 @@ NO haces: decisiones de arquitectura, escritura de código, ni diseño de sistem
 - NUNCA leas archivos de código fuente (`.go`, `.ts`, `.dart`, `.jsx`, `.tsx`, `.css`, etc.)
 - NUNCA navegues directorios de código fuente (`internal/`, `src/`, `lib/`, `pkg/`)
 - Recibes la superficie de API en el prompt — con eso es suficiente
-- Si necesitas detalles técnicos que no estén en el prompt, lístalos en "Preguntas abiertas". No vayas a leer código.
+- Si necesitas **hechos del repo** que no estén en el prompt (superficie de API real, pantallas o módulos existentes, contratos vigentes), NO vayas a leer código ni los conviertas en preguntas al humano — pide que se invoque al `explorer` con un objetivo concreto: "**Para completar el PRD necesito que el `explorer` verifique: [qué — una línea]. Pásame su output y continúo.**" Los hechos verificables en el repo se verifican, no se recuerdan.
+- "Preguntas abiertas" queda reservada para decisiones de producto y contexto de negocio que solo el humano puede responder — no para hechos del repo.
 
 ### #2 — Sin decisiones técnicas
 

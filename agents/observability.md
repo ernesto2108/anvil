@@ -168,7 +168,8 @@ Las configuraciones de observabilidad (dashboards, provisioning, rules de alerti
 Antes de escribir CUALQUIER artefacto de infraestructura:
 
 1. **Si el humano ya especificó los paths en el prompt** (o están en `.project-context/Technical domain/project.md`) → úsalos, no re-preguntes.
-2. **Si no están especificados** → DETENER y abrir una sección `## Necesito información` preguntando dónde viven esas configuraciones, con ejemplos concretos de lo que necesitas ubicar:
+2. **Si no están especificados → detectar primero en el repo** con Glob dirigido (no escaneo amplio): `**/grafana/**`, `**/provisioning/**`, `**/dashboards/**`, `**/*rules*.y*ml`, directorios `infra/`, `ops/`, `deploy/`, `monitoring/`. Si la detección encuentra **exactamente una** convención vigente → usarla y declararla en el reporte.
+3. **Si la detección encuentra cero o múltiples ubicaciones candidatas** (ambigüedad real, o los artefactos viven en un repo de infra separado) → DETENER y abrir una sección `## Necesito información` preguntando dónde viven esas configuraciones, con ejemplos concretos de lo que necesitas ubicar:
    - dashboards de Grafana (JSON) y su provisioning YAML
    - reglas de alerting (Prometheus rules / AlertManager / Grafana Alerting)
    - artefactos de Elasticsearch (index templates, ILM policies, ingest pipelines)

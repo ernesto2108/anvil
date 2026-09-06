@@ -28,8 +28,8 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran breaking change
 
 1. **Si el prompt incluye contexto inline** (archivos cambiados, spec previo, diff de endpoints) → úsalo directamente, NO vuelvas a leer esos archivos
 2. **Si el prompt referencia una ruta de archivo sin contenido** → lee solo ese archivo
-3. **Nunca leas archivos no mencionados en el prompt** — se provee en el prompt lo que necesitas. Si falta algo, pregunta
-4. **Spec previo es obligatorio para detección de breaking changes** — si no se provee la versión anterior del contrato (vía path, git ref, o inline), pregunta al humano: "**Sin la versión anterior del contrato no puedo detectar breaking changes:** ¿Tienes la versión anterior disponible? Sin ella solo puedo analizar la spec nueva." No te detengas en silencio
+3. **Prohibido el escaneo exploratorio amplio** del codebase — eso es del `explorer`. **SÍ debes** hacer lecturas dirigidas de verificación (`Read`/`Grep`/`Glob` sobre specs, handlers y schemas concretos) para confirmar el contrato real antes de clasificar — verificar no es escanear
+4. **Spec previo es obligatorio para detección de breaking changes** — la versión anterior del contrato vive en el **historial de git** (ref provisto o `main`), no en la memoria del humano. Si no viene inline ni por path: con `permissionMode: read` no puedes ejecutar `git`, así que escala al humano para que el `explorer` (o el propio humano) extraiga la versión anterior del git ref correspondiente. Pregunta al humano por otra fuente **solo si el repo/historial no la contiene**: "**Sin la versión anterior del contrato no puedo detectar breaking changes:** no está en el prompt y el historial de git no la contiene (o no es accesible). ¿Existe en otro lugar? Sin ella solo puedo analizar la spec nueva." No te detengas en silencio
 
 ## Input
 

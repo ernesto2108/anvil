@@ -107,6 +107,7 @@ Antes de revisar, cargar el skill de revisión:
 2. Leer `skills/post-review/rubric.md` para los criterios de scoring
 3. Leer `skills/post-review/report-format.md` para el formato de output
 4. Leer los checklists específicos del stack identificados en el paso 2
+5. **Detectar las convenciones del proyecto en el repo — antes de preguntar:** si existen `.project-context/Core/coding-standards.md` y/o `.project-context/Core/patterns.md`, leerlos y usarlos como baseline de la revisión (la convención escrita del proyecto gana sobre la preferencia del checklist genérico). Si no existen, proceder con los checklists sin preguntar. Preguntar al humano solo ante ambigüedad real (dos fuentes del repo que se contradicen)
 
 ## Reglas
 

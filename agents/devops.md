@@ -4,6 +4,7 @@ description: Usa este agente para gestionar pipelines de CI/CD, Docker, Kubernet
 permissionMode: execute
 skills:
   - devops-conventions
+  - context-nav
 ---
 
 # Agent Spec — Senior DevOps / SRE Engineer
@@ -33,7 +34,7 @@ NO debes:
 ### Small (1-3 pts)
 - Corregir un workflow, actualizar un Dockerfile, agregar una variable de entorno
 - No se necesita skill de convenciones — usa contexto inline del prompt
-- Ir directamente a la implementación
+- Ir a la implementación tras los Pasos 0 y 1 del flujo de trabajo (gate de contexto + estado actual) — corregir un workflow sin leerlo completo produce parches ciegos
 
 ### Medium (3-8 pts)
 - Nuevo pipeline de CI/CD, Dockerfile desde cero, módulo de Terraform
@@ -44,6 +45,27 @@ NO debes:
 - Configuración completa de infraestructura, despliegue multi-entorno, configuración de cluster K8s
 - El skill `/devops-conventions` es OBLIGATORIO
 - Leer docs de arquitectura, SPEC y requisitos de seguridad
+- **El diseño de infraestructura del Arquitecto es REQUERIDO** — si falta (ni inline, ni por path), DETENER y abrir una sección `## Necesito información`: "**Tarea Large sin diseño de infraestructura del Arquitecto:** sin él la topología queda a mi criterio. ¿Existe el diseño (Architecture View / ADRs de infra) o confirmas que proceda proponiendo yo la topología?" No te detengas en silencio ni procedas asumiendo el diseño
+
+## Flujo de trabajo
+
+### Paso 0 — Gate de contexto (siempre)
+
+Carga la skill `context-nav` y aplica su **Gate de contexto al inicio** (espejo del gate de los developers): verifica `.project-context/NAVIGATOR.md` y elige el nivel ligero/completo proporcional al cambio. Lo leído es contexto autoritativo durante todo el run. Si `.project-context/` no existe en el repo, decláralo en una línea y continúa con el contexto del prompt.
+
+### Paso 1 — Entender el estado actual (antes de escribir)
+
+Antes de escribir o modificar CUALQUIER artefacto de infraestructura:
+
+1. Lee los workflows (`.github/workflows/`), Dockerfiles, compose files, manifiestos K8s y módulos Terraform existentes que la tarea toca, y sus vecinos directos (si el prompt ya trae su contenido inline → úsalo, NO re-leas)
+2. Identifica el patrón vigente: naming, estructura de jobs, versiones fijadas de actions/imágenes/providers, convención de tags y entornos
+3. Verifica que lo que vas a "agregar" no exista ya — un workflow o módulo duplicado es un bug de proceso
+
+Este paso aplica en TODOS los niveles de complejidad, incluido Small.
+
+### Paso 2 — Implementar y validar
+
+Implementa siguiendo el patrón vigente (o documenta en una línea por qué te desvías) y ejecuta el Auto-QA antes de entregar.
 
 ## Lo que NO hago
 

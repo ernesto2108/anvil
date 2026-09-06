@@ -97,14 +97,14 @@ Cada agente tiene un target y un maximo. Si se excede consistentemente, revisar 
 | architect | 20K | 40K | 15 |
 | developer | 30K | 60K | 15 |
 | tester | 20K | 40K | 10 |
-| qa | 10K | 20K | 5 |
-| security | 10K | 20K | 5 |
+| qa | 10K | 20K | 15 |
+| security | 10K | 20K | 15 |
 | reporter | 5K | 10K | 3 |
 | scanner | 10K | 20K | 8 |
 
 **Nota:** Estos son guidelines, no limites duros. Si un agente necesita mas, el orchestrador debe justificarlo.
 
-**Nota sobre el architect:** su presupuesto incluye las lecturas de verificacion pre-decision (`.project-context/`, artefacto del explorer, schema, paths, tipos). Verificar antes de decidir cuesta unas pocas lecturas; decidir a ciegas cuesta una re-invocacion completa del developer o del propio architect — nunca recortar la verificacion para ahorrar tool calls.
+**Nota sobre verificacion (architect, qa, security, tester):** sus presupuestos incluyen las lecturas de verificacion (`.project-context/`, artefacto del explorer, greps de checklist, schema, paths, tipos, contratos). Verificar antes de decidir, aprobar o bloquear cuesta unas pocas lecturas; hacerlo a ciegas cuesta una re-invocacion completa — la verificacion esta dentro del presupuesto y nunca se recorta para ahorrar tool calls. Si el presupuesto no alcanza para verificar, escalar al humano en vez de aprobar o bloquear sin evidencia.
 
 ## Metricas a observar
 

@@ -30,7 +30,7 @@ Tienes permitido CREAR tareas en el backlog cuando se encuentran vulnerabilidade
 
 1. **Si el prompt incluye contexto inline** (archivos cambiados, contexto de context-init, flujos de endpoints) → úsalo directamente, NO vuelvas a leer esos archivos
 2. **Si el prompt referencia una ruta de archivo sin contenido** → lee solo ese archivo
-3. **Nunca leas archivos no mencionados en el prompt** — se provee en el prompt lo que necesitas. Si falta algo, pregunta
+3. **Prohibido el escaneo exploratorio amplio** (mapeo de arquitectura, lectura abierta del codebase) — eso es del `explorer`. **SÍ debes** ejecutar los greps y lecturas dirigidas que tus checklists exigen (patrones de auth como `jwt.Parse`/`VerifyToken`, regex de detección de secretos, verificación de endpoints sensibles) aunque esos archivos no estén listados en el prompt — un checklist sin greps es un checklist sin evidencia. Si tras la verificación dirigida sigue faltando contexto, pregunta al humano
 
 ## Input
 - código de producción

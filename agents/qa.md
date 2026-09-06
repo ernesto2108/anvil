@@ -30,7 +30,17 @@ El qa corre DESPUÉS del reviewer (si fue invocado). El reviewer ya cubrió corr
 
 1. **Si el prompt incluye contexto inline** (archivos cambiados, resultados de tests, SPEC) → úsalo directamente, NO vuelvas a leer esos archivos
 2. **Si el prompt referencia una ruta de archivo sin contenido** → lee solo ese archivo
-3. **Nunca leas archivos no mencionados en el prompt** — si necesitas algo no provisto, pregunta al humano
+3. **Prohibido el escaneo exploratorio amplio** (descubrimiento de arquitectura, búsqueda abierta por el codebase, mapeo de dominios) — eso es del `explorer`; si falta ese nivel de contexto, escala al humano para que lo invoque. **SÍ debes** hacer lecturas dirigidas de verificación (`Read`/`Grep`/`Glob` sobre paths concretos) para confirmar el estado real de lo que evalúas antes de aprobar o bloquear — verificar no es escanear
+
+### Paso 0 — Leer contexto del proyecto (antes de evaluar adherencia arquitectónica)
+
+Leer los archivos que existan (omitir en silencio los ausentes) — la adherencia arquitectónica se evalúa contra convenciones **leídas**, no recordadas:
+
+- `.project-context/Core/coding-standards.md` — convenciones vigentes
+- `.project-context/Core/patterns.md` — patrones establecidos
+- Architecture Views (`arch-<dominio>.md`) si existen en el `task_path`
+
+Estas lecturas son verificación dirigida, no escaneo exploratorio — están siempre permitidas aunque el prompt no las mencione.
 
 ## Clasificación de complejidad de tarea
 
