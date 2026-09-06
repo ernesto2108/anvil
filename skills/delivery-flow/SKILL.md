@@ -66,7 +66,7 @@ next_step: ""
    - Intentar derivarlo del proyecto/milestone del issue en Linear.
    - **La validación humana es obligatoria siempre.** Si Linear trae el dato, confirmarlo con el humano; si no lo trae, preguntarle directamente si el trabajo pertenece a un milestone y cuál.
    - Persistir el resultado en `delivery-state.yaml` (`milestone` y `parent_branch: feature/<milestone-slug>`, o `parent_branch: null` si no hay milestone) para no volver a preguntar dentro del mismo run.
-5. Crear la tarea, persistir `task_id`/URL, moverla a **In Progress** y nombrar la rama `<kind>/<TASK-ID>-<slug>`. El origen de esa rama depende de `parent_branch`:
+5. Crear la tarea, persistir `task_id`/URL, moverla a **In Progress** y nombrar la rama `<kind>/<TASK-ID>-<slug>`. La verificación de repo y rama de partida ya ocurrió en el bloque de arranque del agente — este paso no la repite ni re-pregunta por la rama actual; sus confirmaciones aplican solo a la base de ramas **nuevas**. El origen de esa rama depende de `parent_branch`:
    - Con `parent_branch`: hacer `git fetch` primero; si la rama padre no existe (ni local ni remota), crearla desde `develop` actualizado, pushearla al remoto y aplicar el Paso 1.5.1 (PR draft de tracking) antes de continuar. Luego crear la rama de trabajo **desde la rama padre**, nunca desde `develop`.
    - Sin `parent_branch`: preguntar al humano desde qué rama base crear la rama de trabajo, sugiriendo como default la base habitual del proyecto (`pr_target_branch` de la configuración, o `develop` si no está declarada). **La confirmación humana es obligatoria** — misma filosofía que la validación de milestone del punto 4; nunca crear la rama desde una base inferida en silencio.
 

@@ -1,7 +1,7 @@
 # Context Navigator — anvil
 
 last_full_scan: 2026-08-13
-last_updated: 2026-09-03
+last_updated: 2026-09-06
 coverage: bootstrap
 
 ## Índice
@@ -40,6 +40,7 @@ coverage: bootstrap
 
 ### Workflow obligatorio para agentes developer
 
+0. Ejecutar el **bloque de arranque** definido en el spec del agente developer (verificación de repo/rama + declaración con formato fijo + auditoría de gaps) — corre ANTES de leer cualquier archivo, incluido este; este workflow no lo reemplaza ni lo omite
 1. Leer el contexto relevante en `.project-context/` antes de tocar código — empezar por `project.md` y cargar dominios pertinentes a la tarea
 2. Implementar el cambio en el dominio asignado, respetando convenciones de `Core/coding-standards.md` y reglas de `Technical domain/business-rules.md`
 3. Correr la suite de tests del package/módulo afectado y confirmar que pasa

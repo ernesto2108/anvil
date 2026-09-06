@@ -154,3 +154,14 @@ internal/dashboard/
 - `tui/` — interfaz de terminal interactiva (bubbletea) — `browse.go` (851 líneas) / `browse_test.go` (977 líneas).
 
 **Gap:** estos cuatro dominios no fueron inspeccionados en profundidad en este bootstrap (sondeo grep-first, presupuesto de líneas) — profundizar en un rescan `deep` si una tarea los toca directamente.
+
+---
+
+## Dominio: sistema de IA (agents/, skills/, commands/)
+
+### Responsabilidad
+- Specs de los agentes (`agents/*.md`), skills (`skills/*/SKILL.md`) y commands (`commands/*.md`) que anvil despliega a Claude Code, OpenCode y Codex vía `anvil deploy`.
+
+### Decisiones tomadas
+- 2026-09-06 — **Bloque de arranque con formato fijo** en los 4 developers (`developer-backend/frontend/mobile/ai`): la primera salida de cada tarea es una declaración con plantilla (`Arranque — repo | rama actual | rama pedida | modo | lenguaje | task | complejidad | contexto | gaps`), sin vía de omisión. Verifica repo Y rama con comandos antes de leer archivos; exactamente 3 preguntas bloqueantes (repo difiere, rama pedida ≠ actual, rama no indicada) y auditoría activa de gaps de la spec (`gaps: N` → detenerse sin implementar). Reemplaza al "Gate de rama de partida" de 7aaf1b5, que fallaba porque el prompt con `repo:`/`branch:` caía en un escape sin verificación.
+- Los templates de `context-nav` (`navigator.tmpl.md`, `workflows.tmpl.md`) referencian el bloque como paso 0 del workflow developer; `delivery-flow` referencia el gate ya ejecutado en vez de duplicar decisiones de rama.
