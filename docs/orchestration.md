@@ -19,7 +19,7 @@ Como orquestador, tu flujo es:
 | Typo, config, 1-2 files, clear fix | **Trivial** | Directo — sin agentes | Ninguno | En conversacion |
 | Bug fix, refactor, 2-5 files, patron conocido | **Small** | developer → tester | Sin PRD/design | Inline en prompt del agente |
 | Feature nueva, endpoint nuevo, decisiones de diseno | **Medium** | developer → tester → qa | PRD minimo | PRD + archivos clave |
-| Cross-cutting, nuevo contexto, UI+backend, multi-servicio | **Complex** | pm → architect → developer → tester → security → qa → reporter | PRD + Design completos | Docs completos |
+| Cross-cutting, nuevo contexto, UI+backend, multi-servicio | **Complex** | pm → explorer → architect → developer → tester → security → qa → reporter | PRD + Design completos | Docs completos |
 
 ## Reglas de token efficiency
 
@@ -55,7 +55,7 @@ flowchart TD
     Decision -->|Trivial| Direct["Ejecutar directo"]
     Decision -->|Small| SmallPipe["developer → tester"]
     Decision -->|Medium| MedPipe["developer → tester → qa"]
-    Decision -->|Complex| ComplexPipe["pm → architect → developer → tester → security → qa → reporter"]
+    Decision -->|Complex| ComplexPipe["pm → explorer → architect → developer → tester → security → qa → reporter"]
 ```
 
 ## Triage automatico
@@ -79,6 +79,7 @@ No todos los agentes corren siempre:
 | Agente | Saltar cuando |
 |--------|--------------|
 | context-init | .project-context/ existe y se actualizo en esta sesion |
+| explorer | la feature no toca codigo existente (greenfield puro), o ya existe un `explorer-<topic>.md` fresco para este run |
 | pm | requirements ya son claros y especificos |
 | designer | no hay cambios de UI |
 | architect | no hay decisiones de diseno (patron ya existe) |
@@ -150,7 +151,8 @@ Cada agente recibe SOLO lo que necesita:
 | pm | vault path, request del usuario | codigo, diffs |
 | context-init | root del proyecto | tareas |
 | designer | prd.md, context.md | codigo, reportes |
-| architect | prd.md, ui-spec.md, context.md | codigo, reportes |
+| explorer | objetivo de exploracion, run-id, topic | diffs, reportes |
+| architect | prd.md, ui-spec.md, context.md, `explorer-<topic>.md` (obligatorio si toca codigo existente) | codigo crudo, reportes |
 | developer | prd.md, design.md, ui-spec.md, skill | reportes QA/security |
 | tester | prd.md, design.md, archivos cambiados | diffs completos |
 | qa | prd.md, design.md, git diff | historial de conversacion |
