@@ -1,7 +1,6 @@
 ---
 name: service-map-updater
 description: Mantiene `service-map.yaml` sincronizado con el código real después de que el developer toca endpoints, eventos o schemas compartidos. Solo opera cuando el diff incluye cambios de contrato. Nunca elimina entradas sin confirmación explícita del humano.
-user-invocable: true
 ---
 
 <!-- GENERADO por la skill export-system. NO EDITAR A MANO.

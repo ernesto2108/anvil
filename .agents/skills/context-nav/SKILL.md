@@ -26,10 +26,11 @@ Sistema de conocimiento acumulativo que vive en `.project-context/` al lado de `
 Los agentes que implementan código (developers de stack) aplican este gate antes de escribir nada. Esta es la fuente única del procedimiento — los agentes solo cargan esta skill y lo ejecutan.
 
 1. **Gate de existencia:** `.project-context/NAVIGATOR.md` debe existir. Si no existe, DETENER y responder al humano en una sola línea: **"No existe `.project-context/NAVIGATOR.md` — ejecuta el agente `context-init` primero y luego continúa."** No implementar nada hasta que exista el contexto.
-2. **Carga proporcional al tamaño del cambio** (el agente decide, no pregunta; declara el nivel elegido en una línea):
-   - **Cambio acotado** (≤2 archivos, sin contratos nuevos, sin dependencias nuevas, sin decisiones de diseño): leer `NAVIGATOR.md` + el archivo de standards relevante al área tocada (`.project-context/Core/coding-standards.md` y/o `patterns.md`). Declarar: **"Contexto: ligero."**
-   - **Cualquier otro caso**: leer `NAVIGATOR.md`, `.project-context/Technical domain/project.md`, `.project-context/Core/coding-standards.md`, `.project-context/Core/patterns.md`, `.project-context/Technical domain/business-rules.md` y `.project-context/Core/workflows.md`. Declarar: **"Contexto: completo."**
-3. Usar lo leído como contexto autoritativo durante todo el run. Si un archivo esperado no existe o está vacío, mencionar al humano cuál falta antes de continuar.
+2. **Carga proporcional al tamaño del cambio** (el agente decide, no pregunta; declara el nivel elegido — si su spec define un bloque de arranque con campo `contexto:`, esa es la declaración y no se repite en una línea aparte):
+   - **Cambio acotado** (≤2 archivos, todos en rutas que ya existen — sin carpetas, paquetes ni dominios nuevos —, sin contratos nuevos, sin dependencias nuevas, sin decisiones de diseño): leer `NAVIGATOR.md` + `.project-context/Core/coding-standards.md` (siempre) + `.project-context/Core/patterns.md` si el área tocada lo amerita. Declarar: **"Contexto: ligero."**
+   - **Cualquier otro caso** — incluida la creación de carpetas, paquetes o dominios nuevos: leer `NAVIGATOR.md`, `.project-context/Technical domain/project.md`, `.project-context/Core/coding-standards.md`, `.project-context/Core/patterns.md`, `.project-context/Technical domain/business-rules.md`, `.project-context/Technical domain/contracts.md` y `.project-context/Core/workflows.md`. Declarar: **"Contexto: completo."**
+3. **Gate de placement (rutas nuevas):** antes de crear cualquier archivo en una ruta que no existe, validar el placement contra `Core/coding-standards.md §Estructura de carpetas` y la convención de paths de `Technical domain/project.md`. Declarar en una línea la ruta elegida y la regla que la respalda — formato: **"Placement: `internal/<dominio>/` según coding-standards §Estructura de carpetas."** Si ninguna regla documentada respalda la ruta → DETENER y proponer al humano la ruta con su justificación antes de crear el archivo.
+4. Usar lo leído como contexto autoritativo durante todo el run. Si un archivo esperado no existe o está vacío, mencionar al humano cuál falta antes de continuar.
 
 ## Estructura de archivos
 
@@ -41,7 +42,8 @@ Los agentes que implementan código (developers de stack) aplican este gate ante
 │   ├── navigation.md                     # Índice de Core
 │   ├── workflows.md                      # Ramas, ambientes, deploy, comandos operativos
 │   ├── task-management.md                # Gestión de tareas, tickets, DoD
-│   └── coding-standards.md               # Naming, linting, patrones detectados
+│   ├── coding-standards.md               # Naming, linting, patrones detectados
+│   └── patterns.md                       # Patrones de diseño inferidos del código
 │
 ├── Technical domain/
 │   ├── navigation.md                     # Índice de Technical domain
@@ -49,6 +51,7 @@ Los agentes que implementan código (developers de stack) aplican este gate ante
 │   ├── domain.md                         # Entidades y bounded contexts
 │   ├── glossary.md                       # Lenguaje humano ↔ técnico
 │   ├── contracts.md                      # APIs, queues, eventos, reglas de negocio
+│   ├── business-rules.md                 # Invariantes de negocio + modelo de auth
 │   ├── dependencies.md                   # Grafo de dependencias entre dominios
 │   └── risks.md                          # Deuda técnica, gotchas, restricciones
 │
@@ -67,8 +70,8 @@ Los agentes que implementan código (developers de stack) aplican este gate ante
 
 ## Reglas de lectura
 
-- Los agentes que implementan (orquestador y developers de stack) leen `Technical domain/project.md` + `Core/patterns.md` + `Technical domain/contracts.md` + `Core/workflows.md` siempre
-- Lee solo los dominios que la tarea va a tocar (inferir desde archivos afectados)
+- Los agentes que implementan (orquestador y developers de stack) aplican el **§Gate de contexto al inicio** — ese gate es la fuente única de qué archivos leer según el nivel (ligero/completo); no existe una lista "siempre" aparte
+- Lee solo los dominios que la tarea va a tocar (inferir desde archivos afectados; si la tarea crea un dominio nuevo, no hay archivos de los que inferir → aplica el nivel completo y el gate de placement del §Gate)
 - En modo directo, inyectar resumen de NAVIGATOR.md en la primera respuesta de sesión
 
 ## Staleness

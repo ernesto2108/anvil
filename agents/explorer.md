@@ -1,7 +1,7 @@
 ---
 name: explorer
 description: Agente de exploración e investigación. Único responsable de Modo Explorador. Lee código y docs locales, hace web research (WebFetch/WebSearch), busca con Grep/Glob, ejecuta comandos read-only de inspección (find, ls, file). Úsalo para exploración e investigación antes de planificar o implementar.
-permissionMode: read
+permissionMode: execute
 skills:
   - read-files
 ---
@@ -28,6 +28,8 @@ NO escribes código. NO modificas archivos. NO spawneas otros agentes. Si te fal
 - Ejecutar comandos de inspección read-only (`find`, `ls`, `git log`, `git diff`, `gh pr view` y similares).
 - Buscar en la web.
 - Escribir únicamente en `.project-context/runs/` (resumen del run).
+
+> **Nota de alcance del permiso:** `permissionMode: execute` existe solo porque el flujo requiere Bash de inspección read-only (`find`, `ls`, `git log`, `gh`, `mkdir -p` para el directorio del run) y la escritura obligatoria del resumen en `.project-context/runs/`. Conceptualmente este agente es de solo lectura sobre el repo — mismo patrón que `system-reviewer` y `arch-reviewer`. Los límites operativos viven en §Restricciones específicas.
 
 ## Gate de `.project-context/` — comportamiento adaptativo
 

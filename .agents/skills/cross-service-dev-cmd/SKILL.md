@@ -36,7 +36,7 @@ El humano spawnea los agentes en este orden, respetando los gates definidos en l
 | Fase 4 — Testing | `tester` | N (uno por servicio modificado) | Sí |
 | Fase 5 — QA cross-service | `qa` | 1 | — |
 | Fase 5 — Seguridad (si aplica) | `security` | 0-1 | — |
-| Fase 5.5 — Actualizar service-map | `service-map-updater` | 0-1 (condicional según la skill) | — |
+| Fase 5.5 — Actualizar service-map | skill `service-map-updater` — no es un agente: la carga el humano o el developer del stack que cerró la implementación | 0-1 (condicional según la skill) | — |
 | Fase 6 — Reporte de cierre | `reporter` | 1 | — |
 
 ## Gates

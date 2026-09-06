@@ -37,7 +37,8 @@ Los agentes que implementan código (developers de stack) aplican este gate ante
 │   ├── navigation.md                     # Índice de Core
 │   ├── workflows.md                      # Ramas, ambientes, deploy, comandos operativos
 │   ├── task-management.md                # Gestión de tareas, tickets, DoD
-│   └── coding-standards.md               # Naming, linting, patrones detectados
+│   ├── coding-standards.md               # Naming, linting, patrones detectados
+│   └── patterns.md                       # Patrones de diseño inferidos del código
 │
 ├── Technical domain/
 │   ├── navigation.md                     # Índice de Technical domain
@@ -45,6 +46,7 @@ Los agentes que implementan código (developers de stack) aplican este gate ante
 │   ├── domain.md                         # Entidades y bounded contexts
 │   ├── glossary.md                       # Lenguaje humano ↔ técnico
 │   ├── contracts.md                      # APIs, queues, eventos, reglas de negocio
+│   ├── business-rules.md                 # Invariantes de negocio + modelo de auth
 │   ├── dependencies.md                   # Grafo de dependencias entre dominios
 │   └── risks.md                          # Deuda técnica, gotchas, restricciones
 │

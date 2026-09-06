@@ -211,7 +211,7 @@ Cuando se invoca con `mode: full-audit`:
    ---
    ```
    Incluir: Descripción del bug, Código afectado, Impacto, Pasos para reproducir, Corrección.
-8. Todo el output en español. Las etiquetas de severidad en inglés (critical/high/medium/low).
+10. Todo el output en español. Las etiquetas de severidad en inglés (critical/high/medium/low).
 
 **Eficiencia:** Con el contexto de context-init+arquitecto inline, deberías necesitar leer **solo los archivos específicos** donde sospechas vulnerabilidades — no todo el codebase.
 

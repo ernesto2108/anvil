@@ -6,6 +6,8 @@ Cada token cuesta dinero y tiempo. Un anvil mal disenado puede quemar 10x mas to
 
 ## Estrategias
 
+> **Nota sobre nombres de agentes:** en los pipelines de este documento, `developer` refiere a la familia de developers resuelta por stack (`developer-backend` / `developer-frontend` / `developer-mobile` / `developer-ai`) y `designer` a la dupla `designer-spec` (especificacion) + `designer-visual` (construccion en Pencil). `reporter` es una skill, no un agente.
+
 ### 1. No correr agentes innecesarios
 
 La optimizacion mas grande es no hacer trabajo que no se necesita.
@@ -23,7 +25,7 @@ Cada agente recibe SOLO los archivos que necesita. No pasar el contexto completo
 
 ```
 # MAL — developer recibe todo
-"Lee prd.md, design.md, ui-spec.md, qa-review.md, security-audit.md, context.md..."
+"Lee prd.md, design.md, design-spec.md, qa-review.md, security-audit.md, context.md..."
 
 # BIEN — developer recibe lo minimo
 "Lee prd.md y design.md. Convention skill: go-conventions."
@@ -55,7 +57,7 @@ Ver `docs/convention-routing.md` para la guia completa con ejemplos de prompts.
 
 Si `.project-context/NAVIGATOR.md` se actualizo en la misma sesion, no correr `context-init` de nuevo. Ahorra ~5000 tokens.
 
-### 13. Inyectar `.project-context/` en vez de explorar el repo
+### 6. Inyectar `.project-context/` en vez de explorar el repo
 
 Si `.project-context/NAVIGATOR.md` existe y tiene menos de 3 dias, inyectar los archivos relevantes inline en vez de dejar que el agente explore el repo:
 
@@ -66,25 +68,25 @@ Si `.project-context/NAVIGATOR.md` existe y tiene menos de 3 dias, inyectar los 
 | Orquestador eligiendo convention files | ~3K buscando | 0 — stack en `project.md` |
 | context-init re-descubriendo contratos | ~10K cada sesion | 0 si < 3 dias |
 
-Regla: antes de decirle a un agente "lee `internal/X/`", verificar si ese dominio existe en `.project-context/domains/X.md`. Si existe y esta fresco, inyectar ese archivo en lugar del codigo fuente.
+Regla: antes de decirle a un agente "lee `internal/X/`", verificar si ese dominio esta documentado en `.project-context/Technical domain/domain.md` (o en `business-rules.md` / `contracts.md` del mismo directorio, segun lo que se necesite). Si esta documentado y fresco, inyectar ese archivo en lugar del codigo fuente.
 
-### 6. Reporter solo en Maximum
+### 7. Reporter solo en Maximum
 
-El reporter genera un resumen de sesion. Solo vale la pena en tareas Maximum donde hubo muchos cambios. Para trivial/medium es desperdicio.
+La skill `reporter` genera un resumen de sesion. Solo vale la pena en tareas Maximum donde hubo muchos cambios. Para trivial/medium es desperdicio.
 
-### 7. Un QA, no N QAs
+### 8. Un QA, no N QAs
 
 En cross-service, correr UN qa con el diff combinado de todos los servicios. No un qa por servicio.
 
-### 8. Agentes concisos
+### 9. Agentes concisos
 
 Los agentes mismos deben ser cortos. Un agente de 200 lineas se carga en el contexto cada vez que se invoca. Mantener por debajo de 100 lineas.
 
-### 9. Un documento por invocacion
+### 10. Un documento por invocacion
 
 No pedirle a un agente que produzca PRD + roadmap + sprint update en una sola corrida. Dividir en invocaciones separadas. Cada invocacion produce 1 archivo.
 
-### 10. Presupuestos de tokens por agente
+### 11. Presupuestos de tokens por agente
 
 Cada agente tiene un target y un maximo. Si se excede consistentemente, revisar el prompt o dividir el trabajo.
 
@@ -93,16 +95,18 @@ Cada agente tiene un target y un maximo. Si se excede consistentemente, revisar 
 | Agente | Target | Max | Tool calls max |
 |--------|--------|-----|----------------|
 | pm | 15K | 25K | 5 |
-| designer | 20K | 40K | 10 |
+| designer-spec | 20K | 40K | 10 |
 | architect | 20K | 40K | 15 |
-| developer | 30K | 60K | 15 |
+| developer-* (backend / frontend / mobile / ai) | 30K | 60K | 15 |
 | tester | 20K | 40K | 10 |
 | qa | 10K | 20K | 15 |
 | security | 10K | 20K | 15 |
-| reporter | 5K | 10K | 3 |
-| scanner | 10K | 20K | 8 |
+| reporter (skill) | 5K | 10K | 3 |
+| context-init | 10K | 20K | 8 |
 
 **Nota:** Estos son guidelines, no limites duros. Si un agente necesita mas, el orchestrador debe justificarlo.
+
+**Nota sobre designer-visual:** no tiene fila propia porque su consumo lo dominan las MCP tools de Pencil, no las lecturas de contexto — su presupuesto se gestiona por pantalla segun la seccion "Optimizacion de MCP tools (Pencil/Figma)".
 
 **Nota sobre verificacion (architect, qa, security, tester):** sus presupuestos incluyen las lecturas de verificacion (`.project-context/`, artefacto del explorer, greps de checklist, schema, paths, tipos, contratos). Verificar antes de decidir, aprobar o bloquear cuesta unas pocas lecturas; hacerlo a ciegas cuesta una re-invocacion completa — la verificacion esta dentro del presupuesto y nunca se recorta para ahorrar tool calls. Si el presupuesto no alcanza para verificar, escalar al humano en vez de aprobar o bloquear sin evidencia.
 
@@ -117,21 +121,22 @@ Cada agente tiene un target y un maximo. Si se excede consistentemente, revisar 
 | Re-lecturas de archivos | Si el mismo archivo se lee 3+ veces, inyectar contenido |
 | Tokens PM vs presupuesto | Si PM > 25K, el prompt fue muy pesado o leyo codigo |
 
-### 11. Subagentes no tienen acceso a MCP tools
+### 12. Division spec/construccion en diseño (MCP tools)
 
-Los subagentes (Agent tool) NO heredan conexiones MCP del proceso principal. Pencil, Figma, y cualquier otro MCP server solo estan disponibles en la conversacion principal.
+El diseño esta dividido en dos agentes con presupuestos de naturaleza distinta:
 
-**Impacto:** El designer agent no puede ejecutar diseños en Pencil/Figma. Solo produce specs (ui-spec.md).
-
-**Solucion:** El pipeline se pausa despues del designer. El usuario ejecuta el diseño visual en la conversacion principal (con acceso a MCP). Cuando termina, dice "ya acabe" y el pipeline continua.
+- **`designer-spec`** produce la especificacion (`design-spec.md` + `DESIGN.md`). No usa MCP tools — su presupuesto es el de un agente de documentos (ver tabla de presupuestos).
+- **`designer-visual`** construye el diseño en Pencil: declara los tools `mcp__pencil__*` en su frontmatter y ejecuta el Design Spec directamente sobre el archivo `.pen`. Su consumo lo dominan las MCP tools — aplicar las estrategias de la seccion siguiente.
 
 ```
-designer agent → ui-spec.md → PAUSA → usuario diseña en Pencil/Figma → "ya acabé" → architect
+designer-spec → design-spec.md → designer-visual construye en Pencil → architect
 ```
 
-Esto aplica a cualquier agente que necesite MCP tools. Si un nuevo agente necesita MCP, debe seguir el mismo patron: producir spec → pausa → ejecucion en main → continuar.
+**Paso humano residual:** el Pencil MCP no abre ni crea archivos — opera sobre el documento ya abierto en el editor. El usuario es responsable de abrir/crear el `.pen` antes de invocar a `designer-visual`.
 
-## 12. Optimizacion de MCP tools (Pencil/Figma)
+Regla general: un agente que necesita MCP tools debe declararlos explicitamente en su frontmatter (como hace `designer-visual`) — no asumir que los hereda del proceso principal.
+
+## 13. Optimizacion de MCP tools (Pencil/Figma)
 
 Los MCP servers de diseño (Pencil, Figma) consumen tokens masivamente. Estrategias:
 

@@ -1,7 +1,6 @@
 ---
 name: cross-service-dev
 description: Protocolo procedimental para coordinar trabajo cross-service en múltiples repos de microservicios en una sola sesión. Úsalo cuando el usuario diga "implement across services", "this touches X and Y services", "cross-service feature", "work on multiple repos", "remove this endpoint from all services", "deprecate this across services", "refactor cross-service", o describa cualquier cambio (crear, actualizar, eliminar, deprecar) que requiera trabajo coordinado en 2+ servicios. Define fases, gates y formato de salida. Requiere service-map.yaml para resolver rutas de repos.
-disable-model-invocation: true
 ---
 
 # Cross-Service Dev — Protocolo Multi-Repo
