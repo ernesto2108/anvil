@@ -1,30 +1,24 @@
 # Committer handoff — Fase 1 → Fase 2
 
-- TASK-ID: (sin TASK-ID — ad-hoc)
+- TASK-ID: (sin TASK-ID — run ad-hoc)
 - run_id: ad-hoc
-- Commit hash: e7de67c
-- Commit subject: fix(skills): shorten test-api description under Kiro limit
-- Rama destino: develop (pusheado: fe6c012..e7de67c)
+- Commit hash: 3015debe921f6f00d15a4a51a5d6c1c90fa8369d
+- Commit subject: fix(system): resuelve críticos de la auditoría
+- Rama destino: develop
 - Remoto: git@github.com:ernesto2108/anvil.git
-- Fecha Fase 1: 2026-08-08T23:40:00Z
+- Fecha Fase 1: 2026-09-06T19:05:00Z
 
 ## Mensaje del commit (verbatim)
 
-feat(skills): add task-flow for Linear + Outline
+fix(system): resuelve críticos de la auditoría
 
-Two-phase task lifecycle skill for work repos: phase 1 drafts the
-issue in Spanish and creates it in Linear behind a human confirmation
-gate; phase 2 delegates commit/PR to committer-flow, moves the issue
-to Done with the PR link, and writes a per-task doc in Outline.
-
-Gate 0 resolves the docs backend from the project registry routing
-table (single source of truth) instead of hardcoding repo prefixes,
-asking the human only when the project has no match. Credentials are
-read at runtime from the registry and never hardcoded in the skill.
-
-Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01DzRvsa9HHMhEbfa8PmcSy5
+(cuerpo completo en `git log -1 3015deb` — 18 archivos: 8 fuente del sistema,
+2 docs, 8 exports de Codex regenerados)
 
 ## Notas
 
-Corrí sin TASK-ID — gate de handoff omitido. run_id ausente — handoff propio en ad-hoc/. El usuario pidió commit y publicación en el mismo turno; `.project-context/` excluido del commit por decisión del usuario.
+- Corrí sin TASK-ID — gate de handoff omitido; run_id ausente — handoff en `ad-hoc/`.
+- Gates posteriores omitidos por instrucción explícita del humano; hay un re-audit scoped del system-reviewer corriendo en paralelo (solo lectura) — sus hallazgos, si los hay, van en commit de seguimiento.
+- Rama destino `develop` establecida por el humano en esta sesión.
+- Excluidos por decisión del humano: `.project-context/runs/adhoc/` y este handoff.
+- El fix de `~/.claude/CLAUDE.md` global (fila service-map-updater) se aplicó fuera del repo — no forma parte de este commit.
