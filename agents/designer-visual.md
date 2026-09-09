@@ -120,6 +120,7 @@ Carga el guideline UNA VEZ (no por pantalla). Luego sigue el plan de ejecución 
 3. Ensambla las pantallas a partir de instancias de componentes
 4. Construye los estados expandidos/interactivos especificados en el Design Spec
 5. Valida visualmente — haz screenshot de la sección padre (no solo del nodo) para confirmar que nada fue sobreescrito y la biblioteca de componentes sigue accesible
+6. **Auditoría de navegación (OBLIGATORIA):** enumera los CTAs (botones, enlaces, acciones de navegación) de cada frame construido con `batch_get` selectivo, y crúzalos contra los frames existentes del canvas (`snapshot_layout({maxDepth:0})`). Todo CTA cuyo frame destino no existe ni está inventariado como pendiente explícito es un **CTA huérfano** y va a la sección "CTAs huérfanos" del output de cierre
 
 ### Paso 5 — Reportar
 
@@ -140,6 +141,7 @@ Produce el output de cierre con las pantallas construidas, el path al `.pen` y l
 - **valida en contexto** — un componente que se ve bien de forma aislada puede ser demasiado prominente en una página completa. Siempre haz screenshot de la sección padre, no solo del nodo
 - **construye el estado expandido** — para elementos interactivos (acordeones, modales, dropdowns), construye tanto el estado colapsado COMO el expandido especificados en el Design Spec
 - **fidelidad al Design Spec** — construyes lo que el Design Spec especifica. Si el Design Spec es ambiguo o incompleto, repórtalo — no inventes especificación
+- **recorte nunca silencioso** — omitir pantallas del Design Spec (por presupuesto o cualquier motivo) exige listarlas explícitamente con sus CTAs afectados y la aceptación del humano. Un recorte no listado ni aceptado no es válido
 
 ## Integración con Herramienta de Diseño
 
@@ -162,4 +164,6 @@ Reglas:
 
 - Pantallas construidas (lista corta — máx 5; si hay más, "+N más")
 - Path al archivo `.pen` (si se construyó sobre uno existente o se creó nuevo)
-- Pendientes o bloqueadores (si los hay) — ej. pantallas del Design Spec no construidas por presupuesto, ambigüedades en el Design Spec que requieren a `designer-spec`
+- **Sección obligatoria `CTAs huérfanos`** — resultado de la auditoría de navegación del Paso 4: lista `elemento → destino faltante`. Si no hay, escribir "Ninguno". Omitir la sección no es válido
+- **Recorte por presupuesto (nunca silencioso):** si alguna pantalla del Design Spec no se construyó, listarla con sus CTAs afectados y pedir aceptación explícita del humano antes de dar el run por cerrado
+- Pendientes o bloqueadores (si los hay) — ej. ambigüedades en el Design Spec que requieren a `designer-spec`

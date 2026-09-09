@@ -33,6 +33,21 @@ Antes de construir CUALQUIER pantalla, carga los lineamientos de Pencil que corr
 
 3. **Aplica lineamientos junto con las recetas** — los lineamientos de Pencil definen principios (jerarquía, densidad, retroalimentación). Las recetas a continuación definen la estructura. Usa ambos.
 
+### Paso 0.5 — Inventario de Navegación (GATE)
+
+Antes de construir CUALQUIER pantalla, deriva el **inventario de navegación** desde sus elementos interactivos:
+
+1. **Enumera los CTAs** de la(s) pantalla(s) pedida(s) — cada botón, enlace o acción de navegación (ej. un Login trae "Regístrate" y "Olvidé mi contraseña")
+2. **Deriva el destino** de cada CTA → una pantalla concreta
+3. **Clasifica cada destino** en exactamente uno de dos estados:
+   - **Diseñado** — la pantalla destino se construye en este mismo run
+   - **Inventariado** — pendiente EXPLÍCITO que se reporta al humano al cierre (tabla `CTA → destino pendiente`)
+4. **Propón y deja decidir** — presenta el inventario en un solo mensaje y deja que el humano decida qué destinos se diseñan ahora y cuáles quedan inventariados. Proporcional: una pantalla pedida no debe explotar en un interrogatorio — derivar, proponer, decidir
+
+**Regla dura:** nunca terminar un run con **CTAs huérfanos** — CTAs cuyo destino no está ni diseñado ni inventariado como pendiente explícito.
+
+Al nombrar frames, usa la convención de flujo `"Journey / N-Pantalla"` (ej. `"Auth / 1-Login"`, `"Auth / 2-Registro"`) — ver `reference/pencil-workflow.md` de `/design-system`.
+
 ### Paso 1 — Construir Pantallas
 
 1. Detecta la herramienta de diseño:

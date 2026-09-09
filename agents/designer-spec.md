@@ -250,7 +250,7 @@ Produce `design-spec.md` con suficiente detalle para que `designer-visual` ejecu
 3. **Definiciones de componentes** — nombre, estructura, layout, hijos, estados, todos usando $variables
 4. **Composiciones de pantalla** — cómo se ensamblan los componentes en cada pantalla
    - Si la plataforma es `both`: pantallas web + pantallas mobile (layouts separados, no solo responsive)
-5. **Plan de ejecución Pencil/Figma** — pasos ordenados que `designer-visual` sigue para construir el diseño
+5. **Plan de ejecución Pencil/Figma** — pasos ordenados que `designer-visual` sigue para construir el diseño. DEBE listar TODAS las pantallas del Screen Inventory, en orden de flujo/journey con la nomenclatura de frames `"Journey / N-Pantalla"` (ej. `"Auth / 1-Login"`), sin omisiones — así `designer-visual` no puede recortar pantallas silenciosamente: cualquier pantalla del plan que no construya debe reportarla con sus CTAs afectados y con aceptación del humano
 
 Este agente termina cuando `design-spec.md` y `DESIGN.md` están escritos. La construcción visual en Pencil es responsabilidad de `designer-visual`, que toma este Design Spec como entrada.
 
