@@ -99,6 +99,14 @@ FILA 4 — Pantallas Mobile
 - **States/capas junto a la Librería** en la misma fila
 - **Después de reorganizar**, ejecuta `snapshot_layout({problemsOnly:true})` para verificar que no haya superposiciones
 
+### Convención de flujo (navegación entre pantallas)
+
+Pencil NO tiene conectores ni prototipado entre frames — la representación del flujo es por **convención**, y convive con el orden cronológico: las filas siguen siendo cronológicas por iteración (v1, v2…); DENTRO de cada iteración, las pantallas se agrupan y ordenan por flujo.
+
+- **Nomenclatura de frames:** `"Journey / N-Pantalla"` — ej. `"Auth / 1-Login"`, `"Auth / 2-Registro"`, `"Auth / 3-Recuperar contraseña"`. El prefijo agrupa por journey; el número marca el orden dentro del flujo
+- **Agrupación por filas de flujo:** dentro del bloque de una iteración, las pantallas de un mismo journey van contiguas en orden de flujo (izquierda → derecha). Si la iteración tiene varios journeys, usa una fila por journey (ej. `v2 / Auth` y debajo `v2 / Onboarding`), manteniendo el bloque de la iteración junto antes de la siguiente iteración
+- **Flechas opcionales:** si ayudan a la lectura, dibuja flechas como vectores simples entre frames consecutivos de un journey. Son decorativas — la fuente de verdad del flujo es la nomenclatura y el orden, nunca inventes capacidades de prototipado que Pencil no tiene
+
 ## Nodos de Script (Código en el Canvas)
 
 Para patrones muy repetitivos o data-driven, un nodo de script renderiza output de JS en el canvas. Restricciones: máx 1000 nodos, timeout 2s, sin async, sin DOM/red. Para repeticiones simples (<10 ops) prefiere loops dentro de `batch_design`. Para patrones únicos personalizables, usa instancias de componentes.

@@ -270,6 +270,10 @@ Verifica WCAG AA (4.5:1 texto, 3:1 texto grande) para TODOS los modos **calculan
 
 ### 6. Ensamblar Pantallas desde Componentes
 
+**Gate — inventario de navegación:** antes de ensamblar, enumera los CTAs (botones, enlaces, acciones de navegación) de las pantallas a construir y deriva el destino de cada uno. Cada destino queda en exactamente uno de dos estados: **diseñado** en este mismo run, o **inventariado** como pendiente explícito que se reporta al humano al cierre (tabla `CTA → destino pendiente`). Propón el inventario en un solo mensaje y deja que el humano decida qué destinos se diseñan ahora — proporcional, sin interrogatorios. Nunca cerrar un run con **CTAs huérfanos** (CTA cuyo destino no está ni diseñado ni inventariado).
+
+Nombra los frames con la convención de flujo `"Journey / N-Pantalla"` (ej. `"Auth / 1-Login"`, `"Auth / 2-Registro"`) — ver `reference/pencil-workflow.md`.
+
 Usa instancias de componentes (`ref` en Pencil, instancias en Figma). Sobreescribe el contenido via `descendants`, nunca via `U()` en el componente madre.
 
 **Si el usuario solicita oscuro y claro:** diseña uno, copia el frame, cambia solo el tema/modo. Muestra ambos.
@@ -335,6 +339,7 @@ Adicionalmente, si este paso define o modifica tokens (colores, tipografía, esp
 | Menú hamburguesa como navegación principal en app nativa | error | Usar tab bar (iOS) / navigation bar (M3) — ver `reference/mobile-patterns.md` |
 | Rampa de color generada a ojo sin seguir las curvas de OKLCH | error | Derivar con el algoritmo de `reference/color-craft.md` (lightness + campana de chroma) |
 | Contraste "verificado" sin cálculo con la fórmula WCAG | error | Calcular con la fórmula de `reference/color-craft.md` y citar el ratio |
+| CTA sin destino diseñado ni inventariado (CTA huérfano) | error | Diseñar la pantalla destino en el mismo run, o inventariarla como pendiente explícito reportado al humano (gate del Paso 6) |
 
 ## Limitaciones de Herramienta (Pencil)
 

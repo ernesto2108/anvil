@@ -100,7 +100,7 @@ Después de presentar el estado del proyecto, verificar si el canvas está organ
 1. `snapshot_layout(maxDepth: 0)` — leer posiciones de todos los frames de nivel superior
 2. Verificar si los frames siguen las reglas de organización:
    - Fila 1: Library + Component States
-   - Fila 2+: Pantallas en orden cronológico (v1, v2, etc.)
+   - Fila 2+: Pantallas por iteración en orden cronológico (v1, v2, etc.); dentro de cada iteración, agrupadas por journey en orden de flujo con la nomenclatura `"Journey / N-Pantalla"` (ver `reference/pencil-workflow.md` de `/design-system`)
    - Últimas filas: Pantallas mobile
    - ~200px de separación entre filas y entre frames horizontales
 3. Si los frames están desorganizados, preguntar: "El canvas esta un poco desordenado, quieres que lo organice?"

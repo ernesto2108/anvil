@@ -97,6 +97,15 @@ Quién va a usar esto y en qué escenarios.
 - **Otros afectados:** <si aplica>
 - **Jobs-to-be-done:** <qué tarea real resuelve>
 
+### User Journeys y Mapa de Pantallas
+Por cada journey principal: los pasos del usuario, la pantalla de cada paso, y desde dónde se llega a ella. Materializa la regla "cada CTA necesita un destino": todo botón o enlace mencionado en un RF aparece aquí con su pantalla destino (o en Preguntas Abiertas si el destino no es claro).
+
+| Journey | Paso | Pantalla | Se llega desde |
+|---------|------|----------|----------------|
+| Auth | 1 | Login | entrada directa |
+| Auth | 2 | Registro | Login → "Regístrate" |
+| Auth | 3 | Recuperar contraseña | Login → "Olvidé mi contraseña" |
+
 ## 5. Scope
 ### Incluido
 - <capacidad 1> — P0
@@ -155,6 +164,7 @@ Quién va a usar esto y en qué escenarios.
 
 - **Cada RF lleva sus escenarios Dado/Cuando/Entonces** integrados en la sección 6 — nada vago como "debería funcionar bien"
 - **Incluir al menos 1 escenario de error y 1 caso borde** por requerimiento funcional
+- **Cada CTA necesita un destino** — todo botón/enlace mencionado en un RF aparece en el Mapa de Pantallas (sección 4) con su pantalla destino; un CTA sin destino es un requisito incompleto y va a Preguntas Abiertas
 - **Sin detalles de implementación** — sin schemas de DB, sin contratos de API, sin decisiones de arquitectura
 - **Las capacidades en Scope deben tener prioridad** (P0/P1/P2)
 - **Las métricas de éxito deben tener baseline** — "reducir X de 68% a 50%", no solo "reducir X"

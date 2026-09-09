@@ -70,8 +70,18 @@ Revisa cada pantalla contra estos criterios. Puntúa cada uno del 1 al 5:
 - [ ] Estados de carga, vacío y error existen (no solo el flujo feliz)
 - [ ] Existe versión móvil (si es responsive/ambas plataformas)
 - [ ] Existe modo oscuro (si es requerido)
-- [ ] Cada CTA tiene una pantalla de destino
+- [ ] Cada CTA tiene una pantalla de destino — ejecutar la **Verificación de Navegación** (procedimiento abajo); todo CTA huérfano es severidad alta y bloquea la puntuación de Completitud
 - [ ] Si es app nativa: usa patrones móviles nativos (tab bar, sheets, thumb zone) y NO una spec web encogida — ver `reference/mobile-patterns.md` (`/design-system`)
+
+#### Verificación de Navegación (procedimiento obligatorio, cross-frame)
+
+No es un checkbox de opinión — se verifica contra el archivo:
+
+1. **Enumerar elementos interactivos por frame** — `batch_get` selectivo sobre cada pantalla para listar botones, enlaces y CTAs con su texto/acción
+2. **Cruzar contra los frames top-level del `.pen`** — `snapshot_layout({maxDepth:0})`: ¿existe un frame destino para cada CTA? (la convención de nombres `"Journey / N-Pantalla"` facilita el cruce)
+3. **Reportar CTAs huérfanos** — tabla `frame → elemento → destino faltante` en el reporte
+
+Todo **CTA huérfano** se reporta con **severidad alta** y es **bloqueante para Completitud**: mientras existan huérfanos no inventariados como pendiente explícito aceptado por el usuario, la puntuación de Completitud no puede superar 2/5.
 
 ### Paso 3 — Generar Reporte
 
