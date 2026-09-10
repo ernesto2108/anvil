@@ -20,6 +20,7 @@ user-invocable: false
 1. **El diseño aprobado es la fuente de verdad** — si la implementación difiere, la implementación está mal hasta que el humano diga lo contrario.
 2. **Diff semántico sobre pixel-perfect** — clasifica por impacto en UX (jerarquía, marca, flujo) no por diferencias de subpíxel.
 3. **Puertas explícitas** — los issues críticos bloquean; los menores se marcan "por corregir"; el score es un umbral verificable, no una opinión.
+4. **Los datos exactos ganan sobre la impresión visual** — un screenshot de baja resolución da una primera impresión útil, pero no es ground truth. Cuando la referencia expone datos estructurados (árbol de nodos, valores hex, píxeles, texto literal), esos datos son la fuente de verdad; el screenshot solo orienta dónde mirar.
 
 ## Inputs requeridos
 
@@ -44,11 +45,16 @@ Solo DETENER si no existe **NINGUNA** referencia utilizable de los tres tipos. E
 
 Según el tipo de referencia disponible:
 
-- **`pen`:** llamar a `mcp__pencil__get_screenshot` con `frame_id` y `pen_file`. Si falla → reportar: "No se pudo obtener screenshot del frame `{frame_id}`. Verifica que `frame_id` y `pen_file` sean correctos." y DETENER.
-- **`figma`:** obtener screenshot vía MCP de Figma si está disponible. Si no lo está → pedir al humano un export PNG de la pantalla y leerlo con Read. Si no lo provee → DETENER.
-- **`screenshots`:** leer cada path con Read.
+- **`pen`:** llamar a `mcp__pencil__get_screenshot` con `frame_id` y `pen_file` para una primera impresión visual. Si falla → reportar: "No se pudo obtener screenshot del frame `{frame_id}`. Verifica que `frame_id` y `pen_file` sean correctos." y DETENER.
 
-Guardar como `design_screenshot` (o varios, si hay múltiples estados/variantes — ver Paso 4).
+  **Además del screenshot, extraer siempre el árbol de nodos exacto** del mismo `frame_id` vía `mcp__pencil__batch_get`, con `resolveVariables:true` y `readDepth` suficiente para cubrir todos los elementos relevantes de la pantalla (6-8 en pantallas con jerarquía profunda). El screenshot de Pencil suele ser de baja resolución respecto al frame real (ej. ~300px para un frame de 1440px) — detalles como presencia de íconos, su nombre/tipo exacto, tamaño de variante de un componente (`sm` vs `md`), o grosor de borde son indistinguibles a esa resolución y solo el árbol de nodos los expone con precisión. Guardar este árbol como `design_nodes`.
+
+  El análisis del Paso 3 debe basarse en **ambas fuentes**: `design_screenshot` para impresión visual general (layout, composición, primera pasada), y `design_nodes` para verificar valores puntuales (colores hex, tamaños en px, orden de children, contenido de texto literal, nombres de íconos). **Ante conflicto entre lo que "se ve" en el screenshot y lo que dicen los datos exactos del nodo, los datos del nodo ganan.**
+
+- **`figma`:** obtener screenshot vía MCP de Figma si está disponible. Si el MCP de Figma expone también propiedades de nodo (colores, texto, spacing), extraerlas igual que en `pen` y aplicar la misma regla de precedencia. Si no hay screenshot disponible → pedir al humano un export PNG de la pantalla y leerlo con Read. Si no lo provee → DETENER.
+- **`screenshots`:** leer cada path con Read. Sin datos de nodo disponibles, el análisis depende enteramente de la imagen — advertir en el reporte final que esta referencia no permite verificar valores exactos (colores hex, copy literal, orden) y que el score debe tratarse con más cautela.
+
+Guardar como `design_screenshot` (o varios, si hay múltiples estados/variantes — ver Paso 4), y `design_nodes` cuando aplique.
 
 ### Paso 2 — Obtener screenshot de la implementación (receta por plataforma)
 
@@ -65,6 +71,15 @@ Guardar como `impl_screenshot`. **Fallback manual solo si todas las vías de la 
 
 ### Paso 3 — Análisis con Claude Vision
 
+Si hay `design_nodes` disponible (ver Paso 1), verificar explícitamente estas categorías contra los datos exactos del nodo antes de cerrar el análisis — son diffs que comparar solo imágenes tiende a pasar por alto:
+
+- **Presencia/ausencia de íconos** — un ícono de más o de menos, o un ícono suelto donde el diseño lo pone dentro de un contenedor con fondo propio (o viceversa).
+- **Nombre/tipo exacto de ícono** — ej. `chevron-left` vs `arrow-left`; visualmente similares a baja resolución, semánticamente distintos.
+- **Orden de elementos hijos** — el mismo conjunto de elementos en otro orden (ej. texto antes que botón cuando el diseño pone botón antes que texto) se ve "parecido" en una imagen pero es un diff real.
+- **Copy/texto literal exacto** — no aceptar "significado similar" como equivalente. Comparar el string literal del nodo contra el string literal implementado; dos frases con la misma intención pero texto distinto SÍ son un diff.
+- **Variantes de color por contexto** — no asumir que un componente reusado se ve igual en todas sus instancias. Verificar cada instancia del componente contra su nodo real; un mismo componente puede tener variantes de color legítimamente distintas según su contenedor (ej. borde gris en un contexto, rojo en otro).
+- **Color aplicado a texto vs a ícono** — cuando un título lleva texto + ícono adjunto, verificar en el nodo si el color semántico aplica a ambos o solo a uno (ej. solo el ícono lleva color, el texto es siempre neutro). No asumir que comparten color solo porque están juntos visualmente.
+
 Enviar ambas imágenes a Claude con este prompt estructurado:
 
 ```
@@ -72,12 +87,20 @@ Primera imagen: diseño de referencia aprobado.
 Segunda imagen: implementación actual en browser/app.
 
 Analiza las diferencias visuales entre la referencia y la implementación.
+Si se provee un árbol de nodos exacto de la referencia (colores hex, tamaños en
+px, orden de children, texto literal, nombres de íconos), verifica cada
+elemento contra esos datos exactos, no solo contra la impresión visual de la
+imagen — presta atención especial a copy exacto, orden de elementos, íconos
+faltantes/de más, y variantes de color según contenedor.
+
 Clasifica cada diferencia por severidad:
 
 - crítica: elemento faltante, jerarquía visual incorrecta, flujo roto,
-  color de marca incorrecto.
+  color de marca incorrecto, copy que cambia el significado o la instrucción
+  al usuario, orden de elementos que altera el flujo de lectura o acción.
 - menor: espaciado incorrecto (>4px), tipografía incorrecta, iconos
-  incorrectos.
+  incorrectos o de nombre distinto, copy con diferencia literal que no
+  cambia el significado, orden de elementos cosmético sin impacto en flujo.
 - cosmética: diferencias de subpíxel, antialiasing, sombras ligeramente
   distintas.
 
@@ -102,6 +125,14 @@ Si la referencia incluye múltiples estados o variantes (dark/light, viewports o
 
 - El **score global = mínimo** de los scores individuales.
 - La lista de issues concatena los issues de todos los pares, prefijando el `element` con la variante (ej. `[dark] Botón CTA`).
+
+### Paso 4.5 — Validar layout heredado de componentes/CSS compartidos (cuando aplique)
+
+Considerar este paso cuando un issue detectado en el Paso 3 es de posición o tamaño **general** de la pantalla completa (ej. contenido centrado vs. pegado a un borde, ancho máximo vs. ancho completo) en vez de un elemento puntual — esto sugiere que el layout raíz puede venir de un componente o CSS compartido entre secciones/roles, no de la pantalla evaluada en sí.
+
+Si la implementación comparte layout/CSS de contenedor raíz entre varias pantallas del mismo rol o sección: comparar el frame `Main`/contenedor raíz de la pantalla evaluada contra el de **al menos otra pantalla relacionada** del mismo rol en la referencia. Si el patrón de layout (padding fijo vs. centrado, cap de ancho vs. sin cap) es consistente entre ambas pantallas del mismo rol, es intencional para ese rol — y un valor distinto en la implementación es un bug de "layout heredado de otro contexto", no un ajuste puntual de la pantalla evaluada. Reportarlo como tal para que la corrección se haga en el nivel compartido, no en la pantalla individual.
+
+No aplica si no hay componentes o CSS compartidos entre roles/secciones, o si el diff es de un elemento puntual sin relación con el contenedor raíz.
 
 ### Paso 5 — Gate y evaluación
 
@@ -139,6 +170,7 @@ Siempre producir el reporte en este formato para el handoff:
 - No rediseñar componentes ni regenerar el frame en Pencil.
 - Sin ninguna referencia utilizable (`pen`, `figma` ni `screenshots`) no hay QA — detener y pedirla.
 - `score < 90` no es aprobable sin justificación explícita en el reporte.
+- Con referencia `pen`, no depender solo del screenshot — extraer siempre `design_nodes` vía `batch_get` y usarlo como fuente de verdad ante conflicto con la imagen.
 
 ## Anti-patrones
 
@@ -146,6 +178,10 @@ Siempre producir el reporte en este formato para el handoff:
 |---|---|
 | Reportar "todo bien" sin haber obtenido ambos screenshots | Verificar que los Pasos 1 y 2 completaron antes del Paso 3 |
 | Marcar diferencias de 1-2px como críticas | Usar la rúbrica: críticas = jerarquía/marca/flujo; subpíxel es cosmético |
+| Confiar solo en el screenshot de Pencil (baja resolución) para descartar diffs de ícono, tamaño de variante o borde | Extraer `design_nodes` vía `batch_get` y verificar esos valores contra el árbol exacto |
+| Aceptar copy "con significado similar" como equivalente al copy del diseño | Comparar el texto literal del nodo contra el texto literal implementado; diff de copy exacto es real aunque el significado coincida |
+| Asumir que un componente reusado se ve igual en todas sus instancias | Verificar cada instancia contra su nodo real — las variantes de color por contexto son legítimas y deben coincidir por instancia, no por "familia" de componente |
+| Evaluar un bug de layout general (centrado, ancho) solo contra la pantalla evaluada, aislada | Comparar el contenedor raíz contra al menos otra pantalla del mismo rol para distinguir bug real de layout intencional heredado (Paso 4.5) |
 | Aprobar con `score < 90` sin justificar | Escribir la justificación en `summary` o marcar no aprobado |
 | Detener por falta de `.pen` habiendo screenshots o Figma | Aceptar cualquiera de los tres tipos de referencia |
 | Modificar código aquí mismo | Esta skill solo reporta; la corrección la decide el agente host |
