@@ -64,8 +64,7 @@ commands/                     — 1 slash command del CLI
 | Agente | Rol | Notas |
 |---|---|---|
 | `reviewer` | Revisión post-desarrollo de diffs/PRs | SOLO LECTURA |
-| `qa` | Gate de calidad para tareas ≥5 pts | SOLO LECTURA |
-| `qa-fixer` | Correcciones quirúrgicas post-QA/security | — |
+| `qa` | Gate de calidad para tareas ≥5 pts | SOLO LECTURA. Al reportar bugs indica el developer de stack sugerido |
 | `security` | SAST, SCA, secretos, auth | Puede bloquear con CVE crítico. SOLO LECTURA |
 | `dba-reader` | Auditoría de persistencia: schemas, EXPLAIN plans, índices | SOLO LECTURA |
 
@@ -131,7 +130,7 @@ commands/                     — 1 slash command del CLI
 | `test-api` | Tests de contratos de API | `tester` |
 | `e2e-test-run` | Ejecución de tests end-to-end | `tester`, `qa` |
 | `code-review-rubric` | Rúbrica de revisión de código | `reviewer`, `qa` |
-| `post-review` | Procesamiento de hallazgos post-review | `reviewer`, `qa-fixer` |
+| `post-review` | Procesamiento de hallazgos post-review | `reviewer` |
 | `lint` | Ejecución de linters del proyecto | `developer`, `qa` |
 | `dependency-check` | Auditoría de dependencias y vulnerabilidades | `security`, `devops` |
 | `perf` | Análisis de performance | `qa`, `developer` |

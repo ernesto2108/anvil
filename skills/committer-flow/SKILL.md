@@ -200,7 +200,7 @@ Máx 100 palabras: commit hash corto, subject, rama destino, path al handoff, no
 `git rev-parse HEAD` vs `Commit hash` del handoff:
 
 - Igual → continuar.
-- Diferente pero ancestor (`git merge-base --is-ancestor <hash> HEAD`) → esperado si `qa-fixer` añadió commits. Continuar.
+- Diferente pero ancestor (`git merge-base --is-ancestor <hash> HEAD`) → esperado si el developer añadió commits de corrección post-QA. Continuar.
 - Diferente y no ancestor → preguntar al humano si proceder con HEAD actual.
 
 ### Paso 2.3 — Verificar rama destino
@@ -216,7 +216,7 @@ Máx 100 palabras: commit hash corto, subject, rama destino, path al handoff, no
 `git status --porcelain` debe estar vacío.
 
 - Limpio → continuar.
-- Hay cambios → DETENER. Reportar al humano: fixes de `qa-fixer` sin commitear. Pedir mini-Fase-1 antes de continuar.
+- Hay cambios → DETENER. Reportar al humano: fixes de corrección sin commitear. Pedir mini-Fase-1 antes de continuar.
 
 ### Paso 2.5 — Push (no-interactivo)
 

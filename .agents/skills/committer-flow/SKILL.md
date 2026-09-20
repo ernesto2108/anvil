@@ -1,16 +1,15 @@
 ---
 name: committer-flow
-description: Flujo completo de dos fases para commit y push seguro — inputs, commit (Conventional Commits), captura de rama destino, push y manejo de errores. Úsalo cuando el usuario pida "commit y push", "haz el commit", "sube los cambios", "push a la rama", o cuando cierres una tarea que necesita quedar commiteada y empujada al remoto.
+description: Flujo completo de tres fases para commit, push y PR seguro — inputs, Conventional Commits, captura de rama destino, push, PR estructurado y manejo de errores. Úsalo cuando el usuario pida "commit y push", "haz el commit", "sube los cambios", "push a la rama", o cuando cierres una tarea que necesita quedar commiteada y empujada al remoto.
 ---
 
 <!-- GENERADO por la skill export-system. NO EDITAR A MANO.
      Fuente de verdad: agents/, skills/, commands/, CLAUDE.md.
      Los cambios hechos aquí se pierden en la próxima exportación. -->
 
-
 # Committer Flow
 
-Flujo de dos fases: Fase 1 genera el commit y captura la rama destino; Fase 2 ejecuta el push.
+Flujo de tres fases: Fase 1 genera el commit y captura la rama destino; Fase 2 ejecuta el push; Fase 3 crea o reutiliza un PR estructurado.
 
 ## Reglas duras
 
@@ -20,15 +19,16 @@ Flujo de dos fases: Fase 1 genera el commit y captura la rama destino; Fase 2 ej
 - **Modificar código, tests, configs o specs** — operación solo-lectura sobre el repo.
 - **Reintentar automáticamente un commit o push fallido** — reportar al humano y detener.
 - **Inferir rama destino sin preguntar** — siempre es decisión del usuario (ver Paso 1.4).
-- **Escribir contenido de git en un idioma distinto del inglés** — mensajes de commit y, si el flujo abre un PR, su título y cuerpo van completamente en inglés (ver "Idioma del contenido de git").
+- **Escribir contenido de git en un idioma distinto del español** — mensajes de commit y, si el flujo abre un PR, su título y cuerpo van completamente en español (ver "Idioma del contenido de git").
 
 ## Idioma del contenido de git
 
 Regla transversal a ambas fases:
 
-- Todo contenido que queda escrito en git o en el remoto se redacta **en inglés, siempre**: mensaje de commit (asunto, cuerpo, footer) y título + cuerpo del PR cuando se abre uno (`gh pr create`).
+- Todo contenido que queda escrito en git o en el remoto se redacta **en español, siempre**: mensaje de commit (asunto, cuerpo, footer) y título + cuerpo del PR cuando se abre uno (`gh pr create`).
 - Aplica sin excepción, independientemente del idioma del historial previo del repo y del idioma de la conversación.
-- Identificadores de código, paths, nombres de archivos, flags, comandos y nombres propios se citan verbatim, sin traducir.
+- Los tipos de Conventional Commits (`feat`, `fix`, `chore`, `refactor`, etc.), identificadores de código, paths, nombres de archivos, flags, comandos y nombres propios se citan verbatim, sin traducir.
+- Nombres de rama: slugs ASCII — palabras en español pero sin tildes ni ñ (ej. `feat/LIN-123-gestion-pagos`).
 - La interacción con el humano (preguntas, reportes, notas de handoff) sigue en español — esta regla solo cubre contenido de git.
 
 ## Inputs requeridos — Fase 1
@@ -119,7 +119,7 @@ Si el diff mezcla tipos, elegir el principal. Si es genuinamente mixto, usar `ch
 
 Formato: `<type>(<scope>): <description>`
 
-Idioma: el mensaje completo (asunto, cuerpo y footer) se escribe **en inglés, siempre**, sin importar el idioma del historial del repo ni el de la conversación. Identificadores de código, paths y flags van verbatim.
+Idioma: el mensaje completo (asunto, cuerpo y footer) se escribe **en español, siempre**, sin importar el idioma del historial del repo ni el de la conversación. Los tipos de Conventional Commits, identificadores de código, paths y flags van verbatim.
 
 Reglas: tipo en minúsculas · scope opcional (área afectada) · descripción en imperativo, minúscula, sin punto · asunto ≤ 50 caracteres.
 
@@ -145,7 +145,7 @@ EOF
 - [ ] Hay cambios staged
 - [ ] Tipo corresponde al propósito principal
 - [ ] Asunto ≤ 50 caracteres, imperativo, sin punto
-- [ ] Mensaje completo en inglés (identificadores de código verbatim)
+- [ ] Mensaje completo en español (tipos de Conventional Commits e identificadores de código verbatim)
 - [ ] Cuerpo separado del asunto por línea en blanco (si aplica)
 - [ ] Sin anti-patrones
 - [ ] Footer con ticket si se detectó en la rama
@@ -160,6 +160,8 @@ Usar `AskUserQuestion`:
   1. `<rama actual>` — `git branch --show-current`
   2. Hasta 3 ramas locales adicionales — `git branch --format='%(refname:short)' --sort=-committerdate`
   3. "Otra (la escribo)"
+
+La pregunta nunca se omite: el humano siempre decide. La rama padre del milestone (`parent_branch`) no es destino de push — es la base del PR (Fase 3).
 
 Si elige "Otra" → segunda llamada `AskUserQuestion` para capturar el nombre. Validar: sin espacios ni caracteres `~^:?*[\`.
 
@@ -202,7 +204,7 @@ Máx 100 palabras: commit hash corto, subject, rama destino, path al handoff, no
 `git rev-parse HEAD` vs `Commit hash` del handoff:
 
 - Igual → continuar.
-- Diferente pero ancestor (`git merge-base --is-ancestor <hash> HEAD`) → esperado si `qa-fixer` añadió commits. Continuar.
+- Diferente pero ancestor (`git merge-base --is-ancestor <hash> HEAD`) → esperado si el developer añadió commits de corrección post-QA. Continuar.
 - Diferente y no ancestor → preguntar al humano si proceder con HEAD actual.
 
 ### Paso 2.3 — Verificar rama destino
@@ -218,7 +220,7 @@ Máx 100 palabras: commit hash corto, subject, rama destino, path al handoff, no
 `git status --porcelain` debe estar vacío.
 
 - Limpio → continuar.
-- Hay cambios → DETENER. Reportar al humano: fixes de `qa-fixer` sin commitear. Pedir mini-Fase-1 antes de continuar.
+- Hay cambios → DETENER. Reportar al humano: fixes de corrección sin commitear. Pedir mini-Fase-1 antes de continuar.
 
 ### Paso 2.5 — Push (no-interactivo)
 
@@ -238,6 +240,69 @@ Sin `--force`, `--force-with-lease` ni variantes bajo ninguna circunstancia.
 
 Máx 100 palabras: confirmación de push, rama remota, commit hash post-push, notas (ej. rama nueva creada).
 
+## Flujo — Fase 3: PR
+
+### Inputs requeridos
+
+| Campo | Requerido | Fallback si falta |
+|---|---|---|
+| `Phase` | siempre | `3` (literal) |
+| URL o path de `delivery-state.yaml` | sí para entrega trazada | Si falta, crear PR solo cuando el humano lo solicita explícitamente y anotar ausencia de tracking. |
+| Rama base | no | Resolver por cascada (ver Paso 3.1). |
+| Evidencia de validación | sí | DETENER: no crear un PR sin resultados. |
+
+### Paso 3.1 — Verificar precondiciones
+
+- Confirmar que el push de Fase 2 terminó y que `git status --porcelain` está vacío.
+- Ejecutar `gh auth status`; si falla, DETENER y reportar la autenticación pendiente.
+- Resolver la rama base por esta cascada, en orden, deteniéndose en la primera que aplique:
+  1. `parent_branch` de `delivery-state.yaml` — rama padre del milestone.
+  2. `pr_target_branch` de la configuración del proyecto en `.project-context/` (config estática del repo, no un campo del estado de entrega).
+  3. Default remoto (`origin/HEAD`).
+  4. Preguntar al humano.
+- **Guardia:** si el estado tiene `parent_branch` y la base resuelta o solicitada es otra (por ejemplo `develop`), advertir explícitamente al humano —"el trabajo pertenece al milestone `<milestone>` y debería integrarse primero en `<parent_branch>`"— y continuar solo con su confirmación.
+- Nunca abrir el PR contra una rama inferida de forma ambigua.
+
+### Paso 3.2 — Reutilizar o crear
+
+Buscar primero un PR abierto para la rama actual:
+
+```bash
+gh pr view <branch> --json url,title,body,state
+```
+
+- Si existe, reutilizar su URL. Actualizar título/cuerpo si no cumple el formato estructurado o contiene placeholders.
+- Si no existe, crear con `gh pr create --base <base> --head <branch> --title <title> --body-file <file>`.
+- Nunca crear un segundo PR para la misma rama.
+
+### Paso 3.3 — Redactar el PR
+
+Todo título y cuerpo del PR se escribe en español. El título sigue Conventional Commits e incluye el `TASK-ID` cuando exista. El cuerpo DEBE tener contenido específico derivado del diff y de las validaciones:
+
+```markdown
+## Contexto
+<Por qué se necesita el cambio.>
+
+## Cambios
+- <Cambio concreto y observable>
+
+## Validación
+- `<comando>` — <resultado pass/fail>
+
+## Riesgo y rollback
+<Nivel de riesgo y acción concreta de revert/rollback.>
+
+## Trazabilidad
+- Linear: <URL del issue o motivo explícito de no-tracking>
+- Documentación: <URL o reporter delta-only>
+```
+
+Prohibido: cuerpo de una línea, `TBD`, `N/A` sin motivo, o copiar el mensaje del commit como descripción completa.
+
+### Paso 3.4 — Persistir y reportar
+
+Guardar `pr_url` en el estado de entrega si existe. Reportar URL, rama base, task ID y si el PR se creó o reutilizó.
+
 ## Manejo de errores
 
 Para cualquier fallo: capturar output textual completo → DETENER → reportar al humano con comando ejecutado, código de salida, output y paso donde ocurrió. Sin reintentos automáticos.
@@ -247,7 +312,7 @@ Para cualquier fallo: capturar output textual completo → DETENER → reportar 
 ### Fase 1
 - [ ] `verify-handoff.sh` devolvió exit 0 (o se omitió por fallback documentado)
 - [ ] Commit hash capturado y válido
-- [ ] Mensaje del commit redactado íntegramente en inglés
+- [ ] Mensaje del commit redactado íntegramente en español
 - [ ] Commit hash registrado en `committer-handoff.md`
 - [ ] Rama destino registrada (no vacía)
 - [ ] Handoff propio existe en `.project-context/runs/<run_id>/committer-handoff.md`
@@ -256,9 +321,17 @@ Para cualquier fallo: capturar output textual completo → DETENER → reportar 
 - [ ] `git push` devolvió código 0
 - [ ] Commit hash del handoff es ancestor (o igual) de HEAD post-push
 
+### Fase 3
+- [ ] `gh auth status` devolvió código 0
+- [ ] Existe exactamente un PR abierto o creado para la rama
+- [ ] Si el estado tiene `parent_branch`, la base del PR es esa rama (o el humano confirmó otra tras la advertencia)
+- [ ] El PR tiene Context, Changes, Validation, Risk and rollback y Tracking
+- [ ] URL del PR persistida en el estado de entrega cuando aplica
+
 Si algún check falla → reportar al humano antes de cerrar.
 
 ## Presupuesto
 
 - **Fase 1:** Objetivo 4K | Máximo 8K | Máx tool calls: 12
 - **Fase 2:** Objetivo 3K | Máximo 6K | Máx tool calls: 8
+- **Fase 3:** Objetivo 3K | Máximo 6K | Máx tool calls: 8

@@ -278,5 +278,5 @@ Si no hay hallazgos, emitir `APROBADO` con una línea: "Se revisaron N archivos 
 - **Complementa a `reviewer`** — corren en paralelo como dos gates independientes pre-merge
 - **Usa hallazgos del `explorer`** — si el explorer ya mapeó `.project-context/` en el run, leer su resumen en `.project-context/runs/` para no re-mapear
 - **El `qa` puede invocarlo** como sub-gate adicional cuando sospecha problemas estructurales
-- **Si bloquea merge** → el humano pasa el reporte al developer del stack correspondiente (o al `qa-fixer` para correcciones quirúrgicas) para aplicar correcciones, y luego re-invoca `arch-reviewer`
+- **Si bloquea merge** → el humano pasa el reporte al developer del stack correspondiente para aplicar correcciones, y luego re-invoca `arch-reviewer`
 - **No reemplaza al `architect`** — el architect *diseña* la arquitectura; el arch-reviewer *audita* que un PR la respete

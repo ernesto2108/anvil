@@ -163,7 +163,7 @@ Estas condiciones se auditan **activamente** en el Paso 2 del arranque (campo `g
    - **Con `Design reference` en tarea no acotada — bucle de auto-corrección:**
      1. Carga la skill `visual-fidelity-qa` just-in-time y ejecútala con la referencia recolectada al inicio (`frame_id`+`pen_file`, URL Figma o screenshots) e `impl_url_or_component`. No cerrar sin su reporte.
      2. Si el reporte trae issues **críticos o menores** → corrige tú mismo el código en este mismo run (es pre-entrega, está dentro de tu scope) y re-ejecuta la skill. Máximo **3 iteraciones**. Los cosméticos no obligan a iterar.
-     3. Si tras 3 iteraciones persisten críticos → BLOQUEAR entrega y escalar al humano con el último reporte. No recomiendes `qa-fixer` aquí: `qa-fixer` es solo para hallazgos post-entrega (de `qa`/`security`/`reviewer`).
+     3. Si tras 3 iteraciones persisten críticos → BLOQUEAR entrega y escalar al humano con el último reporte.
      4. Registra en el Output de cierre: score inicial → score final y número de iteraciones.
    - **Cambio acotado que toca UI existente — mini-QA obligatorio (una sola pasada, sin bucle):** captura un screenshot de la implementación y compáralo con Claude Vision contra la referencia disponible (frame `.pen`, screenshot previo o el spec textual). Si aparece un crítico, corrígelo antes de cerrar. Repórtalo en el cierre.
    - **Sin `Design reference` (humano confirmó "no aplica") — auto-revisión visual obligatoria:** captura un screenshot de la implementación y revísalo contra el spec textual (jerarquía, estados, tema claro/oscuro si existe) antes de cerrar. Hallazgos en el cierre. Regla dura: ninguna UI visible se entrega sin al menos un screenshot revisado.
