@@ -110,3 +110,10 @@ Pencil NO tiene conectores ni prototipado entre frames — la representación de
 ## Nodos de Script (Código en el Canvas)
 
 Para patrones muy repetitivos o data-driven, un nodo de script renderiza output de JS en el canvas. Restricciones: máx 1000 nodos, timeout 2s, sin async, sin DOM/red. Para repeticiones simples (<10 ops) prefiere loops dentro de `batch_design`. Para patrones únicos personalizables, usa instancias de componentes.
+
+### Cuándo Nodo de Script vs `batch_design` en loop
+
+`batch_design` tiene un límite práctico de ~25 operaciones efectivas por llamada (ver `skills/design-recipes/reference/pencil.md`). Un loop data-driven que supere ese límite (tablas grandes, dashboards con muchas métricas, grids extensos) obliga a encadenar múltiples llamadas `batch_design` — más tokens, más round-trips, más riesgo de IDs desincronizados entre llamadas.
+
+- **Si el patrón repetitivo cabe en ≤25 operaciones efectivas en una sola llamada** → usa loop dentro de `batch_design`
+- **Si el patrón repetitivo superaría ~25 operaciones efectivas** (ej. tabla de 50 filas, dashboard con 30+ tarjetas de métricas) → prefiere un Nodo de Script en una sola operación, en vez de encadenar varias llamadas `batch_design`

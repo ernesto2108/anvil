@@ -58,6 +58,56 @@ UI: user, settings, moon, sun, eye, eye-off, mail, bell
 
 **CRÍTICO:** Lucide v4+ usa el prefijo `circle-*` (circle-check), NO el sufijo `*-circle` (check-circle). Siempre verifica.
 
+## Librerías de Iconos Disponibles
+
+Pencil soporta 5 librerías via `library:` en `Insert({type:"icon",...})`:
+
+| Librería | Nombres | Notas |
+|---|---|---|
+| `lucide` | ver tabla arriba | default, outline |
+| `feather` | mismos nombres que lucide | outline/rounded |
+| `Material Symbols Outlined` | ver tabla de equivalencias | nombres distintos a lucide |
+| `Material Symbols Rounded` | ver tabla de equivalencias | acepta `weight` |
+| `Material Symbols Sharp` | ver tabla de equivalencias | acepta `weight` |
+
+### Equivalencias Lucide ↔ Material Symbols
+
+| Lucide | Material Symbols |
+|---|---|
+| layout-dashboard | dashboard |
+| git-branch | account_tree |
+| play | play_arrow |
+| menu | menu |
+| x | close |
+| chevron-down | expand_more |
+| arrow-right | arrow_forward |
+| plus | add |
+| check | check |
+| trash-2 | delete |
+| edit | edit |
+| search | search |
+| log-out | logout |
+| activity | monitor_heart |
+| circle-check | check_circle |
+| circle-alert | error |
+| circle-play | play_circle |
+| user | person |
+| settings | settings |
+| moon | dark_mode |
+| sun | light_mode |
+| eye | visibility |
+| eye-off | visibility_off |
+| mail | mail |
+| bell | notifications |
+
+### Parámetro `weight`
+
+Las variantes Material Symbols aceptan `weight` (ej. `400`) para controlar el grosor del trazo:
+
+```javascript
+Insert(container,{type:"icon",library:"Material Symbols Rounded",icon:"dashboard",width:24,height:24,fill:"$--foreground",weight:400})
+```
+
 ## Receta: Pantalla de Auth — Pencil
 
 ```javascript
