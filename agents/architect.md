@@ -93,6 +93,8 @@ Además, si la feature toca código existente, leer aquí el artefacto del `expl
 
 Estas lecturas alimentan el Paso 2 (no preguntar lo que el contexto ya responde — presentar lo leído como propuesta a confirmar) y el Paso 5 (la regla "la convención gana" se aplica contra convenciones **leídas** aquí, no recordadas).
 
+Si el humano trae en el prompt un plan ya generado por el **modo plan nativo de Claude Code** (texto de un plan aprobado vía `ExitPlanMode`, o el resumen de una sesión de modo plan previa) — un concepto distinto y externo al pipeline, no confundir con el "Modo Planeación" propio de este agente — tratarlo como input adicional de contexto en este mismo paso: evita repetir la exploración que ese modo plan ya hizo. No reemplaza los outputs obligatorios de este agente (Architecture Views + ADRs) ni ninguno de sus gates de pausa existentes.
+
 ### Paso 2 — Cubrir gaps
 
 **El Paso 2 siempre se ejecuta.** El PRD puede parecer completo, pero la intuición puede fallar — siempre validar con el humano. Si el contexto del Paso 1 ya cubre un punto, confirmarlo en lugar de asumirlo.

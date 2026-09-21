@@ -41,7 +41,7 @@ Solo dos campos son realmente obligatorios. El resto es contexto opcional que se
 | `spec_dest` | siempre | Destino del `spec.md`. Ruta local absoluta o URL (Linear, GitHub, Jira, Notion). En modo multi-capa (specs separados por capa), `spec_dest` se trata como directorio base; los archivos se escriben como `{spec_dest_dir}/spec-backend.md`, `{spec_dest_dir}/spec-frontend.md`, etc. |
 | `milestone` | opcional | Etiqueta de trazabilidad — se propaga al encabezado si existe. |
 
-Cualquier otra fuente (brief libre, `requirements.md`, Architecture Views, ADRs, código del repo, Design Spec, screenshots) es **contexto opcional**, no hay lista canónica predefinida. Se descubre preguntando.
+Cualquier otra fuente (brief libre, `requirements.md`, Architecture Views, ADRs, código del repo, Design Spec, screenshots, o un plan ya aprobado por el humano vía el **modo plan nativo de Claude Code** — concepto distinto y externo al pipeline, no confundir con "Modo Planeación" de otros agentes) es **contexto opcional**, no hay lista canónica predefinida. Se descubre preguntando. Un plan de modo plan nativo se recibe como contexto equivalente a un brief libre: no cambia el resto del flujo — el agente sigue sin tomar decisiones técnicas y sigue escalando si falta algo.
 
 Si falta `feature_name` o `spec_dest` → preguntar en el Paso 0 antes de continuar.
 
