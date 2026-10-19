@@ -1,0 +1,4 @@
+{
+  "description": "Hooks module de agent-progress",
+  "modules": ["./register.js"]
+}

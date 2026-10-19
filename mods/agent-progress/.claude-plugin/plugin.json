@@ -1,0 +1,6 @@
+{
+  "name": "agent-progress",
+  "version": "0.1.0",
+  "description": "Muestra encima del prompt el avance de cada subagente: porcentaje real si usa TodoWrite, y llamadas y tiempo siempre",
+  "author": { "name": "Ernesto Diaz" }
+}
