@@ -1,24 +1,31 @@
 # Committer handoff — Fase 1 → Fase 2
 
-- TASK-ID: (sin TASK-ID — run ad-hoc)
+- TASK-ID: (sin TASK-ID — cambio del sistema de agentes)
 - run_id: ad-hoc
-- Commit hash: 3015debe921f6f00d15a4a51a5d6c1c90fa8369d
-- Commit subject: fix(system): resuelve críticos de la auditoría
+- Commit hash: 71b11eba6300143fa847696639cb34167f567681
+- Commit subject: chore(agents): elimina qa-fixer y deja que qa sugiera el developer de stack
 - Rama destino: develop
 - Remoto: git@github.com:ernesto2108/anvil.git
-- Fecha Fase 1: 2026-09-06T19:05:00Z
+- Fecha Fase 1: 2026-09-20T20:01:51Z
 
 ## Mensaje del commit (verbatim)
 
-fix(system): resuelve críticos de la auditoría
+chore(agents): elimina qa-fixer y deja que qa sugiera el developer de stack
 
-(cuerpo completo en `git log -1 3015deb` — 18 archivos: 8 fuente del sistema,
-2 docs, 8 exports de Codex regenerados)
+Retira por completo el agente qa-fixer del sistema. Ahora, cuando qa
+reporta un bug o bloqueador, indica el developer de stack sugerido
+(developer-backend / developer-frontend / developer-mobile según la
+ubicación del código) para que el humano lo invoque directamente —
+sin correcciones quirúrgicas intermedias.
+
+Cambios: agents/qa-fixer.md eliminado; agents/qa.md, arch-reviewer.md,
+developer-frontend.md, developer-mobile.md y skills/committer-flow
+actualizados para quitar toda referencia a qa-fixer; .context/domains/
+ai-system.md sincronizado. Exports de Codex (.codex/agents/,
+.agents/skills/) regenerados vía export-system.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 
 ## Notas
 
-- Corrí sin TASK-ID — gate de handoff omitido; run_id ausente — handoff en `ad-hoc/`.
-- Gates posteriores omitidos por instrucción explícita del humano; hay un re-audit scoped del system-reviewer corriendo en paralelo (solo lectura) — sus hallazgos, si los hay, van en commit de seguimiento.
-- Rama destino `develop` establecida por el humano en esta sesión.
-- Excluidos por decisión del humano: `.project-context/runs/adhoc/` y este handoff.
-- El fix de `~/.claude/CLAUDE.md` global (fila service-map-updater) se aplicó fuera del repo — no forma parte de este commit.
+Corrí sin TASK-ID — gate de handoff omitido. Sin handoff de developer — staging basado en git status puro.
