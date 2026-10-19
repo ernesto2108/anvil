@@ -1,37 +1,15 @@
 // anvil-usage: dibuja el uso de contexto y el costo estimado a la derecha de la
 // linea de modo (SessionMode, donde sale "auto mode on (shift+tab to cycle)").
 //
-// SIN VERIFICAR EN VIVO (requiere Claude Code v2.1.287+). Pendientes:
-//   - forma exacta de $.session.usage().cost (se lee de forma defensiva)
-//   - que el Box con justifyContent/width sea aceptado en SessionMode
-//   - que result.usage de turn.step traiga los campos documentados (se leen
-//     de forma defensiva: si faltan, cuentan como 0)
+// "in" y "out" son los tokens de la ultima respuesta del modelo
+// (context.apiUsage): "in" suma input fresco y cache (escritura y lectura).
+// Debajo va una fila con el gasto de la ventana de 5 horas y la semanal.
 // Si un arbol no valida, Claude Code dibuja su propio SessionMode y deja una
-// linea en el transcript con el motivo (ver troubleshoot de mods).
-//
-// Tokens: se acumulan por sesion desde turn.step (cada request al modelo,
-// incluidos los de subagentes). "in" es input fresco + escritura de cache;
-// "cache" son las lecturas de cache, que son baratas y dominan el volumen.
-// Los contadores viven en variables del modulo: se reinician al recargar el
-// mod y en /clear, /resume y /branch (session.end).
+// linea en el transcript con el motivo.
 
 const BAR_WIDTH = 10
-const REFRESH_MS = 2000
-
-const tokens = { input: 0, cache: 0, output: 0 }
-
-function resetTokens() {
-  tokens.input = 0
-  tokens.cache = 0
-  tokens.output = 0
-}
-
-function addUsage(usage) {
-  tokens.input += (Number(usage.input_tokens) || 0) + (Number(usage.cache_creation_input_tokens) || 0)
-  tokens.cache += Number(usage.cache_read_input_tokens) || 0
-  tokens.output += Number(usage.output_tokens) || 0
-}
 const PARTIALS = ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉']
+const REFRESH_MS = 2000
 
 // 950 -> "950", 15500 -> "15.5k", 1000000 -> "1M"
 function fmtTokens(n) {
@@ -41,13 +19,13 @@ function fmtTokens(n) {
 }
 
 // Barra con resolucion de octavos de celda: [lleno, vacio]
-function bar(percent) {
+function bar(percent, width = BAR_WIDTH) {
   const clamped = Math.min(100, Math.max(0, Number(percent) || 0))
-  const eighths = Math.round((clamped * BAR_WIDTH * 8) / 100)
+  const eighths = Math.round((clamped * width * 8) / 100)
   const full = Math.floor(eighths / 8)
   const rem = eighths % 8
   const filled = '█'.repeat(full) + PARTIALS[rem]
-  const empty = '░'.repeat(BAR_WIDTH - full - (rem > 0 ? 1 : 0))
+  const empty = '░'.repeat(width - full - (rem > 0 ? 1 : 0))
   return [filled, empty]
 }
 
@@ -68,6 +46,46 @@ function costUsd(cost) {
   return null
 }
 
+// "2h10m", "3d4h", "35m" hasta el reset; '' si no hay fecha valida
+function fmtReset(iso) {
+  const ms = Date.parse(iso) - Date.now()
+  if (!Number.isFinite(ms) || ms <= 0) return ''
+  const m = Math.floor(ms / 60000)
+  const d = Math.floor(m / 1440)
+  const h = Math.floor((m % 1440) / 60)
+  if (d > 0) return d + 'd' + h + 'h'
+  if (h > 0) return h + 'h' + String(m % 60).padStart(2, '0') + 'm'
+  return m + 'm'
+}
+
+const WINDOWS = [
+  ['five_hour', '5h'],
+  ['seven_day', 'sem'],
+]
+
+// Fila con el gasto de la ventana de 5 horas y la semanal (solo suscripcion)
+function limitsRow(Box, Text, rateLimits) {
+  const parts = []
+  for (const [kind, label] of WINDOWS) {
+    const w = (rateLimits || []).find((r) => r.kind === kind)
+    if (!w) continue
+    const pct = Number(w.percentUsed) || 0
+    const color = colorFor(pct)
+    const [filled, empty] = bar(pct, 8)
+    const reset = fmtReset(w.resetsAt)
+    if (parts.length) parts.push(Text({ dimColor: true, children: ['  ·  '] }))
+    parts.push(
+      Text({ children: [label + ' '] }),
+      Text({ color, children: [filled] }),
+      Text({ dimColor: true, children: [empty] }),
+      Text({ color, children: [' ' + pct.toFixed(1) + '%'] }),
+      Text({ dimColor: true, children: [reset ? ' (reset ' + reset + ')' : ''] }),
+    )
+  }
+  if (!parts.length) return null
+  return Box({ flexDirection: 'row', justifyContent: 'flex-end', width: '100%', children: parts })
+}
+
 export function register(on) {
   // Refresca el dibujo en cada medicion (tras cada turno) y por timer, porque
   // Claude Code no redibuja solo cuando cambian los datos del mod.
@@ -78,23 +96,6 @@ export function register(on) {
 
   on('session.measure', async ($, e, next) => {
     $.ui.invalidate('ui.render')
-    return next(e)
-  })
-
-  // Acumula los tokens de cada request al modelo. Es un generador porque el
-  // evento hace streaming: yield* reenvia la respuesta y devuelve el resultado.
-  on('turn.step', async function* ($, e, next) {
-    const result = yield* next(e)
-    if (result?.usage) {
-      addUsage(result.usage)
-      $.ui.invalidate('ui.render')
-    }
-    return result
-  })
-
-  // /clear, /resume y /branch empiezan una conversacion nueva
-  on('session.end', async ($, e, next) => {
-    resetTokens()
     return next(e)
   })
 
@@ -109,6 +110,13 @@ export function register(on) {
     const [filled, empty] = bar(percent)
     const usd = costUsd(usage?.cost)
 
+    const api = usage?.context?.apiUsage
+    const tokensIn =
+      (Number(api?.input_tokens) || 0) +
+      (Number(api?.cache_creation_input_tokens) || 0) +
+      (Number(api?.cache_read_input_tokens) || 0)
+    const tokensOut = Number(api?.output_tokens) || 0
+
     const parts = [
       Text({ color, children: [filled] }),
       Text({ dimColor: true, children: [empty] }),
@@ -119,17 +127,20 @@ export function register(on) {
     ]
     parts.push(
       Text({
-        children: [' · in ' + fmtTokens(tokens.input) + ' · cache ' + fmtTokens(tokens.cache) + ' · out ' + fmtTokens(tokens.output)],
+        children: [' · in ' + fmtTokens(tokensIn) + ' · out ' + fmtTokens(tokensOut)],
       }),
     )
     if (usd !== null) parts.push(Text({ children: [' · ~$' + usd.toFixed(3)] }))
 
     // Modo a la izquierda, uso a la derecha
-    return Box({
+    // Sin width: un Box con un nodo del motor dentro no admite esa prop, asi que
+    // un espaciador con flexGrow empuja el uso a la derecha.
+    const top = Box({
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      width: '100%',
-      children: [theirs, Box({ flexDirection: 'row', children: parts })],
+      children: [theirs, Box({ flexGrow: 1 }), Box({ flexDirection: 'row', children: parts })],
     })
+    const limits = limitsRow(Box, Text, usage?.rateLimits)
+    if (!limits) return top
+    return Box({ flexDirection: 'column', children: [top, limits] })
   })
 }
