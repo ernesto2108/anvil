@@ -90,3 +90,63 @@ printf '\033[0m'
 printf '\033[%sm%s\033[90m%s\033[0m' "$color" "$bar" "$empty"
 printf ' \033[%sm%s\033[0m' "$color" "$pct_txt"
 printf '%s\n' "$tail_txt"
+
+# Segunda línea: gasto de la ventana de 5 horas y la semanal (solo suscripción).
+# Si rate_limits no viene en el JSON, no se imprime nada.
+now=$(date +%s)
+fmt_reset() {
+  local secs=$(( $1 - now )) d h m
+  (( secs <= 0 )) && return 0
+  d=$(( secs / 86400 )); h=$(( secs % 86400 / 3600 )); m=$(( secs % 3600 / 60 ))
+  if   (( d > 0 )); then printf '%dd%dh' "$d" "$h"
+  elif (( h > 0 )); then printf '%dh%02dm' "$h" "$m"
+  else                   printf '%dm' "$m"
+  fi
+}
+
+LIMIT_BAR_WIDTH=${LIMIT_BAR_WIDTH:-8}
+limit_colored=""   # texto con colores
+limit_plain=""     # texto visible, para medir el relleno
+for entry in "five_hour:5h" "seven_day:sem"; do
+  key=${entry%%:*}; label=${entry##*:}
+  read -r lpct lreset < <(
+    jq -r --arg k "$key" '
+      (.rate_limits[$k] // empty)
+      | [ (.used_percentage // .percentUsed // 0),
+          ((.resets_at // .resetsAt // 0)
+            | if type == "number" then . else (try fromdateiso8601 catch 0) end) ]
+      | @tsv' <<<"$input"
+  ) || true
+  [[ -z "${lpct:-}" ]] && continue
+  lint=${lpct%.*}; lint=${lint:-0}
+  if   (( lint >= 85 )); then lc=31
+  elif (( lint >= 60 )); then lc=33
+  else                        lc=32
+  fi
+  lfull=$(awk -v p="$lpct" -v w="$LIMIT_BAR_WIDTH" 'BEGIN { e = int(p * w * 8 / 100 + 0.5); if (e > w * 8) e = w * 8; print int(e / 8) }')
+  lrem=$(awk -v p="$lpct" -v w="$LIMIT_BAR_WIDTH" 'BEGIN { e = int(p * w * 8 / 100 + 0.5); if (e > w * 8) e = w * 8; print e % 8 }')
+  lbar=""; for (( i = 0; i < lfull; i++ )); do lbar+="█"; done
+  lcells=$lfull
+  if (( lrem > 0 )); then lbar+="${partials[lrem]}"; lcells=$(( lcells + 1 )); fi
+  lempty=""; for (( i = lcells; i < LIMIT_BAR_WIDTH; i++ )); do lempty+="░"; done
+  ltxt=$(printf '%.1f%%' "$lpct")
+  lreset_txt=$(fmt_reset "${lreset:-0}")
+  lrest=""; [[ -n "$lreset_txt" ]] && lrest=" (reset ${lreset_txt})"
+  if [[ -n "$limit_plain" ]]; then
+    limit_plain+="  ·  "; limit_colored+="  ·  "
+  fi
+  limit_plain+="${label} ${lbar}${lempty} ${ltxt}${lrest}"
+  limit_colored+="${label} \033[${lc}m${lbar}\033[90m${lempty}\033[0m \033[${lc}m${ltxt}\033[0m\033[90m${lrest}\033[0m"
+done
+
+if [[ -n "$limit_plain" ]]; then
+  lpad=0
+  if [[ "${STATUSLINE_ALIGN:-right}" == "right" && "${COLUMNS:-0}" -gt 0 ]]; then
+    lascii=${limit_plain//·/.}
+    lpad=$(( COLUMNS - ${#lascii} - RIGHT_MARGIN ))
+    (( lpad < 0 )) && lpad=0
+  fi
+  printf '\033[0m'
+  (( lpad > 0 )) && printf '%*s' "$lpad" ''
+  printf '%b\n' "$limit_colored"
+fi
