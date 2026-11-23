@@ -1,0 +1,52 @@
+/*
+  COMPONENTES (CSS) — estilos de los componentes de components.js. Mobile-first.
+  Solo consume var(--token) de tokens.css: cero hex/px sueltos de color, tipografía, espaciado o radio.
+  Una clase CSS por componente/variante; el markup lo genera el helper homónimo de components.js.
+  Agregar un componente = clase aquí + helper en components.js (nunca estilos ni markup en screens.js).
+
+  Si el proyecto ya tiene librería de componentes (existing_design_system: yes): no duplicar estilos;
+  mapear a las clases/estilos existentes (o enlazar su CSS desde index.html) y dejar aquí solo lo que falte.
+*/
+
+/* ===== Base ===== */
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { font: var(--fs-base)/1.5 var(--font-body); color: var(--color-text); background: var(--color-bg); }
+button { font: inherit; color: inherit; cursor: pointer; }
+img, svg { max-width: 100%; }
+svg.i { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.125em; flex-shrink: 0; }
+
+/* ===== Layout y componentes ===== */
+.page { max-width: 1200px; margin: 0 auto; padding: var(--sp-4); }
+.card { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--sp-4); }
+.grid { display: grid; gap: var(--sp-4); grid-template-columns: 1fr; }
+.stack { display: flex; flex-direction: column; gap: var(--sp-3); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+h1.pg { font-size: var(--fs-xl); margin: 0 0 var(--sp-3); font-weight: var(--fw-bold); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); min-height: var(--touch-min); padding: 0 var(--sp-4); border-radius: var(--radius-md); font-weight: var(--fw-bold); border: 1px solid transparent; background: transparent; text-decoration: none; }
+.btn.primary { background: var(--color-primary); color: var(--color-primary-contrast); }
+.btn.outlined { border-color: var(--color-border); }
+.btn.full { width: 100%; }
+.btn[aria-disabled="true"] { opacity: .5; cursor: default; }
+.field { display: flex; flex-direction: column; gap: var(--sp-1); }
+.field label { font-size: var(--fs-sm); color: var(--color-muted); }
+.input { min-height: var(--touch-min); padding: 0 var(--sp-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); }
+.input.err { border-color: var(--color-danger); }
+.help.err { color: var(--color-danger); font-size: var(--fs-xs); }
+.badge { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--sp-2); border-radius: var(--radius-sm); font-size: var(--fs-xs); font-weight: var(--fw-bold); }
+.badge.success { background: color-mix(in srgb, var(--color-success) 16%, transparent); color: var(--color-success); }
+.badge.warning { background: color-mix(in srgb, var(--color-warning) 16%, transparent); color: var(--color-warning); }
+.badge.danger  { background: color-mix(in srgb, var(--color-danger) 16%, transparent);  color: var(--color-danger); }
+.twrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+
+/* ===== Breakpoints (mobile-first): 600px tablet · 1024px desktop ===== */
+@media (min-width: 600px) {
+  .page { padding: var(--sp-6); }
+  .grid.cols-2, .grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+  .btn.full { width: auto; }
+}
+@media (min-width: 1024px) {
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+}

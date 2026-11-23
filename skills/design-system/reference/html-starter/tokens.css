@@ -1,0 +1,37 @@
+/*
+  TOKENS — única fuente de valores visuales de la maqueta HTML (genérico, sin dominio).
+  Contiene SOLO custom properties: tokens base, tema alterno y modo oscuro.
+  Sin reglas de componentes ni de layout (eso vive en components.css).
+
+  Si el proyecto ya tiene sistema de diseño (existing_design_system: yes):
+    - NO duplicar valores. Reemplazar este archivo por un mapa de alias a los tokens existentes
+      (p. ej. --color-primary: var(--<token-existente>);) o enlazar el CSS existente en index.html.
+    - Mantener los nombres que consume components.css, para no tocar los componentes.
+
+  Breakpoints (no pueden ser variables dentro de @media; se repiten literalmente en components.css
+  e index.html): tablet 600px · desktop 1024px. Si el sistema existente declara otros, reemplazarlos allí.
+*/
+:root {
+  /* color */
+  --color-bg: #f6f7f9; --color-surface: #ffffff; --color-text: #1f2430; --color-muted: #5f6b7a;
+  --color-border: #dde1e7; --color-primary: #3b5bdb; --color-primary-contrast: #ffffff;
+  --color-primary-soft: rgba(59,91,219,.10);
+  --color-success: #1f9d55; --color-warning: #b7791f; --color-danger: #d64545; --color-info: #2b7ad0;
+  /* tipografía */
+  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs-xs: 12px; --fs-sm: 13px; --fs-base: 14px; --fs-lg: 16px; --fs-xl: 20px; --fs-2xl: 24px;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700;
+  /* espaciado / radio / sombra */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-6: 24px; --sp-8: 32px;
+  --radius-sm: 6px; --radius-md: 8px; --radius-lg: 16px; --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px -8px rgba(16,24,40,.12);
+  --touch-min: 44px;
+}
+
+/* Tema alterno (color primario) — se alterna con el botón "Tema" de la barra */
+body[data-theme="alt"] { --color-primary: #0e9f6e; --color-primary-soft: rgba(14,159,110,.10); }
+
+/* Modo oscuro: redefinir solo tokens semánticos (superficies elevadas más claras, no inversión) */
+body[data-mode="dark"] {
+  --color-bg: #11141a; --color-surface: #1a1f28; --color-text: #e8ebf0; --color-muted: #9aa5b4; --color-border: #2a313c;
+}
