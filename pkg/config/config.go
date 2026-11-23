@@ -40,12 +40,6 @@ type Manifest struct {
 	MCP            MCPSection           `yaml:"mcp,omitempty"`
 }
 
-type TierMap struct {
-	High   string `yaml:"high"`
-	Medium string `yaml:"medium"`
-	Low    string `yaml:"low"`
-}
-
 type PermMap struct {
 	Read    string `yaml:"read"`
 	Write   string `yaml:"write"`
@@ -54,7 +48,7 @@ type PermMap struct {
 
 type ProviderConfig struct {
 	Provider    string             `yaml:"provider"`
-	Providers   map[string]TierMap `yaml:"providers"`
+	Providers   []string           `yaml:"providers"`
 	Permissions map[string]PermMap `yaml:"permissions"`
 }
 
@@ -115,32 +109,7 @@ func (a *App) ActiveProvider() string {
 }
 
 func (a *App) ListProviders() []string {
-	var names []string
-	for k := range a.Provider.Providers {
-		names = append(names, k)
-	}
-	return names
-}
-
-func (a *App) ResolveTier(tier, provider string) (string, error) {
-	if provider == "" {
-		provider = a.Provider.Provider
-	}
-	tm, ok := a.Provider.Providers[provider]
-	if !ok {
-		return "", fmt.Errorf("provider %q not found in config", provider)
-	}
-
-	switch tier {
-	case TierHigh:
-		return tm.High, nil
-	case TierMedium:
-		return tm.Medium, nil
-	case TierLow:
-		return tm.Low, nil
-	default:
-		return tier, nil
-	}
+	return a.Provider.Providers
 }
 
 func (a *App) ResolvePermission(perm, tool string) string {

@@ -1,0 +1,7 @@
+{
+  "name": "model-indicator",
+  "version": "0.1.0",
+  "description": "Muestra arriba del textarea con que modelo se esta trabajando (cambia entre plan y codigo)",
+  "types": "./types/index.d.ts",
+  "author": { "name": "Ernesto Diaz" }
+}

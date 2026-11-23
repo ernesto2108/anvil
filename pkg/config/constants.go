@@ -1,12 +1,5 @@
 package config
 
-// Tier names used in agent frontmatter to map to provider-specific models.
-const (
-	TierHigh   = "high"
-	TierMedium = "medium"
-	TierLow    = "low"
-)
-
 // Target tool identifiers used in anvil.yaml.
 const (
 	TargetClaude   = "claude"
@@ -36,11 +29,6 @@ const (
 	PermWrite   = "write"
 	PermExecute = "execute"
 )
-
-// IsTier returns true if the string is a valid tier name.
-func IsTier(s string) bool {
-	return s == TierHigh || s == TierMedium || s == TierLow
-}
 
 // IsPerm returns true if the string is a valid permission level.
 func IsPerm(s string) bool {

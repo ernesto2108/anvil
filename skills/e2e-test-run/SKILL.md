@@ -1,6 +1,6 @@
 ---
 name: e2e-test-run
-description: Convenciones para escribir y ejecutar pruebas E2E. Cubre Playwright (web + desktop), Maestro (mobile cross-platform: Flutter, React Native e iOS nativo) y XCUITest (iOS nativo). Usar cuando el tester necesite escribir tests de flujo completo, visual regression, o accesibilidad automatizada.
+description: 'Convenciones para escribir y ejecutar pruebas E2E. Cubre Playwright (web + desktop), Maestro (mobile cross-platform: Flutter, React Native e iOS nativo) y XCUITest (iOS nativo). Usar cuando el tester necesite escribir tests de flujo completo, visual regression, o accesibilidad automatizada.'
 ---
 
 # E2E Test Conventions

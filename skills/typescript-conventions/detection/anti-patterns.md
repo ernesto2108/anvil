@@ -13,8 +13,8 @@ Solo reportar `error` y `warning` por defecto. Reportar `suggestion` únicamente
 |---|---|---|---|---|
 | `any` sin supresión explícita | untyped-any | error | types | Usar `unknown` y estrechar, o definir el tipo — ver `rules/coding.md` |
 | `// @ts-ignore` sin motivo | ts-ignore-no-reason | error | types | Reemplazar con `// @ts-expect-error: reason` — debe incluir el motivo |
-| Palabra clave `enum` | enum-usage | warning | types | Unión `as const`: `const X = ["a","b"] as const; type X = typeof X[number]` — ver `guides/patterns/types.md` |
-| Aserción de tipo `x as SomeType` | unsafe-assertion | warning | types | Usar type guard (`instanceof`, `in`, comprobación discriminante) — ver `guides/patterns/types.md` |
+| Palabra clave `enum` | enum-usage | warning | types | Unión `as const`: `const X = ["a","b"] as const; type X = typeof X[number]` |
+| Aserción de tipo `x as SomeType` | unsafe-assertion | warning | types | Usar type guard (`instanceof`, `in`, comprobación discriminante) |
 | Aserción non-null `!` sobre datos de API/usuario | non-null-assertion | warning | reliability | Estrechar con verificación `if (x == null)` en su lugar |
 | Palabra clave `namespace` | namespace-usage | error | types | ESM reemplaza a los namespaces — usar módulos |
 | Declaración `var` | var-usage | error | style | Usar `const` o `let` |

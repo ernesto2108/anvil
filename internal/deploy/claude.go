@@ -37,17 +37,7 @@ func deployClaudeAgents(cfg *config.App, target string, ts *TargetStats) {
 // adaptClaude formats an agent file for the Claude Code target.
 func adaptClaude(cfg *config.App, agent AgentData) string {
 	content := agent.Content
-	tier := agent.Tier
 	perm := agent.Perm
-
-	resolved := tier
-	if config.IsTier(tier) {
-		model, err := cfg.ResolveTier(tier, config.TargetClaude)
-		if err == nil {
-			resolved = model
-			content = frontmatter.ReplaceField(content, "model", tier, resolved)
-		}
-	}
 
 	if config.IsPerm(perm) {
 		tools := cfg.ResolvePermission(perm, config.TargetClaude)

@@ -415,17 +415,11 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 		}
 		destFile := filepath.Join(destDir, it.Name+".md")
 
-		// Agents always need frontmatter resolution (model tier → actual model,
-		// permission level → tool list), so we always write a transformed copy
-		// regardless of the deploy mode. Symlinks would bypass this resolution.
+		// Agents always need frontmatter resolution (permission level → tool
+		// list), so we always write a transformed copy regardless of the
+		// deploy mode. Symlinks would bypass this resolution.
 		content := string(data)
 		content = frontmatter.SetField(content, "managed-by", "anvil")
-		tier := doc.Fields["model"]
-		if config.IsTier(tier) {
-			if model, err := cfg.ResolveTier(tier, targetName); err == nil {
-				content = frontmatter.ReplaceField(content, "model", tier, model)
-			}
-		}
 		permKey, perm := deploy.PermField(doc)
 		if config.IsPerm(perm) {
 			tools := cfg.ResolvePermission(perm, targetName)
@@ -454,15 +448,8 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 		destFile := filepath.Join(destDir, it.Name+".md")
 
 		desc := doc.Fields["description"]
-		tier := doc.Fields["model"]
 		_, perm := deploy.PermField(doc)
 
-		resolved := tier
-		if config.IsTier(tier) {
-			if model, err := cfg.ResolveTier(tier, cfg.ActiveProvider()); err == nil {
-				resolved = model
-			}
-		}
 		permResolved := config.PermWrite
 		if config.IsPerm(perm) {
 			if p := cfg.ResolvePermission(perm, targetName); p != "" {
@@ -470,7 +457,7 @@ func installAgent(cfg *config.App, it tui.Item, targetName, targetPath string, m
 			}
 		}
 
-		adapted := fmt.Sprintf("---\ndescription: %s\nmanaged-by: anvil\nmode: subagent\nmodel: %s\npermission: %s\n---\n\n%s", desc, resolved, permResolved, doc.Body)
+		adapted := fmt.Sprintf("---\ndescription: %s\nmanaged-by: anvil\nmode: subagent\npermission: %s\n---\n\n%s", desc, permResolved, doc.Body)
 		if err := os.WriteFile(destFile, []byte(adapted), 0o644); err != nil {
 			output.Error("  write agent: %s", err)
 			return
@@ -750,12 +737,6 @@ func reconcileAgents(cfg *config.App, targetPaths map[string]string) {
 			content := string(data)
 			content = frontmatter.SetField(content, deploy.ManagedByKey, deploy.ManagedByValue)
 
-			tier := doc.Fields["model"]
-			if config.IsTier(tier) {
-				if model, err := cfg.ResolveTier(tier, targetName); err == nil {
-					content = frontmatter.ReplaceField(content, "model", tier, model)
-				}
-			}
 			permKey, perm := deploy.PermField(doc)
 			if config.IsPerm(perm) {
 				tools := cfg.ResolvePermission(perm, targetName)

@@ -70,9 +70,15 @@ Incluir:
 
 Formato en español. Espera aprobación explícita. Itera si es necesario.
 
-### 2. Verificar Sistema Existente
+### 2. Verificar Sistema Existente (Gate de Discovery de Sistema Existente)
 
-Lee `{design_system_path}` (resuelto por el orquestador). Si existe → salta al paso 7.
+Aplica el **Gate de Discovery de Sistema Existente** de `/design-project` (detectar → preguntar → resolver `existing_design_system: yes|no|unknown`). Además lee `{design_system_path}` si fue resuelto por el orquestador.
+
+- `yes` → NO crear tokens ni componentes paralelos: mapea los tokens/breakpoints/componentes existentes (en HTML, `tokens.css` como mapa de alias y `components.js` referenciando la librería existente; en Pencil/Figma, a variables equivalentes) y salta al paso 7.
+- `no` → continúa en el paso 3 (crear desde cero).
+- `unknown` → DETENTE y resuelve el gate antes de continuar.
+
+Si la herramienta es HTML, aplica además el **Gate de Ubicación de Artefactos** de `/design-project` (`design_dir`, `components_path`, `tokens_path`): sin esas rutas confirmadas por el humano no se escribe ningún archivo.
 
 ### 3. Crear Colecciones de Variables
 
@@ -110,7 +116,17 @@ Si el `Platform` del PRD es `mobile` o `both`:
 - Agrega tokens específicos de móvil: mínimos de objetivo táctil (44pt iOS, 48dp Android), conciencia de área segura, tamaños de fuente de la plataforma
 - Documenta la tabla de mapeo abstracto → plataforma
 
-Implementación específica de la herramienta: carga `reference/pencil-workflow.md` o `reference/figma-workflow.md`.
+Implementación específica de la herramienta resuelta (Gate de Selección de Herramienta de `/design-project`): carga `reference/html-workflow.md` (default), `reference/pencil-workflow.md` o `reference/figma-workflow.md`.
+
+#### Responsive (OBLIGATORIO — toda herramienta)
+
+Todo diseño es responsive, sin excepción. Define y declara antes de construir:
+
+- **Breakpoints:** reutiliza los del sistema existente si los hay; si no, estándar: mobile `< 600px`, tablet `600–1023px`, desktop `>= 1024px`. Anchos de verificación: **375 / 768 / 1280**.
+- **Mobile-first:** el layout base es el mobile; tablet y desktop amplían.
+- **Fluidez:** contenedores con `max-width` y layout flexible; sin anchos fijos que rompan en mobile; touch targets `>= 44px`.
+- **Por herramienta:** HTML → `<meta viewport>` + media queries `min-width` + verificación por screenshots (ver `reference/html-workflow.md`); Pencil → un frame por breakpoint por pantalla; Figma → frames por breakpoint con constraints/auto-layout.
+- **Tokens:** si el sistema usa tokens de breakpoint, se registran junto a los demás tokens.
 
 ### 4. Construir Librería de Componentes (OBLIGATORIO)
 
@@ -118,7 +134,7 @@ Implementación específica de la herramienta: carga `reference/pencil-workflow.
 
 #### Pre-verificación: Verificar que el Sistema de Diseño Existe (BLOQUEANTE)
 
-Antes de crear CUALQUIER componente, ejecuta `get_variables()` y verifica:
+Antes de crear CUALQUIER componente, lista las variables del sistema (Pencil: `get_variables()`; HTML: tokens en `tokens.css`; Figma: variables del archivo) y verifica:
 
 1. **Las variables de color existen** — al menos una familia de tono con rampa completa 50→950
 2. **Las variables de tipografía existen** — font-family, escala de font-size (display→xs), conjunto de font-weight
@@ -265,7 +281,13 @@ Verifica WCAG AA (4.5:1 texto, 3:1 texto grande) para TODOS los modos **calculan
 
 ### 6. Ensamblar Pantallas desde Componentes
 
-Usa instancias de componentes (`ref` en Pencil, instancias en Figma). Sobreescribe el contenido via `descendants`, nunca via `U()` en el componente madre.
+**Gate — inventario de navegación:** antes de ensamblar, enumera los CTAs (botones, enlaces, acciones de navegación) de las pantallas a construir y deriva el destino de cada uno. Cada destino queda en exactamente uno de dos estados: **diseñado** en este mismo run, o **inventariado** como pendiente explícito que se reporta al humano al cierre (tabla `CTA → destino pendiente`). Propón el inventario en un solo mensaje y deja que el humano decida qué destinos se diseñan ahora — proporcional, sin interrogatorios. Nunca cerrar un run con **CTAs huérfanos** (CTA cuyo destino no está ni diseñado ni inventariado).
+
+Nombra los frames con la convención de flujo `"Journey / N-Pantalla"` (ej. `"Auth / 1-Login"`, `"Auth / 2-Registro"`) — ver `reference/pencil-workflow.md`.
+
+Usa instancias de componentes (`ref` en Pencil, instancias en Figma; en HTML, helpers de `components.js` compuestos desde `screens.js`, nunca componentes inline en las pantallas). Sobreescribe el contenido via `descendants`, nunca via `U()` en el componente madre.
+
+**Gate de Responsive:** cada pantalla se construye y verifica en mobile / tablet / desktop (Pencil/Figma: frames por breakpoint; HTML: screenshots a 375 / 768 / 1280). Una pantalla sin su variante o verificación responsive no está terminada.
 
 **Si el usuario solicita oscuro y claro:** diseña uno, copia el frame, cambia solo el tema/modo. Muestra ambos.
 
@@ -330,8 +352,16 @@ Adicionalmente, si este paso define o modifica tokens (colores, tipografía, esp
 | Menú hamburguesa como navegación principal en app nativa | error | Usar tab bar (iOS) / navigation bar (M3) — ver `reference/mobile-patterns.md` |
 | Rampa de color generada a ojo sin seguir las curvas de OKLCH | error | Derivar con el algoritmo de `reference/color-craft.md` (lightness + campana de chroma) |
 | Contraste "verificado" sin cálculo con la fórmula WCAG | error | Calcular con la fórmula de `reference/color-craft.md` y citar el ratio |
+| CTA sin destino diseñado ni inventariado (CTA huérfano) | error | Diseñar la pantalla destino en el mismo run, o inventariarla como pendiente explícito reportado al humano (gate del Paso 6) |
+| Crear tokens/componentes sin resolver el Gate de Discovery de Sistema Existente | error | Detectar/preguntar y reutilizar lo existente (`/design-project`) |
+| Tokens paralelos cuando el proyecto ya tiene sistema | error | Mapear a los tokens existentes; registrar la fuente de verdad |
+| Pantalla sin variantes/verificación responsive (mobile/tablet/desktop) | error | Construir y verificar los tres breakpoints (Gate de Responsive) |
+| HTML sin `<meta viewport>` o con anchos fijos en contenedores | error | Viewport meta + layout fluido mobile-first |
+| Maqueta HTML en un solo archivo (tokens + componentes + pantallas mezclados) | error | Separar: `tokens.css`, `components.css`/`components.js`, `screens.js` (starter `reference/html-starter/`) |
+| Componente o estilos de componente definidos inline en `screens.js` | error | Agregarlo a `components.js` (+ `components.css`) y usar el helper |
+| Crear/escribir archivos HTML sin confirmar ubicación con el humano | error | Resolver el Gate de Ubicación de Artefactos de `/design-project` primero |
 
-## Limitaciones de Herramienta (Pencil)
+## Limitaciones de Herramienta (Pencil — solo si la herramienta resuelta es Pencil)
 
 - **Los tipos de variable son inmutables** — planifica los tipos (color/string/number) antes de crear. Si necesitas cambiar el tipo, usa un nombre de variable nuevo
 - **`fontWeight` requiere tipo string** — crea variables de peso como `{"type": "string", "value": "600"}`, no número
@@ -351,6 +381,7 @@ Para wrapping de texto, armonía de grilla, limitaciones de i18n y otras restric
 | Diseñando pantallas móviles / plataforma `mobile` o `both` (app nativa) | `reference/mobile-patterns.md` |
 | Generando o combinando colores, verificando contraste | `reference/color-craft.md` |
 | Sin referencias del dominio / anclando dirección visual | `reference/domain-styles.md` |
-| **Pencil** — variables, componentes, instancias | `reference/pencil-workflow.md` |
-| **Figma** — colecciones, modos, variantes, Dev Mode | `reference/figma-workflow.md` |
+| **HTML (default)** — tokens, componentes, pantallas (`GROUPS`) en archivos separados, responsive, capturas | `reference/html-workflow.md` (+ plantilla `reference/html-starter/`: `index.html`, `tokens.css`, `components.css`, `components.js`, `screens.js`) |
+| **Pencil (opcional)** — variables, componentes, instancias | `reference/pencil-workflow.md` |
+| **Figma (opcional)** — colecciones, modos, variantes, Dev Mode | `reference/figma-workflow.md` |
 | **DESIGN.md** — template, reglas de generación, validación CLI | `reference/design-md.md` |

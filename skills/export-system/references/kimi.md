@@ -28,13 +28,14 @@ Kimi Code declara **compatibilidad explícita** con archivos de agente estilo Cl
 | `name` | `name` | Copia literal |
 | `description` | `description` | Copia literal — es el **único campo obligatorio** |
 | `permissionMode` | `tools` / `disallowedTools` | Ver tabla de permisos abajo |
-| `model` | — | `model:` de Claude se **ignora**. Opcionalmente emitir `model_preference: primary` (default) o `secondary` para agentes de baja complejidad |
 | `skills` | — | Se **ignora silenciosamente**. Eliminar y mover al body (Paso 5) |
 | body | body | Copia literal = system prompt |
 
 Campos opcionales soportados que se pueden emitir si aportan: `whenToUse` (cuándo invocar el agente), `subagents` (lista de agentes que puede invocar).
 
 `tools` acepta lista YAML o string separado por comas. Usar lista YAML.
+
+> **Sin campo `model`.** Los agentes fuente no declaran modelo: **no emitir `model` ni `model_preference`**; Kimi Code usa el modelo de su sesión. Una línea `model:` residual en la fuente se omite sin traducir.
 
 > ⚠️ **Nunca emitir `override: true`.** Ese campo reemplaza el system prompt principal de Kimi Code; un agente exportado jamás debe hacerlo.
 
@@ -60,7 +61,6 @@ disallowedTools:
   - Write
   - Edit
   - Bash
-model_preference: primary
 ---
 ```
 
@@ -84,6 +84,5 @@ El command `git:commit` → skill `git-commit` → invocable como `/skill:git-co
 
 ## Pérdidas conocidas
 
-- El tier de modelo (`low|medium|high`) no existe; solo `model_preference: primary|secondary`.
 - Los namespaces de commands se aplanan (`git:commit` → `git-commit`).
 - El campo `tools` de los commands se pierde.

@@ -163,16 +163,17 @@ Cuando un ADR se beneficie de una visualización (flujo, secuencia, estados, sch
 3. Cada diagrama debe pasar el checklist de validación de `generate-diagram`.
 4. Si el diagrama excede el alcance de Mermaid → escalar al humano: `Pregunta abierta: el diagrama de [X] requiere drawio standalone — ¿quieres que lo produzca el agente diagrammer?`.
 
-## Gate de verificación de paths (antes de cerrar archivos)
+## Gate de verificación de estado real (pre-decisión)
 
-Antes de finalizar cualquier vista o ADR que referencie paths o nombres de paquetes, verificar que existen:
+Este gate corre **ANTES de tomar y escribir las decisiones** — el orden es verificar estado real → decidir, nunca decidir → verificar. Ninguna vista ni ADR debe afirmar estado del sistema sin haberlo verificado primero:
 
 - Usar `Glob` para verificar que directorios/archivos referenciados existen.
 - Usar `Grep` para confirmar que tipos/interfaces que referencias realmente existen.
 - Si un path NO existe, marcarlo explícitamente como `NEW`.
-- Verificar afirmaciones de estado — si el documento dice "agregar X", `Grep` literal X primero para confirmar que NO existe.
+- Verificar afirmaciones de estado — si la decisión dice "agregar X", `Grep` literal X primero para confirmar que NO existe.
+- Si la decisión toca persistencia, leer el schema/migraciones directamente del repo (ver la regla de schema DB en `adr-writer`).
 
-Este gate cuesta 2-4 llamadas Glob/Grep y previene una re-invocación del developer.
+Estas lecturas dirigidas cuentan dentro del presupuesto global de tool calls del run y previenen re-invocaciones del developer — verificar antes es siempre más barato que iterar después. Al cerrar cada archivo, re-confirmar solo lo que haya cambiado durante la escritura.
 
 ### Reconocimiento obligatorio para archivos NEW (decisión de ubicación)
 

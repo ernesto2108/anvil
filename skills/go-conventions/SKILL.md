@@ -41,22 +41,11 @@ Carga **solo** los archivos relevantes para la tarea actual:
 | Imports, DTOs, validación, DI | `rules/architecture.md` |
 | SQL, transacciones, repositories | `rules/database.md` |
 | Reglas críticas de Kafka/RabbitMQ | `rules/messaging.md` |
-| Functional options, constructores, guard clauses | `rules/patterns.md` |
 
 ### Guías (patrones detallados con código, ~3-5KB cada una)
 
 | Trabajando en... | Cargar |
 |---|---|
-| Qué primitiva de concurrencia usar | `guides/concurrency/decision-matrix.md` |
-| Patrón fan-out/fan-in | `guides/concurrency/fan-out-fan-in.md` |
-| Worker pools, concurrencia acotada | `guides/concurrency/worker-pools.md` |
-| Etapas de pipeline | `guides/concurrency/pipelines.md` |
-| Timeouts, cancelación de context | `guides/concurrency/timeout-cancellation.md` |
-| Rate limiting | `guides/concurrency/rate-limiting.md` |
-| Graceful shutdown (HTTP, workers) | `guides/concurrency/graceful-shutdown.md` |
-| Acceso concurrente a map | `guides/concurrency/concurrent-map.md` |
-| Pub/sub event broadcasting | `guides/concurrency/pub-sub.md` |
-| Anti-patrones de concurrencia + checklist | `guides/concurrency/anti-patterns.md` |
 | Context en HTTP client, DB, Redis, gRPC | `guides/cleanup/context-propagation.md` |
 | Diseño de timeout multi-nivel | `guides/cleanup/timeout-architecture.md` |
 | Rows, transacciones, HTTP body, tickers | `guides/cleanup/resource-cleanup.md` |
@@ -99,11 +88,10 @@ Carga **solo** los archivos relevantes para la tarea actual:
 |---|---|
 | Patrones de manejo de errores | `examples/errors.md` |
 | Arquitectura, interfaces, DI | `examples/architecture.md` |
-| Patrones de testing | `examples/testing.md` |
 | Base de datos, repositories, DTOs | `examples/database.md` |
 | Validación de entidades | `examples/validation.md` |
-| Concurrencia, shutdown | `examples/concurrency.md` |
 | Flujo completo Handler → Service → Repo, reglas de wrapping de errores | `examples/service-contracts.md` |
+| Patrones de testing | `examples/testing.md` |
 
 ## Gate Post-Implementación
 

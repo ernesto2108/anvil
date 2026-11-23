@@ -34,7 +34,6 @@ El **filename es el ID** del agente. No emitir campo `name`.
 | `name` | — | Se omite; pasa a ser el nombre del archivo |
 | `description` | `description` | Copia literal (obligatorio en OpenCode) |
 | — | `mode` | Siempre `subagent` |
-| `model` | — (se omite) | **No emitir `model`.** El agente hereda el modelo de la sesión activa de OpenCode. Anotar en el reporte el tier original de cada agente (`sonnet`/`opus`) para fijado manual opcional |
 | `permissionMode` | `permission` | Ver tabla de permisos abajo |
 | `skills` | — | Eliminar; mover al body (Paso 5 del SKILL.md) |
 | body | body | Copia literal = system prompt |
@@ -43,7 +42,7 @@ Campos opcionales que **no** se emiten salvo que el usuario los pida: `temperatu
 
 > El campo `tools:` booleano existe pero está **deprecado**. Usar siempre `permission`.
 
-> **Por qué se omite `model`:** OpenCode exige un `provider/model-id` resoluble contra los providers **autenticados en la máquina destino**. Emitir `anthropic/...` rompe el subagente (falla antes de ejecutar) si el usuario tiene autenticado otro provider. El exportador no puede conocer esa configuración, y el tier de origen es una preferencia de capacidad, no un binding a provider.
+> **Nunca emitir `model`.** Los agentes fuente no declaran modelo, y OpenCode exigiría un `provider/model-id` resoluble contra los providers **autenticados en la máquina destino**: emitir `anthropic/...` rompería el subagente antes de ejecutar. El agente hereda el modelo de la sesión activa de OpenCode.
 
 ## Tabla de permisos
 
@@ -78,7 +77,7 @@ permission:
 | `description` | `description` |
 | `tools` | — (sin equivalente; se omite) |
 | — | `agent` — solo si el command delega a un agente concreto |
-| — | `model` — omitir salvo que el usuario lo pida |
+| — | `model` — no emitir |
 | — | `subtask` — `true` si el command debe correr aislado |
 
 El body es un template: los placeholders de argumentos se escriben como `$ARGUMENTS`.
@@ -87,6 +86,5 @@ Los commands anidados (`commands/git/commit.md`, nombre `git:commit`) se aplanan
 
 ## Pérdidas conocidas
 
-- El tier de modelo (`sonnet`/`opus`) no se exporta: los agentes heredan el modelo de la sesión de OpenCode. El reporte lista el tier original por agente para fijado manual opcional (solo si el destino tiene autenticado un provider con modelos equivalentes).
 - El campo `tools` de los commands se pierde.
 - La jerarquía de namespaces de commands (`git:commit`) se aplana.

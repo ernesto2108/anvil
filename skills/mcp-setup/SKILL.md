@@ -1,6 +1,6 @@
 ---
 name: mcp-setup
-description: Receta determinista para activar MCP servers de infraestructura en un repo. Detecta servicios (PostgreSQL, MySQL, Redis, Kafka, Elasticsearch, MongoDB, SQLite), los mapea a sus packages MCP, y genera .mcp.json.example (commitable) y .mcp.json (local gitignored) siguiendo el patrón .env/.env.example — connection strings siempre vía ${ENV_VAR}, nunca hardcodeadas. Úsalo cuando context-init o infra-probe reporten "mcp_available: false", cuando hagas setup inicial de un proyecto nuevo, o cuando el usuario diga "activar MCP", "configurar mcp.json", "habilitar MCPs de infra", "setup de mcp servers". Pausa con confirmación antes de escribir.
+description: 'Receta determinista para activar MCP servers de infraestructura en un repo. Detecta servicios (PostgreSQL, MySQL, Redis, Kafka, Elasticsearch, MongoDB, SQLite), los mapea a sus packages MCP, y genera .mcp.json.example (commitable) y .mcp.json (local gitignored) siguiendo el patrón .env/.env.example — connection strings siempre vía ${ENV_VAR}, nunca hardcodeadas. Úsalo cuando context-init o infra-probe reporten "mcp_available: false", cuando hagas setup inicial de un proyecto nuevo, o cuando el usuario diga "activar MCP", "configurar mcp.json", "habilitar MCPs de infra", "setup de mcp servers". Pausa con confirmación antes de escribir.'
 ---
 
 # MCP Setup — Activación de MCP servers de infraestructura

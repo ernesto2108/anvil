@@ -19,7 +19,9 @@ Como orquestador, tu flujo es:
 | Typo, config, 1-2 files, clear fix | **Trivial** | Directo — sin agentes | Ninguno | En conversacion |
 | Bug fix, refactor, 2-5 files, patron conocido | **Small** | developer → tester | Sin PRD/design | Inline en prompt del agente |
 | Feature nueva, endpoint nuevo, decisiones de diseno | **Medium** | developer → tester → qa | PRD minimo | PRD + archivos clave |
-| Cross-cutting, nuevo contexto, UI+backend, multi-servicio | **Complex** | pm → architect → developer → tester → security → qa → reporter | PRD + Design completos | Docs completos |
+| Cross-cutting, nuevo contexto, UI+backend, multi-servicio | **Complex** | pm → explorer → architect → developer → tester → security → qa → reporter | PRD + Design completos | Docs completos |
+
+> **Nota sobre nombres de agentes:** en los pipelines de este documento, `developer` refiere a la familia de developers resuelta por stack (`developer-backend` / `developer-frontend` / `developer-mobile` / `developer-ai`) y `designer` a la dupla `designer-spec` (especificacion) + `designer-visual` (construccion en Pencil). `reporter` es una skill, no un agente.
 
 ## Reglas de token efficiency
 
@@ -55,7 +57,7 @@ flowchart TD
     Decision -->|Trivial| Direct["Ejecutar directo"]
     Decision -->|Small| SmallPipe["developer → tester"]
     Decision -->|Medium| MedPipe["developer → tester → qa"]
-    Decision -->|Complex| ComplexPipe["pm → architect → developer → tester → security → qa → reporter"]
+    Decision -->|Complex| ComplexPipe["pm → explorer → architect → developer → tester → security → qa → reporter"]
 ```
 
 ## Triage automatico
@@ -79,6 +81,7 @@ No todos los agentes corren siempre:
 | Agente | Saltar cuando |
 |--------|--------------|
 | context-init | .project-context/ existe y se actualizo en esta sesion |
+| explorer | la feature no toca codigo existente (greenfield puro), o ya existe un `explorer-<topic>.md` fresco para este run |
 | pm | requirements ya son claros y especificos |
 | designer | no hay cambios de UI |
 | architect | no hay decisiones de diseno (patron ya existe) |
@@ -102,7 +105,7 @@ flowchart LR
     G1 -->|Si| Designer
     G1 -->|No| PM
 
-    Designer -->|ui-spec.md| G1b{Design Gate}
+    Designer -->|design-spec.md| G1b{Design Gate}
     G1b -->|Diseño ejecutado + checklist OK| Architect
     G1b -->|Checklist falla| Fix0["Completar diseño"]
 
@@ -123,7 +126,7 @@ flowchart LR
 
 Despues de ejecutar el diseño visual (en Pencil/Figma), verificar ANTES de continuar:
 
-1. Todas las pantallas del Screen Inventory de ui-spec.md existen en el archivo de diseño
+1. Todas las pantallas del Screen Inventory de design-spec.md existen en el archivo de diseño
 2. Versiones mobile existen para cada pantalla (si responsive/both)
 3. Versiones dark mode existen para pantallas clave (si modos requeridos)
 4. Frame de Design System tiene: paleta de colores, tipografia, iconos, espaciado, radius
@@ -150,8 +153,9 @@ Cada agente recibe SOLO lo que necesita:
 | pm | vault path, request del usuario | codigo, diffs |
 | context-init | root del proyecto | tareas |
 | designer | prd.md, context.md | codigo, reportes |
-| architect | prd.md, ui-spec.md, context.md | codigo, reportes |
-| developer | prd.md, design.md, ui-spec.md, skill | reportes QA/security |
+| explorer | objetivo de exploracion, run-id, topic | diffs, reportes |
+| architect | prd.md, design-spec.md, context.md, `explorer-<topic>.md` (obligatorio si toca codigo existente) | codigo crudo, reportes |
+| developer | prd.md, design.md, design-spec.md, skill | reportes QA/security |
 | tester | prd.md, design.md, archivos cambiados | diffs completos |
 | qa | prd.md, design.md, git diff | historial de conversacion |
 | security | git diff, paths de dependencias | requirements, diseno |

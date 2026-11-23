@@ -1,0 +1,6 @@
+{
+  "name": "anvil-usage",
+  "version": "0.1.0",
+  "description": "Muestra contexto, barra de progreso y costo estimado a la derecha de la linea de auto mode",
+  "author": { "name": "Ernesto Diaz" }
+}

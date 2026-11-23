@@ -123,32 +123,29 @@ El `spec.md` NO entra en este orden — lo produce el `spec-writer` aparte.
 
 ## Regla de schema DB (CRÍTICA)
 
-**NUNCA proponer una tabla nueva sin escalar primero al humano si una tabla existente puede extenderse.**
+**NUNCA proponer una tabla nueva sin verificar primero el schema real.** La memoria del humano NO es fuente de verdad del schema — el repo sí.
 
 Antes de diseñar cualquier cambio de DB:
 
-1. Escalar al humano con la pregunta concreta: qué tablas relacionadas existen.
-2. Evaluar si `ALTER TABLE` (agregar columnas) resuelve el problema.
-3. Solo proponer tabla nueva si hay justificación técnica clara Y el humano confirma.
+1. **Leer el schema/migraciones directamente:** localizar con Glob/Grep dirigidos dónde vive el schema (directorios de migraciones, `schema.sql`, DBML, modelos ORM) y leer las tablas relacionadas al cambio. Si el schema no vive en el repo o la lectura dirigida no basta → pedir el artefacto de hallazgos del explorer con el schema relevante; nunca sustituirlo por lo que el humano recuerde.
+2. Evaluar si `ALTER TABLE` (agregar columnas) sobre una tabla existente resuelve el problema.
+3. Solo proponer tabla nueva si hay justificación técnica clara Y el humano confirma la propuesta.
 
-### Preguntas a hacer al humano
+### Qué confirmar con el humano (solo lo que el repo no responde)
 
-Antes de diseñar cualquier cambio de DB, preguntar:
+1. Si la evaluación apunta a tabla nueva: "Verifiqué el schema — existen <tablas leídas>. ¿Extendemos <tabla candidata> o hay justificación para una tabla separada (ej. relación N:M, entidad con ciclo de vida propio)?"
+2. Nunca preguntar "¿qué tablas existen?" — eso se lee del repo, no se pregunta. Presentar siempre lo leído como evidencia y pedir confirmación de la decisión, no del estado.
 
-1. "¿Qué tablas relacionadas existen actualmente? ¿Puedes listarlas o indicar dónde está el schema?"
-2. "¿Una columna nueva en una tabla existente resolvería el problema, o necesitamos una tabla nueva?"
-3. Si la respuesta apunta a tabla nueva: "¿Hay justificación técnica clara para una tabla separada (ej. relación N:M, entidad con ciclo de vida propio)?"
+## Estrategia de migración — verificar, luego confirmar (CRÍTICA)
 
-## Estrategia de migración — escalar, no asumir (CRÍTICA)
+No todos los proyectos usan archivos de migración en el repo. Antes de diseñar la estrategia de persistencia:
 
-No todos los proyectos usan archivos de migración en el repo. Antes de diseñar la estrategia de persistencia, escalar al humano:
+1. **Verificar en el repo primero:** ¿existe un directorio o herramienta de migraciones (Glob dirigido)? ¿Qué formato y convención siguen las migraciones existentes?
+2. **Confirmar con el humano solo lo que el repo no puede responder:** el estado de la DB y, si no se detectó sistema de migraciones, cómo se gestionan los cambios de schema.
 
-1. **¿Cómo se gestionan los cambios de schema?** (migraciones formales / SQL manual / sync tools / DB ya existe sin migraciones)
-2. **¿Cuál es el estado de la DB?** (nueva / existente con datos / existente solo en dev)
+### Preguntas a hacer al humano (solo las que el repo no responde)
 
-### Preguntas a hacer al humano
-
-1. "¿Cómo se gestionan los cambios de schema en este proyecto? (migraciones formales en el repo / SQL manual / herramienta de sync / la DB ya existe sin sistema de migraciones)"
+1. Solo si no se detectó sistema de migraciones en el repo: "No encontré migraciones en el repo — ¿cómo se gestionan los cambios de schema? (SQL manual / herramienta de sync / la DB ya existe sin sistema de migraciones)"
 2. "¿En qué estado está la DB? (nueva sin datos / existente solo en dev / existente en producción con datos reales)"
 
 Si la DB ya existe en producción, incluir en el ADR de persistencia:
@@ -161,7 +158,7 @@ Si la DB ya existe en producción, incluir en el ADR de persistencia:
 ## Presupuesto de tokens
 
 - **Objetivo:** 25K tokens | **Máximo:** 40K tokens
-- **Máx llamadas a tools de lectura/exploración:** ≤4 Grep/Glob (gate de verificación de paths) + ≤2 por archivo NEW (LS + 1 vecino).
+- **Llamadas a tools de lectura/verificación:** comparten el presupuesto global del run (máx 15 tool calls — ver `docs/token-optimization.md`), incluyendo el gate de verificación pre-decisión (schema, paths, tipos) y el reconocimiento por archivo NEW (LS + 1 vecino). La verificación pre-decisión tiene prioridad sobre cualquier otra lectura: nunca recortarla para ahorrar llamadas — si el presupuesto no alcanza, escalar al humano en vez de decidir sin verificar.
 - **Máx ADRs por run:** 12.
 
 ## Checklist de validación (antes de cerrar un ADR)

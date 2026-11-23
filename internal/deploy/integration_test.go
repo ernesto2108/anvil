@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ernesto2108/anvil/pkg/config"
 	"github.com/ernesto2108/anvil/internal/deploy"
+	"github.com/ernesto2108/anvil/pkg/config"
 	"github.com/ernesto2108/anvil/pkg/fileutil"
 	"github.com/ernesto2108/anvil/pkg/state"
 )
@@ -31,8 +31,8 @@ func setupFakeRepo(t *testing.T) string {
 	// agents
 	agentDir := filepath.Join(repo, config.CompAgents)
 	os.MkdirAll(agentDir, 0o755)
-	os.WriteFile(filepath.Join(agentDir, "developer.md"), []byte("---\nmodel: high\npermission: execute\ndescription: writes code\n---\n\nYou are a developer."), 0o644)
-	os.WriteFile(filepath.Join(agentDir, "tester.md"), []byte("---\nmodel: medium\npermission: execute\ndescription: writes tests\n---\n\nYou are a tester."), 0o644)
+	os.WriteFile(filepath.Join(agentDir, "developer.md"), []byte("---\npermission: execute\ndescription: writes code\n---\n\nYou are a developer."), 0o644)
+	os.WriteFile(filepath.Join(agentDir, "tester.md"), []byte("---\npermission: execute\ndescription: writes tests\n---\n\nYou are a tester."), 0o644)
 
 	// skills
 	skillDir := filepath.Join(repo, config.CompSkills, "go-conventions")
@@ -79,10 +79,9 @@ func loadTestConfig(t *testing.T, repoDir string) *config.App {
 `
 	cfg := `provider: claude
 providers:
-  claude:
-    high: claude-opus-4-6
-    medium: claude-sonnet-4-6
-    low: claude-haiku-4-5-20251001
+  - claude-opus-4-6
+  - claude-sonnet-4-6
+  - claude-haiku-4-5-20251001
 permissions:
   claude:
     read: "Read,Glob,Grep"
@@ -122,14 +121,11 @@ func Test_DeployClaude_CreatesAgentsSkillsCommands(t *testing.T) {
 		t.Errorf("expected 2 agent files, got %d", len(entries))
 	}
 
-	// Verify tier was resolved in agent content
+	// Verify no model field is emitted in the deployed agent content
 	data, _ := os.ReadFile(filepath.Join(agentDir, "developer.md"))
 	content := string(data)
-	if containsStr(content, "model: high") {
-		t.Error("tier 'high' should have been resolved to a model name")
-	}
-	if !containsStr(content, "claude-opus-4-6") {
-		t.Error("expected resolved model 'claude-opus-4-6' in agent content")
+	if containsStr(content, "model:") {
+		t.Error("deployed agent should not contain a 'model:' field")
 	}
 
 	// skills should be a directory with individual symlinks
@@ -494,10 +490,9 @@ components:
 `
 	cfg := `provider: claude
 providers:
-  claude:
-    high: claude-opus-4-6
-    medium: claude-sonnet-4-6
-    low: claude-haiku-4-5-20251001
+  - claude-opus-4-6
+  - claude-sonnet-4-6
+  - claude-haiku-4-5-20251001
 permissions:
   claude:
     read: "Read,Glob,Grep"
@@ -553,10 +548,9 @@ components:
 `
 	cfg := `provider: claude
 providers:
-  claude:
-    high: claude-opus-4-6
-    medium: claude-sonnet-4-6
-    low: claude-haiku-4-5-20251001
+  - claude-opus-4-6
+  - claude-sonnet-4-6
+  - claude-haiku-4-5-20251001
 permissions:
   claude:
     read: "Read,Glob,Grep"

@@ -35,11 +35,12 @@ Markdown con frontmatter YAML; el body es el system prompt.
 | `name` | `name` | Copia literal |
 | `description` | `description` | Copia literal |
 | `permissionMode` | `tools` / `excludedTools` | Vocabulario propio — ver tabla abajo |
-| `model` | `model` | `low|medium|high` NO son válidos. Omitir el campo (Kiro usa su default) y anotarlo en el reporte |
 | `skills` | — | Eliminar; mover al body (Paso 5) |
 | body | body | Copia literal = system prompt |
 
 Campos opcionales que **no** se emiten salvo petición explícita: `resources`, `permissions` (reglas match/effect), `includeMcpJson`, `includePowers`.
+
+> **Sin campo `model`.** Los agentes fuente no lo declaran: **no emitir `model`**; Kiro usa su modelo por defecto. Una línea `model:` residual en la fuente se omite sin traducir.
 
 ## Vocabulario de tools (propio de Kiro)
 
@@ -88,7 +89,6 @@ Alternativa válida si el command debe dispararse por evento en lugar de a petic
 
 ## Pérdidas conocidas
 
-- El tier de modelo no se traduce; se omite el campo.
 - La granularidad de tools se reduce a 4 valores (`read`/`write`/`shell`/`subagent`).
 - Los commands pierden su naturaleza de comando invocable con argumentos: pasan a ser contexto inyectable con `#nombre`.
 - El campo `tools` de los commands se pierde.

@@ -1,0 +1,86 @@
+<!doctype html>
+<!--
+  STARTER DE MAQUETA HTML — entrada (shell de la herramienta). Genérico, sin dependencias, sin dominio.
+  Funciona abriendo el archivo directo (file://): sin servidor ni build, scripts clásicos (sin módulos ES).
+
+  Archivos y responsabilidad:
+    tokens.css      valores visuales (custom properties, tema, modo oscuro)       — compartido
+    components.css  estilos de componentes + base + breakpoints                   — compartido
+    components.js   helpers de componentes (btn, field, card, badge, page, iconos) — compartido
+    screens.js      mocks, GROUPS/ALL (pantallas) y router                        — por feature
+    index.html      este archivo: shell de la herramienta (selector, barra, notas)
+
+  Rutas: por defecto asumen design/<feature>/index.html y el sistema compartido en design/_system/.
+  Si el Gate de Ubicación de Artefactos eligió otras rutas, ajustar SOLO las rutas relativas de abajo.
+
+  ORDEN DE CARGA (no cambiar): tokens.css → components.css → (DOM) → components.js → screens.js.
+  screens.js usa los helpers de components.js y los elementos del DOM, por eso va al final.
+
+  Modo captura: abrir con ?clean#<id> oculta la herramienta y deja solo la pantalla.
+  Auditoría de CTAs: en consola, auditCtas() lista los data-goto sin pantalla destino.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maqueta</title>
+<link rel="stylesheet" href="../_system/tokens.css">
+<link rel="stylesheet" href="../_system/components.css">
+<style>
+  /* ===== Herramienta (selector de pantallas) — NO forma parte del diseño ni de los tokens ===== */
+  :root { --tool-bg: #111827; --tool-text: #d1d5db; --tool-hover: #1f2937; --tool-active: #2563eb; --tool-on: #ffffff; }
+
+  .tool { display: flex; flex-direction: column; min-height: 100vh; }
+  .side { background: var(--tool-bg); color: var(--tool-text); padding: var(--sp-3); max-height: 34vh; overflow-y: auto; }
+  .side h1 { font-size: var(--fs-lg); margin: 0 0 var(--sp-2); color: var(--tool-on); }
+  .grp { margin-top: var(--sp-3); }
+  .grp > h2 { font-size: var(--fs-xs); letter-spacing: .06em; text-transform: uppercase; margin: 0 0 var(--sp-1); opacity: .7; }
+  .scr { display: block; width: 100%; text-align: left; padding: var(--sp-2); border: 0; background: transparent; color: inherit; border-radius: var(--radius-sm); min-height: var(--touch-min); }
+  .scr:hover { background: var(--tool-hover); }
+  .scr[aria-current="page"] { background: var(--tool-active); color: var(--tool-on); font-weight: var(--fw-semibold); }
+  .stage { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+  .bar h2 { margin: 0; font-size: var(--fs-lg); }
+  .bar .sp { flex: 1; }
+  .nav-btn { border: 1px solid var(--color-border); background: var(--color-surface); border-radius: var(--radius-sm); padding: var(--sp-1) var(--sp-3); min-height: 36px; }
+  .scroll { flex: 1; padding: var(--sp-4); overflow: auto; }
+  .notes { margin: 0 0 var(--sp-3); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-sm); }
+  .notes summary { cursor: pointer; font-weight: var(--fw-bold); }
+  .notes .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-3); margin-top: var(--sp-2); }
+  .notes h4 { margin: 0 0 var(--sp-1); font-size: var(--fs-xs); text-transform: uppercase; color: var(--color-muted); }
+  .notes ul { margin: 0; padding-left: 18px; }
+  body.clean .side, body.clean .bar, body.clean .notes { display: none !important; }
+  body.clean .tool, body.clean .stage, body.clean .scroll { display: block !important; min-height: 0 !important; padding: 0 !important; overflow: visible !important; }
+
+  /* Breakpoint desktop de la herramienta (mismo valor que components.css): 1024px */
+  @media (min-width: 1024px) {
+    .tool { display: grid; grid-template-columns: 280px 1fr; height: 100vh; }
+    .side { max-height: none; }
+    .stage { height: 100vh; }
+  }
+</style>
+</head>
+<body>
+<script>if (/clean/.test(location.search)) document.body.classList.add("clean");</script>
+<div class="tool">
+  <nav class="side" aria-label="Pantallas de la maqueta" id="side"></nav>
+  <div class="stage">
+    <div class="bar">
+      <h2 id="scrTitle"></h2><span id="scrBadge"></span>
+      <span class="sp"></span>
+      <button class="nav-btn" id="themeBtn" type="button">Tema: A</button>
+      <button class="nav-btn" id="modeBtn" type="button">Modo: claro</button>
+      <button class="nav-btn" id="prev" type="button">← Anterior</button>
+      <button class="nav-btn" id="next" type="button">Siguiente →</button>
+    </div>
+    <div class="scroll" id="scroll">
+      <details class="notes" id="notes" open></details>
+      <div id="canvas"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../_system/components.js"></script>
+<script src="screens.js"></script>
+</body>
+</html>

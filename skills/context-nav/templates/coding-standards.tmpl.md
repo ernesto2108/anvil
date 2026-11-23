@@ -9,7 +9,7 @@ last_updated: <YYYY-MM-DD>
 
 - **Código fuente:** `<inglés / español>`
 - **Comentarios:** `<inglés / español>`
-- **Commits:** `<inglés — Conventional Commits>`
+- **Commits:** `<español — Conventional Commits (tipos verbatim: feat, fix, chore…)>`
 - **Documentación técnica:** `<español>`
 
 ## Naming

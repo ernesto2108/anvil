@@ -27,16 +27,7 @@ func deployOpenCodeAgents(cfg *config.App, target string, ts *TargetStats) {
 // adaptOpenCode formats an agent file for the OpenCode target.
 func adaptOpenCode(cfg *config.App, agent AgentData) string {
 	desc := agent.Doc.Fields["description"]
-	tier := agent.Tier
 	perm := agent.Perm
-
-	resolved := tier
-	if config.IsTier(tier) {
-		model, err := cfg.ResolveTier(tier, cfg.ActiveProvider())
-		if err == nil {
-			resolved = model
-		}
-	}
 
 	permResolved := config.PermWrite
 	if config.IsPerm(perm) {
@@ -46,7 +37,7 @@ func adaptOpenCode(cfg *config.App, agent AgentData) string {
 		}
 	}
 
-	return fmt.Sprintf("---\ndescription: %s\nmanaged-by: anvil\nmode: subagent\nmodel: %s\npermission: %s\n---\n\n%s", desc, resolved, permResolved, agent.Doc.Body)
+	return fmt.Sprintf("---\ndescription: %s\nmanaged-by: anvil\nmode: subagent\npermission: %s\n---\n\n%s", desc, permResolved, agent.Doc.Body)
 }
 
 func deployOpenCodeCommands(cfg *config.App, target string, ts *TargetStats) {

@@ -34,7 +34,7 @@ El equipo opera bajo cinco modos según el tipo de cambio. Cada modo determina q
 
 ### Para agentes
 
-Al inicio de cualquier run, preguntar al developer el modo de trabajo (`feature`, `bug`, `fix`, `chore`, `spike`) antes de implementar. El modo determina qué pasos del workflow son obligatorios y cuáles se omiten. Si el modo no está claro en el prompt del usuario, preguntar explícitamente antes de continuar; no asumirlo.
+Al inicio de cualquier run, determinar el modo de trabajo (`feature`, `bug`, `fix`, `chore`, `spike`) antes de implementar: inferirlo del prompt cuando sea inequívoco y declararlo en el bloque de arranque del agente; preguntar explícitamente solo si no es inferible. El modo determina qué pasos del workflow son obligatorios y cuáles se omiten.
 
 Si el cambio toca más de un servicio, cargar `cross-service-dev` antes de implementar — no continuar en modo single-repo.
 

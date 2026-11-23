@@ -95,7 +95,7 @@ Basado en:
 7. Breaking changes usan sufijo `!` Y footer `BREAKING CHANGE:`
 8. Referencias a issues en el footer (`Closes #123`)
 9. Sin mensajes vagos ("fix bug", "update", "WIP")
-10. Mensaje íntegramente en inglés — siempre, en todos los repos. Identificadores de código, paths y flags van verbatim. Aplica solo a commits nuevos: el historial previo no se penaliza retroactivamente
+10. Mensaje íntegramente en español — siempre, en todos los repos. Los tipos de Conventional Commits, identificadores de código, paths y flags van verbatim. Aplica solo a commits nuevos: el historial previo en inglés no se penaliza retroactivamente
 
 ## Alcance
 

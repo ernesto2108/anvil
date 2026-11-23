@@ -7,7 +7,6 @@ description: >
   En modo deep reescanea todo. En modo regular actualiza incrementalmente.
   Reemplaza a context-bootstrap y scanner.
 permissionMode: execute
-model: medium
 skills:
   - scan-project
   - context-nav

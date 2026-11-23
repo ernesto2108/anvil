@@ -1,0 +1,4 @@
+{
+  "description": "Hooks module de commit-es",
+  "modules": ["./register.js"]
+}

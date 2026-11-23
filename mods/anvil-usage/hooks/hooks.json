@@ -1,0 +1,4 @@
+{
+  "description": "Hooks module de anvil-usage",
+  "modules": ["./register.js"]
+}

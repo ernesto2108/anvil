@@ -1,0 +1,6 @@
+{
+  "name": "blast-radius",
+  "version": "0.1.0",
+  "description": "Retiene comandos Bash destructivos (rm -rf, git reset --hard, force push...) y muestra que cambiarian antes de pedir confirmacion",
+  "author": { "name": "Ernesto Diaz" }
+}

@@ -23,9 +23,9 @@ type healthCheck struct {
 }
 
 // switchProvider changes the active provider in the config file and redeploys
-// agents so model tier mappings take effect immediately.
+// agents so the new provider takes effect immediately.
 // Input:  { provider: string }
-// Output: { previous, current, models: { high, medium, low } }
+// Output: { previous, current }
 func (s *Server) switchProvider(_ context.Context, args map[string]any) (string, error) {
 	provider := strArg(args, "provider", "")
 	if provider == "" {
@@ -72,19 +72,9 @@ func (s *Server) switchProvider(_ context.Context, args map[string]any) (string,
 		_ = st.Save()
 	}
 
-	// Resolve tier model names for the new provider.
-	high, _ := s.cfg.ResolveTier(config.TierHigh, provider)
-	medium, _ := s.cfg.ResolveTier(config.TierMedium, provider)
-	low, _ := s.cfg.ResolveTier(config.TierLow, provider)
-
 	result := map[string]any{
 		"previous": previous,
 		"current":  provider,
-		"models": map[string]any{
-			"high":   high,
-			"medium": medium,
-			"low":    low,
-		},
 	}
 	out, _ := json.MarshalIndent(result, "", "  ")
 	return string(out), nil
@@ -319,14 +309,6 @@ func (s *Server) runDoctor(_ context.Context, _ map[string]any) (string, error) 
 			missing = append(missing, s.cfg.Name+".config.yaml")
 		}
 		addCheck(false, "config_files", "missing: "+strings.Join(missing, ", "))
-	}
-
-	// Check 4: Provider tier mappings.
-	provider := s.cfg.ActiveProvider()
-	if _, tierErr := s.cfg.ResolveTier(config.TierHigh, provider); tierErr != nil {
-		addCheck(false, "provider_tiers", fmt.Sprintf("provider %q missing tier mappings", provider))
-	} else {
-		addCheck(true, "provider_tiers", fmt.Sprintf("provider %q has valid tier mappings", provider))
 	}
 
 	// Checks 5–8: Target health.

@@ -59,16 +59,6 @@ func cmdDoctor(cfg *config.App, git *gitutil.Repo) {
 		}
 	}
 
-	// Check 4: Provider has valid tier mappings
-	provider := cfg.ActiveProvider()
-	_, err := cfg.ResolveTier("high", provider)
-	if err != nil {
-		printCheck(false, "Provider '%s' missing tier mappings", provider)
-		issues++
-	} else {
-		printCheck(true, "Provider '%s' has valid tier mappings", provider)
-	}
-
 	fmt.Println()
 	fmt.Println(output.Bold("Targets:"))
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")

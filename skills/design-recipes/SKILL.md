@@ -1,11 +1,11 @@
 ---
 name: design-recipes
-description: Patrones de diseño reutilizables para construir pantallas de forma eficiente en Pencil o Figma. Reduce las operaciones por pantalla al proporcionar recetas probadas. Cargar durante la fase GATE de Ejecución de Diseño. Usar cuando se construyen pantallas a partir de componentes del sistema de diseño en cualquier herramienta de diseño.
+description: Patrones de diseño reutilizables para construir pantallas de forma eficiente en HTML (default), Pencil o Figma, siempre responsive. Reduce las operaciones por pantalla al proporcionar recetas probadas. Cargar durante la fase GATE de Ejecución de Diseño. Usar cuando se construyen pantallas a partir de componentes del sistema de diseño en cualquier herramienta de diseño, "maqueta html", "mockup", "recetas de pantallas" o "responsive".
 ---
 
 # Design Recipes
 
-> Patrones probados para ensamblar pantallas de forma eficiente. Patrones independientes de la herramienta con implementaciones específicas por herramienta.
+> Patrones probados para ensamblar pantallas de forma eficiente. Patrones independientes de la herramienta con implementaciones específicas por herramienta (`reference/html.md` default, `reference/pencil.md`, `reference/figma.md`). Todo diseño es responsive.
 
 ## Cuándo Cargar
 
@@ -15,9 +15,11 @@ Carga esta skill durante el **GATE de Ejecución de Diseño** en el pipeline de 
 
 ## Flujo de trabajo
 
-### Paso 0 — Cargar Lineamientos de Pencil (si hay archivo .pen)
+### Paso 0 — Cargar Lineamientos de Pencil (SOLO si la herramienta resuelta es Pencil)
 
-Antes de construir CUALQUIER pantalla, carga los lineamientos de Pencil que correspondan al tipo de proyecto:
+La herramienta se resuelve con el **Gate de Selección de Herramienta** de `/design-project` (HTML por defecto). Si es HTML o Figma → omitir este paso (las pautas de composición de HTML están en `reference/html.md`).
+
+Si la herramienta es Pencil, antes de construir CUALQUIER pantalla carga los lineamientos que correspondan al tipo de proyecto:
 
 1. **Detecta el tipo de proyecto** desde el PRD/Design Spec:
    - SaaS dashboard, panel de admin, CRM → `get_guidelines("guide", "Web App")`
@@ -33,14 +35,39 @@ Antes de construir CUALQUIER pantalla, carga los lineamientos de Pencil que corr
 
 3. **Aplica lineamientos junto con las recetas** — los lineamientos de Pencil definen principios (jerarquía, densidad, retroalimentación). Las recetas a continuación definen la estructura. Usa ambos.
 
+### Paso 0.5 — Inventario de Navegación (GATE)
+
+Antes de construir CUALQUIER pantalla, deriva el **inventario de navegación** desde sus elementos interactivos:
+
+1. **Enumera los CTAs** de la(s) pantalla(s) pedida(s) — cada botón, enlace o acción de navegación (ej. un Login trae "Regístrate" y "Olvidé mi contraseña")
+2. **Deriva el destino** de cada CTA → una pantalla concreta
+3. **Clasifica cada destino** en exactamente uno de dos estados:
+   - **Diseñado** — la pantalla destino se construye en este mismo run
+   - **Inventariado** — pendiente EXPLÍCITO que se reporta al humano al cierre (tabla `CTA → destino pendiente`)
+4. **Propón y deja decidir** — presenta el inventario en un solo mensaje y deja que el humano decida qué destinos se diseñan ahora y cuáles quedan inventariados. Proporcional: una pantalla pedida no debe explotar en un interrogatorio — derivar, proponer, decidir
+
+**Regla dura:** nunca terminar un run con **CTAs huérfanos** — CTAs cuyo destino no está ni diseñado ni inventariado como pendiente explícito.
+
+Al nombrar frames, usa la convención de flujo `"Journey / N-Pantalla"` (ej. `"Auth / 1-Login"`, `"Auth / 2-Registro"`) — ver `reference/pencil-workflow.md` de `/design-system`. En HTML, el Journey es el grupo de `GROUPS` (en `screens.js`) y `N-Pantalla` el `label`.
+
 ### Paso 1 — Construir Pantallas
 
-1. Detecta la herramienta de diseño:
-   - Archivo `.pen` → carga `reference/pencil.md`
-   - URL de Figma o `.fig` → carga `reference/figma.md`
+1. Usa la herramienta resuelta por el **Gate de Selección de Herramienta** de `/design-project`:
+   - HTML (default) → carga `reference/html.md`
+   - Pencil (`.pen` + MCP operativo) → carga `reference/pencil.md`
+   - Figma (URL) → carga `reference/figma.md`
 2. Identifica qué tipos de pantalla vas a construir
 3. Sigue la receta para cada tipo
 4. Verifica con captura de pantalla después de cada pantalla
+
+### Paso 2 — Gate de Responsive (toda herramienta)
+
+Cada receta se construye mobile-first y se verifica en **mobile / tablet / desktop** (anchos 375 / 768 / 1280, o los breakpoints del sistema existente):
+
+- **HTML:** screenshots a esos anchos con `?clean#<id>` vía Chrome MCP; layouts por breakpoint en `reference/html.md`.
+- **Pencil / Figma:** un frame por breakpoint por pantalla (los frames mobile ya descritos en cada receta; agregar tablet).
+
+Una pantalla no está terminada sin sus variantes/verificación responsive.
 
 ## Recetas por Tipo de Pantalla
 

@@ -47,13 +47,11 @@ Cargar **solo** los archivos relevantes para la tarea actual:
 
 | Trabajando en... | Cargar |
 |---|---|
-| Discriminated unions, branded types, mapped/conditional types | `guides/patterns/types.md` |
 | Configuración de Vitest, `expectTypeOf`, mocking, pruebas async | `guides/testing/vitest.md` |
 | AbortController, Promise.allSettled, async iterators, timeouts | `guides/async/promises.md` |
 | Componentes funcionales React, tipado de props, hooks, RSC, Zod+RHF | `guides/react/components.md` |
 | XSS, sanitización de inputs, CSRF, CSP | `guides/security.md` |
 | Configuración flat ESLint v8, reglas críticas, typescript-eslint | `guides/eslint.md` |
-| Node.js ESM, verbatimModuleSyntax, subpath exports | `guides/node-esm.md` |
 
 ### Detección y Checklists
 

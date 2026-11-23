@@ -1,0 +1,4 @@
+{
+  "description": "Hooks module de message-bar",
+  "modules": ["./register.js"]
+}

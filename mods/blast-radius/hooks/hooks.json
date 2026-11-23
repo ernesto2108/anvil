@@ -1,0 +1,4 @@
+{
+  "description": "Hooks module de blast-radius",
+  "modules": ["./register.js"]
+}

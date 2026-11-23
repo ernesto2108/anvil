@@ -1,0 +1,6 @@
+{
+  "name": "commit-es",
+  "version": "0.1.0",
+  "description": "Rechaza commits y PRs cuyo mensaje no este en espanol o cuyo asunto no siga Conventional Commits",
+  "author": { "name": "Ernesto Diaz" }
+}
